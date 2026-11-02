@@ -1,0 +1,99 @@
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+database.db
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+*.bak
+*.backup
+
+# Logs
+logs/
+*.log
+lerna-debug.log*
+npm-debug.log
+
+# Dependencies lock files (optional, depending on project preference)
+# package-lock.json
+# yarn.lock
+
+# Secrets and credentials
+secrets/
+credentials.json
+*.pem
+*.key
+*.crt
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# CI/CD
+.github/workflows/secrets
+
+# Custom
+coverage/
+.nyc_output/
+dist/
+build/
+output/
+
+# Socket.io
+.socket-io/
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
