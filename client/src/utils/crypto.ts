@@ -1,307 +1,294 @@
-/**
- * E2EE Crypto Utility Module
- * 
- * Provides end-to-end encryption using native browser Web Crypto API
- * Algorithm: AES-256-GCM (Advanced Encryption Standard with Galois/Counter Mode)
- * 
- * Features:
- * - 256-bit symmetric key generation
- * - Message encryption with IV (Initialization Vector)
- * - Message decryption with authentication tag verification
- * - Base64 encoding/decoding for transport
- * - Zero external dependencies (native Web Crypto API only)
- */
+/** Browser-native AES-256-GCM primitives for the local messaging demo. */
 
-/**
- * Cryptographic algorithm configuration
- * GCM mode provides both encryption and authentication
- */
-const ALGORITHM = 'AES-GCM' as const;
-const KEY_LENGTH = 256; // bits
-const IV_LENGTH = 12; // bytes (96 bits) - recommended for GCM
-const TAG_LENGTH = 128; // bits - authentication tag length
-const ENCODING = 'utf-8' as const;
+export const ENCRYPTION_ALGORITHM = 'AES-256-GCM' as const;
+export const ENCRYPTION_VERSION = 1 as const;
+export const ENCRYPTION_ENCODING = 'base64' as const;
 
-/**
- * Converts an ArrayBuffer to a Base64 string
- * Used for transport and storage of binary data
- * 
- * @param buffer - The ArrayBuffer to convert
- * @returns Base64 encoded string
- */
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
+const WEB_CRYPTO_ALGORITHM = 'AES-GCM' as const;
+const KEY_LENGTH_BITS = 256;
+const IV_LENGTH_BYTES = 12;
+const AUTHENTICATION_TAG_LENGTH_BITS = 128;
+const AUTHENTICATION_TAG_LENGTH_BYTES = AUTHENTICATION_TAG_LENGTH_BITS / 8;
+const MAX_IV_GENERATION_ATTEMPTS = 16;
+
+export interface EncryptedMessagePayload {
+  version: typeof ENCRYPTION_VERSION;
+  algorithm: typeof ENCRYPTION_ALGORITHM;
+  encoding: typeof ENCRYPTION_ENCODING;
+  /** Base64-encoded 96-bit nonce. */
+  iv: string;
+  /** Base64 AES-GCM output, including the 128-bit authentication tag. */
+  ciphertext: string;
+}
+
+/** Metadata authenticated as AES-GCM additional authenticated data. */
+export interface CryptoMessageContext {
+  conversationId: string;
+  messageId: string;
+  senderId: string;
+  senderName: string;
+  timestamp: string;
+}
+
+export type CryptoErrorCode =
+  | 'web_crypto_unavailable'
+  | 'key_generation_failed'
+  | 'missing_key'
+  | 'invalid_key'
+  | 'invalid_plaintext'
+  | 'invalid_context'
+  | 'iv_generation_failed'
+  | 'invalid_payload'
+  | 'unsupported_version'
+  | 'unsupported_algorithm'
+  | 'invalid_base64'
+  | 'invalid_iv'
+  | 'encryption_failed'
+  | 'authentication_failed'
+  | 'invalid_plaintext_encoding';
+
+const SAFE_ERROR_MESSAGES: Record<CryptoErrorCode, string> = {
+  web_crypto_unavailable: 'Browser cryptography is unavailable.',
+  key_generation_failed: 'A local encryption key could not be created.',
+  missing_key: 'No local encryption key is available for this conversation.',
+  invalid_key: 'The encryption key is invalid for this operation.',
+  invalid_plaintext: 'The message must contain non-empty text.',
+  invalid_context: 'The message context is invalid.',
+  iv_generation_failed: 'A unique encryption nonce could not be generated.',
+  invalid_payload: 'The encrypted message payload is malformed.',
+  unsupported_version: 'The encrypted message version is unsupported.',
+  unsupported_algorithm: 'The encrypted message algorithm is unsupported.',
+  invalid_base64: 'The encrypted message encoding is invalid.',
+  invalid_iv: 'The encrypted message nonce is invalid.',
+  encryption_failed: 'The message could not be encrypted.',
+  authentication_failed: 'The message could not be authenticated and was rejected.',
+  invalid_plaintext_encoding: 'The authenticated message text is invalid.',
+};
+
+export class CryptoOperationError extends Error {
+  constructor(public readonly code: CryptoErrorCode) {
+    super(SAFE_ERROR_MESSAGES[code]);
+    this.name = 'CryptoOperationError';
+  }
+}
+
+const usedIvsByKey = new WeakMap<CryptoKey, Set<string>>();
+
+export function isWebCryptoAvailable(): boolean {
+  return Boolean(
+    globalThis.crypto?.subtle &&
+    typeof globalThis.crypto.getRandomValues === 'function' &&
+    typeof TextEncoder !== 'undefined' &&
+    typeof TextDecoder !== 'undefined' &&
+    typeof btoa === 'function' &&
+    typeof atob === 'function'
+  );
+}
+
+function requireWebCrypto(): Crypto {
+  if (!isWebCryptoAvailable()) throw new CryptoOperationError('web_crypto_unavailable');
+  return globalThis.crypto;
+}
+
+function validateKey(key: CryptoKey, usage: KeyUsage): void {
+  if (!key || typeof key !== 'object') throw new CryptoOperationError('invalid_key');
+  const algorithm = key.algorithm as AesKeyAlgorithm | undefined;
+  if (
+    key.type !== 'secret' ||
+    !algorithm ||
+    algorithm.name !== WEB_CRYPTO_ALGORITHM ||
+    algorithm.length !== KEY_LENGTH_BITS ||
+    key.extractable ||
+    !Array.isArray(key.usages) ||
+    !key.usages.includes(usage)
+  ) {
+    throw new CryptoOperationError('invalid_key');
+  }
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
   let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    const chunk = bytes.subarray(offset, Math.min(offset + chunkSize, bytes.length));
+    binary += String.fromCharCode(...chunk);
   }
   return btoa(binary);
 }
 
-/**
- * Converts a Base64 string to an ArrayBuffer
- * Used for decoding transport data
- * 
- * @param base64 - The Base64 encoded string
- * @returns Decoded ArrayBuffer
- */
-function base64ToArrayBuffer(base64: string): ArrayBuffer {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
-
-/**
- * Generates a cryptographically secure 256-bit AES-GCM encryption key
- * 
- * This key should be:
- * - Stored securely (encrypted LocalStorage or IndexedDB)
- * - Never transmitted unencrypted
- * - Rotated periodically (every 30 days per security spec)
- * 
- * @returns Promise<CryptoKey> - The generated AES-GCM key
- * @throws Error if Web Crypto API is unavailable
- * 
- * @example
- * ```typescript
- * const key = await generateEncryptionKey();
- * // Store key securely (not shown here)
- * ```
- */
-export async function generateEncryptionKey(): Promise<CryptoKey> {
-  if (!globalThis.crypto?.subtle) {
-    throw new Error(
-      'Web Crypto API not available. This feature requires a secure context (HTTPS).'
-    );
-  }
+function base64ToBytes(value: string): Uint8Array<ArrayBuffer> {
+  const isCanonicalBase64 = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+  if (!value || !isCanonicalBase64.test(value)) throw new CryptoOperationError('invalid_base64');
 
   try {
-    const key = await globalThis.crypto.subtle.generateKey(
-      {
-        name: ALGORITHM,
-        length: KEY_LENGTH,
-      },
-      true, // extractable (for storage/export if needed)
+    const binary = atob(value);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+    if (bytesToBase64(bytes) !== value) throw new CryptoOperationError('invalid_base64');
+    return bytes;
+  } catch (error) {
+    if (error instanceof CryptoOperationError) throw error;
+    throw new CryptoOperationError('invalid_base64');
+  }
+}
+
+function serializeContext(context: CryptoMessageContext): Uint8Array<ArrayBuffer> {
+  const contextValues = context && typeof context === 'object'
+    ? [context.conversationId, context.messageId, context.senderId, context.senderName, context.timestamp]
+    : [];
+  if (
+    !context ||
+    typeof context !== 'object' ||
+    contextValues.some((value) => typeof value !== 'string' || value.length === 0) ||
+    !Number.isFinite(Date.parse(context.timestamp))
+  ) {
+    throw new CryptoOperationError('invalid_context');
+  }
+
+  // Fixed-order JSON serialization binds message routing metadata to the GCM tag.
+  const serialized = JSON.stringify([
+    'yahoo-security-messenger',
+    ENCRYPTION_VERSION,
+    context.conversationId,
+    context.messageId,
+    context.senderId,
+    context.senderName,
+    context.timestamp,
+    'text',
+  ]);
+  return new TextEncoder().encode(serialized);
+}
+
+function generateUniqueIv(key: CryptoKey, crypto: Crypto): Uint8Array<ArrayBuffer> {
+  let usedIvs = usedIvsByKey.get(key);
+  if (!usedIvs) {
+    usedIvs = new Set<string>();
+    usedIvsByKey.set(key, usedIvs);
+  }
+
+  for (let attempt = 0; attempt < MAX_IV_GENERATION_ATTEMPTS; attempt += 1) {
+    let iv: Uint8Array<ArrayBuffer>;
+    try {
+      iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH_BYTES));
+    } catch {
+      throw new CryptoOperationError('iv_generation_failed');
+    }
+    const encodedIv = bytesToBase64(iv);
+    if (!usedIvs.has(encodedIv)) {
+      usedIvs.add(encodedIv);
+      return iv;
+    }
+  }
+
+  throw new CryptoOperationError('iv_generation_failed');
+}
+
+/** Generate an ephemeral, non-extractable AES-256-GCM key. */
+export async function generateEncryptionKey(): Promise<CryptoKey> {
+  const crypto = requireWebCrypto();
+  try {
+    return await crypto.subtle.generateKey(
+      { name: WEB_CRYPTO_ALGORITHM, length: KEY_LENGTH_BITS },
+      false,
       ['encrypt', 'decrypt']
     );
-
-    return key;
-  } catch (error) {
-    throw new Error(`Failed to generate encryption key: ${error instanceof Error ? error.message : String(error)}`);
+  } catch {
+    throw new CryptoOperationError('key_generation_failed');
   }
 }
 
-/**
- * Encrypts a plaintext message using AES-256-GCM
- * 
- * Process:
- * 1. Generates a random 96-bit IV
- * 2. Encrypts the message with the IV and key
- * 3. Returns both IV and ciphertext as Base64 strings (IV is needed for decryption)
- * 
- * @param text - The plaintext message to encrypt
- * @param key - The AES-GCM CryptoKey (must be 256-bit)
- * @returns Promise<{ciphertext: string, iv: string}> - Base64 encoded ciphertext and IV
- * @throws Error if encryption fails or invalid inputs
- * 
- * @example
- * ```typescript
- * const key = await generateEncryptionKey();
- * const message = "Hello, Yahoo! Security Messenger";
- * const { ciphertext, iv } = await encryptMessage(message, key);
- * 
- * // Send ciphertext and iv to recipient over the network
- * // (they have the same key via secure key exchange)
- * ```
- */
+/** Encrypt non-empty text and authenticate its conversation/message metadata. */
 export async function encryptMessage(
-  text: string,
-  key: CryptoKey
-): Promise<{ ciphertext: string; iv: string }> {
-  if (!globalThis.crypto?.subtle) {
-    throw new Error('Web Crypto API not available.');
+  plaintext: string,
+  key: CryptoKey,
+  context: CryptoMessageContext
+): Promise<EncryptedMessagePayload> {
+  const crypto = requireWebCrypto();
+  if (typeof plaintext !== 'string' || plaintext.length === 0) {
+    throw new CryptoOperationError('invalid_plaintext');
   }
-
-  if (!text || typeof text !== 'string') {
-    throw new Error('Invalid message: text must be a non-empty string.');
-  }
-
-  if (!key) {
-    throw new Error('Invalid encryption key provided.');
-  }
-
+  validateKey(key, 'encrypt');
+  const additionalData = serializeContext(context);
   try {
-    // Generate a random IV (Initialization Vector)
-    // 96 bits (12 bytes) is the recommended size for GCM
-    const iv = globalThis.crypto.getRandomValues(new Uint8Array(IV_LENGTH));
-
-    // Convert message text to bytes using UTF-8 encoding
-    const encoder = new TextEncoder();
-    const messageBuffer = encoder.encode(text);
-
-    // Encrypt the message
-    // The result includes the authentication tag automatically appended by GCM
-    const encryptedBuffer = await globalThis.crypto.subtle.encrypt(
+    const iv = generateUniqueIv(key, crypto);
+    const encrypted = await crypto.subtle.encrypt(
       {
-        name: ALGORITHM,
-        iv: iv,
-        tagLength: TAG_LENGTH,
+        name: WEB_CRYPTO_ALGORITHM,
+        iv,
+        additionalData,
+        tagLength: AUTHENTICATION_TAG_LENGTH_BITS,
       },
       key,
-      messageBuffer
+      new TextEncoder().encode(plaintext)
     );
-
-    // Convert results to Base64 for transport/storage
-    const ciphertext = arrayBufferToBase64(encryptedBuffer);
-    const ivBase64 = arrayBufferToBase64(iv.buffer);
 
     return {
-      ciphertext,
-      iv: ivBase64,
+      version: ENCRYPTION_VERSION,
+      algorithm: ENCRYPTION_ALGORITHM,
+      encoding: ENCRYPTION_ENCODING,
+      iv: bytesToBase64(iv),
+      ciphertext: bytesToBase64(new Uint8Array(encrypted)),
     };
   } catch (error) {
-    throw new Error(`Encryption failed: ${error instanceof Error ? error.message : String(error)}`);
+    // A nonce stays reserved even if encryption fails; it is never reused with this key.
+    if (error instanceof CryptoOperationError) throw error;
+    throw new CryptoOperationError('encryption_failed');
   }
 }
 
-/**
- * Decrypts a message encrypted with encryptMessage()
- * 
- * Process:
- * 1. Decodes Base64 ciphertext and IV back to binary
- * 2. Decrypts using the IV and key
- * 3. GCM mode verifies the authentication tag
- * 4. Returns plaintext message
- * 
- * Security guarantees:
- * - Detects if ciphertext has been tampered with (authentication tag verification)
- * - Verifies message integrity and authenticity
- * - Fails if authentication tag is invalid
- * 
- * @param ciphertext - Base64 encoded encrypted message
- * @param iv - Base64 encoded Initialization Vector (from encryptMessage)
- * @param key - The same AES-GCM CryptoKey used for encryption
- * @returns Promise<string> - The decrypted plaintext message
- * @throws Error if decryption fails or message is tampered with
- * 
- * @example
- * ```typescript
- * const key = await generateEncryptionKey();
- * const message = "Secret message";
- * const { ciphertext, iv } = await encryptMessage(message, key);
- * 
- * // Later, decrypt:
- * const decrypted = await decryptMessage(ciphertext, iv, key);
- * console.log(decrypted); // "Secret message"
- * ```
- */
+function validatePayload(payload: unknown): EncryptedMessagePayload {
+  if (!payload || typeof payload !== 'object') throw new CryptoOperationError('invalid_payload');
+  const candidate = payload as Partial<EncryptedMessagePayload>;
+  if (candidate.version !== ENCRYPTION_VERSION) throw new CryptoOperationError('unsupported_version');
+  if (candidate.algorithm !== ENCRYPTION_ALGORITHM) throw new CryptoOperationError('unsupported_algorithm');
+  if (candidate.encoding !== ENCRYPTION_ENCODING || typeof candidate.iv !== 'string' || typeof candidate.ciphertext !== 'string') {
+    throw new CryptoOperationError('invalid_payload');
+  }
+
+  const iv = base64ToBytes(candidate.iv);
+  if (iv.length !== IV_LENGTH_BYTES) throw new CryptoOperationError('invalid_iv');
+  const ciphertext = base64ToBytes(candidate.ciphertext);
+  if (ciphertext.length <= AUTHENTICATION_TAG_LENGTH_BYTES) {
+    throw new CryptoOperationError('invalid_payload');
+  }
+
+  return candidate as EncryptedMessagePayload;
+}
+
+/** Validate, authenticate, and decrypt. Plaintext is returned only on success. */
 export async function decryptMessage(
-  ciphertext: string,
-  iv: string,
-  key: CryptoKey
+  untrustedPayload: unknown,
+  key: CryptoKey,
+  context: CryptoMessageContext
 ): Promise<string> {
-  if (!globalThis.crypto?.subtle) {
-    throw new Error('Web Crypto API not available.');
-  }
+  const crypto = requireWebCrypto();
+  const payload = validatePayload(untrustedPayload);
+  validateKey(key, 'decrypt');
+  const additionalData = serializeContext(context);
+  const iv = base64ToBytes(payload.iv);
+  const ciphertext = base64ToBytes(payload.ciphertext);
 
-  if (!ciphertext || typeof ciphertext !== 'string') {
-    throw new Error('Invalid ciphertext: must be a non-empty Base64 string.');
-  }
-
-  if (!iv || typeof iv !== 'string') {
-    throw new Error('Invalid IV: must be a non-empty Base64 string.');
-  }
-
-  if (!key) {
-    throw new Error('Invalid decryption key provided.');
-  }
-
+  let decrypted: ArrayBuffer;
   try {
-    // Decode Base64 back to binary
-    const ciphertextBuffer = base64ToArrayBuffer(ciphertext);
-    const ivBuffer = base64ToArrayBuffer(iv);
-
-    // Verify IV length
-    if (ivBuffer.byteLength !== IV_LENGTH) {
-      throw new Error(`Invalid IV length. Expected ${IV_LENGTH} bytes, got ${ivBuffer.byteLength}`);
-    }
-
-    // Decrypt the message
-    // GCM mode will verify the authentication tag and throw if verification fails
-    const decryptedBuffer = await globalThis.crypto.subtle.decrypt(
+    decrypted = await crypto.subtle.decrypt(
       {
-        name: ALGORITHM,
-        iv: ivBuffer,
-        tagLength: TAG_LENGTH,
+        name: WEB_CRYPTO_ALGORITHM,
+        iv,
+        additionalData,
+        tagLength: AUTHENTICATION_TAG_LENGTH_BITS,
       },
       key,
-      ciphertextBuffer
+      ciphertext
     );
-
-    // Convert decrypted bytes back to UTF-8 string
-    const decoder = new TextDecoder(ENCODING);
-    const plaintext = decoder.decode(decryptedBuffer);
-
-    return plaintext;
-  } catch (error) {
-    // Distinguish between authentication failures and other errors
-    if (error instanceof Error) {
-      if (error.message.includes('authentication')) {
-        throw new Error(
-          'Message authentication failed. The message may have been tampered with.'
-        );
-      }
-      throw new Error(`Decryption failed: ${error.message}`);
-    }
-    throw new Error(`Decryption failed: ${String(error)}`);
-  }
-}
-
-/**
- * Exports a CryptoKey to raw bytes (for storage)
- * Note: Only works if the key was created with extractable: true
- * 
- * @param key - The CryptoKey to export
- * @returns Promise<string> - Base64 encoded key material
- */
-export async function exportKey(key: CryptoKey): Promise<string> {
-  if (!globalThis.crypto?.subtle) {
-    throw new Error('Web Crypto API not available.');
+  } catch {
+    throw new CryptoOperationError('authentication_failed');
   }
 
   try {
-    const exported = await globalThis.crypto.subtle.exportKey('raw', key);
-    return arrayBufferToBase64(exported);
-  } catch (error) {
-    throw new Error(`Failed to export key: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
-/**
- * Imports raw key bytes back into a CryptoKey
- * 
- * @param keyData - Base64 encoded key material (from exportKey)
- * @returns Promise<CryptoKey> - The imported AES-GCM key
- */
-export async function importKey(keyData: string): Promise<CryptoKey> {
-  if (!globalThis.crypto?.subtle) {
-    throw new Error('Web Crypto API not available.');
-  }
-
-  try {
-    const buffer = base64ToArrayBuffer(keyData);
-    const key = await globalThis.crypto.subtle.importKey(
-      'raw',
-      buffer,
-      { name: ALGORITHM },
-      true,
-      ['encrypt', 'decrypt']
-    );
-    return key;
-  } catch (error) {
-    throw new Error(`Failed to import key: ${error instanceof Error ? error.message : String(error)}`);
+    return new TextDecoder('utf-8', { fatal: true }).decode(decrypted);
+  } catch {
+    throw new CryptoOperationError('invalid_plaintext_encoding');
   }
 }

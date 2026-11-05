@@ -1,301 +1,99 @@
-/**
- * E2EE Crypto Utility Tests
- * 
- * Tests for:
- * - Key generation
- * - Message encryption
- * - Message decryption
- * - Error handling
- * - Round-trip encryption/decryption
- */
-
 import {
-  generateEncryptionKey,
-  encryptMessage,
+  CryptoOperationError,
   decryptMessage,
-  exportKey,
-  importKey,
+  encryptMessage,
+  generateEncryptionKey,
+  type CryptoMessageContext,
+  type EncryptedMessagePayload,
 } from './crypto';
 
-describe('Crypto Utilities', () => {
-  describe('generateEncryptionKey', () => {
-    it('should generate a valid AES-GCM encryption key', async () => {
-      const key = await generateEncryptionKey();
-      expect(key).toBeDefined();
-      expect(key.type).toBe('secret');
-      expect(key.algorithm.name).toBe('AES-GCM');
-      expect(key.usages).toContain('encrypt');
-      expect(key.usages).toContain('decrypt');
-    });
+const context: CryptoMessageContext = {
+  conversationId: 'conversation-a',
+  messageId: 'message-a',
+  senderId: 'user-a',
+  senderName: 'Alice',
+  timestamp: '2026-01-01T12:00:00.000Z',
+};
 
-    it('should generate different keys each time', async () => {
-      const key1 = await generateEncryptionKey();
-      const key2 = await generateEncryptionKey();
+describe('browser AES-256-GCM utilities', () => {
+  test('generates a non-extractable AES-256 key with encrypt and decrypt usages', async () => {
+    const key = await generateEncryptionKey();
+    expect(key.type).toBe('secret');
+    expect(key.algorithm).toMatchObject({ name: 'AES-GCM', length: 256 });
+    expect(key.usages).toEqual(expect.arrayContaining(['encrypt', 'decrypt']));
+    expect(key.extractable).toBe(false);
+    await expect(crypto.subtle.exportKey('raw', key)).rejects.toThrow();
+  });
 
-      // Keys should be different objects (though we can't directly compare CryptoKey)
-      expect(key1).not.toBe(key2);
-    });
+  test('returns versioned base64 ciphertext and round-trips Unicode and newlines', async () => {
+    const key = await generateEncryptionKey();
+    const plaintext = 'Hello 👋\nSecond line — café';
+    const payload = await encryptMessage(plaintext, key, context);
+    expect(payload).toMatchObject({ version: 1, algorithm: 'AES-256-GCM', encoding: 'base64' });
+    expect(atob(payload.iv)).toHaveLength(12);
+    expect(atob(payload.ciphertext).length).toBeGreaterThan(16);
+    await expect(decryptMessage(payload, key, context)).resolves.toBe(plaintext);
+  });
 
-    it('should throw error if Web Crypto API is unavailable', async () => {
-      const originalCrypto = globalThis.crypto;
-      (globalThis.crypto as any) = undefined;
+  test('uses a different nonce for each encryption under the same key', async () => {
+    const key = await generateEncryptionKey();
+    const first = await encryptMessage('one', key, context);
+    const second = await encryptMessage('two', key, { ...context, messageId: 'message-b' });
+    expect(first.iv).not.toBe(second.iv);
+  });
 
-      try {
-        await expect(generateEncryptionKey()).rejects.toThrow(
-          'Web Crypto API not available'
-        );
-      } finally {
-        globalThis.crypto = originalCrypto;
-      }
+  test('rejects empty plaintext and invalid keys with typed safe errors', async () => {
+    const key = await generateEncryptionKey();
+    await expect(encryptMessage('', key, context)).rejects.toMatchObject({ code: 'invalid_plaintext' });
+    const extractableKey = await crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
+    );
+    await expect(encryptMessage('secret', extractableKey, context)).rejects.toBeInstanceOf(CryptoOperationError);
+  });
+
+  test.each([
+    ['wrong conversation', { ...context, conversationId: 'conversation-b' }],
+    ['wrong message id', { ...context, messageId: 'message-b' }],
+    ['wrong sender', { ...context, senderId: 'attacker' }],
+    ['wrong timestamp', { ...context, timestamp: '2026-01-01T12:00:01.000Z' }],
+  ])('rejects authenticated metadata changes (%s)', async (_name, alteredContext) => {
+    const key = await generateEncryptionKey();
+    const payload = await encryptMessage('authenticated text', key, context);
+    await expect(decryptMessage(payload, key, alteredContext)).rejects.toMatchObject({
+      code: 'authentication_failed',
     });
   });
 
-  describe('encryptMessage', () => {
-    let key: CryptoKey;
-
-    beforeEach(async () => {
-      key = await generateEncryptionKey();
-    });
-
-    it('should encrypt a message and return ciphertext and IV', async () => {
-      const message = 'Hello, Yahoo! Security Messenger';
-      const result = await encryptMessage(message, key);
-
-      expect(result).toHaveProperty('ciphertext');
-      expect(result).toHaveProperty('iv');
-      expect(typeof result.ciphertext).toBe('string');
-      expect(typeof result.iv).toBe('string');
-      expect(result.ciphertext.length).toBeGreaterThan(0);
-      expect(result.iv.length).toBeGreaterThan(0);
-    });
-
-    it('should produce different ciphertexts for the same message (due to random IV)', async () => {
-      const message = 'Test message';
-
-      const result1 = await encryptMessage(message, key);
-      const result2 = await encryptMessage(message, key);
-
-      expect(result1.ciphertext).not.toBe(result2.ciphertext);
-      expect(result1.iv).not.toBe(result2.iv);
-    });
-
-    it('should encrypt empty string', async () => {
-      const result = await encryptMessage('', key);
-      expect(result).toHaveProperty('ciphertext');
-      expect(result).toHaveProperty('iv');
-    });
-
-    it('should encrypt long messages', async () => {
-      const longMessage = 'A'.repeat(10000);
-      const result = await encryptMessage(longMessage, key);
-      expect(result.ciphertext.length).toBeGreaterThan(0);
-    });
-
-    it('should encrypt special characters and unicode', async () => {
-      const message = '🔐 Hello 世界 مرحبا 🌍';
-      const result = await encryptMessage(message, key);
-      expect(result).toHaveProperty('ciphertext');
-      expect(result).toHaveProperty('iv');
-    });
-
-    it('should throw error with invalid message', async () => {
-      await expect(encryptMessage(null as any, key)).rejects.toThrow(
-        'Invalid message'
-      );
-    });
-
-    it('should throw error with invalid key', async () => {
-      await expect(encryptMessage('test', null as any)).rejects.toThrow(
-        'Invalid encryption key'
-      );
-    });
+  test('rejects tampered ciphertext and a different key without returning plaintext', async () => {
+    const key = await generateEncryptionKey();
+    const otherKey = await generateEncryptionKey();
+    const payload = await encryptMessage('do not reveal', key, context);
+    const bytes = Uint8Array.from(atob(payload.ciphertext), (character) => character.charCodeAt(0));
+    bytes[0] = bytes[0]! ^ 1;
+    const tampered: EncryptedMessagePayload = { ...payload, ciphertext: btoa(String.fromCharCode(...bytes)) };
+    await expect(decryptMessage(tampered, key, context)).rejects.toMatchObject({ code: 'authentication_failed' });
+    await expect(decryptMessage(payload, otherKey, context)).rejects.toMatchObject({ code: 'authentication_failed' });
   });
 
-  describe('decryptMessage', () => {
-    let key: CryptoKey;
-
-    beforeEach(async () => {
-      key = await generateEncryptionKey();
-    });
-
-    it('should decrypt an encrypted message correctly', async () => {
-      const originalMessage = 'Hello, Yahoo! Security Messenger';
-      const { ciphertext, iv } = await encryptMessage(originalMessage, key);
-
-      const decrypted = await decryptMessage(ciphertext, iv, key);
-      expect(decrypted).toBe(originalMessage);
-    });
-
-    it('should decrypt messages with special characters', async () => {
-      const originalMessage = '🔐 Test 中文 العربية';
-      const { ciphertext, iv } = await encryptMessage(originalMessage, key);
-
-      const decrypted = await decryptMessage(ciphertext, iv, key);
-      expect(decrypted).toBe(originalMessage);
-    });
-
-    it('should throw error if ciphertext is tampered with', async () => {
-      const { ciphertext, iv } = await encryptMessage('test', key);
-
-      // Tamper with the ciphertext
-      const tampered = Buffer.from(
-        atob(ciphertext),
-        'binary'
-      );
-      tampered[0] ^= 0xff; // Flip bits
-      const tamperedBase64 = btoa(
-        String.fromCharCode(...Array.from(tampered))
-      );
-
-      await expect(
-        decryptMessage(tamperedBase64, iv, key)
-      ).rejects.toThrow(
-        /authentication|Decryption failed/i
-      );
-    });
-
-    it('should throw error if IV is incorrect', async () => {
-      const { ciphertext } = await encryptMessage('test', key);
-
-      // Generate wrong IV
-      const wrongIV = Buffer.from(new Uint8Array(12)).toString('base64');
-
-      await expect(
-        decryptMessage(ciphertext, wrongIV, key)
-      ).rejects.toThrow(
-        /authentication|Decryption failed/i
-      );
-    });
-
-    it('should throw error with invalid ciphertext', async () => {
-      const iv = Buffer.from(new Uint8Array(12)).toString('base64');
-
-      await expect(
-        decryptMessage('invalid', iv, key)
-      ).rejects.toThrow('Decryption failed');
-    });
-
-    it('should throw error with invalid IV', async () => {
-      const { ciphertext } = await encryptMessage('test', key);
-
-      await expect(
-        decryptMessage(ciphertext, 'invalid', key)
-      ).rejects.toThrow('Decryption failed');
-    });
-
-    it('should throw error with invalid key', async () => {
-      const { ciphertext, iv } = await encryptMessage('test', key);
-
-      await expect(
-        decryptMessage(ciphertext, iv, null as any)
-      ).rejects.toThrow('Invalid decryption key');
-    });
+  test.each([
+    ['version', { version: 2 }],
+    ['algorithm', { algorithm: 'AES-CBC' }],
+    ['encoding', { encoding: 'hex' }],
+    ['base64', { iv: '%%%=' }],
+    ['IV length', { iv: btoa('short') }],
+    ['empty ciphertext', { ciphertext: '' }],
+  ])('rejects malformed or unsupported payload %s', async (_name, overrides) => {
+    const key = await generateEncryptionKey();
+    const payload = await encryptMessage('valid', key, context);
+    await expect(decryptMessage({ ...payload, ...overrides }, key, context)).rejects.toBeInstanceOf(CryptoOperationError);
   });
 
-  describe('Round-trip encryption/decryption', () => {
-    let key: CryptoKey;
-
-    beforeEach(async () => {
-      key = await generateEncryptionKey();
-    });
-
-    it('should correctly round-trip multiple messages', async () => {
-      const messages = [
-        'Short',
-        'This is a medium length message',
-        'A'.repeat(1000),
-        '🔐 Unicode: 日本語 العربية Ελληνικά',
-      ];
-
-      for (const message of messages) {
-        const { ciphertext, iv } = await encryptMessage(message, key);
-        const decrypted = await decryptMessage(ciphertext, iv, key);
-        expect(decrypted).toBe(message);
-      }
-    });
-
-    it('should maintain message integrity across multiple encryptions', async () => {
-      const message = 'Integrity test message';
-
-      for (let i = 0; i < 5; i++) {
-        const { ciphertext, iv } = await encryptMessage(message, key);
-        const decrypted = await decryptMessage(ciphertext, iv, key);
-        expect(decrypted).toBe(message);
-      }
-    });
-  });
-
-  describe('Key export/import', () => {
-    it('should export and import a key successfully', async () => {
-      const originalKey = await generateEncryptionKey();
-
-      // Export the key
-      const exported = await exportKey(originalKey);
-      expect(typeof exported).toBe('string');
-      expect(exported.length).toBeGreaterThan(0);
-
-      // Import the key
-      const importedKey = await importKey(exported);
-
-      // Test that imported key works
-      const message = 'Test message';
-      const { ciphertext, iv } = await encryptMessage(message, originalKey);
-      const decrypted = await decryptMessage(ciphertext, iv, importedKey);
-      expect(decrypted).toBe(message);
-    });
-
-    it('should throw error on invalid key export', async () => {
-      await expect(exportKey(null as any)).rejects.toThrow(
-        'Failed to export key'
-      );
-    });
-
-    it('should throw error on invalid key import', async () => {
-      await expect(importKey('invalid-base64!')).rejects.toThrow(
-        'Failed to import key'
-      );
-    });
-  });
-
-  describe('Error handling', () => {
-    it('should provide meaningful error messages', async () => {
-      const key = await generateEncryptionKey();
-
-      try {
-        await decryptMessage('', '', key);
-      } catch (error) {
-        expect(error).toBeInstanceOf(Error);
-        expect((error as Error).message).toMatch(
-          /invalid|empty|decryption/i
-        );
-      }
-    });
-  });
-
-  describe('Performance', () => {
-    it('should encrypt message in reasonable time', async () => {
-      const key = await generateEncryptionKey();
-      const message = 'Performance test message';
-
-      const start = performance.now();
-      await encryptMessage(message, key);
-      const duration = performance.now() - start;
-
-      // Should complete within 100ms
-      expect(duration).toBeLessThan(100);
-    });
-
-    it('should decrypt message in reasonable time', async () => {
-      const key = await generateEncryptionKey();
-      const message = 'Performance test message';
-      const { ciphertext, iv } = await encryptMessage(message, key);
-
-      const start = performance.now();
-      await decryptMessage(ciphertext, iv, key);
-      const duration = performance.now() - start;
-
-      // Should complete within 100ms
-      expect(duration).toBeLessThan(100);
+  test('does not include native Web Crypto details in externally visible errors', async () => {
+    const key = await generateEncryptionKey();
+    const payload = await encryptMessage('safe', key, context);
+    await expect(decryptMessage(payload, key, { ...context, messageId: '' })).rejects.toMatchObject({
+      code: 'invalid_context',
+      message: 'The message context is invalid.',
     });
   });
 });

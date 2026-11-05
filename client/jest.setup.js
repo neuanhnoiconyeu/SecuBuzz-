@@ -1,9 +1,19 @@
 // jest.setup.js
 import '@testing-library/jest-dom'
 
-// Mock Web Crypto API if not available in test environment
-if (!globalThis.crypto) {
-  globalThis.crypto = require('crypto').webcrypto
+// Use Node's complete Web Crypto implementation when jsdom exposes only a partial one.
+if (!globalThis.crypto?.subtle) {
+  Object.defineProperty(globalThis, 'crypto', {
+    configurable: true,
+    writable: true,
+    value: require('crypto').webcrypto,
+  })
+}
+
+if (!globalThis.TextEncoder || !globalThis.TextDecoder) {
+  const { TextDecoder, TextEncoder } = require('util')
+  globalThis.TextEncoder = globalThis.TextEncoder || TextEncoder
+  globalThis.TextDecoder = globalThis.TextDecoder || TextDecoder
 }
 
 // Mock IntersectionObserver

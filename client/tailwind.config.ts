@@ -9,10 +9,57 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Windows XP colors
-        'xp-blue': '#0078d4',
-        'xp-gray': '#ece9d8',
-        'xp-silver': '#dfddce',
+        brand: {
+          DEFAULT: 'var(--color-brand)',
+          hover: 'var(--color-brand-hover)',
+          pressed: 'var(--color-brand-pressed)',
+          soft: 'var(--color-brand-soft)',
+        },
+        surface: {
+          DEFAULT: 'var(--color-surface)',
+          raised: 'var(--color-surface-raised)',
+          muted: 'var(--color-surface-muted)',
+        },
+        ink: {
+          DEFAULT: 'var(--color-text)',
+          muted: 'var(--color-text-muted)',
+          subtle: 'var(--color-text-subtle)',
+        },
+        border: {
+          DEFAULT: 'var(--color-border)',
+          strong: 'var(--color-border-strong)',
+        },
+        success: 'var(--color-success)',
+        warning: 'var(--color-warning)',
+        danger: 'var(--color-error)',
+        info: 'var(--color-info)',
+        'xp-blue': 'var(--color-xp-blue)',
+        'xp-blue-dark': 'var(--color-xp-blue-dark)',
+      },
+      fontFamily: {
+        sans: ['var(--font-family-base)'],
+        retro: ['var(--font-family-retro)'],
+      },
+      spacing: {
+        '18': '4.5rem',
+        '22': '5.5rem',
+      },
+      borderRadius: {
+        control: 'var(--radius-control)',
+        panel: 'var(--radius-panel)',
+      },
+      boxShadow: {
+        panel: 'var(--shadow-panel)',
+        popover: 'var(--shadow-popover)',
+      },
+      zIndex: {
+        dropdown: 'var(--z-dropdown)',
+        sticky: 'var(--z-sticky)',
+        dialog: 'var(--z-dialog)',
+      },
+      transitionDuration: {
+        fast: 'var(--duration-fast)',
+        normal: 'var(--duration-normal)',
       },
       animation: {
         'buzz-shake': 'buzz-shake 0.5s ease-in-out',

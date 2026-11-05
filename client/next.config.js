@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Keep a running dev server's assets separate from `next build` output.
+  // This prevents production builds from replacing stylesheets used by `next dev`.
+  distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
   reactStrictMode: true,
   swcMinify: true,
   typescript: {

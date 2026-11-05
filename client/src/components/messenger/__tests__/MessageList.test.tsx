@@ -1,0 +1,247 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import postcss from 'postcss';
+import { MessageList } from '../MessageList';
+import type { ChatMessage } from '@/messaging/messageModel';
+
+const makeMessage = (overrides: Partial<ChatMessage> = {}): ChatMessage => ({
+  id: 'message-1',
+  conversationId: 'conversation-a',
+  senderId: 'securebot',
+  senderName: 'SecureBot',
+  content: 'Hello from the bot',
+  timestamp: '2026-01-01T12:00:00.000Z',
+  type: 'text',
+  deliveryStatus: 'delivered',
+  ...overrides,
+});
+
+describe('MessageList', () => {
+  test('uses a full-width flex parent and content-sized bubble with safe wrapping', () => {
+    const source = readFileSync(path.join(process.cwd(), 'src/app/globals.css'), 'utf8');
+    const stylesheet = postcss.parse(source);
+    const declarationsFor = (selector: string) => {
+      const declarations: Record<string, string> = {};
+      stylesheet.walkRules(selector, (rule) => {
+        rule.walkDecls((declaration) => {
+          declarations[declaration.prop] = declaration.value;
+        });
+      });
+      return declarations;
+    };
+    const row = declarationsFor('.message-content-row');
+    const bubble = declarationsFor('.message-bubble');
+
+    expect(row).toMatchObject({ display: 'flex', width: '100%', 'min-width': '0' });
+    expect(bubble).toMatchObject({
+      width: 'fit-content',
+      'max-width': 'min(72%, 38rem)',
+      'min-width': '0',
+      'white-space': 'pre-wrap',
+      'overflow-wrap': 'anywhere',
+      'word-break': 'normal',
+    });
+  });
+
+  test('renders sender, timestamp, and encrypted state only when metadata exists', () => {
+    const incoming = makeMessage();
+    const outgoing = makeMessage({
+      id: 'message-2',
+      senderId: 'local-user',
+      senderName: 'You',
+      content: 'An encrypted reply',
+      deliveryStatus: 'sent',
+      encryption: {
+        version: 1,
+        algorithm: 'AES-256-GCM',
+        encoding: 'base64',
+        iv: 'iv',
+        ciphertext: 'ciphertext',
+        scope: 'browser-demo',
+      },
+    });
+    const { container } = render(
+      <MessageList messages={[incoming, outgoing]} currentUserId="local-user" onRetryMessage={jest.fn()} />
+    );
+
+    expect(screen.getByText('SecureBot')).toBeInTheDocument();
+    expect(screen.getByText('You')).toBeInTheDocument();
+    expect(screen.getByText('Hello from the bot')).toBeInTheDocument();
+    expect(screen.getByText('An encrypted reply')).toBeInTheDocument();
+    expect(screen.getByText('Encrypted locally')).toBeInTheDocument();
+    expect(screen.getByText('Accepted by local demo')).toBeInTheDocument();
+    expect(container.querySelectorAll('time')).toHaveLength(2);
+  });
+
+  test('renders system and security alert messages with distinct semantics', () => {
+    const system = makeMessage({
+      id: 'system-1',
+      senderId: 'system',
+      senderName: 'System',
+      type: 'system',
+      content: 'Secure channel initialized in this browser.',
+    });
+    const alert = makeMessage({
+      id: 'alert-1',
+      senderId: 'security',
+      senderName: 'Security notice',
+      type: 'security_alert',
+      content: 'A demo security event was received.',
+    });
+    render(<MessageList messages={[system, alert]} currentUserId="local-user" onRetryMessage={jest.fn()} />);
+
+    expect(screen.getByRole('note')).toHaveTextContent('Secure channel initialized in this browser.');
+    expect(screen.getByRole('alert')).toHaveTextContent('A demo security event was received.');
+    expect(screen.queryByText('You')).not.toBeInTheDocument();
+  });
+
+  test('shows an empty state without inserting placeholder messages', () => {
+    render(<MessageList messages={[]} currentUserId="local-user" onRetryMessage={jest.fn()} />);
+    expect(screen.getByText('No messages yet')).toBeInTheDocument();
+    expect(screen.queryByRole('article')).not.toBeInTheDocument();
+  });
+
+  test('offers a jump-to-latest control when new messages arrive while scrolled up', () => {
+    const first = makeMessage();
+    const second = makeMessage({ id: 'message-2', content: 'Second' });
+    const { rerender } = render(
+      <MessageList messages={[first, second]} currentUserId="local-user" onRetryMessage={jest.fn()} />
+    );
+    const history = screen.getByRole('log');
+    Object.defineProperty(history, 'scrollHeight', { configurable: true, value: 600 });
+    Object.defineProperty(history, 'clientHeight', { configurable: true, value: 200 });
+    history.scrollTop = 0;
+    fireEvent.scroll(history);
+
+    rerender(
+      <MessageList
+        messages={[first, second, makeMessage({ id: 'message-3', content: 'New message' })]}
+        currentUserId="local-user"
+        onRetryMessage={jest.fn()}
+      />
+    );
+
+    expect(history.scrollTop).toBe(0);
+    const jumpButton = screen.getByRole('button', { name: '1 new message — latest' });
+    fireEvent.click(jumpButton);
+    expect(history.scrollTop).toBeGreaterThanOrEqual(400);
+    expect(screen.queryByRole('button', { name: '1 new message — latest' })).not.toBeInTheDocument();
+  });
+
+  test('initial conversation load starts at the latest message', () => {
+    const originalScrollHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollHeight');
+    const originalClientHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+    Object.defineProperty(HTMLElement.prototype, 'scrollHeight', { configurable: true, get: () => 900 });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get: () => 300 });
+
+    try {
+      render(
+        <MessageList
+          messages={[
+            makeMessage(),
+            makeMessage({ id: 'initial-2', content: 'Older message' }),
+            makeMessage({ id: 'initial-3', content: 'Latest message' }),
+          ]}
+          currentUserId="local-user"
+          onRetryMessage={jest.fn()}
+        />
+      );
+
+      expect(screen.getByRole('log').scrollTop).toBeGreaterThanOrEqual(600);
+      expect(screen.getByText('Latest message')).toBeInTheDocument();
+    } finally {
+      if (originalScrollHeight) Object.defineProperty(HTMLElement.prototype, 'scrollHeight', originalScrollHeight);
+      else Reflect.deleteProperty(HTMLElement.prototype, 'scrollHeight');
+      if (originalClientHeight) Object.defineProperty(HTMLElement.prototype, 'clientHeight', originalClientHeight);
+      else Reflect.deleteProperty(HTMLElement.prototype, 'clientHeight');
+    }
+  });
+
+  test('follows new messages only while the reader is near the bottom', () => {
+    const first = makeMessage();
+    const { rerender } = render(
+      <MessageList messages={[first]} currentUserId="local-user" onRetryMessage={jest.fn()} />
+    );
+    const history = screen.getByRole('log');
+    Object.defineProperty(history, 'scrollHeight', { configurable: true, value: 600 });
+    Object.defineProperty(history, 'clientHeight', { configurable: true, value: 200 });
+    history.scrollTop = 390;
+    fireEvent.scroll(history);
+
+    rerender(
+      <MessageList
+        messages={[first, makeMessage({ id: 'message-2', content: 'Follow me' })]}
+        currentUserId="local-user"
+        onRetryMessage={jest.fn()}
+      />
+    );
+
+    expect(history.scrollTop).toBe(600);
+    expect(screen.queryByRole('button', { name: /new message/ })).not.toBeInTheDocument();
+  });
+
+  test('groups nearby consecutive messages from the same sender', () => {
+    const first = makeMessage();
+    const second = makeMessage({
+      id: 'message-2',
+      content: 'A second bubble',
+      timestamp: '2026-01-01T12:01:00.000Z',
+    });
+    const { container } = render(
+      <MessageList messages={[first, second]} currentUserId="local-user" onRetryMessage={jest.fn()} />
+    );
+
+    expect(container.querySelectorAll('.message-row')).toHaveLength(2);
+    expect(container.querySelectorAll('.message-row-grouped')).toHaveLength(1);
+    expect(screen.getAllByText('SecureBot')).toHaveLength(1);
+  });
+
+  test.each([
+    ['short greeting', 'hi'],
+    ['short word', 'hello'],
+    ['welcome sentence', 'Hello! Welcome to Yahoo Messenger.'],
+    ['long paragraph', 'This is a longer paragraph with normal word boundaries. '.repeat(18)],
+    ['intentional newlines', 'First line\nSecond line\n\nFourth line'],
+    ['long URL', 'https://example.test/a-very-long-path-without-natural-breaks/'.repeat(3)],
+    ['unbroken string', 'S'.repeat(220)],
+  ])('preserves %s content in naturally sized incoming and outgoing bubbles', (_name, content) => {
+    const incomingId = 'incoming-wrap-case';
+    const outgoingId = 'outgoing-wrap-case';
+    const { container } = render(
+      <MessageList
+        messages={[
+          makeMessage({ id: incomingId, content }),
+          makeMessage({ id: outgoingId, senderId: 'local-user', senderName: 'You', content }),
+        ]}
+        currentUserId="local-user"
+        onRetryMessage={jest.fn()}
+      />
+    );
+
+    const incomingRow = container.querySelector(`[data-message-id="${incomingId}"]`);
+    const outgoingRow = container.querySelector(`[data-message-id="${outgoingId}"]`);
+    const incomingBubble = incomingRow?.querySelector('.message-bubble');
+    const outgoingBubble = outgoingRow?.querySelector('.message-bubble');
+
+    expect(incomingBubble?.textContent).toBe(content);
+    expect(outgoingBubble?.textContent).toBe(content);
+    expect(incomingBubble).toHaveClass('message-bubble');
+    expect(outgoingBubble).toHaveClass('message-bubble');
+    expect(outgoingRow).toHaveClass('message-row-outgoing');
+  });
+
+  test('provides a retry action for failed outgoing messages', () => {
+    const onRetryMessage = jest.fn();
+    render(
+      <MessageList
+        messages={[makeMessage({ senderId: 'local-user', senderName: 'You', deliveryStatus: 'failed' })]}
+        currentUserId="local-user"
+        onRetryMessage={onRetryMessage}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetryMessage).toHaveBeenCalledWith('message-1');
+    expect(screen.getByText('Not sent')).toBeInTheDocument();
+  });
+});
