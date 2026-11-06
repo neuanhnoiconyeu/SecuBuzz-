@@ -1,4 +1,5 @@
-import { Bot, Users, UserRound } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { Bot, Search, Users, UserRound, X } from 'lucide-react';
 import { Avatar, Badge } from '@/components/ui';
 import type { Conversation } from '@/conversations/conversationModel';
 
@@ -34,30 +35,95 @@ export function ConversationSidebar({
   mobileListOpen,
   onSelect,
 }: ConversationSidebarProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [hydrated, setHydrated] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchId = useId();
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const visibleConversations = conversations.filter((conversation) =>
+    conversation.displayName.toLowerCase().includes(normalizedQuery)
+    || conversation.type.includes(normalizedQuery)
+  );
+  const clearSearch = () => {
+    setSearchQuery('');
+    searchInputRef.current?.focus();
+  };
+
+  useEffect(() => {
+    // Demo timestamps and locale formatting differ between server and browser.
+    // Keep the first render stable; the actual activity remains client-visible.
+    setHydrated(true);
+  }, []);
+
   return (
     <aside
       className={`conversation-sidebar ${mobileListOpen ? 'is-mobile-open' : 'is-mobile-hidden'}`}
       aria-label="Conversations"
     >
-      <div className="conversation-sidebar-heading">
-        <div>
-          <p className="conversation-sidebar-eyebrow">Yahoo! Messenger</p>
-          <h2>Chats</h2>
+      <div className="conversation-browse-header">
+        <div className="conversation-sidebar-heading">
+          <div>
+            <p className="conversation-sidebar-eyebrow">Your conversations</p>
+            <h2 className="display-heading">Messages</h2>
+          </div>
+          <Badge status="info">Demo</Badge>
         </div>
-        <Badge status="info">Demo</Badge>
+
+        <div className="conversation-search">
+          <label className="sr-only" htmlFor={searchId}>Search conversations</label>
+          <Search className="conversation-search-icon" size={16} aria-hidden="true" />
+          <input
+            ref={searchInputRef}
+            id={searchId}
+            className="ui-input conversation-search-input"
+            type="search"
+            placeholder="Search conversations"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape' && searchQuery) {
+                event.preventDefault();
+                clearSearch();
+              }
+            }}
+            autoComplete="off"
+            spellCheck={false}
+          />
+          {searchQuery && (
+            <button type="button" className="conversation-search-clear" aria-label="Clear conversation search" onClick={clearSearch}>
+              <X size={15} aria-hidden="true" />
+            </button>
+          )}
+        </div>
       </div>
-      <p className="conversation-demo-note">Local examples only. No other users are connected.</p>
+
+      <div className="conversation-list-heading">
+        <span>{normalizedQuery ? 'Search results' : 'Recent chats'}</span>
+        <span className="conversation-result-count" aria-live="polite" aria-atomic="true">
+          {visibleConversations.length} {normalizedQuery
+            ? visibleConversations.length === 1 ? 'result' : 'results'
+            : visibleConversations.length === 1 ? 'conversation' : 'conversations'}
+        </span>
+      </div>
 
       {conversations.length === 0 ? (
         <div className="conversation-list-empty" role="status">
           <strong>No conversations yet</strong>
           <span>Demo conversations will appear here when available.</span>
         </div>
+      ) : visibleConversations.length === 0 ? (
+        <div className="conversation-list-empty" role="status">
+          <Search size={24} aria-hidden="true" />
+          <strong>No matching conversations</strong>
+          <span>Try another name or conversation type.</span>
+          <button type="button" className="conversation-search-reset" onClick={clearSearch}>Clear search</button>
+        </div>
       ) : (
         <ul className="conversation-list" aria-label="Your conversations">
-          {conversations.map((conversation) => {
+          {visibleConversations.map((conversation) => {
             const active = conversation.id === activeConversationId;
             const typeLabel = conversation.type === 'bot' ? 'Bot' : conversation.type === 'group' ? 'Group' : 'Direct';
+            const unreadLabel = conversation.unreadCount > 99 ? '99+' : String(conversation.unreadCount);
             const accessibleLabel = [
               conversation.displayName,
               typeLabel,
@@ -73,23 +139,31 @@ export function ConversationSidebar({
                   aria-label={accessibleLabel}
                   onClick={() => onSelect(conversation.id)}
                 >
-                  <Avatar name={conversation.displayName} {...(conversation.avatarUrl ? { src: conversation.avatarUrl } : {})} size="md" />
+                  <span className="conversation-list-avatar">
+                    <Avatar name={conversation.displayName} {...(conversation.avatarUrl ? { src: conversation.avatarUrl } : {})} size="md" />
+                    <span className={`conversation-avatar-type conversation-avatar-type--${conversation.type}`} title={typeLabel}>
+                      <ConversationTypeIcon type={conversation.type} />
+                    </span>
+                  </span>
                   <span className="conversation-list-copy">
-                    <span className="conversation-list-topline">
-                      <span className="conversation-list-name">{conversation.displayName}</span>
-                      <time dateTime={conversation.lastActivityAt} title={new Date(conversation.lastActivityAt).toLocaleString()}>
-                        {formatActivity(conversation.lastActivityAt)}
-                      </time>
-                    </span>
+                    <span className="conversation-list-name" title={conversation.displayName}>{conversation.displayName}</span>
                     <span className="conversation-list-preview">{conversation.lastMessagePreview}</span>
-                    <span className="conversation-list-bottomline">
-                      <span className="conversation-type-tag"><ConversationTypeIcon type={conversation.type} />{typeLabel}</span>
-                      {conversation.unreadCount > 0 && (
-                        <span className="conversation-unread" aria-label={`${conversation.unreadCount} unread messages`}>
-                          {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
-                        </span>
-                      )}
-                    </span>
+                  </span>
+                  <span className="conversation-list-trailing">
+                    <time
+                      className="conversation-activity-time"
+                      {...(hydrated ? {
+                        dateTime: conversation.lastActivityAt,
+                        title: new Date(conversation.lastActivityAt).toLocaleString(),
+                      } : {})}
+                    >
+                      {hydrated ? formatActivity(conversation.lastActivityAt) : '—'}
+                    </time>
+                    {conversation.unreadCount > 0 && (
+                      <span className="conversation-unread" aria-label={`${conversation.unreadCount} unread messages`}>
+                        <span className="conversation-unread-value" key={unreadLabel} aria-hidden="true">{unreadLabel}</span>
+                      </span>
+                    )}
                   </span>
                 </button>
               </li>
@@ -97,6 +171,7 @@ export function ConversationSidebar({
           })}
         </ul>
       )}
+      <p className="conversation-demo-note">Local examples only. No other users are connected.</p>
     </aside>
   );
 }

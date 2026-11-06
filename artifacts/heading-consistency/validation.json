@@ -1,0 +1,34 @@
+{
+  "jest": {
+    "command": "npm test -- --runInBand",
+    "exitCode": 0,
+    "suitesPassed": 21,
+    "testsPassed": 159,
+    "testsFailed": 0
+  },
+  "typescript": {
+    "command": "npm run type-check",
+    "exitCode": 0
+  },
+  "productionBuild": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "routeSize": "27.3 kB",
+    "firstLoadJs": "115 kB",
+    "warnings": []
+  },
+  "browser": {
+    "applicationAssertionsPassed": 289,
+    "comparisonChecksPassed": 3,
+    "actualPlatformFontMeasurements": 88,
+    "fontMeasurementsAreAdditionalTests": false,
+    "viewports": [1440, 1024, 390],
+    "themes": ["light", "dark"],
+    "evidence": "after/browser-summary.json"
+  },
+  "protectedScope": {
+    "filesChecked": 54,
+    "filesChanged": 0,
+    "evidence": "protected-scope-evidence.json"
+  }
+}

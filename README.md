@@ -1,4 +1,4 @@
-# Yahoo! Security Messenger
+# Yahoo! Security Messenger 2.0
 
 **A 2000s Retro DevSecOps Communication Platform with AI-Powered Intelligence**
 
@@ -167,7 +167,7 @@ The client uses a Retro Modern direction: Yahoo Messenger and Windows XP details
 
 ### Styling and tokens
 
-- CSS variables in `client/src/app/globals.css` are the source of truth for brand/status colors, surfaces, typography, spacing, radii, shadows, z-index layers, and transition durations.
+- Semantic tokens have one owner: `styles/themes.css` defines colors and shadows, `styles/typography.css` defines fonts and type roles, and `styles/motion.css` defines motion. `app/globals.css` consumes them and owns component layout, spacing, radii, and stacking.
 - `client/tailwind.config.ts` maps the shared color, typography, radius, shadow, stacking, and duration tokens for Tailwind utilities.
 - Tailwind CSS remains the primary styling system. NES.css is used only through explicit retro variants; avoid applying NES classes globally.
 - Lucide React provides the interface icon set. Keep icon sizes consistent and label icon-only controls accessibly.
@@ -225,3 +225,111 @@ The current SecureBot screen uses reusable message components, a conversation-sc
 - SecureBot returns a fixed scripted demo response. Direct and group demo entries accept local encrypted messages for interface testing but do not fabricate a recipient or delivery response. Their UI explains that no other user receives those messages.
 - `client/src/conversations/conversationModel.ts` defines `ConversationDataProvider` methods for loading, creating, updating, and loading messages. It also defines a domain-level realtime provider boundary for message, conversation, unread/read, and presence updates. These are interfaces only; they do not define database schemas or Socket.IO event names. Existing `MessagingTransport` remains the client message boundary.
 - Local unread counts, previews, and drafts are in-memory only. Real user presence, remote delivery, database/API persistence, complete Friends or group workflows, AI Hub workflows, and multi-user E2EE are not implemented.
+
+## Phase 5 — User profile and local identity
+
+- Open the profile from the avatar and identity button in the top Messenger navigation. The profile window shows the display name, demo username, immutable user ID, custom status, avatar, and local presence preference. Its settings support Save, Cancel, validation feedback, Escape to close, and focus return to the opening control.
+- `client/src/profiles/profileModel.ts` separates immutable identity (`id`, `username`, `isDemo`) from editable fields. The default identity is `local-user` / `@demo-explorer`, with the display name “Demo Explorer.” It is explicitly a demo identity, not a registered or authenticated account. Editing the display name does not change the user ID or username.
+- Display names are required and limited to 40 Unicode code points after trimming. Custom statuses are optional and limited to 160 Unicode code points after trimming. Both reject C0/C1 control characters. Avatars use an allowlist of built-in Initials, Smile, Star, Rocket, and Cat presets; there are no uploads or remote image URLs.
+- Available, Busy, Away, and Invisible are local presence preferences. The navigation and profile window reflect the selected preference. No Socket.IO presence events or visibility changes are broadcast.
+- `LocalDemoProfileService` in `client/src/profiles/profileService.ts` owns an in-memory profile and notifies subscribers with isolated snapshots. `useCurrentProfile` manages loading, saves, duplicate submission protection, and safe errors. A fresh app session creates a fresh local service; refreshing the page resets profile changes. No profile data is stored in localStorage, sessionStorage, or a database.
+- Navigation identity and own-message display labels use the current profile. New message envelopes use the current display name; existing authenticated sender metadata stays intact for message retry/decryption. Conversation participant IDs, contact identities, and encryption key identities are not rewritten by profile edits.
+- A future Database/API adapter can implement `ProfileService.getCurrentProfile()`, `updateProfile()`, `setPresencePreference()`, and `subscribeToProfileChanges()`. The teammate's authenticated API contract must supply the stable user ID, read-only username, editable-field validation, authoritative profile response, and error semantics. This phase defines no API endpoints, persistence, account registration, username availability checks, password settings, or authentication backend.
+
+## Messenger interface — V2
+
+- The messenger uses one shared window with compact retro chrome, top navigation, an inline profile entry, and two integrated conversation/chat panes. Messages and conversation lists scroll within their regions. Mobile uses a full-width list/chat view; Back to conversations opens the list, and selecting a conversation returns focus to the chat heading.
+- **Search conversations** filters existing local conversation names and types without changing the active conversation or its draft. Queries ignore surrounding whitespace and case. Clear search or Escape restores all rows. Search is held in page memory only.
+- The chat uses one contact/security header, purple outgoing bubbles, and sender/delivery metadata outside the bubbles. The compact composer grows from one line up to 112px, then scrolls internally. Enter sends, Shift+Enter inserts a newline, and BUZZ retains its existing sound and shake behavior. Local demo disclaimers remain visible.
+- Conversation headers show local encryption readiness and the E2EE limitation. Open **Security details** with a click, Enter, or Space to inspect AES-GCM, recipient-key, key-exchange, and demo limitations. These disclosures do not establish multi-user E2EE.
+- Profile dialogs keep their header and action footer visible while the form body scrolls. Shared `Dialog` supports an optional `footer`; submit actions outside a form use the native HTML `form` attribute.
+- **System log** starts collapsed to prioritize chat space. Open it to inspect the existing local event log. Purple branding, restrained retro accents, shared focus colors, and reduced-motion preferences remain the design conventions.
+
+Actual V2 baseline/updated screenshots and browser evidence are in `artifacts/ui-redesign-v2/`. Open `comparison.html` there to compare desktop, laptop, and mobile captures. The small window-control glyphs are decorative; this remains a web application.
+
+## Brand identity and logo usage
+
+The product name is **Yahoo! Security Messenger 2.0**. `BrandLogo` and `BrandIcon` in `client/src/components/branding` provide full, compact, and icon-only variants with `sm`, `md`, and `lg` sizes. Informative variants have an accessible name; use `decorative` when a parent control or adjacent text already supplies it. Next.js serves responsive optimized images while preserving the source assets. Preserve image proportions and the supplied artwork. Dark Mode applies a restrained CSS tonal adjustment to the full wordmark for readability; its transparent source asset, geometry, lettering, and icon remain unchanged.
+
+The compact navigation logo already has HTML text beside the original purple icon. Its **Yahoo! Security** name uses Bungee 400; **Messenger 2.0** remains a smaller Space Grotesk subtitle. The desktop-style title bar uses Bungee for both text spans, forming the full application title at 12px. Branding shares the existing display family rather than loading another font or altering image lettering. The title stays on one line, with an ellipsis fallback in very narrow windows; the established icon-only mobile navigation and accessible home-link name are preserved.
+
+| Variant | Artwork and use |
+| --- | --- |
+| Full | The unchanged `public/branding/yahoo-security-logo-source.png`, including the original lettering, subtitle, chat symbol, and shield. Use on welcome/empty-state surfaces; `--brand-artwork-filter` adapts its dark lettering to Charcoal without adding a rectangular backing. |
+| Compact | The detailed transparent icon with a short readable product label. Use in the window header and desktop application navigation. |
+| Icon | The detailed transparent chat/security symbol for mobile navigation and small application identity areas. The simplified true-vector `favicon.svg` is intended for favicon-sized rendering. |
+
+Favicon PNGs are supplied at 16px and 32px, with a 180px Apple touch icon. They are rendered from the authored vector; they are not renamed or embedded raster SVGs. The original source and detailed icon are raster artwork. Asset dimensions, source checksum, provenance, limitations, and the exact built-in image-generation edit prompt are documented in [ASSETS.md](client/public/branding/ASSETS.md).
+
+Future Friends and AI Hub screens should keep the compact/icon application identity in shared navigation and retain their own section labels. Future authentication and About views can use the full variant. Application branding never replaces user/contact avatars, and the shield artwork does not indicate that multi-user E2EE is established.
+
+Branding before/after screenshots and browser evidence are in `artifacts/branding/`.
+
+## Appearance and adaptive themes
+
+Open **Your profile → Appearance** to select **Light**, **Dark**, or **System**. Appearance applies immediately and is independent of profile Edit/Save/Cancel. Light retains the Yahoo lavender palette; Dark uses layered Midnight Charcoal surfaces with restrained purple accents. The selected native radio, border, icon, and text make the preference visible without relying on color alone.
+
+`client/src/theme` owns the preference, resolved theme, update action, browser-storage helpers, and pre-hydration initialization. The root layout mounts one `ThemeProvider`. `useTheme()` exposes `preference`, `resolvedTheme`, and `setPreference`; components use semantic variables rather than branching on the active theme. The default is System. A synchronous head script resolves the theme before paint; only the root HTML attributes it changes receive hydration-warning suppression. Component markup retains normal hydration checking.
+
+Only the non-sensitive string `light`, `dark`, or `system` is persisted under localStorage key `secubuzz-theme`. Invalid/missing values fall back to System. Blocked/full storage does not prevent in-session changes, but persistence requires available browser storage. System follows live `prefers-color-scheme` changes; explicit Light/Dark preferences take precedence. Media listeners are removed on provider cleanup. The browser's `color-scheme` and theme-color metadata follow the resolved theme.
+
+`client/src/styles/themes.css` centralizes both palettes, including surfaces, incoming/outgoing bubbles, text, inputs, focus rings, status colors, shadows, and ambient gradients. `globals.css` owns component geometry and consumes these tokens; Tailwind's existing semantic color utilities resolve through the same variables. The theme changes colors in place without remounting messages, drafts, dialogs, or ambient elements. Dark text-reading surfaces stay still; empty conversations retain slow purple lighting. Reduced-motion preferences keep both themes static while preserving focus and state feedback.
+
+Conversation activity timestamps use a stable initial placeholder with reserved space, then format the existing timestamp in the browser after hydration. This prevents server/client clock and locale differences from triggering hydration recovery; conversation data and activity ordering are unchanged.
+
+Current baseline and themed screenshots, browser evidence, and motion captures are in `artifacts/charcoal-theme/`. Existing crypto, key management, transport, profile identity behavior, and security labels remain unchanged. This theme does not establish recipient key distribution or multi-user E2EE.
+
+## Typography: Bungee × Space Grotesk
+
+Space Grotesk is the primary interface font. Bungee defines the display hierarchy through the shared `.display-heading` class: **Messages**, **Security**, conversation titles, empty states, modal titles, profile/settings headings, and security section headings. The compact branding name, full title-bar text, and **BUZZ!** share that same Bungee family and weight declaration. The lettering embedded inside the logo artwork is unchanged.
+
+| Role | Family / weight | Size |
+| --- | --- | --- |
+| Page display | Bungee 400 | Messages 24px / Security 26px; mobile 22px / 24px |
+| Navigation wordmark | Bungee 400 | 16px / 15px on compact desktop widths |
+| Title-bar application name | Bungee 400 | 12px |
+| Navigation branding subtitle | Space Grotesk 500 | 12px |
+| Conversation heading | Bungee 400 | 20px desktop / 18px mobile |
+| Empty-state heading | Bungee 400 | 22px desktop / 20px mobile |
+| Modal title | Bungee 400 | 20px desktop / 18px mobile |
+| Profile / security section heading | Bungee 400 | 18px desktop / 16px mobile |
+| Conversation name | Space Grotesk 600 | 15px |
+| Message body | Space Grotesk 400 | 15px, line-height 1.6 |
+| Input / composer | Space Grotesk 400 | 16px; compact search 14px |
+| Navigation / button | Space Grotesk 600 | 14px |
+| Caption / helper | Space Grotesk 400–500 | At least 12px |
+| BUZZ label | Bungee 400 | 13px desktop / 12px mobile |
+
+`--font-display` and `--font-body` resolve the Next.js variables from `src/app/fonts.ts`. `src/styles/typography.css` centralizes the `display`, `heading`, `body`, `label`, `caption`, `button`, and `buzz` roles; Tailwind's font families and role sizes consume the same tokens. `.display-heading` uses context modifiers for page, conversation, empty, modal, and section sizes. Legacy base/retro aliases point to these families rather than loading another font. Bungee display roles explicitly use weight 400 with synthetic styling disabled. Heading levels, accessible names, focus refs, and long-name wrapping are preserved. Navigation, sidebar conversation names, chat bodies, form/control labels (including Appearance and Avatar legends), inputs, descriptions, security explanations, system logs, errors, helper text, and regular buttons remain in Space Grotesk. Message wrapping, palette, theme state, and animation rules are preserved.
+
+Both official, unmodified Google Fonts binaries are bundled through `next/font/local`: one Bungee Regular face and one Space Grotesk variable face covering application weights 400–700. They are preloaded once with `font-display: swap` and fallback metrics. Builds and page loads need no Google font-CDN access; the former Press Start 2P link and duplicate preconnects are removed. See the [font provenance, checksums, coverage, and OFL licenses](client/src/assets/fonts/README.md). The complete published glyph sets include Latin Extended and Vietnamese; other scripts and emoji use installed system fallbacks.
+
+The mobile BUZZ button retains its existing action, location, and 44px minimum height. Its minimum width is 56px so the actual 12px Bungee glyphs fit without clipping. Important captions no longer fall to 9–11px. Responsive font and overflow checks, native 200% browser zoom evidence, and Light/Dark comparison screenshots are recorded in `artifacts/typography/`. Very long names retain their existing ellipsis or wrapping behavior and accessible names.
+
+The heading consistency pass reuses those same loaded fonts; it adds no font files or font requests. Current heading screenshots and focused browser evidence are in `artifacts/heading-consistency/`.
+
+The subsequent branding typography pass is limited to text styling and title-bar fit. Its Light/Dark desktop/mobile captures and actual-font checks are in `artifacts/brand-typography/`. Original logo artwork, font assets, heading styles, and application behavior remain intact.
+
+## Motion conventions
+
+- `client/src/styles/motion.css` owns reusable durations, easing curves, distances, and keyframes. The root layout imports it before global component styling; existing `--duration-*` variables and Tailwind utilities map to these tokens.
+
+| Motion | Token | Duration |
+| --- | --- | --- |
+| Fast interaction | `--motion-fast` | 120ms |
+| Standard / message entry | `--motion-standard` / `--motion-entry` | 200ms |
+| Dialog | `--motion-dialog` | 240ms |
+| Ambient fields | `--motion-ambient` / `--motion-ambient-slow` | 28s / 36s |
+| Empty logo floating | `--motion-float` | 12s |
+| BUZZ | `--motion-buzz` | 500ms |
+
+- Moving lavender fields, a static fine texture, and a soft brand halo live inside **empty** conversations. The fields and surrounding shell use gradient falloff rather than animated blur. As soon as messages appear, the empty atmosphere is removed and the opaque reading surface stays still. Mobile keeps one quieter, slower empty-state field and disables shell movement and logo floating. Existing logo assets are unchanged.
+- New text messages fade and move up 5px over 200ms. `useMessageEntryMotion` is presentation-only: initial/history messages, conversation remounts, prepends, previously seen IDs, and status/retry/name changes do not replay. Hidden or reduced-motion arrivals are consumed without deferring an entrance. Animation-end cleanup has a 300ms fallback, which must remain longer than the CSS entry duration.
+- Conversation changes transition only the contact identity group; message history and native security disclosure nodes are not animated as a group. Unread updates replace only the displayed number. Counts capped at `99+` do not replay when their visible label stays unchanged. Selected avatars gain a decorative check while keeping the native radio control and existing validation/focus behavior.
+- Sending retains the existing promise and draft behavior. Only an accepted submission shows a check mark and announces “Message submitted.” The acknowledgement clears on editing or another submission; it does not claim remote delivery.
+- Navigation, local preference colors, validation feedback, and composer focus states use restrained transitions. Textarea growth remains immediate and bounded; no height animation is added while typing. BUZZ briefly shakes the chat pane by at most 3px and keeps the existing local sound/callback behavior. The button and header retain a static color cue in reduced-motion mode; no remote delivery is implied.
+- Security details and System Log fade/translate in both directions using native `::details-content` transitions when supported. Closing flips the native open state immediately and makes retained content inert, excluding it from focus and accessibility until the visual exit completes. Enhancement requires `::details-content`, discrete transitions, and CSS `interactivity: inert`; unsupported browsers and reduced-motion users get instant native toggling. No height/grid animation, JavaScript state delay, or deferred unmount is used. See [CSS interactivity](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/interactivity).
+- Supporting browsers give native dialogs a 240ms opacity/6px transition using `@starting-style` and discrete `display`/`overlay` transitions. Closing, focus return, and reopening are immediate; no JavaScript close delay or deferred unmount was added. Closed exit visuals ignore pointer input. Older engines retain immediate native behavior. See [native dialog animation guidance](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog#animating_dialogs).
+- `prefers-reduced-motion: reduce` removes animations and transitions, including dialog backdrops and decorative effects. Check marks, status text, focus indicators, loading/disabled states, and the BUZZ color cue remain available. Hover movement is limited to fine-pointer devices with normal-motion preferences.
+
+Current before/after captures, natural-time ambient recordings, interaction recordings, and browser evidence are in `artifacts/master-motion/`. Earlier motion evidence remains in `artifacts/motion/`. No animation library, continuous JavaScript animation loop, animated blur filter, or blanket `will-change` promotion was added to the application.

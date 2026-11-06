@@ -1,0 +1,6797 @@
+{
+  "startedAt": "2026-11-06T04:18:49.071Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Ambient background uses slow CSS animation",
+      "passed": true,
+      "detail": [
+        {
+          "name": "ambient-lavender",
+          "kind": "CSSAnimation",
+          "target": "MAIN.app-shell",
+          "pseudo": "::before",
+          "messageId": null,
+          "currentTime": 1383.3529999879188,
+          "playState": "running",
+          "duration": 28000,
+          "iterations": "Infinity",
+          "progress": 0.049405464285282814,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "ambient-violet",
+          "kind": "CSSAnimation",
+          "target": "MAIN.app-shell",
+          "pseudo": "::after",
+          "messageId": null,
+          "currentTime": 1383.3529999879188,
+          "playState": "running",
+          "duration": 36000,
+          "iterations": "Infinity",
+          "progress": 0.03842647222188664,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Ambient animation advances on the browser timeline",
+      "passed": true,
+      "detail": {
+        "start": [
+          {
+            "name": "ambient-lavender",
+            "kind": "CSSAnimation",
+            "target": "MAIN.app-shell",
+            "pseudo": "::before",
+            "messageId": null,
+            "currentTime": 1383.3529999879188,
+            "playState": "running",
+            "duration": 28000,
+            "iterations": "Infinity",
+            "progress": 0.049405464285282814,
+            "keyframeProperties": [
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ]
+            ]
+          },
+          {
+            "name": "ambient-violet",
+            "kind": "CSSAnimation",
+            "target": "MAIN.app-shell",
+            "pseudo": "::after",
+            "messageId": null,
+            "currentTime": 1383.3529999879188,
+            "playState": "running",
+            "duration": 36000,
+            "iterations": "Infinity",
+            "progress": 0.03842647222188664,
+            "keyframeProperties": [
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ]
+            ]
+          }
+        ],
+        "end": [
+          {
+            "name": "ambient-lavender",
+            "kind": "CSSAnimation",
+            "target": "MAIN.app-shell",
+            "pseudo": "::before",
+            "messageId": null,
+            "currentTime": 1700.0069999879188,
+            "playState": "running",
+            "duration": 28000,
+            "iterations": "Infinity",
+            "progress": 0.06071453571385425,
+            "keyframeProperties": [
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ]
+            ]
+          },
+          {
+            "name": "ambient-violet",
+            "kind": "CSSAnimation",
+            "target": "MAIN.app-shell",
+            "pseudo": "::after",
+            "messageId": null,
+            "currentTime": 1700.0069999879188,
+            "playState": "running",
+            "duration": 36000,
+            "iterations": "Infinity",
+            "progress": 0.04722241666633108,
+            "keyframeProperties": [
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "label": "Ambient keyframes animate compositor properties only",
+      "passed": true
+    },
+    {
+      "label": "Empty-state decorative movement is present",
+      "passed": true,
+      "detail": [
+        {
+          "name": "ambient-lavender",
+          "kind": "CSSAnimation",
+          "target": "MAIN.app-shell",
+          "pseudo": "::before",
+          "messageId": null,
+          "currentTime": 1383.3529999879188,
+          "playState": "running",
+          "duration": 28000,
+          "iterations": "Infinity",
+          "progress": 0.049405464285282814,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "ambient-violet",
+          "kind": "CSSAnimation",
+          "target": "MAIN.app-shell",
+          "pseudo": "::after",
+          "messageId": null,
+          "currentTime": 1383.3529999879188,
+          "playState": "running",
+          "duration": 36000,
+          "iterations": "Infinity",
+          "progress": 0.03842647222188664,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "empty-light-lavender",
+          "kind": "CSSAnimation",
+          "target": "DIV.chat-empty-atmosphere",
+          "pseudo": "::before",
+          "messageId": null,
+          "currentTime": 1383.3529999879188,
+          "playState": "running",
+          "duration": 28000,
+          "iterations": "Infinity",
+          "progress": 0.049405464285282814,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "empty-light-violet",
+          "kind": "CSSAnimation",
+          "target": "DIV.chat-empty-atmosphere",
+          "pseudo": "::after",
+          "messageId": null,
+          "currentTime": 1383.3529999879188,
+          "playState": "running",
+          "duration": 36000,
+          "iterations": "Infinity",
+          "progress": 0.03842647222188664,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "brand-float",
+          "kind": "CSSAnimation",
+          "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 1383.3529999879188,
+          "playState": "running",
+          "duration": 12000,
+          "iterations": "Infinity",
+          "progress": 0.1152794166656599,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Chat reading surface stays stable",
+      "passed": true,
+      "detail": {
+        "transform": "none",
+        "animationName": "none",
+        "background": "rgb(32, 33, 43)"
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Fresh outgoing message enters exactly once",
+      "passed": true,
+      "detail": {
+        "outgoingId": "427c002c-f3c8-4ad9-9693-14f4ae13d1fe",
+        "events": [
+          {
+            "type": "animationstart",
+            "name": "message-arrive",
+            "time": 2332.5999999940395,
+            "messageId": "427c002c-f3c8-4ad9-9693-14f4ae13d1fe",
+            "target": "ARTICLE.message-row message-row-outgoing "
+          }
+        ]
+      }
+    },
+    {
+      "label": "Fresh incoming demo reply enters exactly once",
+      "passed": true,
+      "detail": {
+        "incomingId": "securebot-demo-reply-1",
+        "events": [
+          {
+            "type": "animationstart",
+            "name": "message-arrive",
+            "time": 2332.699999988079,
+            "messageId": "securebot-demo-reply-1",
+            "target": "ARTICLE.message-row  "
+          }
+        ]
+      }
+    },
+    {
+      "label": "Message entry is measured at 150–250 milliseconds",
+      "passed": true,
+      "detail": [
+        {
+          "name": "message-arrive",
+          "kind": "CSSAnimation",
+          "target": "ARTICLE.message-row message-row-outgoing ",
+          "pseudo": null,
+          "messageId": "427c002c-f3c8-4ad9-9693-14f4ae13d1fe",
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 200,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "transform",
+              "opacity"
+            ],
+            [
+              "transform",
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "message-arrive",
+          "kind": "CSSAnimation",
+          "target": "ARTICLE.message-row message-row-outgoing ",
+          "pseudo": null,
+          "messageId": "427c002c-f3c8-4ad9-9693-14f4ae13d1fe",
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 200,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "transform",
+              "opacity"
+            ],
+            [
+              "transform",
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "message-arrive",
+          "kind": "CSSAnimation",
+          "target": "ARTICLE.message-row message-row-outgoing ",
+          "pseudo": null,
+          "messageId": "427c002c-f3c8-4ad9-9693-14f4ae13d1fe",
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 200,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "transform",
+              "opacity"
+            ],
+            [
+              "transform",
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "message-arrive",
+          "kind": "CSSAnimation",
+          "target": "ARTICLE.message-row message-row-outgoing ",
+          "pseudo": null,
+          "messageId": "427c002c-f3c8-4ad9-9693-14f4ae13d1fe",
+          "currentTime": 99.94099999483109,
+          "playState": "running",
+          "duration": 200,
+          "iterations": "1",
+          "progress": 0.4997049999741554,
+          "keyframeProperties": [
+            [
+              "transform",
+              "opacity"
+            ],
+            [
+              "transform",
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "message-arrive",
+          "kind": "CSSAnimation",
+          "target": "ARTICLE.message-row message-row-outgoing ",
+          "pseudo": null,
+          "messageId": "427c002c-f3c8-4ad9-9693-14f4ae13d1fe",
+          "currentTime": 183.30699999483136,
+          "playState": "running",
+          "duration": 200,
+          "iterations": "1",
+          "progress": 0.9165349999741568,
+          "keyframeProperties": [
+            [
+              "transform",
+              "opacity"
+            ],
+            [
+              "transform",
+              "opacity"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Message animation has actual intermediate progress",
+      "passed": true
+    },
+    {
+      "label": "Successful submission has measured confirmation feedback",
+      "passed": true
+    },
+    {
+      "label": "Entry flags clear after the presentation window",
+      "passed": true
+    },
+    {
+      "label": "Control available: Ava Morgan, Direct",
+      "passed": true
+    },
+    {
+      "label": "Control available: SecureBot, Bot",
+      "passed": true
+    },
+    {
+      "label": "Conversation switching does not replay historical messages",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Profile rerender does not replay message history",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Controlled demo failure keeps a retryable encrypted message",
+      "passed": true
+    },
+    {
+      "label": "Failed send does not trigger success-only composer animation",
+      "passed": true
+    },
+    {
+      "label": "Button available: Retry",
+      "passed": true
+    },
+    {
+      "label": "Retry does not replay the existing bubble",
+      "passed": true
+    },
+    {
+      "label": "Retry preserves the message identity",
+      "passed": true
+    },
+    {
+      "label": "Control available: Ava Morgan, Direct",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "New messages retain auto-scroll at the bottom",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "New entry preserves a manually scrolled-up reading position",
+      "passed": true
+    },
+    {
+      "label": "Scrolled-up readers get a new-message affordance",
+      "passed": true
+    },
+    {
+      "label": "Jump to latest still reaches the bottom",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Control available: Close profile",
+      "passed": true
+    },
+    {
+      "label": "Profile entrance and exit use 200–280ms native transitions",
+      "passed": true,
+      "detail": [
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "transform",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": "::backdrop",
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 33.415000000514006,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.4630413592398562,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "transform",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 33.415000000514006,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.4630413592398562,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": "::backdrop",
+          "messageId": null,
+          "currentTime": 33.415000000514006,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.16382526210187787,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 116.74500000051412,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.9141322244298004,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "transform",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 116.74500000051412,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.9141322244298004,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": "::backdrop",
+          "messageId": null,
+          "currentTime": 116.74500000051412,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.7885776839156073,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 116.74500000051412,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.9141322244298004,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "transform",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 116.74500000051412,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.9141322244298004,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": "::backdrop",
+          "messageId": null,
+          "currentTime": 116.74500000051412,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.7885776839156073,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 183.40900000051442,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.9875279538659845,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "transform",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 183.40900000051442,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.9875279538659845,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": "::backdrop",
+          "messageId": null,
+          "currentTime": 183.40900000051442,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.9652042060153097,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "display",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "display"
+            ],
+            [
+              "display"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "overlay",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "overlay"
+            ],
+            [
+              "overlay"
+            ]
+          ]
+        },
+        {
+          "name": "transform",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": "::backdrop",
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "display",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 166.74699999756015,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.9384235691503103,
+          "keyframeProperties": [
+            [
+              "display"
+            ],
+            [
+              "display"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 166.74699999756015,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.9773508919864089,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        },
+        {
+          "name": "overlay",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 166.74699999756015,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.9384235691503103,
+          "keyframeProperties": [
+            [
+              "overlay"
+            ],
+            [
+              "overlay"
+            ]
+          ]
+        },
+        {
+          "name": "transform",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 166.74699999756015,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.9773508919864089,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "opacity",
+          "kind": "CSSTransition",
+          "target": "DIALOG.ui-dialog profile-dialog",
+          "pseudo": "::backdrop",
+          "messageId": null,
+          "currentTime": 166.74699999756015,
+          "playState": "running",
+          "duration": 240,
+          "iterations": "1",
+          "progress": 0.9384235691503103,
+          "keyframeProperties": [
+            [
+              "opacity"
+            ],
+            [
+              "opacity"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Dialog exit is visually measured after native close",
+      "passed": true,
+      "detail": [
+        {
+          "time": 3,
+          "open": true,
+          "opacity": "0",
+          "transform": "matrix(1, 0, 0, 1, 0, 6)",
+          "display": "block",
+          "pointerEvents": "auto"
+        },
+        {
+          "time": 41,
+          "open": true,
+          "opacity": "0",
+          "transform": "matrix(1, 0, 0, 1, 0, 6)",
+          "display": "block",
+          "pointerEvents": "auto"
+        },
+        {
+          "time": 97,
+          "open": true,
+          "opacity": "0.820441",
+          "transform": "matrix(1, 0, 0, 1, 0, 1.07735)",
+          "display": "block",
+          "pointerEvents": "auto"
+        },
+        {
+          "time": 164,
+          "open": true,
+          "opacity": "0.914132",
+          "transform": "matrix(1, 0, 0, 1, 0, 0.515207)",
+          "display": "block",
+          "pointerEvents": "auto"
+        },
+        {
+          "time": 187,
+          "open": true,
+          "opacity": "0.942329",
+          "transform": "matrix(1, 0, 0, 1, 0, 0.346027)",
+          "display": "block",
+          "pointerEvents": "auto"
+        },
+        {
+          "time": 251,
+          "open": true,
+          "opacity": "0.987528",
+          "transform": "matrix(1, 0, 0, 1, 0, 0.0748323)",
+          "display": "block",
+          "pointerEvents": "auto"
+        },
+        {
+          "time": 357,
+          "open": false,
+          "opacity": "1",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "display": "block",
+          "pointerEvents": "none"
+        },
+        {
+          "time": 508,
+          "open": false,
+          "opacity": "0.0226491",
+          "transform": "matrix(1, 0, 0, 1, 0, 5.86411)",
+          "display": "block",
+          "pointerEvents": "none"
+        },
+        {
+          "time": 650,
+          "open": false,
+          "opacity": "0",
+          "transform": "none",
+          "display": "none",
+          "pointerEvents": "none"
+        },
+        {
+          "time": 904,
+          "open": false,
+          "opacity": "0",
+          "transform": "none",
+          "display": "none",
+          "pointerEvents": "none"
+        }
+      ]
+    },
+    {
+      "label": "Dialog close returns focus without waiting for animation",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Control available: Close profile",
+      "passed": true
+    },
+    {
+      "label": "Rapid reopen survives a stale native close event",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Control available: Send BUZZ alert",
+      "passed": true
+    },
+    {
+      "label": "BUZZ shake has a single short animation cycle",
+      "passed": true,
+      "detail": [
+        {
+          "name": "buzz-shake",
+          "kind": "CSSAnimation",
+          "target": "SECTION.chat-window",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 500,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "buzz-shake",
+          "kind": "CSSAnimation",
+          "target": "SECTION.chat-window",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 500,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "buzz-shake",
+          "kind": "CSSAnimation",
+          "target": "SECTION.chat-window",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 500,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "buzz-shake",
+          "kind": "CSSAnimation",
+          "target": "SECTION.chat-window",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 500,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "buzz-shake",
+          "kind": "CSSAnimation",
+          "target": "SECTION.chat-window",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 500,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "buzz-shake",
+          "kind": "CSSAnimation",
+          "target": "SECTION.chat-window",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 500,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "buzz-shake",
+          "kind": "CSSAnimation",
+          "target": "SECTION.chat-window",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 0,
+          "playState": "running",
+          "duration": 500,
+          "iterations": "1",
+          "progress": 0,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "buzz-shake",
+          "kind": "CSSAnimation",
+          "target": "SECTION.chat-window",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 150.08099998278902,
+          "playState": "running",
+          "duration": 500,
+          "iterations": "1",
+          "progress": 0.300161999965578,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "buzz-shake",
+          "kind": "CSSAnimation",
+          "target": "SECTION.chat-window",
+          "pseudo": null,
+          "messageId": null,
+          "currentTime": 300.07499998278854,
+          "playState": "running",
+          "duration": 500,
+          "iterations": "1",
+          "progress": 0.600149999965577,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "BUZZ finishes without repeated screen movement",
+      "passed": true
+    },
+    {
+      "label": "Rapid BUZZ click does not replay the two-tone sound",
+      "passed": true,
+      "detail": [
+        {
+          "frequency": 440,
+          "time": 8111.799999982119
+        },
+        {
+          "frequency": 400,
+          "time": 8112.199999988079
+        }
+      ]
+    },
+    {
+      "label": "Motion and BUZZ never create horizontal page overflow",
+      "passed": true
+    },
+    {
+      "label": "Reduced motion removes ambient and empty-state animation",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Reduced-motion messages appear without entrance animation",
+      "passed": true
+    },
+    {
+      "label": "Returning to normal motion does not replay reduced-motion history",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Reduced-motion dialog opens with focus and no transitions",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Control available: Send BUZZ alert",
+      "passed": true
+    },
+    {
+      "label": "Reduced-motion BUZZ keeps static visible feedback",
+      "passed": true,
+      "detail": {
+        "baseBuzz": {
+          "background": "rgb(58, 41, 49)",
+          "boxShadow": "none"
+        },
+        "reducedBuzz": {
+          "active": "true",
+          "background": "rgb(74, 48, 58)",
+          "boxShadow": "none"
+        }
+      }
+    },
+    {
+      "label": "Reduced-motion BUZZ does not shake",
+      "passed": true
+    },
+    {
+      "label": "Reduced-motion BUZZ retains the two-tone audio path",
+      "passed": true
+    },
+    {
+      "label": "Reduced-motion pressed buttons retain feedback without translation",
+      "passed": true,
+      "detail": {
+        "active": true,
+        "transform": "none"
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "laptop normal motion preserves viewport fit",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "documentHeight": 800,
+        "input": {
+          "x": 429.390625,
+          "y": 662.671875,
+          "width": 437.359375,
+          "height": 44,
+          "top": 662.671875,
+          "right": 866.75,
+          "bottom": 706.671875,
+          "left": 429.390625
+        },
+        "buzz": {
+          "x": 339.578125,
+          "y": 662.671875,
+          "width": 81.8125,
+          "height": 44,
+          "top": 662.671875,
+          "right": 421.390625,
+          "bottom": 706.671875,
+          "left": 339.578125
+        },
+        "entries": 0
+      }
+    },
+    {
+      "label": "laptop normal entry flags settle",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "laptop reduced motion preserves viewport fit",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "documentHeight": 800,
+        "input": {
+          "x": 429.390625,
+          "y": 662.671875,
+          "width": 437.359375,
+          "height": 44,
+          "top": 662.671875,
+          "right": 866.75,
+          "bottom": 706.671875,
+          "left": 429.390625
+        },
+        "buzz": {
+          "x": 339.578125,
+          "y": 662.671875,
+          "width": 81.8125,
+          "height": 44,
+          "top": 662.671875,
+          "right": 421.390625,
+          "bottom": 706.671875,
+          "left": 339.578125
+        },
+        "entries": 0
+      }
+    },
+    {
+      "label": "laptop reduced entry flags settle",
+      "passed": true
+    },
+    {
+      "label": "laptop reduced motion removes decorative loops",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "mobile normal motion preserves viewport fit",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "documentHeight": 844,
+        "input": {
+          "x": 64.984375,
+          "y": 716.4375,
+          "width": 260.03125,
+          "height": 44,
+          "top": 716.4375,
+          "right": 325.015625,
+          "bottom": 760.4375,
+          "left": 64.984375
+        },
+        "buzz": {
+          "x": 17.796875,
+          "y": 716.4375,
+          "width": 44,
+          "height": 44,
+          "top": 716.4375,
+          "right": 61.796875,
+          "bottom": 760.4375,
+          "left": 17.796875
+        },
+        "entries": 0
+      }
+    },
+    {
+      "label": "mobile normal entry flags settle",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "mobile reduced motion preserves viewport fit",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "documentHeight": 844,
+        "input": {
+          "x": 64.984375,
+          "y": 716.4375,
+          "width": 260.03125,
+          "height": 44,
+          "top": 716.4375,
+          "right": 325.015625,
+          "bottom": 760.4375,
+          "left": 64.984375
+        },
+        "buzz": {
+          "x": 17.796875,
+          "y": 716.4375,
+          "width": 44,
+          "height": 44,
+          "top": 716.4375,
+          "right": 61.796875,
+          "bottom": 760.4375,
+          "left": 17.796875
+        },
+        "entries": 0
+      }
+    },
+    {
+      "label": "mobile reduced entry flags settle",
+      "passed": true
+    },
+    {
+      "label": "mobile reduced motion removes decorative loops",
+      "passed": true
+    },
+    {
+      "label": "Motion verification has no uncaught runtime exceptions",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\charcoal-theme\\dark\\after\\desktop-motion.png",
+    "artifacts\\charcoal-theme\\dark\\after\\desktop-reduced-button-press.png",
+    "artifacts\\charcoal-theme\\dark\\after\\desktop-reduced-motion.png",
+    "artifacts\\charcoal-theme\\dark\\after\\laptop-normal-motion.png",
+    "artifacts\\charcoal-theme\\dark\\after\\laptop-reduced-motion.png",
+    "artifacts\\charcoal-theme\\dark\\after\\mobile-normal-motion.png",
+    "artifacts\\charcoal-theme\\dark\\after\\mobile-reduced-motion.png"
+  ],
+  "runtimeErrors": [],
+  "clips": [
+    {
+      "name": "message-and-submit",
+      "frames": [
+        {
+          "file": "clips/message-and-submit/frame-000.jpg",
+          "time": 82,
+          "browserTimestamp": 1793938731.362245
+        },
+        {
+          "file": "clips/message-and-submit/frame-001.jpg",
+          "time": 114,
+          "browserTimestamp": 1793938731.414492
+        },
+        {
+          "file": "clips/message-and-submit/frame-002.jpg",
+          "time": 158,
+          "browserTimestamp": 1793938731.447824
+        },
+        {
+          "file": "clips/message-and-submit/frame-003.jpg",
+          "time": 190,
+          "browserTimestamp": 1793938731.497822
+        },
+        {
+          "file": "clips/message-and-submit/frame-004.jpg",
+          "time": 240,
+          "browserTimestamp": 1793938731.531154
+        },
+        {
+          "file": "clips/message-and-submit/frame-005.jpg",
+          "time": 290,
+          "browserTimestamp": 1793938731.564486
+        },
+        {
+          "file": "clips/message-and-submit/frame-006.jpg",
+          "time": 300,
+          "browserTimestamp": 1793938731.597818
+        },
+        {
+          "file": "clips/message-and-submit/frame-007.jpg",
+          "time": 338,
+          "browserTimestamp": 1793938731.647816
+        },
+        {
+          "file": "clips/message-and-submit/frame-008.jpg",
+          "time": 375,
+          "browserTimestamp": 1793938731.681148
+        },
+        {
+          "file": "clips/message-and-submit/frame-009.jpg",
+          "time": 401,
+          "browserTimestamp": 1793938731.71448
+        },
+        {
+          "file": "clips/message-and-submit/frame-010.jpg",
+          "time": 432,
+          "browserTimestamp": 1793938731.747811
+        },
+        {
+          "file": "clips/message-and-submit/frame-011.jpg",
+          "time": 464,
+          "browserTimestamp": 1793938731.781144
+        },
+        {
+          "file": "clips/message-and-submit/frame-012.jpg",
+          "time": 496,
+          "browserTimestamp": 1793938731.814476
+        },
+        {
+          "file": "clips/message-and-submit/frame-013.jpg",
+          "time": 526,
+          "browserTimestamp": 1793938731.847808
+        },
+        {
+          "file": "clips/message-and-submit/frame-014.jpg",
+          "time": 565,
+          "browserTimestamp": 1793938731.864474
+        },
+        {
+          "file": "clips/message-and-submit/frame-015.jpg",
+          "time": 600,
+          "browserTimestamp": 1793938731.914472
+        },
+        {
+          "file": "clips/message-and-submit/frame-016.jpg",
+          "time": 639,
+          "browserTimestamp": 1793938731.947804
+        },
+        {
+          "file": "clips/message-and-submit/frame-017.jpg",
+          "time": 682,
+          "browserTimestamp": 1793938731.981136
+        },
+        {
+          "file": "clips/message-and-submit/frame-018.jpg",
+          "time": 711,
+          "browserTimestamp": 1793938732.014468
+        },
+        {
+          "file": "clips/message-and-submit/frame-019.jpg",
+          "time": 756,
+          "browserTimestamp": 1793938732.0478
+        },
+        {
+          "file": "clips/message-and-submit/frame-020.jpg",
+          "time": 789,
+          "browserTimestamp": 1793938732.097798
+        },
+        {
+          "file": "clips/message-and-submit/frame-021.jpg",
+          "time": 824,
+          "browserTimestamp": 1793938732.13113
+        },
+        {
+          "file": "clips/message-and-submit/frame-022.jpg",
+          "time": 864,
+          "browserTimestamp": 1793938732.164462
+        },
+        {
+          "file": "clips/message-and-submit/frame-023.jpg",
+          "time": 899,
+          "browserTimestamp": 1793938732.197794
+        }
+      ],
+      "samples": [
+        {
+          "time": 3,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1733.338999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.06190496428528282,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1733.338999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.04814830555521997,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1733.338999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.06190496428528282,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1733.338999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.04814830555521997,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 1733.338999987919,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.14444491666565992,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2226.899999976158,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 37,
+          "animations": [
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1766.670999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.0630953928567114,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1766.670999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.04907419444410886,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "message-arrive",
+              "kind": "CSSAnimation",
+              "target": "ARTICLE.message-row message-row-outgoing ",
+              "pseudo": null,
+              "messageId": "427c002c-f3c8-4ad9-9693-14f4ae13d1fe",
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "message-arrive",
+              "kind": "CSSAnimation",
+              "target": "ARTICLE.message-row  ",
+              "pseudo": null,
+              "messageId": "securebot-demo-reply-1",
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "submit-confirm",
+              "kind": "CSSAnimation",
+              "target": "svg.[object SVGAnimatedString]",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2263.199999988079,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 79,
+          "animations": [
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1800.0029999879189,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.06428582142813996,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1800.0029999879189,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.05000008333299774,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "message-arrive",
+              "kind": "CSSAnimation",
+              "target": "ARTICLE.message-row message-row-outgoing ",
+              "pseudo": null,
+              "messageId": "427c002c-f3c8-4ad9-9693-14f4ae13d1fe",
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "message-arrive",
+              "kind": "CSSAnimation",
+              "target": "ARTICLE.message-row  ",
+              "pseudo": null,
+              "messageId": "securebot-demo-reply-1",
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "submit-confirm",
+              "kind": "CSSAnimation",
+              "target": "svg.[object SVGAnimatedString]",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2280.0999999940395,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 121,
+          "animations": [
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1833.334999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.06547624999956854,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1833.334999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.050925972221886634,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "message-arrive",
+              "kind": "CSSAnimation",
+              "target": "ARTICLE.message-row message-row-outgoing ",
+              "pseudo": null,
+              "messageId": "427c002c-f3c8-4ad9-9693-14f4ae13d1fe",
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "message-arrive",
+              "kind": "CSSAnimation",
+              "target": "ARTICLE.message-row  ",
+              "pseudo": null,
+              "messageId": "securebot-demo-reply-1",
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "submit-confirm",
+              "kind": "CSSAnimation",
+              "target": "svg.[object SVGAnimatedString]",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2321.2999999821186,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 187,
+          "animations": [
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 99.94099999483109,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8021099644364724,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 99.94099999483109,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8021099644364724,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 99.94099999483109,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8021099644364724,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 99.94099999483109,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8021099644364724,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1899.8689999879189,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.06785246428528281,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1899.8689999879189,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.0527741388885533,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "message-arrive",
+              "kind": "CSSAnimation",
+              "target": "ARTICLE.message-row message-row-outgoing ",
+              "pseudo": null,
+              "messageId": "427c002c-f3c8-4ad9-9693-14f4ae13d1fe",
+              "currentTime": 99.94099999483109,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.4997049999741554,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "message-arrive",
+              "kind": "CSSAnimation",
+              "target": "ARTICLE.message-row  ",
+              "pseudo": null,
+              "messageId": "securebot-demo-reply-1",
+              "currentTime": 99.94099999483109,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.4997049999741554,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "submit-confirm",
+              "kind": "CSSAnimation",
+              "target": "svg.[object SVGAnimatedString]",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 99.94099999483109,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.4997049999741554,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2388,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 253,
+          "animations": [
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 183.30699999483136,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9960835710193927,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 183.30699999483136,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9960835710193927,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 183.30699999483136,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9960835710193927,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 183.30699999483136,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9960835710193927,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1983.234999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.07082982142813997,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1983.234999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.05508986111077553,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "message-arrive",
+              "kind": "CSSAnimation",
+              "target": "ARTICLE.message-row message-row-outgoing ",
+              "pseudo": null,
+              "messageId": "427c002c-f3c8-4ad9-9693-14f4ae13d1fe",
+              "currentTime": 183.30699999483136,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9165349999741568,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "message-arrive",
+              "kind": "CSSAnimation",
+              "target": "ARTICLE.message-row  ",
+              "pseudo": null,
+              "messageId": "securebot-demo-reply-1",
+              "currentTime": 183.30699999483136,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9165349999741568,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "submit-confirm",
+              "kind": "CSSAnimation",
+              "target": "svg.[object SVGAnimatedString]",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 183.30699999483136,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9165349999741568,
+              "keyframeProperties": [
+                [
+                  "transform",
+                  "opacity"
+                ],
+                [
+                  "transform",
+                  "opacity"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2490.5,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 355,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 2066.602999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.07380724999956853,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 2066.602999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.057405638888553295,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2557,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 505,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 2216.5969999879185,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.0791641785709971,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 2216.5969999879185,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.0615721388885533,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2705.399999976158,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 655,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 2383.164999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.08511303571385424,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 2383.164999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.06619902777744219,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2861.699999988079,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 900,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 2616.560999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.09344860714242567,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 2616.560999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.07268224999966441,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 3099,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        }
+      ]
+    },
+    {
+      "name": "dialog-enter-exit",
+      "frames": [
+        {
+          "file": "clips/dialog-enter-exit/frame-000.jpg",
+          "time": 95,
+          "browserTimestamp": 1793938735.614324
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-001.jpg",
+          "time": 125,
+          "browserTimestamp": 1793938735.63099
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-002.jpg",
+          "time": 162,
+          "browserTimestamp": 1793938735.664322
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-003.jpg",
+          "time": 180,
+          "browserTimestamp": 1793938735.697654
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-004.jpg",
+          "time": 216,
+          "browserTimestamp": 1793938735.730985
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-005.jpg",
+          "time": 250,
+          "browserTimestamp": 1793938735.780984
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-006.jpg",
+          "time": 294,
+          "browserTimestamp": 1793938735.830982
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-007.jpg",
+          "time": 330,
+          "browserTimestamp": 1793938735.864314
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-008.jpg",
+          "time": 370,
+          "browserTimestamp": 1793938735.914312
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-009.jpg",
+          "time": 414,
+          "browserTimestamp": 1793938735.947644
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-010.jpg",
+          "time": 467,
+          "browserTimestamp": 1793938735.997642
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-011.jpg",
+          "time": 522,
+          "browserTimestamp": 1793938736.04764
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-012.jpg",
+          "time": 568,
+          "browserTimestamp": 1793938736.097638
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-013.jpg",
+          "time": 617,
+          "browserTimestamp": 1793938736.147636
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-014.jpg",
+          "time": 649,
+          "browserTimestamp": 1793938736.197634
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-015.jpg",
+          "time": 683,
+          "browserTimestamp": 1793938736.230966
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-016.jpg",
+          "time": 706,
+          "browserTimestamp": 1793938736.264298
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-017.jpg",
+          "time": 756,
+          "browserTimestamp": 1793938736.280964
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-018.jpg",
+          "time": 780,
+          "browserTimestamp": 1793938736.314296
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-019.jpg",
+          "time": 814,
+          "browserTimestamp": 1793938736.347628
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-020.jpg",
+          "time": 846,
+          "browserTimestamp": 1793938736.38096
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-021.jpg",
+          "time": 876,
+          "browserTimestamp": 1793938736.414292
+        },
+        {
+          "file": "clips/dialog-enter-exit/frame-022.jpg",
+          "time": 908,
+          "browserTimestamp": 1793938736.447624
+        }
+      ],
+      "samples": [
+        {
+          "time": 3,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 5949.8449999879185,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.21249446428528282,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 5949.8449999879185,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.16527347222188662,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 6457,
+            "dialog": {
+              "open": true,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, 6)",
+              "display": "block",
+              "pointerEvents": "auto"
+            },
+            "focused": "Close profile",
+            "buzz": "false",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 41,
+          "animations": [
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "transform",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": "::backdrop",
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 5999.842999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.21428010714242568,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 5999.842999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.16666230555522,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 6514.0999999940395,
+            "dialog": {
+              "open": true,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, 6)",
+              "display": "block",
+              "pointerEvents": "auto"
+            },
+            "focused": "Close profile",
+            "buzz": "false",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 97,
+          "animations": [
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 33.415000000514006,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.4630413592398562,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "transform",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 33.415000000514006,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.4630413592398562,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": "::backdrop",
+              "messageId": null,
+              "currentTime": 33.415000000514006,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.16382526210187787,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 6049.840999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.21606574999956854,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 6049.840999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.1680511388885533,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 6584.0999999940395,
+            "dialog": {
+              "open": true,
+              "opacity": "0.820441",
+              "transform": "matrix(1, 0, 0, 1, 0, 1.07735)",
+              "display": "block",
+              "pointerEvents": "auto"
+            },
+            "focused": "Close profile",
+            "buzz": "false",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 164,
+          "animations": [
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.74500000051412,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.9141322244298004,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "transform",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.74500000051412,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.9141322244298004,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": "::backdrop",
+              "messageId": null,
+              "currentTime": 116.74500000051412,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.7885776839156073,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 6133.170999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.21904182142813997,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 6133.170999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.17036586111077553,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 6618.0999999940395,
+            "dialog": {
+              "open": true,
+              "opacity": "0.914132",
+              "transform": "matrix(1, 0, 0, 1, 0, 0.515207)",
+              "display": "block",
+              "pointerEvents": "auto"
+            },
+            "focused": "Close profile",
+            "buzz": "false",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 187,
+          "animations": [
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.74500000051412,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.9141322244298004,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "transform",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.74500000051412,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.9141322244298004,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": "::backdrop",
+              "messageId": null,
+              "currentTime": 116.74500000051412,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.7885776839156073,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 6133.170999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.21904182142813997,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 6133.170999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.17036586111077553,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 6631.299999982119,
+            "dialog": {
+              "open": true,
+              "opacity": "0.942329",
+              "transform": "matrix(1, 0, 0, 1, 0, 0.346027)",
+              "display": "block",
+              "pointerEvents": "auto"
+            },
+            "focused": "Close profile",
+            "buzz": "false",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 251,
+          "animations": [
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 183.40900000051442,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.9875279538659845,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "transform",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 183.40900000051442,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.9875279538659845,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": "::backdrop",
+              "messageId": null,
+              "currentTime": 183.40900000051442,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.9652042060153097,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 6199.834999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.22142267857099712,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 6199.834999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.17221763888855332,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 6687.5999999940395,
+            "dialog": {
+              "open": true,
+              "opacity": "0.987528",
+              "transform": "matrix(1, 0, 0, 1, 0, 0.0748323)",
+              "display": "block",
+              "pointerEvents": "auto"
+            },
+            "focused": "Close profile",
+            "buzz": "false",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 357,
+          "animations": [
+            {
+              "name": "display",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "display"
+                ],
+                [
+                  "display"
+                ]
+              ]
+            },
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "overlay",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "overlay"
+                ],
+                [
+                  "overlay"
+                ]
+              ]
+            },
+            {
+              "name": "transform",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": "::backdrop",
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 6316.5009999879185,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.22558932142813995,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 6316.5009999879185,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.1754583611107755,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 6794.5999999940395,
+            "dialog": {
+              "open": false,
+              "opacity": "1",
+              "transform": "matrix(1, 0, 0, 1, 0, 0)",
+              "display": "block",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "false",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 508,
+          "animations": [
+            {
+              "name": "display",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 166.74699999756015,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.9384235691503103,
+              "keyframeProperties": [
+                [
+                  "display"
+                ],
+                [
+                  "display"
+                ]
+              ]
+            },
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 166.74699999756015,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.9773508919864089,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "overlay",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 166.74699999756015,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.9384235691503103,
+              "keyframeProperties": [
+                [
+                  "overlay"
+                ],
+                [
+                  "overlay"
+                ]
+              ]
+            },
+            {
+              "name": "transform",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 166.74699999756015,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.9773508919864089,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "opacity",
+              "kind": "CSSTransition",
+              "target": "DIALOG.ui-dialog profile-dialog",
+              "pseudo": "::backdrop",
+              "messageId": null,
+              "currentTime": 166.74699999756015,
+              "playState": "running",
+              "duration": 240,
+              "iterations": "1",
+              "progress": 0.9384235691503103,
+              "keyframeProperties": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 6466.494999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.23094624999956853,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 6466.494999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.17962486111077552,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 6957.5,
+            "dialog": {
+              "open": false,
+              "opacity": "0.0226491",
+              "transform": "matrix(1, 0, 0, 1, 0, 5.86411)",
+              "display": "block",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "false",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 650,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 6599.822999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.23570796428528282,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 6599.822999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.18332841666633107,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 7086.399999976158,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "false",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 904,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 6849.812999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.24463617857099712,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 6849.812999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.19027258333299776,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 7344.699999988079,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "false",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        }
+      ]
+    },
+    {
+      "name": "buzz-normal",
+      "frames": [
+        {
+          "file": "clips/buzz-normal/frame-000.jpg",
+          "time": 59,
+          "browserTimestamp": 1793938737.030934
+        },
+        {
+          "file": "clips/buzz-normal/frame-001.jpg",
+          "time": 105,
+          "browserTimestamp": 1793938737.064265
+        },
+        {
+          "file": "clips/buzz-normal/frame-002.jpg",
+          "time": 147,
+          "browserTimestamp": 1793938737.097597
+        },
+        {
+          "file": "clips/buzz-normal/frame-003.jpg",
+          "time": 196,
+          "browserTimestamp": 1793938737.147595
+        },
+        {
+          "file": "clips/buzz-normal/frame-004.jpg",
+          "time": 249,
+          "browserTimestamp": 1793938737.180928
+        },
+        {
+          "file": "clips/buzz-normal/frame-005.jpg",
+          "time": 303,
+          "browserTimestamp": 1793938737.230926
+        },
+        {
+          "file": "clips/buzz-normal/frame-006.jpg",
+          "time": 341,
+          "browserTimestamp": 1793938737.247592
+        },
+        {
+          "file": "clips/buzz-normal/frame-007.jpg",
+          "time": 377,
+          "browserTimestamp": 1793938737.280924
+        },
+        {
+          "file": "clips/buzz-normal/frame-008.jpg",
+          "time": 404,
+          "browserTimestamp": 1793938737.330922
+        },
+        {
+          "file": "clips/buzz-normal/frame-009.jpg",
+          "time": 436,
+          "browserTimestamp": 1793938737.364254
+        },
+        {
+          "file": "clips/buzz-normal/frame-010.jpg",
+          "time": 466,
+          "browserTimestamp": 1793938737.397586
+        },
+        {
+          "file": "clips/buzz-normal/frame-011.jpg",
+          "time": 503,
+          "browserTimestamp": 1793938737.414252
+        },
+        {
+          "file": "clips/buzz-normal/frame-012.jpg",
+          "time": 532,
+          "browserTimestamp": 1793938737.464249
+        },
+        {
+          "file": "clips/buzz-normal/frame-013.jpg",
+          "time": 562,
+          "browserTimestamp": 1793938737.497582
+        },
+        {
+          "file": "clips/buzz-normal/frame-014.jpg",
+          "time": 588,
+          "browserTimestamp": 1793938737.530914
+        },
+        {
+          "file": "clips/buzz-normal/frame-015.jpg",
+          "time": 620,
+          "browserTimestamp": 1793938737.54758
+        },
+        {
+          "file": "clips/buzz-normal/frame-016.jpg",
+          "time": 652,
+          "browserTimestamp": 1793938737.580912
+        },
+        {
+          "file": "clips/buzz-normal/frame-017.jpg",
+          "time": 679,
+          "browserTimestamp": 1793938737.614244
+        },
+        {
+          "file": "clips/buzz-normal/frame-018.jpg",
+          "time": 707,
+          "browserTimestamp": 1793938737.647576
+        },
+        {
+          "file": "clips/buzz-normal/frame-019.jpg",
+          "time": 737,
+          "browserTimestamp": 1793938737.664242
+        },
+        {
+          "file": "clips/buzz-normal/frame-020.jpg",
+          "time": 768,
+          "browserTimestamp": 1793938737.697573
+        },
+        {
+          "file": "clips/buzz-normal/frame-021.jpg",
+          "time": 802,
+          "browserTimestamp": 1793938737.730906
+        },
+        {
+          "file": "clips/buzz-normal/frame-022.jpg",
+          "time": 836,
+          "browserTimestamp": 1793938737.764238
+        },
+        {
+          "file": "clips/buzz-normal/frame-023.jpg",
+          "time": 862,
+          "browserTimestamp": 1793938737.797569
+        },
+        {
+          "file": "clips/buzz-normal/frame-024.jpg",
+          "time": 893,
+          "browserTimestamp": 1793938737.830902
+        },
+        {
+          "file": "clips/buzz-normal/frame-025.jpg",
+          "time": 927,
+          "browserTimestamp": 1793938737.864234
+        }
+      ],
+      "samples": [
+        {
+          "time": 2,
+          "animations": [
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 7649.780999987918,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.2732064642852828,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 7649.780999987918,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.21249391666633105,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "buzz-shake",
+              "kind": "CSSAnimation",
+              "target": "SECTION.chat-window",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 500,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ui-spin",
+              "kind": "CSSAnimation",
+              "target": "SPAN.ui-button-spinner",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 650,
+              "iterations": "Infinity",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 8137.799999982119,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "true",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 289,
+          "animations": [
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 7666.446999987918,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.2738016785709971,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 7666.446999987918,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.21295686111077552,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "buzz-shake",
+              "kind": "CSSAnimation",
+              "target": "SECTION.chat-window",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 500,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ui-spin",
+              "kind": "CSSAnimation",
+              "target": "SPAN.ui-button-spinner",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 650,
+              "iterations": "Infinity",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 8155.5,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "true",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 305,
+          "animations": [
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 7683.1129999879195,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.2743968928567114,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 7683.1129999879195,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.21341980555522,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "buzz-shake",
+              "kind": "CSSAnimation",
+              "target": "SECTION.chat-window",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 500,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ui-spin",
+              "kind": "CSSAnimation",
+              "target": "SPAN.ui-button-spinner",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 650,
+              "iterations": "Infinity",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 8166.0999999940395,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "true",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 317,
+          "animations": [
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 7683.1129999879195,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.2743968928567114,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 7683.1129999879195,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.21341980555522,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "buzz-shake",
+              "kind": "CSSAnimation",
+              "target": "SECTION.chat-window",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 500,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ui-spin",
+              "kind": "CSSAnimation",
+              "target": "SPAN.ui-button-spinner",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 650,
+              "iterations": "Infinity",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 8173.0999999940395,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "true",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 329,
+          "animations": [
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 7699.778999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.27499210714242567,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 7699.778999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.2138827499996644,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "buzz-shake",
+              "kind": "CSSAnimation",
+              "target": "SECTION.chat-window",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 500,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ui-spin",
+              "kind": "CSSAnimation",
+              "target": "SPAN.ui-button-spinner",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 650,
+              "iterations": "Infinity",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 8201.5,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "true",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 352,
+          "animations": [
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 7716.444999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.27558732142813996,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 7716.444999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.21434569444410886,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "buzz-shake",
+              "kind": "CSSAnimation",
+              "target": "SECTION.chat-window",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 500,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ui-spin",
+              "kind": "CSSAnimation",
+              "target": "SPAN.ui-button-spinner",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 650,
+              "iterations": "Infinity",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 8212.199999988079,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "true",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 363,
+          "animations": [
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 7733.110999987918,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.2761825357138542,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 7733.110999987918,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.21480863888855328,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "buzz-shake",
+              "kind": "CSSAnimation",
+              "target": "SECTION.chat-window",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 500,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ui-spin",
+              "kind": "CSSAnimation",
+              "target": "SPAN.ui-button-spinner",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 650,
+              "iterations": "Infinity",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 8232.5,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "true",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 500,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 7866.438999987919,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.2809442499995685,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 7866.438999987919,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.21851219444410885,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "buzz-shake",
+              "kind": "CSSAnimation",
+              "target": "SECTION.chat-window",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 150.08099998278902,
+              "playState": "running",
+              "duration": 500,
+              "iterations": "1",
+              "progress": 0.300161999965578,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ui-spin",
+              "kind": "CSSAnimation",
+              "target": "SPAN.ui-button-spinner",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 150.08099998278902,
+              "playState": "running",
+              "duration": 650,
+              "iterations": "Infinity",
+              "progress": 0.23089384612736769,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 8355.59999999404,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "true",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 649,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 8016.432999987918,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.2863011785709971,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 8016.432999987918,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.22267869444410884,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "buzz-shake",
+              "kind": "CSSAnimation",
+              "target": "SECTION.chat-window",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 300.07499998278854,
+              "playState": "running",
+              "duration": 500,
+              "iterations": "1",
+              "progress": 0.600149999965577,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ui-spin",
+              "kind": "CSSAnimation",
+              "target": "SPAN.ui-button-spinner",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 300.07499998278854,
+              "playState": "running",
+              "duration": 650,
+              "iterations": "Infinity",
+              "progress": 0.46165384612736693,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 8507,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "true",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        },
+        {
+          "time": 907,
+          "animations": [
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 100.08299998134795,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9836190432020948,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 100.08299998134795,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9836190432020948,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 100.08299998134795,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9836190432020948,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 100.08299998134795,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9836190432020948,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 100.08299998134795,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9836190432020948,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 8283.08899998792,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.2958246071424257,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 8283.08899998792,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.23008580555521999,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 8764,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "Open profile for Motion Explorer; Available local preference",
+            "buzz": "false",
+            "historyTop": 973,
+            "pageWidth": 1440,
+            "viewportWidth": 1440
+          }
+        }
+      ]
+    }
+  ],
+  "finishedAt": "2026-11-06T04:19:09.523Z"
+}

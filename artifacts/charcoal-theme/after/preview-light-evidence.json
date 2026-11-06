@@ -1,0 +1,77 @@
+{
+  "startedAt": "2026-11-06T04:22:22.370Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Preview has no uncaught runtime errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\charcoal-theme\\after\\desktop-light-profile.png",
+    "artifacts\\charcoal-theme\\after\\desktop-light-appearance.png",
+    "artifacts\\charcoal-theme\\after\\desktop-light-profile-edit.png",
+    "artifacts\\charcoal-theme\\after\\desktop-light-empty.png",
+    "artifacts\\charcoal-theme\\after\\desktop-light-conversation.png",
+    "artifacts\\charcoal-theme\\after\\laptop-light-profile.png",
+    "artifacts\\charcoal-theme\\after\\laptop-light-appearance.png",
+    "artifacts\\charcoal-theme\\after\\laptop-light-profile-edit.png",
+    "artifacts\\charcoal-theme\\after\\laptop-light-empty.png",
+    "artifacts\\charcoal-theme\\after\\laptop-light-conversation.png",
+    "artifacts\\charcoal-theme\\after\\mobile-light-profile.png",
+    "artifacts\\charcoal-theme\\after\\mobile-light-appearance.png",
+    "artifacts\\charcoal-theme\\after\\mobile-light-profile-edit.png",
+    "artifacts\\charcoal-theme\\after\\mobile-light-empty.png",
+    "artifacts\\charcoal-theme\\after\\mobile-light-conversation.png"
+  ],
+  "runtimeErrors": []
+}

@@ -1,0 +1,715 @@
+{
+  "mode": "reduced",
+  "css": "\n:root { --motion-standard: 200ms; --ease-out: cubic-bezier(.2,.7,.2,1); }\nbody { font: 16px system-ui; background: #f4f1f7; margin: 40px; }\ndetails { width: 360px; border: 1px solid #c9b0dc; background: white; }\nsummary { padding: 12px; cursor: pointer; }\n.panel { background: #f1eafa; padding: 16px; }\n.panel p { margin: 0 0 12px; }\n/* CSS-only native disclosure entry/exit. No animated height or React lifecycle. */\n@media (prefers-reduced-motion: no-preference) {\n  /* Retaining native contents for a visual exit also retains accessibility in\n     Chromium unless closed descendants become inert. Gate all three features. */\n  @supports selector(details::details-content) and (transition-behavior: allow-discrete) and (interactivity: inert) {\n    .conversation-security-details::details-content,\n    .debug-console::details-content {\n      opacity: 0;\n      transform: translateY(-4px);\n      transition:\n        opacity var(--motion-standard, 200ms) var(--ease-out),\n        transform var(--motion-standard, 200ms) var(--ease-out),\n        content-visibility var(--motion-standard, 200ms) allow-discrete;\n    }\n\n    .conversation-security-details[open]::details-content,\n    .debug-console[open]::details-content {\n      opacity: 1;\n      transform: translateY(0);\n    }\n\n    .conversation-security-details:not([open]) > .conversation-security-panel,\n    .debug-console:not([open]) > .debug-log {\n      interactivity: inert;\n      pointer-events: none;\n    }\n\n    /* Replace the previous entrance-only keyframes; avoid two simultaneous fades. */\n    .conversation-security-details[open] .conversation-security-panel,\n    .debug-console[open] .debug-log {\n      animation: none;\n    }\n  }\n}\n",
+  "checks": [
+    {
+      "label": "Native keyboard activation opens the disclosure",
+      "passed": true
+    },
+    {
+      "label": "Native close state is immediate",
+      "passed": true
+    },
+    {
+      "label": "Closed summary accessibility state is immediately collapsed",
+      "passed": true
+    },
+    {
+      "label": "Closed contents immediately leave the accessibility tree",
+      "passed": true
+    },
+    {
+      "label": "Closed contents cannot receive programmatic focus",
+      "passed": true
+    },
+    {
+      "label": "Tab skips closed contents",
+      "passed": true
+    },
+    {
+      "label": "Panel has no pointer interaction during visual exit",
+      "passed": true
+    },
+    {
+      "label": "Final native content visibility is hidden",
+      "passed": true
+    },
+    {
+      "label": "Only full and collapsed heights occur; no per-frame size tween",
+      "passed": true
+    },
+    {
+      "label": "Reduced motion or unsupported feature gate closes instantly",
+      "passed": true
+    },
+    {
+      "label": "Reduced motion or fallback has no entrance/exit opacity tween",
+      "passed": true
+    }
+  ],
+  "states": [
+    {
+      "label": "initial-closed",
+      "time": 91.89999997615814,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "SUMMARY",
+      "animations": []
+    },
+    {
+      "label": "opening",
+      "time": 101.89999997615814,
+      "open": true,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "visible",
+      "pointerEvents": "auto",
+      "detailsHeight": 156,
+      "belowTop": 198,
+      "focus": "SUMMARY",
+      "animations": []
+    },
+    {
+      "label": "opening-mid",
+      "time": 180,
+      "open": true,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "visible",
+      "pointerEvents": "auto",
+      "detailsHeight": 156,
+      "belowTop": 198,
+      "focus": "SUMMARY",
+      "animations": []
+    },
+    {
+      "label": "open",
+      "time": 376.7999999821186,
+      "open": true,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "visible",
+      "pointerEvents": "auto",
+      "detailsHeight": 156,
+      "belowTop": 198,
+      "focus": "SUMMARY",
+      "animations": []
+    },
+    {
+      "label": "close-immediate",
+      "time": 381.89999997615814,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "SUMMARY",
+      "animations": []
+    },
+    {
+      "label": "closed-after-transition",
+      "time": 774.0999999940395,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    }
+  ],
+  "ax": [
+    {
+      "label": "initial-closed",
+      "rows": [
+        {
+          "role": "button",
+          "name": "After disclosure",
+          "ignored": false,
+          "properties": [
+            {
+              "name": "invalid",
+              "value": {
+                "type": "token",
+                "value": "false"
+              }
+            },
+            {
+              "name": "focusable",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            }
+          ]
+        },
+        {
+          "role": "DisclosureTriangle",
+          "name": "Security details",
+          "ignored": false,
+          "properties": [
+            {
+              "name": "focusable",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            },
+            {
+              "name": "expanded",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": false
+              }
+            }
+          ]
+        },
+        {
+          "role": "StaticText",
+          "name": "After disclosure",
+          "ignored": false,
+          "properties": []
+        },
+        {
+          "role": "StaticText",
+          "name": "Security details",
+          "ignored": false,
+          "properties": []
+        }
+      ]
+    },
+    {
+      "label": "open",
+      "rows": [
+        {
+          "role": "button",
+          "name": "After disclosure",
+          "ignored": false,
+          "properties": [
+            {
+              "name": "invalid",
+              "value": {
+                "type": "token",
+                "value": "false"
+              }
+            },
+            {
+              "name": "focusable",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            }
+          ]
+        },
+        {
+          "role": "DisclosureTriangle",
+          "name": "Security details",
+          "ignored": false,
+          "properties": [
+            {
+              "name": "focusable",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            },
+            {
+              "name": "expanded",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            }
+          ]
+        },
+        {
+          "role": "button",
+          "name": "Inside action",
+          "ignored": false,
+          "properties": [
+            {
+              "name": "invalid",
+              "value": {
+                "type": "token",
+                "value": "false"
+              }
+            },
+            {
+              "name": "focusable",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            }
+          ]
+        },
+        {
+          "role": "StaticText",
+          "name": "After disclosure",
+          "ignored": false,
+          "properties": []
+        },
+        {
+          "role": "StaticText",
+          "name": "Security details",
+          "ignored": false,
+          "properties": []
+        },
+        {
+          "role": "StaticText",
+          "name": "Local AES-256-GCM only. Recipient key unavailable. E2EE not established.",
+          "ignored": false,
+          "properties": []
+        },
+        {
+          "role": "StaticText",
+          "name": "Inside action",
+          "ignored": false,
+          "properties": []
+        }
+      ]
+    },
+    {
+      "label": "closed-during-exit",
+      "rows": [
+        {
+          "role": "button",
+          "name": "After disclosure",
+          "ignored": false,
+          "properties": [
+            {
+              "name": "invalid",
+              "value": {
+                "type": "token",
+                "value": "false"
+              }
+            },
+            {
+              "name": "focusable",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            }
+          ]
+        },
+        {
+          "role": "DisclosureTriangle",
+          "name": "Security details",
+          "ignored": false,
+          "properties": [
+            {
+              "name": "focusable",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            },
+            {
+              "name": "expanded",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": false
+              }
+            }
+          ]
+        },
+        {
+          "role": "StaticText",
+          "name": "After disclosure",
+          "ignored": false,
+          "properties": []
+        },
+        {
+          "role": "StaticText",
+          "name": "Security details",
+          "ignored": false,
+          "properties": []
+        }
+      ]
+    },
+    {
+      "label": "closed-after-transition",
+      "rows": [
+        {
+          "role": "button",
+          "name": "After disclosure",
+          "ignored": false,
+          "properties": [
+            {
+              "name": "invalid",
+              "value": {
+                "type": "token",
+                "value": "false"
+              }
+            },
+            {
+              "name": "focusable",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            },
+            {
+              "name": "focused",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            }
+          ]
+        },
+        {
+          "role": "DisclosureTriangle",
+          "name": "Security details",
+          "ignored": false,
+          "properties": [
+            {
+              "name": "focusable",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": true
+              }
+            },
+            {
+              "name": "expanded",
+              "value": {
+                "type": "booleanOrUndefined",
+                "value": false
+              }
+            }
+          ]
+        },
+        {
+          "role": "StaticText",
+          "name": "After disclosure",
+          "ignored": false,
+          "properties": []
+        },
+        {
+          "role": "StaticText",
+          "name": "Security details",
+          "ignored": false,
+          "properties": []
+        }
+      ]
+    }
+  ],
+  "support": {
+    "details": true,
+    "discrete": true,
+    "inert": true,
+    "version": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+  },
+  "focusAttempt": "SUMMARY",
+  "tabAfterClose": "after",
+  "frames": [
+    {
+      "time": 378.89999997615814,
+      "open": true,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "visible",
+      "pointerEvents": "auto",
+      "detailsHeight": 156,
+      "belowTop": 198,
+      "focus": "SUMMARY",
+      "animations": []
+    },
+    {
+      "time": 386.5,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 401.7999999821186,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 418.89999997615814,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 435.69999998807907,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 451.89999997615814,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 468.39999997615814,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 485.89999997615814,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 501.59999999403954,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 518.3999999761581,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 535.7999999821186,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 553.5999999940395,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 568.3999999761581,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 585,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 601.8999999761581,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 619.0999999940395,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 635,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 651.7999999821186,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 668.7999999821186,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 686.6999999880791,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 701.5,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 719.3999999761581,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    },
+    {
+      "time": 735.5,
+      "open": false,
+      "opacity": "1",
+      "transform": "none",
+      "contentVisibility": "hidden",
+      "pointerEvents": "auto",
+      "detailsHeight": 47,
+      "belowTop": 89,
+      "focus": "after",
+      "animations": []
+    }
+  ]
+}

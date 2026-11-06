@@ -1,0 +1,396 @@
+{
+  "startedAt": "2026-11-06T03:18:20.023Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "desktop empty canvas has no internal or page horizontal overflow",
+      "passed": true,
+      "detail": [
+        {
+          "width": 1440,
+          "height": 1000,
+          "documentWidth": 1440,
+          "documentHeight": 1000,
+          "historyWidth": 1070,
+          "historyScrollWidth": 1070,
+          "history": {
+            "x": 341,
+            "y": 235.875,
+            "width": 1070,
+            "height": 599.078125
+          },
+          "hasAtmosphere": true,
+          "caption": {
+            "text": "A little hello starts a conversation. Try it in this local demo.",
+            "color": "rgb(98, 88, 106)",
+            "rect": {
+              "x": 700,
+              "y": 637.015625,
+              "width": 352,
+              "height": 46.1875,
+              "top": 637.015625,
+              "right": 1052,
+              "bottom": 683.203125,
+              "left": 700
+            },
+            "lineHeight": 23.1
+          }
+        },
+        {
+          "width": 1440,
+          "height": 1000,
+          "documentWidth": 1440,
+          "documentHeight": 1000,
+          "historyWidth": 1070,
+          "historyScrollWidth": 1070,
+          "history": {
+            "x": 341,
+            "y": 235.875,
+            "width": 1070,
+            "height": 599.078125
+          },
+          "hasAtmosphere": true,
+          "caption": {
+            "text": "A little hello starts a conversation. Try it in this local demo.",
+            "color": "rgb(98, 88, 106)",
+            "rect": {
+              "x": 700,
+              "y": 637.015625,
+              "width": 352,
+              "height": 46.1875,
+              "top": 637.015625,
+              "right": 1052,
+              "bottom": 683.203125,
+              "left": 700
+            },
+            "lineHeight": 23.1
+          }
+        },
+        {
+          "width": 1440,
+          "height": 1000,
+          "documentWidth": 1440,
+          "documentHeight": 1000,
+          "historyWidth": 1070,
+          "historyScrollWidth": 1070,
+          "history": {
+            "x": 341,
+            "y": 235.875,
+            "width": 1070,
+            "height": 599.078125
+          },
+          "hasAtmosphere": true,
+          "caption": {
+            "text": "A little hello starts a conversation. Try it in this local demo.",
+            "color": "rgb(98, 88, 106)",
+            "rect": {
+              "x": 700,
+              "y": 637.015625,
+              "width": 352,
+              "height": 46.1875,
+              "top": 637.015625,
+              "right": 1052,
+              "bottom": 683.203125,
+              "left": 700
+            },
+            "lineHeight": 23.1
+          }
+        },
+        {
+          "width": 1440,
+          "height": 1000,
+          "documentWidth": 1440,
+          "documentHeight": 1000,
+          "historyWidth": 1070,
+          "historyScrollWidth": 1070,
+          "history": {
+            "x": 341,
+            "y": 235.875,
+            "width": 1070,
+            "height": 599.078125
+          },
+          "hasAtmosphere": true,
+          "caption": {
+            "text": "A little hello starts a conversation. Try it in this local demo.",
+            "color": "rgb(98, 88, 106)",
+            "rect": {
+              "x": 700,
+              "y": 637.015625,
+              "width": 352,
+              "height": 46.1875,
+              "top": 637.015625,
+              "right": 1052,
+              "bottom": 683.203125,
+              "left": 700
+            },
+            "lineHeight": 23.1
+          }
+        }
+      ]
+    },
+    {
+      "label": "laptop empty canvas has no internal or page horizontal overflow",
+      "passed": true,
+      "detail": [
+        {
+          "width": 1024,
+          "height": 800,
+          "documentWidth": 1024,
+          "documentHeight": 800,
+          "historyWidth": 701,
+          "historyScrollWidth": 701,
+          "history": {
+            "x": 301.46875,
+            "y": 221.96875,
+            "width": 701.0625,
+            "height": 420.515625
+          },
+          "hasAtmosphere": true,
+          "caption": {
+            "text": "A little hello starts a conversation. Try it in this local demo.",
+            "color": "rgb(98, 88, 106)",
+            "rect": {
+              "x": 476,
+              "y": 533.828125,
+              "width": 352,
+              "height": 46.1875,
+              "top": 533.828125,
+              "right": 828,
+              "bottom": 580.015625,
+              "left": 476
+            },
+            "lineHeight": 23.1
+          }
+        },
+        {
+          "width": 1024,
+          "height": 800,
+          "documentWidth": 1024,
+          "documentHeight": 800,
+          "historyWidth": 701,
+          "historyScrollWidth": 701,
+          "history": {
+            "x": 301.46875,
+            "y": 221.96875,
+            "width": 701.0625,
+            "height": 420.515625
+          },
+          "hasAtmosphere": true,
+          "caption": {
+            "text": "A little hello starts a conversation. Try it in this local demo.",
+            "color": "rgb(98, 88, 106)",
+            "rect": {
+              "x": 476,
+              "y": 533.828125,
+              "width": 352,
+              "height": 46.1875,
+              "top": 533.828125,
+              "right": 828,
+              "bottom": 580.015625,
+              "left": 476
+            },
+            "lineHeight": 23.1
+          }
+        },
+        {
+          "width": 1024,
+          "height": 800,
+          "documentWidth": 1024,
+          "documentHeight": 800,
+          "historyWidth": 701,
+          "historyScrollWidth": 701,
+          "history": {
+            "x": 301.46875,
+            "y": 221.96875,
+            "width": 701.0625,
+            "height": 420.515625
+          },
+          "hasAtmosphere": true,
+          "caption": {
+            "text": "A little hello starts a conversation. Try it in this local demo.",
+            "color": "rgb(98, 88, 106)",
+            "rect": {
+              "x": 476,
+              "y": 533.828125,
+              "width": 352,
+              "height": 46.1875,
+              "top": 533.828125,
+              "right": 828,
+              "bottom": 580.015625,
+              "left": 476
+            },
+            "lineHeight": 23.1
+          }
+        },
+        {
+          "width": 1024,
+          "height": 800,
+          "documentWidth": 1024,
+          "documentHeight": 800,
+          "historyWidth": 701,
+          "historyScrollWidth": 701,
+          "history": {
+            "x": 301.46875,
+            "y": 221.96875,
+            "width": 701.0625,
+            "height": 420.515625
+          },
+          "hasAtmosphere": true,
+          "caption": {
+            "text": "A little hello starts a conversation. Try it in this local demo.",
+            "color": "rgb(98, 88, 106)",
+            "rect": {
+              "x": 476,
+              "y": 533.828125,
+              "width": 352,
+              "height": 46.1875,
+              "top": 533.828125,
+              "right": 828,
+              "bottom": 580.015625,
+              "left": 476
+            },
+            "lineHeight": 23.1
+          }
+        }
+      ]
+    },
+    {
+      "label": "mobile empty canvas has no internal or page horizontal overflow",
+      "passed": true,
+      "detail": [
+        {
+          "width": 390,
+          "height": 844,
+          "documentWidth": 390,
+          "documentHeight": 844,
+          "historyWidth": 390,
+          "historyScrollWidth": 390,
+          "history": {
+            "x": 0,
+            "y": 232.71875,
+            "width": 390,
+            "height": 467.53125
+          },
+          "hasAtmosphere": true,
+          "caption": {
+            "text": "A little hello starts a conversation. Try it in this local demo.",
+            "color": "rgb(98, 88, 106)",
+            "rect": {
+              "x": 59,
+              "y": 537.90625,
+              "width": 272,
+              "height": 42.875,
+              "top": 537.90625,
+              "right": 331,
+              "bottom": 580.78125,
+              "left": 59
+            },
+            "lineHeight": 21.45
+          }
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "documentWidth": 390,
+          "documentHeight": 844,
+          "historyWidth": 390,
+          "historyScrollWidth": 390,
+          "history": {
+            "x": 0,
+            "y": 232.71875,
+            "width": 390,
+            "height": 467.53125
+          },
+          "hasAtmosphere": true,
+          "caption": {
+            "text": "A little hello starts a conversation. Try it in this local demo.",
+            "color": "rgb(98, 88, 106)",
+            "rect": {
+              "x": 59,
+              "y": 537.90625,
+              "width": 272,
+              "height": 42.875,
+              "top": 537.90625,
+              "right": 331,
+              "bottom": 580.78125,
+              "left": 59
+            },
+            "lineHeight": 21.45
+          }
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "documentWidth": 390,
+          "documentHeight": 844,
+          "historyWidth": 390,
+          "historyScrollWidth": 390,
+          "history": {
+            "x": 0,
+            "y": 232.71875,
+            "width": 390,
+            "height": 467.53125
+          },
+          "hasAtmosphere": true,
+          "caption": {
+            "text": "A little hello starts a conversation. Try it in this local demo.",
+            "color": "rgb(98, 88, 106)",
+            "rect": {
+              "x": 59,
+              "y": 537.90625,
+              "width": 272,
+              "height": 42.875,
+              "top": 537.90625,
+              "right": 331,
+              "bottom": 580.78125,
+              "left": 59
+            },
+            "lineHeight": 21.45
+          }
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "documentWidth": 390,
+          "documentHeight": 844,
+          "historyWidth": 390,
+          "historyScrollWidth": 390,
+          "history": {
+            "x": 0,
+            "y": 232.71875,
+            "width": 390,
+            "height": 467.53125
+          },
+          "hasAtmosphere": true,
+          "caption": {
+            "text": "A little hello starts a conversation. Try it in this local demo.",
+            "color": "rgb(98, 88, 106)",
+            "rect": {
+              "x": 59,
+              "y": 537.90625,
+              "width": 272,
+              "height": 42.875,
+              "top": 537.90625,
+              "right": 331,
+              "bottom": 580.78125,
+              "left": 59
+            },
+            "lineHeight": 21.45
+          }
+        }
+      ]
+    },
+    {
+      "label": "MASTER motion checks have no uncaught browser errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\master-motion\\after\\desktop-empty-verified.png",
+    "artifacts\\master-motion\\after\\laptop-empty-verified.png",
+    "artifacts\\master-motion\\after\\mobile-empty-verified.png"
+  ],
+  "runtimeErrors": [],
+  "finishedAt": "2026-11-06T03:18:28.131Z"
+}

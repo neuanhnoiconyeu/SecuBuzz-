@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yahoo! Security Messenger — brand asset inspection</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:24px;font:14px/1.5 system-ui,sans-serif;color:#241b2a;background:#eeeaf2}main{max-width:1200px;margin:auto}h1{font-size:22px;margin:0 0 4px}p{margin:0 0 20px}section{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}.surface{padding:24px;border-radius:8px;background:white;color:#241b2a;min-width:0}.dark{background:#241333;color:#f2eaf8}.surface h2{font-size:16px;margin:0 0 16px}.full{width:100%;max-width:480px;height:auto;display:block;margin:8px auto 20px}.icons{display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap}.icons figure{margin:0;text-align:center;min-width:54px}.icons img{display:block;margin:0 auto 8px;object-fit:contain}.icons figcaption{font-size:12px}.note{font-size:12px;margin:20px 0 0;color:#62586a}.dark .note{color:#d2bfdc}.source-note{max-width:900px;color:#62586a}code{font-family:ui-monospace,monospace}@media(max-width:700px){body{padding:12px}section{grid-template-columns:1fr}}
+</style>
+<main>
+<h1>Brand asset inspection</h1>
+<p class="source-note">Original supplied full logo, detailed icon adaptation, and simplified vector favicon. PNG favicon previews below are displayed at their actual 16px and 32px sizes. Artwork colors are preserved.</p>
+<section aria-label="Full logo on light and dark surfaces">
+  <div class="surface"><h2>Original full artwork · light</h2><img class="full" src="../../client/public/branding/yahoo-security-logo-source.png" alt="Original Yahoo Security Messenger logo on white"></div>
+  <div class="surface dark"><h2>Original full artwork · dark</h2><img class="full" src="../../client/public/branding/yahoo-security-logo-source.png" alt="Original Yahoo Security Messenger logo on dark purple"><p class="note">The supplied purple wordmark has lower contrast here; use the full variant on a light surface. The icon remains the appropriate small mark on dark chrome.</p></div>
+</section>
+<section aria-label="Icon and favicon on light and dark surfaces">
+  <div class="surface"><h2>Icons · light</h2><div class="icons">
+    <figure><img src="../../client/public/branding/favicon-16.png" width="16" height="16" alt="16 pixel PNG favicon"><figcaption>PNG · 16px</figcaption></figure>
+    <figure><img src="../../client/public/branding/favicon-32.png" width="32" height="32" alt="32 pixel PNG favicon"><figcaption>PNG · 32px</figcaption></figure>
+    <figure><img src="../../client/public/branding/favicon.svg" width="48" height="48" alt="48 pixel simplified SVG icon"><figcaption>SVG · 48px</figcaption></figure>
+    <figure><img src="../../client/public/branding/yahoo-security-icon.png" width="96" height="96" alt="96 pixel detailed icon"><figcaption>Detailed · 96px</figcaption></figure>
+    <figure><img src="../../client/public/branding/apple-touch-icon.png" width="64" height="64" alt="Apple icon rendered at64 pixels"><figcaption>Apple · 64px</figcaption></figure>
+  </div></div>
+  <div class="surface dark"><h2>Icons · dark</h2><div class="icons">
+    <figure><img src="../../client/public/branding/favicon-16.png" width="16" height="16" alt="16 pixel PNG favicon on dark"><figcaption>PNG · 16px</figcaption></figure>
+    <figure><img src="../../client/public/branding/favicon-32.png" width="32" height="32" alt="32 pixel PNG favicon on dark"><figcaption>PNG · 32px</figcaption></figure>
+    <figure><img src="../../client/public/branding/favicon.svg" width="48" height="48" alt="48 pixel SVG icon on dark"><figcaption>SVG · 48px</figcaption></figure>
+    <figure><img src="../../client/public/branding/yahoo-security-icon.png" width="96" height="96" alt="96 pixel detailed icon on dark"><figcaption>Detailed · 96px</figcaption></figure>
+    <figure><img src="../../client/public/branding/apple-touch-icon.png" width="64" height="64" alt="Apple icon on dark"><figcaption>Apple · 64px</figcaption></figure>
+  </div></div>
+</section>
+<p class="source-note">The full artwork remains raster. The detailed icon is a raster adaptation. <code>favicon.svg</code> is actual vector geometry, and the 16/32/180 PNG files are deterministic browser renderings of that SVG.</p>
+</main>
+</html>

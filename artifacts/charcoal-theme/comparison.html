@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SecuBuzz — Light and Midnight Charcoal comparison</title>
+  <style>
+    :root { color-scheme: dark; font: 15px/1.6 system-ui,sans-serif; color:#f5f2fa; background:#14151c; }
+    * { box-sizing:border-box; }
+    body { margin:0 auto; max-width:1600px; padding:32px clamp(16px,3vw,48px); }
+    h1 { margin:0 0 8px; font-size:clamp(24px,3vw,36px); line-height:1.25; }
+    h2 { margin:40px 0 16px; font-size:22px; }
+    p { max-width:900px; margin:8px 0 16px; color:#b6b0c3; }
+    a { color:#c5a1f3; text-underline-offset:4px; }
+    a:focus-visible { outline:3px solid #c5a1f3; outline-offset:4px; }
+    nav { display:flex; flex-wrap:wrap; gap:12px 24px; margin:24px 0; }
+    .pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; align-items:start; }
+    .triple { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    figure { min-width:0; margin:0; padding:12px; border:1px solid #494252; border-radius:12px; background:#1d1f29; }
+    figcaption { margin:0 0 12px; font-weight:600; }
+    figure a { display:block; }
+    img { display:block; width:100%; height:auto; border-radius:6px; }
+    .mobile img { max-width:390px; margin:auto; }
+    .note { margin-top:32px; padding:16px; border-left:3px solid #a77ae8; background:#252630; }
+    @media(max-width:760px) { .pair,.triple { grid-template-columns:1fr; } body { padding-top:24px; } }
+  </style>
+</head>
+<body>
+  <h1>Light &amp; Midnight Charcoal</h1>
+  <p>The existing Yahoo Messenger layout and source branding remain in place. These captures compare the original Light baseline with the adaptive theme implementation.</p>
+  <nav aria-label="Evidence sections">
+    <a href="#desktop">Desktop</a><a href="#laptop">Laptop</a><a href="#mobile">Mobile</a>
+    <a href="#chat">Messages</a><a href="#profile">Profile &amp; appearance</a>
+    <a href="motion-player.html">Motion playback</a><a href="after/browser-summary.json">Browser evidence</a>
+    <a href="validation.json">Terminal validation</a>
+  </nav>
+  <h2 id="desktop">Desktop · 1440 × 1000</h2>
+  <div class="pair">
+    <figure><figcaption>Light · current</figcaption><a href="after/desktop-light-empty.png"><img src="after/desktop-light-empty.png" alt="Current Light desktop messenger" loading="lazy"></a></figure>
+    <figure><figcaption>Midnight Charcoal · current</figcaption><a href="after/desktop-dark-empty.png"><img src="after/desktop-dark-empty.png" alt="Current Midnight Charcoal desktop messenger" loading="lazy"></a></figure>
+  </div>
+  <h2 id="laptop">Laptop · 1024 × 800</h2>
+  <div class="pair">
+    <figure><figcaption>Light</figcaption><a href="after/laptop-light-empty.png"><img src="after/laptop-light-empty.png" alt="Light laptop messenger" loading="lazy"></a></figure>
+    <figure><figcaption>Midnight Charcoal</figcaption><a href="after/laptop-dark-empty.png"><img src="after/laptop-dark-empty.png" alt="Midnight Charcoal laptop messenger" loading="lazy"></a></figure>
+  </div>
+  <h2 id="mobile">Mobile · 390 × 844</h2>
+  <div class="pair mobile">
+    <figure><figcaption>Light</figcaption><a href="after/mobile-light-empty.png"><img src="after/mobile-light-empty.png" alt="Light mobile messenger" loading="lazy"></a></figure>
+    <figure><figcaption>Midnight Charcoal</figcaption><a href="after/mobile-dark-empty.png"><img src="after/mobile-dark-empty.png" alt="Midnight Charcoal mobile messenger" loading="lazy"></a></figure>
+  </div>
+  <h2 id="chat">Chat reading surfaces</h2>
+  <div class="pair">
+    <figure><figcaption>Light · local demo conversation</figcaption><a href="after/desktop-light-conversation.png"><img src="after/desktop-light-conversation.png" alt="Light desktop with sent and demo reply messages" loading="lazy"></a></figure>
+    <figure><figcaption>Charcoal · local demo conversation</figcaption><a href="after/desktop-dark-conversation.png"><img src="after/desktop-dark-conversation.png" alt="Dark desktop with sent and demo reply messages" loading="lazy"></a></figure>
+  </div>
+  <h2 id="profile">Appearance stays separate from identity</h2>
+  <div class="pair mobile">
+    <figure><figcaption>Dark mobile · Appearance selector</figcaption><a href="after/mobile-dark-appearance.png"><img src="after/mobile-dark-appearance.png" alt="Light Dark and System native appearance radios in mobile profile" loading="lazy"></a></figure>
+    <figure><figcaption>Dark mobile · chat with messages</figcaption><a href="after/mobile-dark-conversation.png"><img src="after/mobile-dark-conversation.png" alt="Dark mobile chat and composer" loading="lazy"></a></figure>
+  </div>
+  <div class="pair" style="margin-top:20px">
+    <figure><figcaption>Light · Edit profile</figcaption><a href="after/desktop-light-profile-edit.png"><img src="after/desktop-light-profile-edit.png" alt="Light desktop profile editor" loading="lazy"></a></figure>
+    <figure><figcaption>Charcoal · Edit profile</figcaption><a href="after/desktop-dark-profile-edit.png"><img src="after/desktop-dark-profile-edit.png" alt="Dark desktop profile editor" loading="lazy"></a></figure>
+  </div>
+  <h2>Original Light baseline</h2>
+  <div class="pair triple">
+    <figure><figcaption>Desktop before</figcaption><a href="before/desktop-messenger.png"><img src="before/desktop-messenger.png" alt="Original Light desktop before theme implementation" loading="lazy"></a></figure>
+    <figure><figcaption>Laptop before</figcaption><a href="before/laptop-messenger.png"><img src="before/laptop-messenger.png" alt="Original Light laptop before theme implementation" loading="lazy"></a></figure>
+    <figure class="mobile"><figcaption>Mobile before</figcaption><a href="before/mobile-messenger.png"><img src="before/mobile-messenger.png" alt="Original Light mobile before theme implementation" loading="lazy"></a></figure>
+  </div>
+  <p class="note">Screenshots show the actual local demo in Chrome. Ambient changes require the motion playback viewer. Security labels describe local encryption; authenticated multi-user E2EE is not established.</p>
+</body>
+</html>

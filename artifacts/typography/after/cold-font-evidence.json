@@ -1,0 +1,386 @@
+{
+  "startedAt": "2026-11-06T04:58:24.209Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Cold context issues exactly two local font requests",
+      "passed": true,
+      "detail": [
+        {
+          "requestId": "interception-job-35.0",
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "type": "Font",
+          "measurement": "Actual Fetch.requestPaused Font request in a fresh browser context"
+        },
+        {
+          "requestId": "interception-job-36.0",
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "type": "Font",
+          "measurement": "Actual Fetch.requestPaused Font request in a fresh browser context"
+        }
+      ]
+    },
+    {
+      "label": "Interface remains visible while custom font bytes are delayed",
+      "passed": true,
+      "detail": {
+        "now": 1349.5999999940395,
+        "faces": [
+          {
+            "family": "__bungee_7600f0",
+            "status": "loading"
+          },
+          {
+            "family": "__bungee_Fallback_7600f0",
+            "status": "loaded"
+          },
+          {
+            "family": "__spaceGrotesk_be0dd0",
+            "status": "loading"
+          },
+          {
+            "family": "__spaceGrotesk_Fallback_be0dd0",
+            "status": "loaded"
+          }
+        ],
+        "bodyFont": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "ready": true
+      }
+    },
+    {
+      "label": "Both fonts finish after delayed cold requests",
+      "passed": true,
+      "detail": [
+        {
+          "family": "__bungee_7600f0",
+          "status": "loaded"
+        },
+        {
+          "family": "__bungee_Fallback_7600f0",
+          "status": "loaded"
+        },
+        {
+          "family": "__spaceGrotesk_be0dd0",
+          "status": "loaded"
+        },
+        {
+          "family": "__spaceGrotesk_Fallback_be0dd0",
+          "status": "loaded"
+        }
+      ]
+    },
+    {
+      "label": "Cold font loading performs no duplicate font requests",
+      "passed": true,
+      "detail": [
+        {
+          "requestId": "interception-job-35.0",
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "type": "Font",
+          "measurement": "Actual Fetch.requestPaused Font request in a fresh browser context"
+        },
+        {
+          "requestId": "interception-job-36.0",
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "type": "Font",
+          "measurement": "Actual Fetch.requestPaused Font request in a fresh browser context"
+        }
+      ]
+    },
+    {
+      "label": "Cold font swap causes no horizontal overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "documentWidth": 1440
+      }
+    },
+    {
+      "label": "Measured cold startup CLS stays below 0.1",
+      "passed": true,
+      "detail": {
+        "totalCLS": 0.0004376476447964892,
+        "fontSwapCLS": 0.0002664574592496142,
+        "shifts": [
+          {
+            "time": 1592.300000011921,
+            "value": 0.000171190185546875,
+            "hadRecentInput": false,
+            "sources": [
+              {
+                "tag": "DIV",
+                "class": "messenger-navigation-profile",
+                "previous": {},
+                "current": {}
+              },
+              {
+                "class": "",
+                "previous": {},
+                "current": {}
+              },
+              {
+                "class": "",
+                "previous": {},
+                "current": {}
+              },
+              {
+                "class": "",
+                "previous": {},
+                "current": {}
+              }
+            ]
+          },
+          {
+            "time": 2038,
+            "value": 0.0001802369972511574,
+            "hadRecentInput": false,
+            "sources": [
+              {
+                "tag": "TEXTAREA",
+                "class": "composer-input",
+                "previous": {},
+                "current": {}
+              }
+            ]
+          },
+          {
+            "time": 2101.5999999940395,
+            "value": 0.00008622046199845678,
+            "hadRecentInput": false,
+            "sources": [
+              {
+                "tag": "DIV",
+                "class": "messenger-navigation-profile",
+                "previous": {},
+                "current": {}
+              },
+              {
+                "tag": "H2",
+                "class": "",
+                "previous": {},
+                "current": {}
+              },
+              {
+                "tag": "BUTTON",
+                "class": "messenger-navigation-item ",
+                "previous": {},
+                "current": {}
+              },
+              {
+                "tag": "P",
+                "class": "composer-hint",
+                "previous": {},
+                "current": {}
+              },
+              {
+                "class": "",
+                "previous": {},
+                "current": {}
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "label": "Cold load probe has no browser runtime errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\typography\\after\\desktop-cold-font-fallback.png",
+    "artifacts\\typography\\after\\desktop-cold-font-loaded.png"
+  ],
+  "runtimeErrors": [],
+  "fontRequests": [
+    {
+      "requestId": "interception-job-35.0",
+      "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+      "type": "Font",
+      "measurement": "Actual Fetch.requestPaused Font request in a fresh browser context"
+    },
+    {
+      "requestId": "interception-job-36.0",
+      "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+      "type": "Font",
+      "measurement": "Actual Fetch.requestPaused Font request in a fresh browser context"
+    }
+  ],
+  "networkRequests": [
+    {
+      "requestId": "19864.35",
+      "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+      "time": 199847.757467,
+      "type": "Font"
+    },
+    {
+      "requestId": "19864.34",
+      "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+      "time": 199847.758132,
+      "type": "Font"
+    }
+  ],
+  "coldLoad": {
+    "before": {
+      "now": 1349.5999999940395,
+      "faces": [
+        {
+          "family": "__bungee_7600f0",
+          "status": "loading"
+        },
+        {
+          "family": "__bungee_Fallback_7600f0",
+          "status": "loaded"
+        },
+        {
+          "family": "__spaceGrotesk_be0dd0",
+          "status": "loading"
+        },
+        {
+          "family": "__spaceGrotesk_Fallback_be0dd0",
+          "status": "loaded"
+        }
+      ],
+      "bodyFont": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+      "ready": true
+    },
+    "releasedAt": 1980.699999988079,
+    "now": 2714.800000011921,
+    "audit": {
+      "shifts": [
+        {
+          "time": 1592.300000011921,
+          "value": 0.000171190185546875,
+          "hadRecentInput": false,
+          "sources": [
+            {
+              "tag": "DIV",
+              "class": "messenger-navigation-profile",
+              "previous": {},
+              "current": {}
+            },
+            {
+              "class": "",
+              "previous": {},
+              "current": {}
+            },
+            {
+              "class": "",
+              "previous": {},
+              "current": {}
+            },
+            {
+              "class": "",
+              "previous": {},
+              "current": {}
+            }
+          ]
+        },
+        {
+          "time": 2038,
+          "value": 0.0001802369972511574,
+          "hadRecentInput": false,
+          "sources": [
+            {
+              "tag": "TEXTAREA",
+              "class": "composer-input",
+              "previous": {},
+              "current": {}
+            }
+          ]
+        },
+        {
+          "time": 2101.5999999940395,
+          "value": 0.00008622046199845678,
+          "hadRecentInput": false,
+          "sources": [
+            {
+              "tag": "DIV",
+              "class": "messenger-navigation-profile",
+              "previous": {},
+              "current": {}
+            },
+            {
+              "tag": "H2",
+              "class": "",
+              "previous": {},
+              "current": {}
+            },
+            {
+              "tag": "BUTTON",
+              "class": "messenger-navigation-item ",
+              "previous": {},
+              "current": {}
+            },
+            {
+              "tag": "P",
+              "class": "composer-hint",
+              "previous": {},
+              "current": {}
+            },
+            {
+              "class": "",
+              "previous": {},
+              "current": {}
+            }
+          ]
+        }
+      ],
+      "fontEvents": [
+        {
+          "type": "loadingdone",
+          "time": 2106.4000000059605
+        }
+      ],
+      "paints": [
+        {
+          "name": "first-paint",
+          "time": 708
+        },
+        {
+          "name": "first-contentful-paint",
+          "time": 708
+        }
+      ]
+    },
+    "faces": [
+      {
+        "family": "__bungee_7600f0",
+        "status": "loaded"
+      },
+      {
+        "family": "__bungee_Fallback_7600f0",
+        "status": "loaded"
+      },
+      {
+        "family": "__spaceGrotesk_be0dd0",
+        "status": "loaded"
+      },
+      {
+        "family": "__spaceGrotesk_Fallback_be0dd0",
+        "status": "loaded"
+      }
+    ],
+    "resources": [
+      {
+        "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+        "startTime": 231.09999999403954,
+        "duration": 1786.2000000178814,
+        "transferSize": 64868,
+        "decodedBodySize": 136676
+      },
+      {
+        "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+        "startTime": 231.69999998807907,
+        "duration": 1784.9000000059605,
+        "transferSize": 56806,
+        "decodedBodySize": 118996
+      }
+    ],
+    "width": 1440,
+    "documentWidth": 1440,
+    "totalCLS": 0.0004376476447964892,
+    "fontSwapCLS": 0.0002664574592496142
+  }
+}

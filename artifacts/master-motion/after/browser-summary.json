@@ -1,0 +1,288 @@
+{
+  "capturedAt": "2026-11-06T03:40:33.897Z",
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 1024,
+      "height": 800
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "additionalHeights": [
+    700,
+    600
+  ],
+  "normalAndReducedMotion": true,
+  "reports": [
+    {
+      "category": "functional",
+      "file": "after/browser-evidence.json",
+      "passed": 255,
+      "failed": 0,
+      "runtimeErrors": 0
+    },
+    {
+      "category": "core_motion",
+      "file": "after/motion-evidence.json",
+      "passed": 81,
+      "failed": 0,
+      "runtimeErrors": 0
+    },
+    {
+      "category": "master_overhaul",
+      "file": "after/overhaul-evidence.json",
+      "passed": 51,
+      "failed": 0,
+      "runtimeErrors": 0
+    },
+    {
+      "category": "retina_and_brand_regression",
+      "file": "after/brand-quality-evidence.json",
+      "passed": 50,
+      "failed": 0,
+      "runtimeErrors": 0
+    },
+    {
+      "category": "compact_heights",
+      "file": "after/extra-evidence.json",
+      "passed": 7,
+      "failed": 0,
+      "runtimeErrors": 0
+    },
+    {
+      "category": "closed_dialog_accessibility",
+      "file": "after/dialog-exit-a11y-evidence.json",
+      "passed": 5,
+      "failed": 0,
+      "runtimeErrors": 0
+    },
+    {
+      "category": "typing_and_final_layout",
+      "file": "after/typing-layout-evidence.json",
+      "passed": 20,
+      "failed": 0,
+      "runtimeErrors": 0
+    },
+    {
+      "category": "sidebar_contrast",
+      "file": "after/sidebar-contrast-evidence.json",
+      "passed": 4,
+      "failed": 0,
+      "runtimeErrors": 0
+    }
+  ],
+  "totals": {
+    "passed": 473,
+    "failed": 0,
+    "runtimeErrors": 0
+  },
+  "viewer": {
+    "passed": 4,
+    "failed": 0
+  },
+  "captures": {
+    "clips": 9,
+    "frames": 294,
+    "naturalAmbientFrames": 17,
+    "naturalAmbientDurationMs": 32887,
+    "naturalMethod": "Natural CSS clock; no animation seeking or phase injection",
+    "samplingMs": 2000,
+    "beforeScreenshots": 12,
+    "afterScreenshots": 55
+  },
+  "ambient": {
+    "changes": [
+      {
+        "elapsed": 8232,
+        "pixels": 101864,
+        "meanAbsoluteChannelDelta": 2.9775223173381504,
+        "rmsChannelDelta": 3.7435114506434974,
+        "maxChannelDelta": 12,
+        "changedPixelPercent": 71.48943689625384
+      },
+      {
+        "elapsed": 16309,
+        "pixels": 101864,
+        "meanAbsoluteChannelDelta": 3.6645789156784208,
+        "rmsChannelDelta": 4.559432396771252,
+        "maxChannelDelta": 14,
+        "changedPixelPercent": 79.14670541113642
+      },
+      {
+        "elapsed": 24201,
+        "pixels": 101864,
+        "meanAbsoluteChannelDelta": 2.0587842613680984,
+        "rmsChannelDelta": 3.0584290615120833,
+        "maxChannelDelta": 11,
+        "changedPixelPercent": 40.18102568130056
+      },
+      {
+        "elapsed": 32230,
+        "pixels": 101864,
+        "meanAbsoluteChannelDelta": 0.837417209874604,
+        "rmsChannelDelta": 1.2723022866913836,
+        "maxChannelDelta": 5,
+        "changedPixelPercent": 19.05089138459122
+      }
+    ],
+    "idleCLS": 0,
+    "layoutCountDelta": 1,
+    "minimumSampledCaptionContrast": 4.725037371933581,
+    "contrastMethod": "Actual PNG line-gap/perimeter pixels over17 natural frames; this is sampled evidence, not a universal accessibility audit."
+  },
+  "typing": [
+    {
+      "viewport": "desktop",
+      "reduced": false,
+      "inputToNextFrameMs": 8.200000017881393
+    },
+    {
+      "viewport": "desktop",
+      "reduced": true,
+      "inputToNextFrameMs": 6.300000011920929
+    },
+    {
+      "viewport": "laptop",
+      "reduced": false,
+      "inputToNextFrameMs": 9.699999988079071
+    },
+    {
+      "viewport": "laptop",
+      "reduced": true,
+      "inputToNextFrameMs": 11.599999994039536
+    },
+    {
+      "viewport": "mobile",
+      "reduced": false,
+      "inputToNextFrameMs": 15
+    },
+    {
+      "viewport": "mobile",
+      "reduced": true,
+      "inputToNextFrameMs": 9.299999982118607
+    }
+  ],
+  "mobileFinal": {
+    "layout": {
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390,
+      "documentHeight": 844,
+      "historyWidth": 390,
+      "historyScrollWidth": 390,
+      "composer": {
+        "x": 0,
+        "y": 700.25,
+        "width": 390,
+        "height": 114.96875,
+        "top": 700.25,
+        "right": 390,
+        "bottom": 815.21875,
+        "left": 0
+      },
+      "input": {
+        "x": 64.984375,
+        "y": 716.4375,
+        "width": 260.03125,
+        "height": 44,
+        "top": 716.4375,
+        "right": 325.015625,
+        "bottom": 760.4375,
+        "left": 64.984375
+      },
+      "buzz": {
+        "x": 17.796875,
+        "y": 716.4375,
+        "width": 44,
+        "height": 44,
+        "top": 716.4375,
+        "right": 61.796875,
+        "bottom": 760.4375,
+        "left": 17.796875
+      },
+      "send": {
+        "x": 328.203125,
+        "y": 716.4375,
+        "width": 44,
+        "height": 44,
+        "top": 716.4375,
+        "right": 372.203125,
+        "bottom": 760.4375,
+        "left": 328.203125
+      },
+      "log": {
+        "x": 0,
+        "y": 816.21875,
+        "width": 390,
+        "height": 27.78125,
+        "top": 816.21875,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      }
+    },
+    "pixels": [
+      {
+        "name": "input",
+        "x": 73,
+        "y": 724,
+        "rgba": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "name": "buzz",
+        "x": 26,
+        "y": 724,
+        "rgba": [
+          255,
+          241,
+          242,
+          255
+        ]
+      },
+      {
+        "name": "send",
+        "x": 336,
+        "y": 724,
+        "rgba": [
+          111,
+          45,
+          168,
+          255
+        ]
+      }
+    ]
+  },
+  "artifacts": {
+    "player": "motion-player.html",
+    "comparison": "comparison.html",
+    "naturalStart": "after/clips/ambient-natural-32s/frame-000.png",
+    "naturalMiddle": "after/clips/ambient-natural-32s/frame-008.png"
+  },
+  "testFaults": [
+    "One demo-transport timestamp failure, restored immediately, exercises actual failed-send/retry UI without changing product code.",
+    "Real AES-GCM completion delayed220ms only in the browser test to exercise a genuine inactive local-demo reply/unread update.",
+    "One Reflect.ownKeys failure scoped to the local profile service, restored immediately, verifies failed-save draft retention."
+  ],
+  "limitations": [
+    "Chrome browser verification; other engines were not exercised.",
+    "The long ambient capture is an actual screenshot sequence sampled every2 seconds, not continuous video. Other clips are Chrome screencast frames.",
+    "Playback contains no audio recording; the existing two-tone oscillator calls were verified separately.",
+    "Performance figures include browser-test instrumentation and are not production benchmarks."
+  ],
+  "duplicateReportsExcluded": [
+    "empty-overflow-evidence.json",
+    "after-layout-evidence.json",
+    "disclosure-probe/summary.json"
+  ]
+}

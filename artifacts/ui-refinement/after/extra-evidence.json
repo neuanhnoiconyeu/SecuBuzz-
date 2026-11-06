@@ -1,0 +1,388 @@
+{
+  "startedAt": "2026-11-06T01:29:52.275Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "390x700 expanded security bounds",
+      "detail": {
+        "viewport": {
+          "width": 390,
+          "height": 700,
+          "documentHeight": 700
+        },
+        "chat": {
+          "x": 8,
+          "y": 79.046875,
+          "width": 374,
+          "height": 568.953125,
+          "right": 382,
+          "bottom": 648,
+          "scrollHeight": 590,
+          "clientHeight": 567,
+          "overflowY": "auto"
+        },
+        "toolbar": {
+          "x": 9,
+          "y": 135.234375,
+          "width": 357,
+          "height": 221.859375,
+          "right": 366,
+          "bottom": 357.09375,
+          "scrollHeight": 221,
+          "clientHeight": 221,
+          "overflowY": "visible"
+        },
+        "composer": {
+          "x": 9,
+          "y": 437.09375,
+          "width": 357,
+          "height": 232.828125,
+          "right": 366,
+          "bottom": 669.921875,
+          "scrollHeight": 232,
+          "clientHeight": 232,
+          "overflowY": "visible"
+        },
+        "buzz": {
+          "x": 119.453125,
+          "y": 576.859375,
+          "width": 99.78125,
+          "height": 38.28125,
+          "right": 219.234375,
+          "bottom": 615.140625,
+          "scrollHeight": 34,
+          "clientHeight": 30,
+          "overflowY": "visible"
+        },
+        "history": {
+          "x": 9,
+          "y": 357.09375,
+          "width": 357,
+          "height": 80,
+          "right": 366,
+          "bottom": 437.09375,
+          "scrollHeight": 182,
+          "clientHeight": 80,
+          "overflowY": "auto"
+        },
+        "security": {
+          "x": 21,
+          "y": 268.09375,
+          "width": 253.859375,
+          "height": 80,
+          "right": 274.859375,
+          "bottom": 348.09375,
+          "scrollHeight": 283,
+          "clientHeight": 78,
+          "overflowY": "auto"
+        }
+      }
+    },
+    {
+      "label": "390x700 expanded security leaves non-overlapping message history",
+      "passed": true,
+      "detail": {
+        "viewport": {
+          "width": 390,
+          "height": 700,
+          "documentHeight": 700
+        },
+        "chat": {
+          "x": 8,
+          "y": 79.046875,
+          "width": 374,
+          "height": 568.953125,
+          "right": 382,
+          "bottom": 648,
+          "scrollHeight": 590,
+          "clientHeight": 567,
+          "overflowY": "auto"
+        },
+        "toolbar": {
+          "x": 9,
+          "y": 135.234375,
+          "width": 357,
+          "height": 221.859375,
+          "right": 366,
+          "bottom": 357.09375,
+          "scrollHeight": 221,
+          "clientHeight": 221,
+          "overflowY": "visible"
+        },
+        "composer": {
+          "x": 9,
+          "y": 437.09375,
+          "width": 357,
+          "height": 232.828125,
+          "right": 366,
+          "bottom": 669.921875,
+          "scrollHeight": 232,
+          "clientHeight": 232,
+          "overflowY": "visible"
+        },
+        "buzz": {
+          "x": 119.453125,
+          "y": 576.859375,
+          "width": 99.78125,
+          "height": 38.28125,
+          "right": 219.234375,
+          "bottom": 615.140625,
+          "scrollHeight": 34,
+          "clientHeight": 30,
+          "overflowY": "visible"
+        },
+        "history": {
+          "x": 9,
+          "y": 357.09375,
+          "width": 357,
+          "height": 80,
+          "right": 366,
+          "bottom": 437.09375,
+          "scrollHeight": 182,
+          "clientHeight": 80,
+          "overflowY": "auto"
+        },
+        "security": {
+          "x": 21,
+          "y": 268.09375,
+          "width": 253.859375,
+          "height": 80,
+          "right": 274.859375,
+          "bottom": 348.09375,
+          "scrollHeight": 283,
+          "clientHeight": 78,
+          "overflowY": "auto"
+        }
+      }
+    },
+    {
+      "label": "390x700 compact chat supplies internal scroll",
+      "passed": true
+    },
+    {
+      "label": "390x700 expanded security keeps composer reachable",
+      "passed": true,
+      "detail": {
+        "chatBottom": 648,
+        "composerBottom": 646.921875,
+        "buzzBottom": 592.140625,
+        "buzzTop": 553.859375,
+        "pageY": 0,
+        "documentHeight": 700,
+        "height": 700
+      }
+    },
+    {
+      "label": "390x600 expanded security bounds",
+      "detail": {
+        "viewport": {
+          "width": 390,
+          "height": 600,
+          "documentHeight": 600
+        },
+        "chat": {
+          "x": 8,
+          "y": 79.046875,
+          "width": 374,
+          "height": 468.953125,
+          "right": 382,
+          "bottom": 548,
+          "scrollHeight": 590,
+          "clientHeight": 467,
+          "overflowY": "auto"
+        },
+        "toolbar": {
+          "x": 9,
+          "y": 135.234375,
+          "width": 357,
+          "height": 221.859375,
+          "right": 366,
+          "bottom": 357.09375,
+          "scrollHeight": 221,
+          "clientHeight": 221,
+          "overflowY": "visible"
+        },
+        "composer": {
+          "x": 9,
+          "y": 437.09375,
+          "width": 357,
+          "height": 232.828125,
+          "right": 366,
+          "bottom": 669.921875,
+          "scrollHeight": 232,
+          "clientHeight": 232,
+          "overflowY": "visible"
+        },
+        "buzz": {
+          "x": 119.453125,
+          "y": 576.859375,
+          "width": 99.78125,
+          "height": 38.28125,
+          "right": 219.234375,
+          "bottom": 615.140625,
+          "scrollHeight": 34,
+          "clientHeight": 30,
+          "overflowY": "visible"
+        },
+        "history": {
+          "x": 9,
+          "y": 357.09375,
+          "width": 357,
+          "height": 80,
+          "right": 366,
+          "bottom": 437.09375,
+          "scrollHeight": 182,
+          "clientHeight": 80,
+          "overflowY": "auto"
+        },
+        "security": {
+          "x": 21,
+          "y": 268.09375,
+          "width": 253.859375,
+          "height": 80,
+          "right": 274.859375,
+          "bottom": 348.09375,
+          "scrollHeight": 283,
+          "clientHeight": 78,
+          "overflowY": "auto"
+        }
+      }
+    },
+    {
+      "label": "390x600 expanded security leaves non-overlapping message history",
+      "passed": true,
+      "detail": {
+        "viewport": {
+          "width": 390,
+          "height": 600,
+          "documentHeight": 600
+        },
+        "chat": {
+          "x": 8,
+          "y": 79.046875,
+          "width": 374,
+          "height": 468.953125,
+          "right": 382,
+          "bottom": 548,
+          "scrollHeight": 590,
+          "clientHeight": 467,
+          "overflowY": "auto"
+        },
+        "toolbar": {
+          "x": 9,
+          "y": 135.234375,
+          "width": 357,
+          "height": 221.859375,
+          "right": 366,
+          "bottom": 357.09375,
+          "scrollHeight": 221,
+          "clientHeight": 221,
+          "overflowY": "visible"
+        },
+        "composer": {
+          "x": 9,
+          "y": 437.09375,
+          "width": 357,
+          "height": 232.828125,
+          "right": 366,
+          "bottom": 669.921875,
+          "scrollHeight": 232,
+          "clientHeight": 232,
+          "overflowY": "visible"
+        },
+        "buzz": {
+          "x": 119.453125,
+          "y": 576.859375,
+          "width": 99.78125,
+          "height": 38.28125,
+          "right": 219.234375,
+          "bottom": 615.140625,
+          "scrollHeight": 34,
+          "clientHeight": 30,
+          "overflowY": "visible"
+        },
+        "history": {
+          "x": 9,
+          "y": 357.09375,
+          "width": 357,
+          "height": 80,
+          "right": 366,
+          "bottom": 437.09375,
+          "scrollHeight": 182,
+          "clientHeight": 80,
+          "overflowY": "auto"
+        },
+        "security": {
+          "x": 21,
+          "y": 268.09375,
+          "width": 253.859375,
+          "height": 80,
+          "right": 274.859375,
+          "bottom": 348.09375,
+          "scrollHeight": 283,
+          "clientHeight": 78,
+          "overflowY": "auto"
+        }
+      }
+    },
+    {
+      "label": "390x600 compact chat supplies internal scroll",
+      "passed": true
+    },
+    {
+      "label": "390x600 expanded security keeps composer reachable",
+      "passed": true,
+      "detail": {
+        "chatBottom": 548,
+        "composerBottom": 546.921875,
+        "buzzBottom": 492.140625,
+        "buzzTop": 453.859375,
+        "pageY": 0,
+        "documentHeight": 600,
+        "height": 600
+      }
+    }
+  ],
+  "screenshots": [
+    "artifacts\\ui-refinement\\after\\mobile-cancel-inspection.png",
+    "artifacts\\ui-refinement\\after\\mobile-700-security-expanded.png",
+    "artifacts\\ui-refinement\\after\\mobile-700-composer-reachable.png",
+    "artifacts\\ui-refinement\\after\\mobile-600-security-expanded.png",
+    "artifacts\\ui-refinement\\after\\mobile-600-composer-reachable.png"
+  ],
+  "runtimeErrors": [],
+  "buttons": [
+    {
+      "text": "Cancel",
+      "className": "ui-button ui-button--outline ui-button--md",
+      "disabled": false,
+      "color": "rgb(93, 35, 143)",
+      "background": "rgb(255, 255, 255)",
+      "opacity": "1",
+      "surface": "#ffffff",
+      "brand": "#6f2da8"
+    },
+    {
+      "text": "Save changes",
+      "className": "ui-button ui-button--primary ui-button--md",
+      "disabled": false,
+      "color": "rgb(255, 255, 255)",
+      "background": "rgb(111, 45, 168)",
+      "opacity": "1",
+      "surface": "#ffffff",
+      "brand": "#6f2da8"
+    }
+  ]
+}

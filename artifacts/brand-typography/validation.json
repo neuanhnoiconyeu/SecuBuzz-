@@ -1,0 +1,7 @@
+{
+  "jest": { "command": "npm test -- --runInBand", "exitCode": 0, "suitesPassed": 21, "testsPassed": 159, "testsFailed": 0 },
+  "typescript": { "command": "npm run type-check", "exitCode": 0 },
+  "productionBuild": { "command": "npm run build", "exitCode": 0, "firstLoadJs": "115 kB", "warnings": [] },
+  "browser": { "applicationChecksPassed": 188, "comparisonChecksPassed": 3, "actualFontMeasurements": 54, "fontMeasurementsAreAdditionalTests": false, "viewports": [1440, 1024, 390, 720, 681, 680], "themes": ["light", "dark"], "evidence": "after/browser-summary.json" },
+  "scope": { "protectedFilesChecked": 92, "protectedFilesChanged": 0, "applicationFilesModified": ["client/src/app/globals.css", "client/src/styles/typography.css", "README.md"], "fontLoadingChanged": false }
+}

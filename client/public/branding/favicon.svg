@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <title>Yahoo! Security Messenger</title>
+  <defs>
+    <linearGradient id="bubble" x1="10" y1="15" x2="45" y2="49" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ae35d5"/>
+      <stop offset="1" stop-color="#510675"/>
+    </linearGradient>
+    <linearGradient id="orbit" x1="3" y1="45" x2="60" y2="29" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#c96ced"/>
+      <stop offset=".5" stop-color="#e8b7f6"/>
+      <stop offset="1" stop-color="#a92bd4"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="43" y1="39" x2="58" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a82ed0"/>
+      <stop offset="1" stop-color="#53097b"/>
+    </linearGradient>
+  </defs>
+  <!-- Source motifs: three signal rays, orbital chat bubble, Y!, shield and lock. -->
+  <path d="m41 3 4 2-4 9-4-2Zm10 6 3 4-8 6-3-4Zm6 10 1 4-9 2-1-4Z" fill="#9e25c9"/>
+  <ellipse cx="31" cy="36" rx="29" ry="8" transform="rotate(-18 31 36)" stroke="url(#orbit)" stroke-width="3.5"/>
+  <path d="M53 29C53 18 43 12 29 12S6 19 6 31c0 9 6 15 15 17l-5 8 14-6c13-1 23-9 23-21Z" fill="url(#bubble)"/>
+  <path d="M11 27c2-7 12-12 23-12-8 1-17 5-23 12Z" fill="#ebc1f8" fill-opacity=".7"/>
+  <path d="M14 22h12v2l-3 .7 5.5 8.1 6-8.1L32 24v-2h11v2l-4 1-7.5 11.3-.8 7.7h4v2H21v-2h4.4l.7-7.7L18 25l-4-1Z" fill="#fff"/>
+  <path d="M45 20h6l-5 15h-4Z" fill="#fff"/>
+  <circle cx="42" cy="40" r="2.5" fill="#fff"/>
+  <path d="M3.5 43.5C-1 54 27 49 46 42" stroke="url(#orbit)" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M50 36c4 4 7 5 11 6-1 9-3 14-11 19-8-5-10-10-11-19 4-1 7-2 11-6Z" fill="url(#shield)" stroke="#f3dcff" stroke-width="2.8" stroke-linejoin="round"/>
+  <path d="M46.5 48v-2a3.5 3.5 0 0 1 7 0v2" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="44" y="47" width="12" height="9" rx="1.8" fill="#fff"/>
+  <path d="M50 50v3" stroke="#741298" stroke-width="2" stroke-linecap="round"/>
+</svg>

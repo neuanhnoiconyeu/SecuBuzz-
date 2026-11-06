@@ -1,0 +1,77 @@
+{
+  "startedAt": "2026-11-06T04:45:37.688Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Typography baseline has no uncaught runtime errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\typography\\before\\desktop-dark-profile.png",
+    "artifacts\\typography\\before\\desktop-dark-appearance.png",
+    "artifacts\\typography\\before\\desktop-dark-profile-edit.png",
+    "artifacts\\typography\\before\\desktop-dark-empty.png",
+    "artifacts\\typography\\before\\desktop-dark-conversation.png",
+    "artifacts\\typography\\before\\laptop-dark-profile.png",
+    "artifacts\\typography\\before\\laptop-dark-appearance.png",
+    "artifacts\\typography\\before\\laptop-dark-profile-edit.png",
+    "artifacts\\typography\\before\\laptop-dark-empty.png",
+    "artifacts\\typography\\before\\laptop-dark-conversation.png",
+    "artifacts\\typography\\before\\mobile-dark-profile.png",
+    "artifacts\\typography\\before\\mobile-dark-appearance.png",
+    "artifacts\\typography\\before\\mobile-dark-profile-edit.png",
+    "artifacts\\typography\\before\\mobile-dark-empty.png",
+    "artifacts\\typography\\before\\mobile-dark-conversation.png"
+  ],
+  "runtimeErrors": []
+}

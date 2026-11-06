@@ -1,0 +1,34 @@
+{
+  "jest": {
+    "command": "npm test -- --runInBand",
+    "exitCode": 0,
+    "suitesPassed": 21,
+    "testsPassed": 159,
+    "testsFailed": 0,
+    "previousTestsPreserved": 159
+  },
+  "typescript": {
+    "command": "npm run type-check",
+    "exitCode": 0
+  },
+  "productionBuild": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "routeSize": "27.3 kB",
+    "firstLoadJs": "115 kB",
+    "warnings": []
+  },
+  "fonts": {
+    "loading": "next/font/local",
+    "files": 2,
+    "bytes": 255672,
+    "licenses": "SIL Open Font License 1.1; originals and public notices bundled",
+    "buildTimeFontDownloads": false,
+    "provenance": "../../client/src/assets/fonts/README.md"
+  },
+  "protectedScope": {
+    "filesChecked": 40,
+    "filesChanged": 0,
+    "evidence": "protected-scope-evidence.json"
+  }
+}

@@ -1,0 +1,991 @@
+{
+  "startedAt": "2026-11-06T05:19:45.221Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "edge 720 light complete title-bar branding stays on one unclipped line",
+      "passed": true,
+      "detail": {
+        "width": 720,
+        "documentWidth": 720,
+        "chrome": {
+          "x": 15.390625,
+          "y": 15.390625,
+          "width": 689.21875,
+          "height": 28.796875
+        },
+        "mark": {
+          "x": 55.375,
+          "y": 21.984375,
+          "width": 220.3125,
+          "height": 15.59375
+        },
+        "parts": [
+          {
+            "text": "Yahoo! Security",
+            "x": 55.375,
+            "y": 20.984375,
+            "width": 116.09375,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          },
+          {
+            "text": "Messenger 2.0",
+            "x": 176.265625,
+            "y": 20.984375,
+            "width": 99.421875,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          }
+        ],
+        "navMarkHidden": false,
+        "navName": {
+          "width": 145.125,
+          "height": 18,
+          "scrollWidth": 145,
+          "clientWidth": 145,
+          "lineHeight": 18
+        }
+      }
+    },
+    {
+      "label": "edge 720 light page and navigation branding fit",
+      "passed": true,
+      "detail": {
+        "width": 720,
+        "documentWidth": 720,
+        "chrome": {
+          "x": 15.390625,
+          "y": 15.390625,
+          "width": 689.21875,
+          "height": 28.796875
+        },
+        "mark": {
+          "x": 55.375,
+          "y": 21.984375,
+          "width": 220.3125,
+          "height": 15.59375
+        },
+        "parts": [
+          {
+            "text": "Yahoo! Security",
+            "x": 55.375,
+            "y": 20.984375,
+            "width": 116.09375,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          },
+          {
+            "text": "Messenger 2.0",
+            "x": 176.265625,
+            "y": 20.984375,
+            "width": 99.421875,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          }
+        ],
+        "navMarkHidden": false,
+        "navName": {
+          "width": 145.125,
+          "height": 18,
+          "scrollWidth": 145,
+          "clientWidth": 145,
+          "lineHeight": 18
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "edge 681 light complete title-bar branding stays on one unclipped line",
+      "passed": true,
+      "detail": {
+        "width": 681,
+        "documentWidth": 681,
+        "chrome": {
+          "x": 14.609375,
+          "y": 14.609375,
+          "width": 651.78125,
+          "height": 28.796875
+        },
+        "mark": {
+          "x": 54.59375,
+          "y": 21.203125,
+          "width": 220.3125,
+          "height": 15.59375
+        },
+        "parts": [
+          {
+            "text": "Yahoo! Security",
+            "x": 54.59375,
+            "y": 20.203125,
+            "width": 116.09375,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          },
+          {
+            "text": "Messenger 2.0",
+            "x": 175.484375,
+            "y": 20.203125,
+            "width": 99.421875,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          }
+        ],
+        "navMarkHidden": false,
+        "navName": {
+          "width": 145.125,
+          "height": 18,
+          "scrollWidth": 145,
+          "clientWidth": 145,
+          "lineHeight": 18
+        }
+      }
+    },
+    {
+      "label": "edge 681 light page and navigation branding fit",
+      "passed": true,
+      "detail": {
+        "width": 681,
+        "documentWidth": 681,
+        "chrome": {
+          "x": 14.609375,
+          "y": 14.609375,
+          "width": 651.78125,
+          "height": 28.796875
+        },
+        "mark": {
+          "x": 54.59375,
+          "y": 21.203125,
+          "width": 220.3125,
+          "height": 15.59375
+        },
+        "parts": [
+          {
+            "text": "Yahoo! Security",
+            "x": 54.59375,
+            "y": 20.203125,
+            "width": 116.09375,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          },
+          {
+            "text": "Messenger 2.0",
+            "x": 175.484375,
+            "y": 20.203125,
+            "width": 99.421875,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          }
+        ],
+        "navMarkHidden": false,
+        "navName": {
+          "width": 145.125,
+          "height": 18,
+          "scrollWidth": 145,
+          "clientWidth": 145,
+          "lineHeight": 18
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "edge 680 light complete title-bar branding stays on one unclipped line",
+      "passed": true,
+      "detail": {
+        "width": 680,
+        "documentWidth": 680,
+        "chrome": {
+          "x": 0,
+          "y": 0,
+          "width": 680,
+          "height": 24
+        },
+        "mark": {
+          "x": 39.984375,
+          "y": 4.203125,
+          "width": 220.3125,
+          "height": 15.59375
+        },
+        "parts": [
+          {
+            "text": "Yahoo! Security",
+            "x": 39.984375,
+            "y": 3.203125,
+            "width": 116.09375,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          },
+          {
+            "text": "Messenger 2.0",
+            "x": 160.875,
+            "y": 3.203125,
+            "width": 99.421875,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          }
+        ],
+        "navMarkHidden": true,
+        "navName": {
+          "width": 0,
+          "height": 0,
+          "scrollWidth": 0,
+          "clientWidth": 0,
+          "lineHeight": 18
+        }
+      }
+    },
+    {
+      "label": "edge 680 light page and navigation branding fit",
+      "passed": true,
+      "detail": {
+        "width": 680,
+        "documentWidth": 680,
+        "chrome": {
+          "x": 0,
+          "y": 0,
+          "width": 680,
+          "height": 24
+        },
+        "mark": {
+          "x": 39.984375,
+          "y": 4.203125,
+          "width": 220.3125,
+          "height": 15.59375
+        },
+        "parts": [
+          {
+            "text": "Yahoo! Security",
+            "x": 39.984375,
+            "y": 3.203125,
+            "width": 116.09375,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          },
+          {
+            "text": "Messenger 2.0",
+            "x": 160.875,
+            "y": 3.203125,
+            "width": 99.421875,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          }
+        ],
+        "navMarkHidden": true,
+        "navName": {
+          "width": 0,
+          "height": 0,
+          "scrollWidth": 0,
+          "clientWidth": 0,
+          "lineHeight": 18
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "edge 720 dark complete title-bar branding stays on one unclipped line",
+      "passed": true,
+      "detail": {
+        "width": 720,
+        "documentWidth": 720,
+        "chrome": {
+          "x": 15.390625,
+          "y": 15.390625,
+          "width": 689.21875,
+          "height": 28.796875
+        },
+        "mark": {
+          "x": 55.375,
+          "y": 21.984375,
+          "width": 220.3125,
+          "height": 15.59375
+        },
+        "parts": [
+          {
+            "text": "Yahoo! Security",
+            "x": 55.375,
+            "y": 20.984375,
+            "width": 116.09375,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          },
+          {
+            "text": "Messenger 2.0",
+            "x": 176.265625,
+            "y": 20.984375,
+            "width": 99.421875,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          }
+        ],
+        "navMarkHidden": false,
+        "navName": {
+          "width": 145.125,
+          "height": 18,
+          "scrollWidth": 145,
+          "clientWidth": 145,
+          "lineHeight": 18
+        }
+      }
+    },
+    {
+      "label": "edge 720 dark page and navigation branding fit",
+      "passed": true,
+      "detail": {
+        "width": 720,
+        "documentWidth": 720,
+        "chrome": {
+          "x": 15.390625,
+          "y": 15.390625,
+          "width": 689.21875,
+          "height": 28.796875
+        },
+        "mark": {
+          "x": 55.375,
+          "y": 21.984375,
+          "width": 220.3125,
+          "height": 15.59375
+        },
+        "parts": [
+          {
+            "text": "Yahoo! Security",
+            "x": 55.375,
+            "y": 20.984375,
+            "width": 116.09375,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          },
+          {
+            "text": "Messenger 2.0",
+            "x": 176.265625,
+            "y": 20.984375,
+            "width": 99.421875,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          }
+        ],
+        "navMarkHidden": false,
+        "navName": {
+          "width": 145.125,
+          "height": 18,
+          "scrollWidth": 145,
+          "clientWidth": 145,
+          "lineHeight": 18
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "edge 681 dark complete title-bar branding stays on one unclipped line",
+      "passed": true,
+      "detail": {
+        "width": 681,
+        "documentWidth": 681,
+        "chrome": {
+          "x": 14.609375,
+          "y": 14.609375,
+          "width": 651.78125,
+          "height": 28.796875
+        },
+        "mark": {
+          "x": 54.59375,
+          "y": 21.203125,
+          "width": 220.3125,
+          "height": 15.59375
+        },
+        "parts": [
+          {
+            "text": "Yahoo! Security",
+            "x": 54.59375,
+            "y": 20.203125,
+            "width": 116.09375,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          },
+          {
+            "text": "Messenger 2.0",
+            "x": 175.484375,
+            "y": 20.203125,
+            "width": 99.421875,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          }
+        ],
+        "navMarkHidden": false,
+        "navName": {
+          "width": 145.125,
+          "height": 18,
+          "scrollWidth": 145,
+          "clientWidth": 145,
+          "lineHeight": 18
+        }
+      }
+    },
+    {
+      "label": "edge 681 dark page and navigation branding fit",
+      "passed": true,
+      "detail": {
+        "width": 681,
+        "documentWidth": 681,
+        "chrome": {
+          "x": 14.609375,
+          "y": 14.609375,
+          "width": 651.78125,
+          "height": 28.796875
+        },
+        "mark": {
+          "x": 54.59375,
+          "y": 21.203125,
+          "width": 220.3125,
+          "height": 15.59375
+        },
+        "parts": [
+          {
+            "text": "Yahoo! Security",
+            "x": 54.59375,
+            "y": 20.203125,
+            "width": 116.09375,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          },
+          {
+            "text": "Messenger 2.0",
+            "x": 175.484375,
+            "y": 20.203125,
+            "width": 99.421875,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          }
+        ],
+        "navMarkHidden": false,
+        "navName": {
+          "width": 145.125,
+          "height": 18,
+          "scrollWidth": 145,
+          "clientWidth": 145,
+          "lineHeight": 18
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "edge 680 dark complete title-bar branding stays on one unclipped line",
+      "passed": true,
+      "detail": {
+        "width": 680,
+        "documentWidth": 680,
+        "chrome": {
+          "x": 0,
+          "y": 0,
+          "width": 680,
+          "height": 24
+        },
+        "mark": {
+          "x": 39.984375,
+          "y": 4.203125,
+          "width": 220.3125,
+          "height": 15.59375
+        },
+        "parts": [
+          {
+            "text": "Yahoo! Security",
+            "x": 39.984375,
+            "y": 3.203125,
+            "width": 116.09375,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          },
+          {
+            "text": "Messenger 2.0",
+            "x": 160.875,
+            "y": 3.203125,
+            "width": 99.421875,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          }
+        ],
+        "navMarkHidden": true,
+        "navName": {
+          "width": 0,
+          "height": 0,
+          "scrollWidth": 0,
+          "clientWidth": 0,
+          "lineHeight": 18
+        }
+      }
+    },
+    {
+      "label": "edge 680 dark page and navigation branding fit",
+      "passed": true,
+      "detail": {
+        "width": 680,
+        "documentWidth": 680,
+        "chrome": {
+          "x": 0,
+          "y": 0,
+          "width": 680,
+          "height": 24
+        },
+        "mark": {
+          "x": 39.984375,
+          "y": 4.203125,
+          "width": 220.3125,
+          "height": 15.59375
+        },
+        "parts": [
+          {
+            "text": "Yahoo! Security",
+            "x": 39.984375,
+            "y": 3.203125,
+            "width": 116.09375,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          },
+          {
+            "text": "Messenger 2.0",
+            "x": 160.875,
+            "y": 3.203125,
+            "width": 99.421875,
+            "height": 16,
+            "clientWidth": 0,
+            "scrollWidth": 0,
+            "lineHeight": 15.6,
+            "fontSize": 12
+          }
+        ],
+        "navMarkHidden": true,
+        "navName": {
+          "width": 0,
+          "height": 0,
+          "scrollWidth": 0,
+          "clientWidth": 0,
+          "lineHeight": 18
+        }
+      }
+    },
+    {
+      "label": "Brand breakpoint edges have no runtime errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\brand-typography\\after\\edge-720-light.png",
+    "artifacts\\brand-typography\\after\\edge-681-light.png",
+    "artifacts\\brand-typography\\after\\edge-680-light.png",
+    "artifacts\\brand-typography\\after\\edge-720-dark.png",
+    "artifacts\\brand-typography\\after\\edge-681-dark.png",
+    "artifacts\\brand-typography\\after\\edge-680-dark.png"
+  ],
+  "runtimeErrors": [],
+  "fonts": [],
+  "layouts": [
+    {
+      "label": "edge 720 light",
+      "width": 720,
+      "documentWidth": 720,
+      "chrome": {
+        "x": 15.390625,
+        "y": 15.390625,
+        "width": 689.21875,
+        "height": 28.796875
+      },
+      "mark": {
+        "x": 55.375,
+        "y": 21.984375,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 55.375,
+          "y": 20.984375,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 176.265625,
+          "y": 20.984375,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": false,
+      "navName": {
+        "width": 145.125,
+        "height": 18,
+        "scrollWidth": 145,
+        "clientWidth": 145,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "edge 681 light",
+      "width": 681,
+      "documentWidth": 681,
+      "chrome": {
+        "x": 14.609375,
+        "y": 14.609375,
+        "width": 651.78125,
+        "height": 28.796875
+      },
+      "mark": {
+        "x": 54.59375,
+        "y": 21.203125,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 54.59375,
+          "y": 20.203125,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 175.484375,
+          "y": 20.203125,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": false,
+      "navName": {
+        "width": 145.125,
+        "height": 18,
+        "scrollWidth": 145,
+        "clientWidth": 145,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "edge 680 light",
+      "width": 680,
+      "documentWidth": 680,
+      "chrome": {
+        "x": 0,
+        "y": 0,
+        "width": 680,
+        "height": 24
+      },
+      "mark": {
+        "x": 39.984375,
+        "y": 4.203125,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 39.984375,
+          "y": 3.203125,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 160.875,
+          "y": 3.203125,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": true,
+      "navName": {
+        "width": 0,
+        "height": 0,
+        "scrollWidth": 0,
+        "clientWidth": 0,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "edge 720 dark",
+      "width": 720,
+      "documentWidth": 720,
+      "chrome": {
+        "x": 15.390625,
+        "y": 15.390625,
+        "width": 689.21875,
+        "height": 28.796875
+      },
+      "mark": {
+        "x": 55.375,
+        "y": 21.984375,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 55.375,
+          "y": 20.984375,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 176.265625,
+          "y": 20.984375,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": false,
+      "navName": {
+        "width": 145.125,
+        "height": 18,
+        "scrollWidth": 145,
+        "clientWidth": 145,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "edge 681 dark",
+      "width": 681,
+      "documentWidth": 681,
+      "chrome": {
+        "x": 14.609375,
+        "y": 14.609375,
+        "width": 651.78125,
+        "height": 28.796875
+      },
+      "mark": {
+        "x": 54.59375,
+        "y": 21.203125,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 54.59375,
+          "y": 20.203125,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 175.484375,
+          "y": 20.203125,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": false,
+      "navName": {
+        "width": 145.125,
+        "height": 18,
+        "scrollWidth": 145,
+        "clientWidth": 145,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "edge 680 dark",
+      "width": 680,
+      "documentWidth": 680,
+      "chrome": {
+        "x": 0,
+        "y": 0,
+        "width": 680,
+        "height": 24
+      },
+      "mark": {
+        "x": 39.984375,
+        "y": 4.203125,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 39.984375,
+          "y": 3.203125,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 160.875,
+          "y": 3.203125,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": true,
+      "navName": {
+        "width": 0,
+        "height": 0,
+        "scrollWidth": 0,
+        "clientWidth": 0,
+        "lineHeight": 18
+      }
+    }
+  ],
+  "fontLoads": [],
+  "console": []
+}

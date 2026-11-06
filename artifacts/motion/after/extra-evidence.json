@@ -1,0 +1,380 @@
+{
+  "startedAt": "2026-11-06T02:27:10.927Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "390x700 expanded security bounds",
+      "detail": {
+        "viewport": {
+          "width": 390,
+          "height": 700,
+          "documentHeight": 700
+        },
+        "chat": {
+          "x": 0,
+          "y": 86.59375,
+          "width": 390,
+          "height": 584.625,
+          "right": 390,
+          "bottom": 671.21875,
+          "scrollHeight": 585,
+          "clientHeight": 585,
+          "overflowY": "auto"
+        },
+        "toolbar": {
+          "x": 0,
+          "y": 86.59375,
+          "width": 390,
+          "height": 259.71875,
+          "right": 390,
+          "bottom": 346.3125,
+          "scrollHeight": 259,
+          "clientHeight": 259,
+          "overflowY": "visible"
+        },
+        "composer": {
+          "x": 0,
+          "y": 556.25,
+          "width": 390,
+          "height": 114.96875,
+          "right": 390,
+          "bottom": 671.21875,
+          "scrollHeight": 115,
+          "clientHeight": 115,
+          "overflowY": "visible"
+        },
+        "buzz": {
+          "x": 17.796875,
+          "y": 572.4375,
+          "width": 44,
+          "height": 44,
+          "right": 61.796875,
+          "bottom": 616.4375,
+          "scrollHeight": 42,
+          "clientHeight": 42,
+          "overflowY": "visible"
+        },
+        "history": {
+          "x": 0,
+          "y": 346.3125,
+          "width": 390,
+          "height": 209.9375,
+          "right": 390,
+          "bottom": 556.25,
+          "scrollHeight": 253,
+          "clientHeight": 210,
+          "overflowY": "auto"
+        },
+        "security": {
+          "x": 16,
+          "y": 222.82611083984375,
+          "width": 358,
+          "height": 112,
+          "right": 374,
+          "bottom": 334.82611083984375,
+          "scrollHeight": 216,
+          "clientHeight": 110,
+          "overflowY": "auto"
+        }
+      }
+    },
+    {
+      "label": "390x700 expanded security leaves non-overlapping message history",
+      "passed": true,
+      "detail": {
+        "viewport": {
+          "width": 390,
+          "height": 700,
+          "documentHeight": 700
+        },
+        "chat": {
+          "x": 0,
+          "y": 86.59375,
+          "width": 390,
+          "height": 584.625,
+          "right": 390,
+          "bottom": 671.21875,
+          "scrollHeight": 585,
+          "clientHeight": 585,
+          "overflowY": "auto"
+        },
+        "toolbar": {
+          "x": 0,
+          "y": 86.59375,
+          "width": 390,
+          "height": 259.71875,
+          "right": 390,
+          "bottom": 346.3125,
+          "scrollHeight": 259,
+          "clientHeight": 259,
+          "overflowY": "visible"
+        },
+        "composer": {
+          "x": 0,
+          "y": 556.25,
+          "width": 390,
+          "height": 114.96875,
+          "right": 390,
+          "bottom": 671.21875,
+          "scrollHeight": 115,
+          "clientHeight": 115,
+          "overflowY": "visible"
+        },
+        "buzz": {
+          "x": 17.796875,
+          "y": 572.4375,
+          "width": 44,
+          "height": 44,
+          "right": 61.796875,
+          "bottom": 616.4375,
+          "scrollHeight": 42,
+          "clientHeight": 42,
+          "overflowY": "visible"
+        },
+        "history": {
+          "x": 0,
+          "y": 346.3125,
+          "width": 390,
+          "height": 209.9375,
+          "right": 390,
+          "bottom": 556.25,
+          "scrollHeight": 253,
+          "clientHeight": 210,
+          "overflowY": "auto"
+        },
+        "security": {
+          "x": 16,
+          "y": 222.82611083984375,
+          "width": 358,
+          "height": 112,
+          "right": 374,
+          "bottom": 334.82611083984375,
+          "scrollHeight": 216,
+          "clientHeight": 110,
+          "overflowY": "auto"
+        }
+      }
+    },
+    {
+      "label": "390x700 expanded security keeps composer reachable",
+      "passed": true,
+      "detail": {
+        "chatBottom": 671.21875,
+        "composerBottom": 671.21875,
+        "buzzBottom": 616.4375,
+        "buzzTop": 572.4375,
+        "pageY": 0,
+        "documentHeight": 700,
+        "height": 700
+      }
+    },
+    {
+      "label": "390x600 expanded security bounds",
+      "detail": {
+        "viewport": {
+          "width": 390,
+          "height": 600,
+          "documentHeight": 600
+        },
+        "chat": {
+          "x": 0,
+          "y": 86.59375,
+          "width": 390,
+          "height": 484.625,
+          "right": 390,
+          "bottom": 571.21875,
+          "scrollHeight": 485,
+          "clientHeight": 485,
+          "overflowY": "auto"
+        },
+        "toolbar": {
+          "x": 0,
+          "y": 86.59375,
+          "width": 390,
+          "height": 259.71875,
+          "right": 390,
+          "bottom": 346.3125,
+          "scrollHeight": 259,
+          "clientHeight": 259,
+          "overflowY": "visible"
+        },
+        "composer": {
+          "x": 0,
+          "y": 456.25,
+          "width": 390,
+          "height": 114.96875,
+          "right": 390,
+          "bottom": 571.21875,
+          "scrollHeight": 115,
+          "clientHeight": 115,
+          "overflowY": "visible"
+        },
+        "buzz": {
+          "x": 17.796875,
+          "y": 472.4375,
+          "width": 44,
+          "height": 44,
+          "right": 61.796875,
+          "bottom": 516.4375,
+          "scrollHeight": 42,
+          "clientHeight": 42,
+          "overflowY": "visible"
+        },
+        "history": {
+          "x": 0,
+          "y": 346.3125,
+          "width": 390,
+          "height": 109.9375,
+          "right": 390,
+          "bottom": 456.25,
+          "scrollHeight": 253,
+          "clientHeight": 110,
+          "overflowY": "auto"
+        },
+        "security": {
+          "x": 16,
+          "y": 222.74838256835938,
+          "width": 358,
+          "height": 112,
+          "right": 374,
+          "bottom": 334.7483825683594,
+          "scrollHeight": 216,
+          "clientHeight": 110,
+          "overflowY": "auto"
+        }
+      }
+    },
+    {
+      "label": "390x600 expanded security leaves non-overlapping message history",
+      "passed": true,
+      "detail": {
+        "viewport": {
+          "width": 390,
+          "height": 600,
+          "documentHeight": 600
+        },
+        "chat": {
+          "x": 0,
+          "y": 86.59375,
+          "width": 390,
+          "height": 484.625,
+          "right": 390,
+          "bottom": 571.21875,
+          "scrollHeight": 485,
+          "clientHeight": 485,
+          "overflowY": "auto"
+        },
+        "toolbar": {
+          "x": 0,
+          "y": 86.59375,
+          "width": 390,
+          "height": 259.71875,
+          "right": 390,
+          "bottom": 346.3125,
+          "scrollHeight": 259,
+          "clientHeight": 259,
+          "overflowY": "visible"
+        },
+        "composer": {
+          "x": 0,
+          "y": 456.25,
+          "width": 390,
+          "height": 114.96875,
+          "right": 390,
+          "bottom": 571.21875,
+          "scrollHeight": 115,
+          "clientHeight": 115,
+          "overflowY": "visible"
+        },
+        "buzz": {
+          "x": 17.796875,
+          "y": 472.4375,
+          "width": 44,
+          "height": 44,
+          "right": 61.796875,
+          "bottom": 516.4375,
+          "scrollHeight": 42,
+          "clientHeight": 42,
+          "overflowY": "visible"
+        },
+        "history": {
+          "x": 0,
+          "y": 346.3125,
+          "width": 390,
+          "height": 109.9375,
+          "right": 390,
+          "bottom": 456.25,
+          "scrollHeight": 253,
+          "clientHeight": 110,
+          "overflowY": "auto"
+        },
+        "security": {
+          "x": 16,
+          "y": 222.74838256835938,
+          "width": 358,
+          "height": 112,
+          "right": 374,
+          "bottom": 334.7483825683594,
+          "scrollHeight": 216,
+          "clientHeight": 110,
+          "overflowY": "auto"
+        }
+      }
+    },
+    {
+      "label": "390x600 expanded security keeps composer reachable",
+      "passed": true,
+      "detail": {
+        "chatBottom": 571.21875,
+        "composerBottom": 571.21875,
+        "buzzBottom": 516.4375,
+        "buzzTop": 472.4375,
+        "pageY": 0,
+        "documentHeight": 600,
+        "height": 600
+      }
+    }
+  ],
+  "screenshots": [
+    "artifacts\\motion\\after\\mobile-cancel-inspection.png",
+    "artifacts\\motion\\after\\mobile-700-security-expanded.png",
+    "artifacts\\motion\\after\\mobile-700-composer-reachable.png",
+    "artifacts\\motion\\after\\mobile-600-security-expanded.png",
+    "artifacts\\motion\\after\\mobile-600-composer-reachable.png"
+  ],
+  "runtimeErrors": [],
+  "buttons": [
+    {
+      "text": "Cancel",
+      "className": "ui-button ui-button--outline ui-button--md",
+      "disabled": false,
+      "color": "rgb(93, 35, 143)",
+      "background": "rgb(255, 255, 255)",
+      "opacity": "1",
+      "surface": "#ffffff",
+      "brand": "#6f2da8"
+    },
+    {
+      "text": "Save changes",
+      "className": "ui-button ui-button--primary ui-button--md",
+      "disabled": false,
+      "color": "rgb(255, 255, 255)",
+      "background": "rgb(111, 45, 168)",
+      "opacity": "1",
+      "surface": "#ffffff",
+      "brand": "#6f2da8"
+    }
+  ]
+}

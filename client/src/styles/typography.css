@@ -1,0 +1,97 @@
+/* Families are supplied once by next/font/local in the root layout. */
+:root {
+  --font-display: var(--font-bungee, Impact, "Arial Black", sans-serif);
+  --font-body: var(--font-space-grotesk, system-ui), -apple-system, BlinkMacSystemFont, "Segoe UI", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+  /* Existing components and Tailwind utilities share the same font source. */
+  --font-family-base: var(--font-body);
+  --font-family-retro: var(--font-display);
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.375rem;
+  --font-size-2xl: 1.75rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --type-display-size: 1.5rem;
+  --type-feature-size: 1.625rem;
+  --type-heading-size: 1.25rem;
+  --type-conversation-size: 1.25rem;
+  --type-empty-size: 1.375rem;
+  --type-modal-size: 1.25rem;
+  --type-section-size: 1.125rem;
+  --type-list-size: 0.9375rem;
+  --type-body-size: 0.9375rem;
+  --type-label-size: 0.875rem;
+  --type-caption-size: 0.75rem;
+  --type-button-size: 0.875rem;
+  --type-input-size: 1rem;
+  --type-buzz-size: 0.8125rem;
+  --type-brand-size: 1rem;
+  --type-titlebar-size: 0.75rem;
+  --type-brand-line: 1.2;
+  --type-brand-tracking: 0;
+  --type-display-line: 1.3;
+  --type-heading-line: 1.35;
+  --type-body-line: 1.6;
+  --type-label-line: 1.4;
+  --type-caption-line: 1.5;
+  --type-button-line: 1.25;
+  --type-buzz-line: 1.2;
+  --type-display-tracking: 0.015em;
+  --type-buzz-tracking: 0.02em;
+}
+
+/* Headings, branding, and BUZZ share one Bungee family/weight declaration. */
+.display-heading, .type-display, .type-heading, .retro-label, .type-buzz, .composer-dock .composer-buzz, .brand-logo-name, .messenger-window-chrome .brand-logo-wordmark {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-normal);
+  font-synthesis: none;
+}
+.display-heading, .type-display, .type-heading, .retro-label {
+  font-size: var(--display-heading-size, var(--type-display-size));
+  line-height: var(--type-display-line);
+  letter-spacing: var(--type-display-tracking);
+  overflow-wrap: anywhere;
+}
+.display-heading--page { --display-heading-size: var(--type-feature-size); }
+.display-heading--conversation { --display-heading-size: var(--type-conversation-size); }
+.display-heading--empty { --display-heading-size: var(--type-empty-size); }
+.display-heading--modal { --display-heading-size: var(--type-modal-size); }
+.display-heading--section { --display-heading-size: var(--type-section-size); line-height: var(--type-heading-line); }
+.retro-label { font-size: var(--type-caption-size); }
+.type-heading { --display-heading-size: var(--type-heading-size); }
+.type-body { font-family: var(--font-body); font-size: var(--type-body-size); font-weight: var(--font-weight-normal); line-height: var(--type-body-line); }
+.type-label { font-family: var(--font-body); font-size: var(--type-label-size); font-weight: var(--font-weight-semibold); line-height: var(--type-label-line); }
+.type-caption { font-family: var(--font-body); font-size: var(--type-caption-size); font-weight: var(--font-weight-normal); line-height: var(--type-caption-line); }
+.type-button { font-family: var(--font-body); font-size: var(--type-button-size); font-weight: var(--font-weight-semibold); line-height: var(--type-button-line); }
+.type-buzz, .composer-dock .composer-buzz {
+  font-size: var(--type-buzz-size);
+  line-height: var(--type-buzz-line);
+  letter-spacing: var(--type-buzz-tracking);
+}
+.debug-log, .profile-details code { font-family: var(--font-body); }
+.profile-details code { font-size: var(--type-caption-size); }
+
+.brand-logo-name { font-size: var(--type-brand-size); line-height: var(--type-brand-line); letter-spacing: var(--type-brand-tracking); }
+.messenger-window-chrome .brand-logo-wordmark { font-size: var(--type-titlebar-size); line-height: var(--type-display-line); letter-spacing: var(--type-brand-tracking); }
+.messenger-window-chrome .brand-logo-name, .messenger-window-chrome .brand-logo-subtitle { font-size: inherit; font-weight: var(--font-weight-normal); line-height: inherit; letter-spacing: inherit; }
+
+@media (max-width: 1100px) {
+  :root { --type-brand-size: 0.9375rem; }
+}
+
+@media (max-width: 680px) {
+  :root {
+    --type-display-size: 1.375rem;
+    --type-feature-size: 1.5rem;
+    --type-conversation-size: 1.125rem;
+    --type-empty-size: 1.25rem;
+    --type-modal-size: 1.125rem;
+    --type-section-size: 1rem;
+    --type-buzz-size: 0.75rem;
+  }
+}

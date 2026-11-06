@@ -1,0 +1,77 @@
+{
+  "startedAt": "2026-11-06T04:54:02.397Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Preview has no uncaught runtime errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\typography\\after\\desktop-light-profile.png",
+    "artifacts\\typography\\after\\desktop-light-appearance.png",
+    "artifacts\\typography\\after\\desktop-light-profile-edit.png",
+    "artifacts\\typography\\after\\desktop-light-empty.png",
+    "artifacts\\typography\\after\\desktop-light-conversation.png",
+    "artifacts\\typography\\after\\laptop-light-profile.png",
+    "artifacts\\typography\\after\\laptop-light-appearance.png",
+    "artifacts\\typography\\after\\laptop-light-profile-edit.png",
+    "artifacts\\typography\\after\\laptop-light-empty.png",
+    "artifacts\\typography\\after\\laptop-light-conversation.png",
+    "artifacts\\typography\\after\\mobile-light-profile.png",
+    "artifacts\\typography\\after\\mobile-light-appearance.png",
+    "artifacts\\typography\\after\\mobile-light-profile-edit.png",
+    "artifacts\\typography\\after\\mobile-light-empty.png",
+    "artifacts\\typography\\after\\mobile-light-conversation.png"
+  ],
+  "runtimeErrors": []
+}

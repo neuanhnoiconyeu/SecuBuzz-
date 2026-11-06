@@ -1,0 +1,3001 @@
+{
+  "startedAt": "2026-11-06T04:07:01.530Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Appearance exposes three native labelled radio options",
+      "passed": true
+    },
+    {
+      "label": "Native ArrowRight changes theme and retains radio focus",
+      "passed": true
+    },
+    {
+      "label": "Dark preference persists independently of identity data",
+      "passed": true
+    },
+    {
+      "label": "System preference resolves the emulated Light OS",
+      "passed": true
+    },
+    {
+      "label": "System follows a live OS change without reload",
+      "passed": true
+    },
+    {
+      "label": "Explicit Light ignores a Dark OS",
+      "passed": true
+    },
+    {
+      "label": "Explicit Dark ignores a Light OS",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Saved Dark survives reload under a Light OS",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "OS theme updates do not lose an in-progress identity draft",
+      "passed": true
+    },
+    {
+      "label": "Button available: Cancel",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Button available: Cancel",
+      "passed": true
+    },
+    {
+      "label": "Identity Cancel preserves the independent appearance preference",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Changing theme preserves message DOM and typed draft",
+      "passed": true
+    },
+    {
+      "label": "Changing theme does not restart the unrelated ambient clock",
+      "passed": true
+    },
+    {
+      "label": "Startup resolves dark / OS light before observed paint",
+      "passed": true,
+      "detail": {
+        "preference": "dark",
+        "os": "light",
+        "expected": "dark",
+        "paints": [
+          {
+            "phase": "paint:first-paint",
+            "time": 471.30000001192093,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "paint:first-contentful-paint",
+            "time": 471.40000000596046,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          }
+        ],
+        "firstFrames": [
+          {
+            "phase": "frame:0",
+            "time": 250.60000002384186,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:1",
+            "time": 309.80000001192093,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:2",
+            "time": 358.10000002384186,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:3",
+            "time": 406.80000001192093,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          }
+        ]
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Stored dark selects the correct preference radio",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Startup resolves light / OS dark before observed paint",
+      "passed": true,
+      "detail": {
+        "preference": "light",
+        "os": "dark",
+        "expected": "light",
+        "paints": [
+          {
+            "phase": "paint:first-paint",
+            "time": 710.5,
+            "theme": "light",
+            "scheme": "light",
+            "hasApp": true,
+            "body": "rgb(233, 228, 239)",
+            "meta": "#e9e4ef"
+          },
+          {
+            "phase": "paint:first-contentful-paint",
+            "time": 710.5999999940395,
+            "theme": "light",
+            "scheme": "light",
+            "hasApp": true,
+            "body": "rgb(233, 228, 239)",
+            "meta": "#e9e4ef"
+          }
+        ],
+        "firstFrames": [
+          {
+            "phase": "frame:0",
+            "time": 376.59999999403954,
+            "theme": "light",
+            "scheme": "light",
+            "hasApp": true,
+            "body": "rgb(233, 228, 239)",
+            "meta": "#e9e4ef"
+          },
+          {
+            "phase": "frame:1",
+            "time": 414.90000000596046,
+            "theme": "light",
+            "scheme": "light",
+            "hasApp": true,
+            "body": "rgb(233, 228, 239)",
+            "meta": "#e9e4ef"
+          },
+          {
+            "phase": "frame:2",
+            "time": 471.30000001192093,
+            "theme": "light",
+            "scheme": "light",
+            "hasApp": true,
+            "body": "rgb(233, 228, 239)",
+            "meta": "#e9e4ef"
+          },
+          {
+            "phase": "frame:3",
+            "time": 605.5999999940395,
+            "theme": "light",
+            "scheme": "light",
+            "hasApp": true,
+            "body": "rgb(233, 228, 239)",
+            "meta": "#e9e4ef"
+          }
+        ]
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Stored light selects the correct preference radio",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Startup resolves system / OS dark before observed paint",
+      "passed": true,
+      "detail": {
+        "preference": "system",
+        "os": "dark",
+        "expected": "dark",
+        "paints": [
+          {
+            "phase": "paint:first-paint",
+            "time": 698,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "paint:first-contentful-paint",
+            "time": 698.2000000178814,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          }
+        ],
+        "firstFrames": [
+          {
+            "phase": "frame:0",
+            "time": 410,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:1",
+            "time": 462.30000001192093,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:2",
+            "time": 465.30000001192093,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:3",
+            "time": 629.3000000119209,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          }
+        ]
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Stored system selects the correct preference radio",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Startup resolves invalid-value / OS dark before observed paint",
+      "passed": true,
+      "detail": {
+        "preference": "invalid-value",
+        "os": "dark",
+        "expected": "dark",
+        "paints": [
+          {
+            "phase": "paint:first-paint",
+            "time": 582.2000000178814,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "paint:first-contentful-paint",
+            "time": 582.3000000119209,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          }
+        ],
+        "firstFrames": [
+          {
+            "phase": "frame:0",
+            "time": 293.90000000596046,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:1",
+            "time": 320.7000000178814,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:2",
+            "time": 350.60000002384186,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:3",
+            "time": 476.40000000596046,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          }
+        ]
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Stored invalid-value selects the correct preference radio",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Saved Dark is rendered before external hydration scripts run",
+      "passed": true,
+      "detail": {
+        "theme": "dark",
+        "scheme": "dark",
+        "color": "rgb(20, 21, 28)",
+        "browserColor": "#14151c",
+        "hydrated": false,
+        "trace": [
+          {
+            "phase": "root-mutation",
+            "time": 146.30000001192093,
+            "theme": null,
+            "scheme": "",
+            "hasApp": false,
+            "body": null
+          },
+          {
+            "phase": "root-mutation",
+            "time": 146.7000000178814,
+            "theme": null,
+            "scheme": "",
+            "hasApp": false,
+            "body": null
+          },
+          {
+            "phase": "root-mutation",
+            "time": 146.90000000596046,
+            "theme": null,
+            "scheme": "",
+            "hasApp": false,
+            "body": null
+          },
+          {
+            "phase": "root-mutation",
+            "time": 146.90000000596046,
+            "theme": null,
+            "scheme": "",
+            "hasApp": false,
+            "body": null
+          },
+          {
+            "phase": "root-mutation",
+            "time": 148.40000000596046,
+            "theme": null,
+            "scheme": "",
+            "hasApp": false,
+            "body": null,
+            "meta": "#e9e4ef"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 220.5,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": false,
+            "body": null,
+            "meta": "#14151c"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 224,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": false,
+            "body": null,
+            "meta": "#14151c"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 231.7000000178814,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:0",
+            "time": 287.80000001192093,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 323.60000002384186,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 367.90000000596046,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:1",
+            "time": 372.10000002384186,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 405.90000000596046,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 411.10000002384186,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 413.7000000178814,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 415.7000000178814,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 425.5,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 426.10000002384186,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 427.30000001192093,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "root-mutation",
+            "time": 428.40000000596046,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:2",
+            "time": 430.90000000596046,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "paint:first-paint",
+            "time": 441,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "paint:first-contentful-paint",
+            "time": 441,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:3",
+            "time": 441.7000000178814,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:4",
+            "time": 473.10000002384186,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:5",
+            "time": 511.5,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:6",
+            "time": 550.2000000178814,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:7",
+            "time": 586.7000000178814,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:8",
+            "time": 620.4000000059605,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:9",
+            "time": 655.7000000178814,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:10",
+            "time": 692.7000000178814,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          },
+          {
+            "phase": "frame:11",
+            "time": 752.7000000178814,
+            "theme": "dark",
+            "scheme": "dark",
+            "hasApp": true,
+            "body": "rgb(20, 21, 28)",
+            "meta": "#14151c"
+          }
+        ]
+      }
+    },
+    {
+      "label": "Dark remains stable when hydration resumes",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Blocked localStorage safely defaults to System/Dark",
+      "passed": true
+    },
+    {
+      "label": "Blocked storage does not prevent an in-session Light choice",
+      "passed": true
+    },
+    {
+      "label": "System still updates when storage is unavailable",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Quota failure preserves the live UI while leaving previous storage intact",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "After failed persistence, reload uses the last successfully stored preference",
+      "passed": true
+    },
+    {
+      "label": "light desktop has no overflow and all primary controls visible",
+      "passed": true,
+      "detail": {
+        "theme": "light",
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "documentHeight": 1000,
+        "historyWidth": 1070,
+        "historyScrollWidth": 1070,
+        "composer": {
+          "x": 341,
+          "y": 834.953125,
+          "width": 1070,
+          "height": 107.265625,
+          "top": 834.953125,
+          "right": 1411,
+          "bottom": 942.21875,
+          "left": 341
+        },
+        "buzz": {
+          "x": 380.390625,
+          "y": 855.140625,
+          "width": 81.8125,
+          "height": 44,
+          "top": 855.140625,
+          "right": 462.203125,
+          "bottom": 899.140625,
+          "left": 380.390625
+        },
+        "profile": {
+          "x": 1242.09375,
+          "y": 72.40625,
+          "width": 148.90625,
+          "height": 44.375,
+          "top": 72.40625,
+          "right": 1391,
+          "bottom": 116.78125,
+          "left": 1242.09375
+        },
+        "log": {
+          "x": 341,
+          "y": 943.21875,
+          "width": 1070,
+          "height": 27.78125,
+          "top": 943.21875,
+          "right": 1411,
+          "bottom": 971,
+          "left": 341
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "light laptop has no overflow and all primary controls visible",
+      "passed": true,
+      "detail": {
+        "theme": "light",
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "documentHeight": 800,
+        "historyWidth": 701,
+        "historyScrollWidth": 701,
+        "composer": {
+          "x": 301.46875,
+          "y": 642.484375,
+          "width": 701.0625,
+          "height": 107.265625,
+          "top": 642.484375,
+          "right": 1002.53125,
+          "bottom": 749.75,
+          "left": 301.46875
+        },
+        "buzz": {
+          "x": 339.578125,
+          "y": 662.671875,
+          "width": 81.8125,
+          "height": 44,
+          "top": 662.671875,
+          "right": 421.390625,
+          "bottom": 706.671875,
+          "left": 339.578125
+        },
+        "profile": {
+          "x": 837.625,
+          "y": 64.875,
+          "width": 148.90625,
+          "height": 44.375,
+          "top": 64.875,
+          "right": 986.53125,
+          "bottom": 109.25,
+          "left": 837.625
+        },
+        "log": {
+          "x": 301.46875,
+          "y": 750.75,
+          "width": 701.0625,
+          "height": 27.78125,
+          "top": 750.75,
+          "right": 1002.53125,
+          "bottom": 778.53125,
+          "left": 301.46875
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "light mobile has no overflow and all primary controls visible",
+      "passed": true,
+      "detail": {
+        "theme": "light",
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "documentHeight": 844,
+        "historyWidth": 390,
+        "historyScrollWidth": 390,
+        "composer": {
+          "x": 0,
+          "y": 700.25,
+          "width": 390,
+          "height": 114.96875,
+          "top": 700.25,
+          "right": 390,
+          "bottom": 815.21875,
+          "left": 0
+        },
+        "buzz": {
+          "x": 17.796875,
+          "y": 716.4375,
+          "width": 44,
+          "height": 44,
+          "top": 716.4375,
+          "right": 61.796875,
+          "bottom": 760.4375,
+          "left": 17.796875
+        },
+        "profile": {
+          "x": 249.4375,
+          "y": 32.796875,
+          "width": 127.765625,
+          "height": 44,
+          "top": 32.796875,
+          "right": 377.203125,
+          "bottom": 76.796875,
+          "left": 249.4375
+        },
+        "log": {
+          "x": 0,
+          "y": 816.21875,
+          "width": 390,
+          "height": 27.78125,
+          "top": 816.21875,
+          "right": 390,
+          "bottom": 844,
+          "left": 0
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "dark desktop has no overflow and all primary controls visible",
+      "passed": true,
+      "detail": {
+        "theme": "dark",
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "documentHeight": 1000,
+        "historyWidth": 1070,
+        "historyScrollWidth": 1070,
+        "composer": {
+          "x": 341,
+          "y": 834.953125,
+          "width": 1070,
+          "height": 107.265625,
+          "top": 834.953125,
+          "right": 1411,
+          "bottom": 942.21875,
+          "left": 341
+        },
+        "buzz": {
+          "x": 380.390625,
+          "y": 855.140625,
+          "width": 81.8125,
+          "height": 44,
+          "top": 855.140625,
+          "right": 462.203125,
+          "bottom": 899.140625,
+          "left": 380.390625
+        },
+        "profile": {
+          "x": 1242.09375,
+          "y": 72.40625,
+          "width": 148.90625,
+          "height": 44.375,
+          "top": 72.40625,
+          "right": 1391,
+          "bottom": 116.78125,
+          "left": 1242.09375
+        },
+        "log": {
+          "x": 341,
+          "y": 943.21875,
+          "width": 1070,
+          "height": 27.78125,
+          "top": 943.21875,
+          "right": 1411,
+          "bottom": 971,
+          "left": 341
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "dark laptop has no overflow and all primary controls visible",
+      "passed": true,
+      "detail": {
+        "theme": "dark",
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "documentHeight": 800,
+        "historyWidth": 701,
+        "historyScrollWidth": 701,
+        "composer": {
+          "x": 301.46875,
+          "y": 642.484375,
+          "width": 701.0625,
+          "height": 107.265625,
+          "top": 642.484375,
+          "right": 1002.53125,
+          "bottom": 749.75,
+          "left": 301.46875
+        },
+        "buzz": {
+          "x": 339.578125,
+          "y": 662.671875,
+          "width": 81.8125,
+          "height": 44,
+          "top": 662.671875,
+          "right": 421.390625,
+          "bottom": 706.671875,
+          "left": 339.578125
+        },
+        "profile": {
+          "x": 837.625,
+          "y": 64.875,
+          "width": 148.90625,
+          "height": 44.375,
+          "top": 64.875,
+          "right": 986.53125,
+          "bottom": 109.25,
+          "left": 837.625
+        },
+        "log": {
+          "x": 301.46875,
+          "y": 750.75,
+          "width": 701.0625,
+          "height": 27.78125,
+          "top": 750.75,
+          "right": 1002.53125,
+          "bottom": 778.53125,
+          "left": 301.46875
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "dark mobile has no overflow and all primary controls visible",
+      "passed": true,
+      "detail": {
+        "theme": "dark",
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "documentHeight": 844,
+        "historyWidth": 390,
+        "historyScrollWidth": 390,
+        "composer": {
+          "x": 0,
+          "y": 700.25,
+          "width": 390,
+          "height": 114.96875,
+          "top": 700.25,
+          "right": 390,
+          "bottom": 815.21875,
+          "left": 0
+        },
+        "buzz": {
+          "x": 17.796875,
+          "y": 716.4375,
+          "width": 44,
+          "height": 44,
+          "top": 716.4375,
+          "right": 61.796875,
+          "bottom": 760.4375,
+          "left": 17.796875
+        },
+        "profile": {
+          "x": 249.4375,
+          "y": 32.796875,
+          "width": 127.765625,
+          "height": 44,
+          "top": 32.796875,
+          "right": 377.203125,
+          "bottom": 76.796875,
+          "left": 249.4375
+        },
+        "log": {
+          "x": 0,
+          "y": 816.21875,
+          "width": 390,
+          "height": 27.78125,
+          "top": 816.21875,
+          "right": 390,
+          "bottom": 844,
+          "left": 0
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Fresh theme scenarios have no hydration warnings",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "Theme scenarios have no uncaught runtime exceptions",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\charcoal-theme\\after\\dark-before-hydration.png",
+    "artifacts\\charcoal-theme\\after\\desktop-light-empty.png",
+    "artifacts\\charcoal-theme\\after\\desktop-light-profile.png",
+    "artifacts\\charcoal-theme\\after\\desktop-light-appearance.png",
+    "artifacts\\charcoal-theme\\after\\desktop-light-profile-edit.png",
+    "artifacts\\charcoal-theme\\after\\desktop-light-conversation.png",
+    "artifacts\\charcoal-theme\\after\\laptop-light-empty.png",
+    "artifacts\\charcoal-theme\\after\\laptop-light-profile.png",
+    "artifacts\\charcoal-theme\\after\\laptop-light-appearance.png",
+    "artifacts\\charcoal-theme\\after\\laptop-light-profile-edit.png",
+    "artifacts\\charcoal-theme\\after\\laptop-light-conversation.png",
+    "artifacts\\charcoal-theme\\after\\mobile-light-empty.png",
+    "artifacts\\charcoal-theme\\after\\mobile-light-profile.png",
+    "artifacts\\charcoal-theme\\after\\mobile-light-appearance.png",
+    "artifacts\\charcoal-theme\\after\\mobile-light-profile-edit.png",
+    "artifacts\\charcoal-theme\\after\\mobile-light-conversation.png",
+    "artifacts\\charcoal-theme\\after\\desktop-dark-empty.png",
+    "artifacts\\charcoal-theme\\after\\desktop-dark-profile.png",
+    "artifacts\\charcoal-theme\\after\\desktop-dark-appearance.png",
+    "artifacts\\charcoal-theme\\after\\desktop-dark-profile-edit.png",
+    "artifacts\\charcoal-theme\\after\\desktop-dark-conversation.png",
+    "artifacts\\charcoal-theme\\after\\laptop-dark-empty.png",
+    "artifacts\\charcoal-theme\\after\\laptop-dark-profile.png",
+    "artifacts\\charcoal-theme\\after\\laptop-dark-appearance.png",
+    "artifacts\\charcoal-theme\\after\\laptop-dark-profile-edit.png",
+    "artifacts\\charcoal-theme\\after\\laptop-dark-conversation.png",
+    "artifacts\\charcoal-theme\\after\\mobile-dark-empty.png",
+    "artifacts\\charcoal-theme\\after\\mobile-dark-profile.png",
+    "artifacts\\charcoal-theme\\after\\mobile-dark-appearance.png",
+    "artifacts\\charcoal-theme\\after\\mobile-dark-profile-edit.png",
+    "artifacts\\charcoal-theme\\after\\mobile-dark-conversation.png"
+  ],
+  "runtimeErrors": [],
+  "console": [
+    {
+      "type": "warning",
+      "args": [
+        "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority"
+      ]
+    }
+  ],
+  "startup": [
+    {
+      "preference": "dark",
+      "os": "light",
+      "expected": "dark",
+      "trace": [
+        {
+          "phase": "root-mutation",
+          "time": 121.40000000596046,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 121.80000001192093,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 121.80000001192093,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 121.90000000596046,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 122.5,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null,
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 228,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": false,
+          "body": null,
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 228.40000000596046,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": false,
+          "body": null,
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 232.2000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 250.40000000596046,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:0",
+          "time": 250.60000002384186,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 282,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 282.7000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 283.40000000596046,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 284,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 284.2000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 284.40000000596046,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 284.60000002384186,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:1",
+          "time": 309.80000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:2",
+          "time": 358.10000002384186,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:3",
+          "time": 406.80000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:4",
+          "time": 468.10000002384186,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "paint:first-paint",
+          "time": 471.30000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "paint:first-contentful-paint",
+          "time": 471.40000000596046,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:5",
+          "time": 561.6000000238419,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:6",
+          "time": 572.1000000238419,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:7",
+          "time": 613.8000000119209,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:8",
+          "time": 656.7000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:9",
+          "time": 694.1000000238419,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:10",
+          "time": 729.1000000238419,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:11",
+          "time": 764.5,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 1597.5,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 1614,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 1655.9000000059605,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        }
+      ]
+    },
+    {
+      "preference": "light",
+      "os": "dark",
+      "expected": "light",
+      "trace": [
+        {
+          "phase": "root-mutation",
+          "time": 146.40000000596046,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 148.30000001192093,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 148.30000001192093,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 148.40000000596046,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 148.90000000596046,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null,
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 339.40000000596046,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": false,
+          "body": null,
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 340.2000000178814,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": false,
+          "body": null,
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 346.59999999403954,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 376.2000000178814,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "frame:0",
+          "time": 376.59999999403954,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 407.5,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 407.80000001192093,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 408.09999999403954,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 408.2000000178814,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 408.40000000596046,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 408.59999999403954,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 408.90000000596046,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "frame:1",
+          "time": 414.90000000596046,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "frame:2",
+          "time": 471.30000001192093,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "frame:3",
+          "time": 605.5999999940395,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "frame:4",
+          "time": 645.7000000178814,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "frame:5",
+          "time": 705.0999999940395,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "paint:first-paint",
+          "time": 710.5,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "paint:first-contentful-paint",
+          "time": 710.5999999940395,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "frame:6",
+          "time": 786.7000000178814,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "frame:7",
+          "time": 825.3000000119209,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "frame:8",
+          "time": 838.4000000059605,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "frame:9",
+          "time": 886.4000000059605,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "frame:10",
+          "time": 929.4000000059605,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "frame:11",
+          "time": 964.2000000178814,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 1752.5999999940395,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 1813.0999999940395,
+          "theme": "light",
+          "scheme": "light",
+          "hasApp": true,
+          "body": "rgb(233, 228, 239)",
+          "meta": "#e9e4ef"
+        }
+      ]
+    },
+    {
+      "preference": "system",
+      "os": "dark",
+      "expected": "dark",
+      "trace": [
+        {
+          "phase": "root-mutation",
+          "time": 145.60000002384186,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 146.10000002384186,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 146.2000000178814,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 146.2000000178814,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 146.80000001192093,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null,
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 385.80000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": false,
+          "body": null,
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 386.40000000596046,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": false,
+          "body": null,
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 391.10000002384186,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 409.80000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:0",
+          "time": 410,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 425.2000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 425.5,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 425.80000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 426.2000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 426.40000000596046,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 426.7000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 426.80000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:1",
+          "time": 462.30000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:2",
+          "time": 465.30000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:3",
+          "time": 629.3000000119209,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:4",
+          "time": 695.9000000059605,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "paint:first-paint",
+          "time": 698,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "paint:first-contentful-paint",
+          "time": 698.2000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:5",
+          "time": 741.4000000059605,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:6",
+          "time": 787.8000000119209,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:7",
+          "time": 792.8000000119209,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:8",
+          "time": 837.5,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:9",
+          "time": 882.1000000238419,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:10",
+          "time": 925.8000000119209,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:11",
+          "time": 969.8000000119209,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 2857.5,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 2885.7000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 2966.100000023842,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        }
+      ]
+    },
+    {
+      "preference": "invalid-value",
+      "os": "dark",
+      "expected": "dark",
+      "trace": [
+        {
+          "phase": "root-mutation",
+          "time": 127,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 127.5,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 127.60000002384186,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 127.60000002384186,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null
+        },
+        {
+          "phase": "root-mutation",
+          "time": 128.2000000178814,
+          "theme": null,
+          "scheme": "",
+          "hasApp": false,
+          "body": null,
+          "meta": "#e9e4ef"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 267.7000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": false,
+          "body": null,
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 268.2000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": false,
+          "body": null,
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 272.90000000596046,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 293.7000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:0",
+          "time": 293.90000000596046,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 317.10000002384186,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 317.80000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 318.30000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 318.80000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 320.10000002384186,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 320.30000001192093,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 320.5,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:1",
+          "time": 320.7000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:2",
+          "time": 350.60000002384186,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:3",
+          "time": 476.40000000596046,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:4",
+          "time": 517.1000000238419,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:5",
+          "time": 576.8000000119209,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "paint:first-paint",
+          "time": 582.2000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "paint:first-contentful-paint",
+          "time": 582.3000000119209,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:6",
+          "time": 621.1000000238419,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:7",
+          "time": 710.1000000238419,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:8",
+          "time": 720.9000000059605,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:9",
+          "time": 761.7000000178814,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:10",
+          "time": 801.4000000059605,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "frame:11",
+          "time": 836.3000000119209,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 1745.300000011921,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 1759.800000011921,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        },
+        {
+          "phase": "root-mutation",
+          "time": 1803.1000000238419,
+          "theme": "dark",
+          "scheme": "dark",
+          "hasApp": true,
+          "body": "rgb(20, 21, 28)",
+          "meta": "#14151c"
+        }
+      ]
+    }
+  ],
+  "blockedHydration": {
+    "pausedScripts": 5,
+    "theme": "dark",
+    "scheme": "dark",
+    "color": "rgb(20, 21, 28)",
+    "browserColor": "#14151c",
+    "hydrated": false,
+    "trace": [
+      {
+        "phase": "root-mutation",
+        "time": 146.30000001192093,
+        "theme": null,
+        "scheme": "",
+        "hasApp": false,
+        "body": null
+      },
+      {
+        "phase": "root-mutation",
+        "time": 146.7000000178814,
+        "theme": null,
+        "scheme": "",
+        "hasApp": false,
+        "body": null
+      },
+      {
+        "phase": "root-mutation",
+        "time": 146.90000000596046,
+        "theme": null,
+        "scheme": "",
+        "hasApp": false,
+        "body": null
+      },
+      {
+        "phase": "root-mutation",
+        "time": 146.90000000596046,
+        "theme": null,
+        "scheme": "",
+        "hasApp": false,
+        "body": null
+      },
+      {
+        "phase": "root-mutation",
+        "time": 148.40000000596046,
+        "theme": null,
+        "scheme": "",
+        "hasApp": false,
+        "body": null,
+        "meta": "#e9e4ef"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 220.5,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": false,
+        "body": null,
+        "meta": "#14151c"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 224,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": false,
+        "body": null,
+        "meta": "#14151c"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 231.7000000178814,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "frame:0",
+        "time": 287.80000001192093,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 323.60000002384186,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 367.90000000596046,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "frame:1",
+        "time": 372.10000002384186,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 405.90000000596046,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 411.10000002384186,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 413.7000000178814,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 415.7000000178814,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 425.5,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 426.10000002384186,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 427.30000001192093,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "root-mutation",
+        "time": 428.40000000596046,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "frame:2",
+        "time": 430.90000000596046,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "paint:first-paint",
+        "time": 441,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "paint:first-contentful-paint",
+        "time": 441,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "frame:3",
+        "time": 441.7000000178814,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "frame:4",
+        "time": 473.10000002384186,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "frame:5",
+        "time": 511.5,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "frame:6",
+        "time": 550.2000000178814,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "frame:7",
+        "time": 586.7000000178814,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "frame:8",
+        "time": 620.4000000059605,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "frame:9",
+        "time": 655.7000000178814,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "frame:10",
+        "time": 692.7000000178814,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "frame:11",
+        "time": 752.7000000178814,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      }
+    ]
+  },
+  "layouts": [
+    {
+      "theme": "light",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440,
+      "documentHeight": 1000,
+      "historyWidth": 1070,
+      "historyScrollWidth": 1070,
+      "composer": {
+        "x": 341,
+        "y": 834.953125,
+        "width": 1070,
+        "height": 107.265625,
+        "top": 834.953125,
+        "right": 1411,
+        "bottom": 942.21875,
+        "left": 341
+      },
+      "buzz": {
+        "x": 380.390625,
+        "y": 855.140625,
+        "width": 81.8125,
+        "height": 44,
+        "top": 855.140625,
+        "right": 462.203125,
+        "bottom": 899.140625,
+        "left": 380.390625
+      },
+      "profile": {
+        "x": 1242.09375,
+        "y": 72.40625,
+        "width": 148.90625,
+        "height": 44.375,
+        "top": 72.40625,
+        "right": 1391,
+        "bottom": 116.78125,
+        "left": 1242.09375
+      },
+      "log": {
+        "x": 341,
+        "y": 943.21875,
+        "width": 1070,
+        "height": 27.78125,
+        "top": 943.21875,
+        "right": 1411,
+        "bottom": 971,
+        "left": 341
+      }
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "height": 800,
+      "documentWidth": 1024,
+      "documentHeight": 800,
+      "historyWidth": 701,
+      "historyScrollWidth": 701,
+      "composer": {
+        "x": 301.46875,
+        "y": 642.484375,
+        "width": 701.0625,
+        "height": 107.265625,
+        "top": 642.484375,
+        "right": 1002.53125,
+        "bottom": 749.75,
+        "left": 301.46875
+      },
+      "buzz": {
+        "x": 339.578125,
+        "y": 662.671875,
+        "width": 81.8125,
+        "height": 44,
+        "top": 662.671875,
+        "right": 421.390625,
+        "bottom": 706.671875,
+        "left": 339.578125
+      },
+      "profile": {
+        "x": 837.625,
+        "y": 64.875,
+        "width": 148.90625,
+        "height": 44.375,
+        "top": 64.875,
+        "right": 986.53125,
+        "bottom": 109.25,
+        "left": 837.625
+      },
+      "log": {
+        "x": 301.46875,
+        "y": 750.75,
+        "width": 701.0625,
+        "height": 27.78125,
+        "top": 750.75,
+        "right": 1002.53125,
+        "bottom": 778.53125,
+        "left": 301.46875
+      }
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390,
+      "documentHeight": 844,
+      "historyWidth": 390,
+      "historyScrollWidth": 390,
+      "composer": {
+        "x": 0,
+        "y": 700.25,
+        "width": 390,
+        "height": 114.96875,
+        "top": 700.25,
+        "right": 390,
+        "bottom": 815.21875,
+        "left": 0
+      },
+      "buzz": {
+        "x": 17.796875,
+        "y": 716.4375,
+        "width": 44,
+        "height": 44,
+        "top": 716.4375,
+        "right": 61.796875,
+        "bottom": 760.4375,
+        "left": 17.796875
+      },
+      "profile": {
+        "x": 249.4375,
+        "y": 32.796875,
+        "width": 127.765625,
+        "height": 44,
+        "top": 32.796875,
+        "right": 377.203125,
+        "bottom": 76.796875,
+        "left": 249.4375
+      },
+      "log": {
+        "x": 0,
+        "y": 816.21875,
+        "width": 390,
+        "height": 27.78125,
+        "top": 816.21875,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440,
+      "documentHeight": 1000,
+      "historyWidth": 1070,
+      "historyScrollWidth": 1070,
+      "composer": {
+        "x": 341,
+        "y": 834.953125,
+        "width": 1070,
+        "height": 107.265625,
+        "top": 834.953125,
+        "right": 1411,
+        "bottom": 942.21875,
+        "left": 341
+      },
+      "buzz": {
+        "x": 380.390625,
+        "y": 855.140625,
+        "width": 81.8125,
+        "height": 44,
+        "top": 855.140625,
+        "right": 462.203125,
+        "bottom": 899.140625,
+        "left": 380.390625
+      },
+      "profile": {
+        "x": 1242.09375,
+        "y": 72.40625,
+        "width": 148.90625,
+        "height": 44.375,
+        "top": 72.40625,
+        "right": 1391,
+        "bottom": 116.78125,
+        "left": 1242.09375
+      },
+      "log": {
+        "x": 341,
+        "y": 943.21875,
+        "width": 1070,
+        "height": 27.78125,
+        "top": 943.21875,
+        "right": 1411,
+        "bottom": 971,
+        "left": 341
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "height": 800,
+      "documentWidth": 1024,
+      "documentHeight": 800,
+      "historyWidth": 701,
+      "historyScrollWidth": 701,
+      "composer": {
+        "x": 301.46875,
+        "y": 642.484375,
+        "width": 701.0625,
+        "height": 107.265625,
+        "top": 642.484375,
+        "right": 1002.53125,
+        "bottom": 749.75,
+        "left": 301.46875
+      },
+      "buzz": {
+        "x": 339.578125,
+        "y": 662.671875,
+        "width": 81.8125,
+        "height": 44,
+        "top": 662.671875,
+        "right": 421.390625,
+        "bottom": 706.671875,
+        "left": 339.578125
+      },
+      "profile": {
+        "x": 837.625,
+        "y": 64.875,
+        "width": 148.90625,
+        "height": 44.375,
+        "top": 64.875,
+        "right": 986.53125,
+        "bottom": 109.25,
+        "left": 837.625
+      },
+      "log": {
+        "x": 301.46875,
+        "y": 750.75,
+        "width": 701.0625,
+        "height": 27.78125,
+        "top": 750.75,
+        "right": 1002.53125,
+        "bottom": 778.53125,
+        "left": 301.46875
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390,
+      "documentHeight": 844,
+      "historyWidth": 390,
+      "historyScrollWidth": 390,
+      "composer": {
+        "x": 0,
+        "y": 700.25,
+        "width": 390,
+        "height": 114.96875,
+        "top": 700.25,
+        "right": 390,
+        "bottom": 815.21875,
+        "left": 0
+      },
+      "buzz": {
+        "x": 17.796875,
+        "y": 716.4375,
+        "width": 44,
+        "height": 44,
+        "top": 716.4375,
+        "right": 61.796875,
+        "bottom": 760.4375,
+        "left": 17.796875
+      },
+      "profile": {
+        "x": 249.4375,
+        "y": 32.796875,
+        "width": 127.765625,
+        "height": 44,
+        "top": 32.796875,
+        "right": 377.203125,
+        "bottom": 76.796875,
+        "left": 249.4375
+      },
+      "log": {
+        "x": 0,
+        "y": 816.21875,
+        "width": 390,
+        "height": 27.78125,
+        "top": 816.21875,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      }
+    }
+  ],
+  "finishedAt": "2026-11-06T04:08:10.613Z"
+}

@@ -1,0 +1,259 @@
+{
+  "completedAt": "2026-11-06T04:28:05.983Z",
+  "browser": "Actual headless Chrome via CDP on Windows; browser-only verification; no product source modified by this agent.",
+  "sourceState": "Final screenshots and 73 contrast checks reflect the final Light control-boundary correction. Functional/theme checks preceded that CSS-only boundary correction; Dark motion captures and natural sequence use the final frozen source.",
+  "viewportSizes": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "name": "laptop",
+      "width": 1024,
+      "height": 800
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "categories": {
+    "theme": {
+      "checks": 82,
+      "passed": 82,
+      "failed": 0,
+      "runtimeErrors": 0,
+      "evidence": "after/theme-evidence.json"
+    },
+    "contrast": {
+      "checks": 73,
+      "passed": 73,
+      "failed": 0,
+      "runtimeErrors": 0,
+      "evidence": "after/contrast-evidence.json"
+    },
+    "functionalLight": {
+      "checks": 255,
+      "passed": 255,
+      "failed": 0,
+      "runtimeErrors": 0,
+      "evidence": "light/after/browser-evidence.json"
+    },
+    "functionalDark": {
+      "checks": 255,
+      "passed": 255,
+      "failed": 0,
+      "runtimeErrors": 0,
+      "evidence": "dark/after/browser-evidence.json"
+    },
+    "coreDarkMotion": {
+      "checks": 81,
+      "passed": 81,
+      "failed": 0,
+      "runtimeErrors": 0,
+      "evidence": "dark/after/motion-evidence.json"
+    },
+    "themeMotion": {
+      "checks": 8,
+      "passed": 8,
+      "failed": 0,
+      "runtimeErrors": 0,
+      "evidence": "after/theme-motion-evidence.json"
+    },
+    "naturalDarkAmbient": {
+      "checks": 11,
+      "passed": 11,
+      "failed": 0,
+      "runtimeErrors": 0,
+      "evidence": "dark/after/ambient-evidence.json"
+    }
+  },
+  "applicationChecks": {
+    "total": 765,
+    "passed": 765,
+    "failed": 0
+  },
+  "viewerChecks": {
+    "checks": 4,
+    "passed": 4,
+    "failed": 0,
+    "evidence": "after/player-evidence.json"
+  },
+  "runtimeErrors": 0,
+  "hydrationWarnings": [],
+  "verified": [
+    "Immediate native-radio Light/Dark/System selection and keyboard focus retention",
+    "Independent localStorage persistence and live OS preference changes only under System",
+    "Invalid/blocked/quota-failed storage and graceful in-session fallback",
+    "Fresh load first-paint theme and meta color before hydration; explicit Light/Dark under opposite OS",
+    "Profile edit draft/cancel separation from appearance preference",
+    "Same existing message DOM, composer draft, and advancing CSSAnimation object retained through theme change",
+    "Chat sending, retry/failure, incoming/outgoing wrapping, conversation navigation, search, scroll preservation, profile save/cancel/validation and keyboard/Escape behavior in both themes at three widths",
+    "Normal/reduced motion, single new-message entry, dialog entrance/exit, no history replay, one 500ms BUZZ and reduced static feedback",
+    "Transparent unchanged brand artwork loaded and readable on Midnight Charcoal",
+    "Final sampled text, focus, input, search, composer and Cancel boundaries in both themes"
+  ],
+  "noWrongThemeFlashEvidence": {
+    "externalScriptsPaused": 5,
+    "cpuThrottleRate": 4,
+    "beforeHydration": {
+      "theme": "dark",
+      "colorScheme": "dark",
+      "bodyBackground": "rgb(20, 21, 28)",
+      "metaThemeColor": "#14151c",
+      "hydrated": false
+    },
+    "firstPaint": [
+      {
+        "phase": "paint:first-paint",
+        "time": 441,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      },
+      {
+        "phase": "paint:first-contentful-paint",
+        "time": 441,
+        "theme": "dark",
+        "scheme": "dark",
+        "hasApp": true,
+        "body": "rgb(20, 21, 28)",
+        "meta": "#14151c"
+      }
+    ],
+    "screenshot": "after/dark-before-hydration.png"
+  },
+  "contrast": {
+    "sampledTextPairs": 50,
+    "sampledControlPairs": 11,
+    "minimumTextRatio": 4.6136817436398925,
+    "minimumControlRatio": 3.0521830414406317,
+    "ambientCaptionMinimum": 6.930431745688437,
+    "scope": "Actual computed foreground/background pairs plus sampled empty-state pixels. These samples are not a full WCAG conformance certification."
+  },
+  "actualMotion": {
+    "clips": [
+      {
+        "name": "message-and-submit",
+        "frames": 24,
+        "firstTimestampMs": 82,
+        "lastTimestampMs": 899,
+        "method": "Actual Chrome screencast frames at recorded natural timestamps. No animation seeking or speed change. No audio is recorded."
+      },
+      {
+        "name": "dialog-enter-exit",
+        "frames": 23,
+        "firstTimestampMs": 95,
+        "lastTimestampMs": 908,
+        "method": "Actual Chrome screencast frames at recorded natural timestamps. No animation seeking or speed change. No audio is recorded."
+      },
+      {
+        "name": "buzz-normal",
+        "frames": 26,
+        "firstTimestampMs": 59,
+        "lastTimestampMs": 927,
+        "method": "Actual Chrome screencast frames at recorded natural timestamps. No animation seeking or speed change. No audio is recorded."
+      },
+      {
+        "name": "dark-ambient",
+        "frames": 51,
+        "firstTimestampMs": 71,
+        "lastTimestampMs": 2191,
+        "method": "Actual Chrome screencast frames at recorded natural timestamps. No animation seeking or speed change. No audio is recorded."
+      },
+      {
+        "name": "live-light-dark-switch",
+        "frames": 16,
+        "firstTimestampMs": 180,
+        "lastTimestampMs": 876,
+        "method": "Actual Chrome screencast frames at recorded natural timestamps. No animation seeking or speed change. No audio is recorded."
+      },
+      {
+        "name": "ambient-natural-32s",
+        "frames": 17,
+        "firstTimestampMs": 746,
+        "lastTimestampMs": 32679,
+        "method": "17 actual PNG screenshots sampled approximately every 2 seconds during natural 32-second CSS playback. No seeking, forced phase, or speed change. This is a sampled sequence, not continuous video."
+      }
+    ],
+    "totalFrames": 157,
+    "naturalAmbient": {
+      "frames": 17,
+      "method": "Natural CSS clock; no animation seeking or phase injection",
+      "samplingTargetMs": 2000,
+      "firstTimestampMs": 746,
+      "lastTimestampMs": 32679,
+      "performance": {
+        "idleLayoutShift": 0,
+        "layoutCountDelta": 1,
+        "scriptDurationDelta": 0.00637,
+        "shifts": []
+      },
+      "pixelChangeSamples": [
+        {
+          "elapsed": 8646,
+          "pixels": 101864,
+          "meanAbsoluteChannelDelta": 1.2493226262467605,
+          "rmsChannelDelta": 1.695833366699914,
+          "maxChannelDelta": 6,
+          "changedPixelPercent": 29.521715228147333
+        },
+        {
+          "elapsed": 16795,
+          "pixels": 101864,
+          "meanAbsoluteChannelDelta": 1.3263239875389408,
+          "rmsChannelDelta": 1.843732480434711,
+          "maxChannelDelta": 8,
+          "changedPixelPercent": 29.58650750019634
+        },
+        {
+          "elapsed": 24509,
+          "pixels": 101864,
+          "meanAbsoluteChannelDelta": 0.7100087698630855,
+          "rmsChannelDelta": 1.0379664771595507,
+          "maxChannelDelta": 5,
+          "changedPixelPercent": 7.0358517238671165
+        },
+        {
+          "elapsed": 32679,
+          "pixels": 101864,
+          "meanAbsoluteChannelDelta": 0.7056303829943192,
+          "rmsChannelDelta": 1.0560129521277903,
+          "maxChannelDelta": 4,
+          "changedPixelPercent": 8.900102096913532
+        }
+      ]
+    },
+    "player": "motion-player.html",
+    "reducedStaticScreenshot": "after/desktop-dark-reduced-empty.png"
+  },
+  "artifacts": {
+    "comparison": "comparison.html",
+    "motionPlayer": "motion-player.html",
+    "finalScreenshots": "after/{desktop,laptop,mobile}-{light,dark}-{empty,conversation,profile,appearance,profile-edit}.png",
+    "terminalValidation": "validation.json",
+    "protectedScope": "protected-scope-evidence.json"
+  },
+  "limitations": [
+    "Chrome only; OS theme and reduced motion were emulated through actual browser media features.",
+    "Natural ambient sequence is 17 real PNG samples over approximately 32 seconds, not continuous video. Other clips are actual timestamped screencast frames.",
+    "Motion suite includes explicit test-only browser fault/audio instrumentation for failure and sound-path checks; no application fault logic was added. Audio is not recorded.",
+    "Performance readings are one instrumented idle sample, not a benchmark.",
+    "No claim of full multi-user E2EE; authenticated recipient key distribution remains outside scope."
+  ],
+  "cleanup": {
+    "status": "Completed",
+    "serverProcessId": 25152,
+    "browserProcessId": 2152,
+    "commandLinesVerified": true,
+    "portsReleased": [
+      3106,
+      9226
+    ],
+    "completedAt": "2026-11-06T04:28:49.5431751Z"
+  }
+}

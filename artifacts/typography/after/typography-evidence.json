@@ -1,0 +1,3850 @@
+{
+  "startedAt": "2026-11-06T04:56:02.576Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Both locally hosted font faces finish loading",
+      "passed": true,
+      "detail": [
+        {
+          "family": "__bungee_7600f0",
+          "status": "loaded",
+          "weight": "400",
+          "style": "normal",
+          "display": "swap"
+        },
+        {
+          "family": "__bungee_Fallback_7600f0",
+          "status": "loaded",
+          "weight": "normal",
+          "style": "normal",
+          "display": "auto"
+        },
+        {
+          "family": "__spaceGrotesk_be0dd0",
+          "status": "loaded",
+          "weight": "400 700",
+          "style": "normal",
+          "display": "swap"
+        },
+        {
+          "family": "__spaceGrotesk_Fallback_be0dd0",
+          "status": "loaded",
+          "weight": "normal",
+          "style": "normal",
+          "display": "auto"
+        }
+      ]
+    },
+    {
+      "label": "Messages display heading actually renders Bungee",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Bungee",
+            "postScriptName": "Bungee-Regular",
+            "isCustomFont": true,
+            "glyphCount": 8
+          }
+        ],
+        "style": {
+          "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "24px",
+          "weight": "400",
+          "lineHeight": "31.2px",
+          "text": "Messages"
+        }
+      }
+    },
+    {
+      "label": "BUZZ label actually renders Bungee",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Bungee",
+            "postScriptName": "Bungee-Regular",
+            "isCustomFont": true,
+            "glyphCount": 5
+          }
+        ],
+        "style": {
+          "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "13px",
+          "weight": "400",
+          "lineHeight": "15.6px",
+          "text": "BUZZ!"
+        }
+      }
+    },
+    {
+      "label": "Empty-state heading actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 15
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "22px",
+          "weight": "600",
+          "lineHeight": "33px",
+          "text": "No messages yet"
+        }
+      }
+    },
+    {
+      "label": "Conversation name actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 9
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "15px",
+          "weight": "600",
+          "lineHeight": "22.5px",
+          "text": "SecureBot"
+        }
+      }
+    },
+    {
+      "label": "Navigation actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 5
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "14px",
+          "weight": "600",
+          "lineHeight": "21px",
+          "text": "Chats",
+          "value": ""
+        }
+      }
+    },
+    {
+      "label": "Search input actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 20
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "14px",
+          "weight": "400",
+          "lineHeight": "20.3px",
+          "text": "",
+          "value": "Font sample café"
+        }
+      }
+    },
+    {
+      "label": "Conversation header actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 18
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "21.6px",
+          "weight": "700",
+          "lineHeight": "28.08px",
+          "text": "Chat with SecureBot"
+        }
+      }
+    },
+    {
+      "label": "Composer actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 16
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "16px",
+          "weight": "400",
+          "lineHeight": "23.2px",
+          "text": "Font sample café",
+          "value": "Font sample café"
+        }
+      }
+    },
+    {
+      "label": "Security summary actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Medium",
+            "isCustomFont": true,
+            "glyphCount": 21
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Medium",
+            "isCustomFont": true,
+            "glyphCount": 16
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 20
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "12px",
+          "weight": "400",
+          "lineHeight": "18px",
+          "text": "Local encryption onlySecurity detailsE2EE not established"
+        }
+      }
+    },
+    {
+      "label": "System log actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 20
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "12px",
+          "weight": "400",
+          "lineHeight": "18px",
+          "text": "System logLocal demo"
+        }
+      }
+    },
+    {
+      "label": "Security display heading actually renders Bungee",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Bungee",
+            "postScriptName": "Bungee-Regular",
+            "isCustomFont": true,
+            "glyphCount": 8
+          }
+        ],
+        "style": {
+          "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "26px",
+          "weight": "400",
+          "lineHeight": "33.8px",
+          "text": "Security"
+        }
+      }
+    },
+    {
+      "label": "Security explanation actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 120
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "12px",
+          "weight": "400",
+          "lineHeight": "19.2px",
+          "text": "Demo conversations are local UI examples. Their keys are held in this page's memory and are not shared with another user."
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "desktop light empty has no horizontal page or history overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 1440,
+        "innerHeight": 1000,
+        "documentWidth": 1440,
+        "historyWidth": 1070,
+        "historyScrollWidth": 1070,
+        "buzz": {
+          "box": {
+            "x": 380.390625,
+            "y": 850.640625,
+            "width": 91.421875,
+            "height": 44
+          },
+          "text": {
+            "x": 393.390625,
+            "y": 863.84375,
+            "width": 65.421875,
+            "height": 17
+          },
+          "scrollWidth": 89,
+          "clientWidth": 89
+        },
+        "displayHeadings": [
+          {
+            "text": "Messages",
+            "width": 135.84375,
+            "scrollWidth": 136,
+            "clientWidth": 136,
+            "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "Chat with SecureBot",
+            "width": 112.296875,
+            "scrollWidth": 112,
+            "clientWidth": 112,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "No messages yet",
+            "width": 172.609375,
+            "scrollWidth": 173,
+            "clientWidth": 173,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "Your profile",
+            "width": 283.078125,
+            "scrollWidth": 283,
+            "clientWidth": 283,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "Demo Explorer",
+            "width": 153.453125,
+            "scrollWidth": 153,
+            "clientWidth": 153,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          }
+        ]
+      }
+    },
+    {
+      "label": "desktop light empty BUZZ glyph range stays inside its button",
+      "passed": true,
+      "detail": {
+        "box": {
+          "x": 380.390625,
+          "y": 850.640625,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 393.390625,
+          "y": 863.84375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "desktop light multilingual messages has no horizontal page or history overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 1440,
+        "innerHeight": 1000,
+        "documentWidth": 1440,
+        "historyWidth": 1055,
+        "historyScrollWidth": 1055,
+        "buzz": {
+          "box": {
+            "x": 380.390625,
+            "y": 850.640625,
+            "width": 91.421875,
+            "height": 44
+          },
+          "text": {
+            "x": 393.390625,
+            "y": 863.84375,
+            "width": 65.421875,
+            "height": 17
+          },
+          "scrollWidth": 89,
+          "clientWidth": 89
+        },
+        "displayHeadings": [
+          {
+            "text": "Messages",
+            "width": 135.84375,
+            "scrollWidth": 136,
+            "clientWidth": 136,
+            "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "Chat with SecureBot",
+            "width": 112.296875,
+            "scrollWidth": 112,
+            "clientWidth": 112,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          }
+        ]
+      }
+    },
+    {
+      "label": "desktop light multilingual messages BUZZ glyph range stays inside its button",
+      "passed": true,
+      "detail": {
+        "box": {
+          "x": 380.390625,
+          "y": 850.640625,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 393.390625,
+          "y": 863.84375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      }
+    },
+    {
+      "label": "desktop light preserves multilingual and intentional multiline content",
+      "passed": true,
+      "detail": [
+        {
+          "text": "hi",
+          "rendered": "hi",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 46.875,
+          "scrollWidth": 45,
+          "clientWidth": 45,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "hello",
+          "rendered": "hello",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 68.703125,
+          "scrollWidth": 67,
+          "clientWidth": 67,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Hello! Welcome to Yahoo Messenger.",
+          "rendered": "Hello! Welcome to Yahoo Messenger.",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 296.6875,
+          "scrollWidth": 295,
+          "clientWidth": 295,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+          "rendered": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 363.234375,
+          "scrollWidth": 361,
+          "clientWidth": 361,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Line one\n\nLine three\nLine four",
+          "rendered": "Line one\n\nLine three\nLine four",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 123.59375,
+          "width": 107.046875,
+          "scrollWidth": 105,
+          "clientWidth": 105,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "https://example.test/unbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbroken",
+          "rendered": "https://example.test/unbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbroken",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 171.59375,
+          "width": 608,
+          "scrollWidth": 606,
+          "clientWidth": 606,
+          "lineHeight": "24px"
+        }
+      ]
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Profile identity actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 13
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "22px",
+          "weight": "600",
+          "lineHeight": "29.7px",
+          "text": "Demo Explorer"
+        }
+      }
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Profile input actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 1
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 15
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 1
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "16px",
+          "weight": "400",
+          "lineHeight": "23.2px",
+          "text": "",
+          "value": "Café 星 Explorer 👋"
+        }
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "desktop light BUZZ keyboard focus is visible",
+      "passed": true
+    },
+    {
+      "label": "desktop light Bungee BUZZ still triggers existing action",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "laptop light empty has no horizontal page or history overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 1024,
+        "innerHeight": 800,
+        "documentWidth": 1024,
+        "historyWidth": 701,
+        "historyScrollWidth": 701,
+        "buzz": {
+          "box": {
+            "x": 339.578125,
+            "y": 658.171875,
+            "width": 91.421875,
+            "height": 44
+          },
+          "text": {
+            "x": 352.578125,
+            "y": 671.375,
+            "width": 65.421875,
+            "height": 17
+          },
+          "scrollWidth": 89,
+          "clientWidth": 89
+        },
+        "displayHeadings": [
+          {
+            "text": "Messages",
+            "width": 135.84375,
+            "scrollWidth": 136,
+            "clientWidth": 136,
+            "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "Chat with SecureBot",
+            "width": 112.296875,
+            "scrollWidth": 112,
+            "clientWidth": 112,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "No messages yet",
+            "width": 172.609375,
+            "scrollWidth": 173,
+            "clientWidth": 173,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          }
+        ]
+      }
+    },
+    {
+      "label": "laptop light empty BUZZ glyph range stays inside its button",
+      "passed": true,
+      "detail": {
+        "box": {
+          "x": 339.578125,
+          "y": 658.171875,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 352.578125,
+          "y": 671.375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "laptop light multilingual messages has no horizontal page or history overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 1024,
+        "innerHeight": 800,
+        "documentWidth": 1024,
+        "historyWidth": 686,
+        "historyScrollWidth": 686,
+        "buzz": {
+          "box": {
+            "x": 339.578125,
+            "y": 658.171875,
+            "width": 91.421875,
+            "height": 44
+          },
+          "text": {
+            "x": 352.578125,
+            "y": 671.375,
+            "width": 65.421875,
+            "height": 17
+          },
+          "scrollWidth": 89,
+          "clientWidth": 89
+        },
+        "displayHeadings": [
+          {
+            "text": "Messages",
+            "width": 135.84375,
+            "scrollWidth": 136,
+            "clientWidth": 136,
+            "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "Chat with SecureBot",
+            "width": 112.296875,
+            "scrollWidth": 112,
+            "clientWidth": 112,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          }
+        ]
+      }
+    },
+    {
+      "label": "laptop light multilingual messages BUZZ glyph range stays inside its button",
+      "passed": true,
+      "detail": {
+        "box": {
+          "x": 339.578125,
+          "y": 658.171875,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 352.578125,
+          "y": 671.375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      }
+    },
+    {
+      "label": "laptop light preserves multilingual and intentional multiline content",
+      "passed": true,
+      "detail": [
+        {
+          "text": "hi",
+          "rendered": "hi",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 46.875,
+          "scrollWidth": 45,
+          "clientWidth": 45,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "hello",
+          "rendered": "hello",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 68.703125,
+          "scrollWidth": 67,
+          "clientWidth": 67,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Hello! Welcome to Yahoo Messenger.",
+          "rendered": "Hello! Welcome to Yahoo Messenger.",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 296.6875,
+          "scrollWidth": 295,
+          "clientWidth": 295,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+          "rendered": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 363.234375,
+          "scrollWidth": 361,
+          "clientWidth": 361,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Line one\n\nLine three\nLine four",
+          "rendered": "Line one\n\nLine three\nLine four",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 123.59375,
+          "width": 107.046875,
+          "scrollWidth": 105,
+          "clientWidth": 105,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "https://example.test/unbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbroken",
+          "rendered": "https://example.test/unbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbroken",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 219.59375,
+          "width": 434.984375,
+          "scrollWidth": 433,
+          "clientWidth": 433,
+          "lineHeight": "24px"
+        }
+      ]
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Profile identity actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 13
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "22px",
+          "weight": "600",
+          "lineHeight": "29.7px",
+          "text": "Demo Explorer"
+        }
+      }
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Profile input actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 1
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 15
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 1
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "16px",
+          "weight": "400",
+          "lineHeight": "23.2px",
+          "text": "",
+          "value": "Café 星 Explorer 👋"
+        }
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "laptop light BUZZ keyboard focus is visible",
+      "passed": true
+    },
+    {
+      "label": "laptop light Bungee BUZZ still triggers existing action",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "mobile light empty has no horizontal page or history overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 390,
+        "innerHeight": 844,
+        "documentWidth": 390,
+        "historyWidth": 390,
+        "historyScrollWidth": 390,
+        "buzz": {
+          "box": {
+            "x": 17.796875,
+            "y": 710.0625,
+            "width": 56,
+            "height": 44.375
+          },
+          "text": {
+            "x": 25.921875,
+            "y": 716.65625,
+            "width": 39.734375,
+            "height": 31.796875
+          },
+          "scrollWidth": 54,
+          "clientWidth": 54
+        },
+        "displayHeadings": [
+          {
+            "text": "Chat with SecureBot",
+            "width": 112.296875,
+            "scrollWidth": 112,
+            "clientWidth": 112,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "No messages yet",
+            "width": 156.90625,
+            "scrollWidth": 157,
+            "clientWidth": 157,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          }
+        ]
+      }
+    },
+    {
+      "label": "mobile light empty BUZZ glyph range stays inside its button",
+      "passed": true,
+      "detail": {
+        "box": {
+          "x": 17.796875,
+          "y": 710.0625,
+          "width": 56,
+          "height": 44.375
+        },
+        "text": {
+          "x": 25.921875,
+          "y": 716.65625,
+          "width": 39.734375,
+          "height": 31.796875
+        },
+        "scrollWidth": 54,
+        "clientWidth": 54
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "mobile light multilingual messages has no horizontal page or history overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 390,
+        "innerHeight": 844,
+        "documentWidth": 390,
+        "historyWidth": 375,
+        "historyScrollWidth": 375,
+        "buzz": {
+          "box": {
+            "x": 17.796875,
+            "y": 710.0625,
+            "width": 56,
+            "height": 44.375
+          },
+          "text": {
+            "x": 25.921875,
+            "y": 716.65625,
+            "width": 39.734375,
+            "height": 31.796875
+          },
+          "scrollWidth": 54,
+          "clientWidth": 54
+        },
+        "displayHeadings": [
+          {
+            "text": "Chat with SecureBot",
+            "width": 112.296875,
+            "scrollWidth": 112,
+            "clientWidth": 112,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          }
+        ]
+      }
+    },
+    {
+      "label": "mobile light multilingual messages BUZZ glyph range stays inside its button",
+      "passed": true,
+      "detail": {
+        "box": {
+          "x": 17.796875,
+          "y": 710.0625,
+          "width": 56,
+          "height": 44.375
+        },
+        "text": {
+          "x": 25.921875,
+          "y": 716.65625,
+          "width": 39.734375,
+          "height": 31.796875
+        },
+        "scrollWidth": 54,
+        "clientWidth": 54
+      }
+    },
+    {
+      "label": "mobile light preserves multilingual and intentional multiline content",
+      "passed": true,
+      "detail": [
+        {
+          "text": "hi",
+          "rendered": "hi",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 48.375,
+          "width": 42.0625,
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "hello",
+          "rendered": "hello",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 48.375,
+          "width": 63.890625,
+          "scrollWidth": 62,
+          "clientWidth": 62,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Hello! Welcome to Yahoo Messenger.",
+          "rendered": "Hello! Welcome to Yahoo Messenger.",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 72.375,
+          "width": 246.953125,
+          "scrollWidth": 245,
+          "clientWidth": 245,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+          "rendered": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 72.375,
+          "width": 246.953125,
+          "scrollWidth": 245,
+          "clientWidth": 245,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Line one\n\nLine three\nLine four",
+          "rendered": "Line one\n\nLine three\nLine four",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 120.375,
+          "width": 102.234375,
+          "scrollWidth": 100,
+          "clientWidth": 100,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "https://example.test/unbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbroken",
+          "rendered": "https://example.test/unbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbroken",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 360.375,
+          "width": 246.953125,
+          "scrollWidth": 245,
+          "clientWidth": 245,
+          "lineHeight": "24px"
+        }
+      ]
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Profile identity actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 13
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "18px",
+          "weight": "600",
+          "lineHeight": "24.3px",
+          "text": "Demo Explorer"
+        }
+      }
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Profile input actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 1
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 15
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 1
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "16px",
+          "weight": "400",
+          "lineHeight": "23.2px",
+          "text": "",
+          "value": "Café 星 Explorer 👋"
+        }
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "mobile light BUZZ keyboard focus is visible",
+      "passed": true
+    },
+    {
+      "label": "mobile light Bungee BUZZ still triggers existing action",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "desktop dark empty has no horizontal page or history overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 1440,
+        "innerHeight": 1000,
+        "documentWidth": 1440,
+        "historyWidth": 1070,
+        "historyScrollWidth": 1070,
+        "buzz": {
+          "box": {
+            "x": 380.390625,
+            "y": 850.640625,
+            "width": 91.421875,
+            "height": 44
+          },
+          "text": {
+            "x": 393.390625,
+            "y": 863.84375,
+            "width": 65.421875,
+            "height": 17
+          },
+          "scrollWidth": 89,
+          "clientWidth": 89
+        },
+        "displayHeadings": [
+          {
+            "text": "Messages",
+            "width": 135.84375,
+            "scrollWidth": 136,
+            "clientWidth": 136,
+            "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "Chat with SecureBot",
+            "width": 112.296875,
+            "scrollWidth": 112,
+            "clientWidth": 112,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "No messages yet",
+            "width": 172.609375,
+            "scrollWidth": 173,
+            "clientWidth": 173,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "Your profile",
+            "width": 283.078125,
+            "scrollWidth": 283,
+            "clientWidth": 283,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "Demo Explorer",
+            "width": 153.453125,
+            "scrollWidth": 153,
+            "clientWidth": 153,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          }
+        ]
+      }
+    },
+    {
+      "label": "desktop dark empty BUZZ glyph range stays inside its button",
+      "passed": true,
+      "detail": {
+        "box": {
+          "x": 380.390625,
+          "y": 850.640625,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 393.390625,
+          "y": 863.84375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "desktop dark multilingual messages has no horizontal page or history overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 1440,
+        "innerHeight": 1000,
+        "documentWidth": 1440,
+        "historyWidth": 1055,
+        "historyScrollWidth": 1055,
+        "buzz": {
+          "box": {
+            "x": 380.390625,
+            "y": 850.640625,
+            "width": 91.421875,
+            "height": 44
+          },
+          "text": {
+            "x": 393.390625,
+            "y": 863.84375,
+            "width": 65.421875,
+            "height": 17
+          },
+          "scrollWidth": 89,
+          "clientWidth": 89
+        },
+        "displayHeadings": [
+          {
+            "text": "Messages",
+            "width": 135.84375,
+            "scrollWidth": 136,
+            "clientWidth": 136,
+            "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "Chat with SecureBot",
+            "width": 112.296875,
+            "scrollWidth": 112,
+            "clientWidth": 112,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          }
+        ]
+      }
+    },
+    {
+      "label": "desktop dark multilingual messages BUZZ glyph range stays inside its button",
+      "passed": true,
+      "detail": {
+        "box": {
+          "x": 380.390625,
+          "y": 850.640625,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 393.390625,
+          "y": 863.84375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      }
+    },
+    {
+      "label": "desktop dark preserves multilingual and intentional multiline content",
+      "passed": true,
+      "detail": [
+        {
+          "text": "hi",
+          "rendered": "hi",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 46.875,
+          "scrollWidth": 45,
+          "clientWidth": 45,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "hello",
+          "rendered": "hello",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 68.703125,
+          "scrollWidth": 67,
+          "clientWidth": 67,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Hello! Welcome to Yahoo Messenger.",
+          "rendered": "Hello! Welcome to Yahoo Messenger.",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 296.6875,
+          "scrollWidth": 295,
+          "clientWidth": 295,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+          "rendered": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 363.234375,
+          "scrollWidth": 361,
+          "clientWidth": 361,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Line one\n\nLine three\nLine four",
+          "rendered": "Line one\n\nLine three\nLine four",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 123.59375,
+          "width": 107.046875,
+          "scrollWidth": 105,
+          "clientWidth": 105,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "https://example.test/unbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbroken",
+          "rendered": "https://example.test/unbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbroken",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 171.59375,
+          "width": 608,
+          "scrollWidth": 606,
+          "clientWidth": 606,
+          "lineHeight": "24px"
+        }
+      ]
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Profile identity actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 13
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "22px",
+          "weight": "600",
+          "lineHeight": "29.7px",
+          "text": "Demo Explorer"
+        }
+      }
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Profile input actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 1
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 15
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 1
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "16px",
+          "weight": "400",
+          "lineHeight": "23.2px",
+          "text": "",
+          "value": "Café 星 Explorer 👋"
+        }
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "desktop dark BUZZ keyboard focus is visible",
+      "passed": true
+    },
+    {
+      "label": "desktop dark Bungee BUZZ still triggers existing action",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "laptop dark empty has no horizontal page or history overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 1024,
+        "innerHeight": 800,
+        "documentWidth": 1024,
+        "historyWidth": 701,
+        "historyScrollWidth": 701,
+        "buzz": {
+          "box": {
+            "x": 339.578125,
+            "y": 658.171875,
+            "width": 91.421875,
+            "height": 44
+          },
+          "text": {
+            "x": 352.578125,
+            "y": 671.375,
+            "width": 65.421875,
+            "height": 17
+          },
+          "scrollWidth": 89,
+          "clientWidth": 89
+        },
+        "displayHeadings": [
+          {
+            "text": "Messages",
+            "width": 135.84375,
+            "scrollWidth": 136,
+            "clientWidth": 136,
+            "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "Chat with SecureBot",
+            "width": 112.296875,
+            "scrollWidth": 112,
+            "clientWidth": 112,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "No messages yet",
+            "width": 172.609375,
+            "scrollWidth": 173,
+            "clientWidth": 173,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          }
+        ]
+      }
+    },
+    {
+      "label": "laptop dark empty BUZZ glyph range stays inside its button",
+      "passed": true,
+      "detail": {
+        "box": {
+          "x": 339.578125,
+          "y": 658.171875,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 352.578125,
+          "y": 671.375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "laptop dark multilingual messages has no horizontal page or history overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 1024,
+        "innerHeight": 800,
+        "documentWidth": 1024,
+        "historyWidth": 686,
+        "historyScrollWidth": 686,
+        "buzz": {
+          "box": {
+            "x": 339.578125,
+            "y": 658.171875,
+            "width": 91.421875,
+            "height": 44
+          },
+          "text": {
+            "x": 352.578125,
+            "y": 671.375,
+            "width": 65.421875,
+            "height": 17
+          },
+          "scrollWidth": 89,
+          "clientWidth": 89
+        },
+        "displayHeadings": [
+          {
+            "text": "Messages",
+            "width": 135.84375,
+            "scrollWidth": 136,
+            "clientWidth": 136,
+            "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "Chat with SecureBot",
+            "width": 112.296875,
+            "scrollWidth": 112,
+            "clientWidth": 112,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          }
+        ]
+      }
+    },
+    {
+      "label": "laptop dark multilingual messages BUZZ glyph range stays inside its button",
+      "passed": true,
+      "detail": {
+        "box": {
+          "x": 339.578125,
+          "y": 658.171875,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 352.578125,
+          "y": 671.375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      }
+    },
+    {
+      "label": "laptop dark preserves multilingual and intentional multiline content",
+      "passed": true,
+      "detail": [
+        {
+          "text": "hi",
+          "rendered": "hi",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 46.875,
+          "scrollWidth": 45,
+          "clientWidth": 45,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "hello",
+          "rendered": "hello",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 68.703125,
+          "scrollWidth": 67,
+          "clientWidth": 67,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Hello! Welcome to Yahoo Messenger.",
+          "rendered": "Hello! Welcome to Yahoo Messenger.",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 296.6875,
+          "scrollWidth": 295,
+          "clientWidth": 295,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+          "rendered": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 51.59375,
+          "width": 363.234375,
+          "scrollWidth": 361,
+          "clientWidth": 361,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Line one\n\nLine three\nLine four",
+          "rendered": "Line one\n\nLine three\nLine four",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 123.59375,
+          "width": 107.046875,
+          "scrollWidth": 105,
+          "clientWidth": 105,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "https://example.test/unbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbroken",
+          "rendered": "https://example.test/unbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbroken",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 219.59375,
+          "width": 434.984375,
+          "scrollWidth": 433,
+          "clientWidth": 433,
+          "lineHeight": "24px"
+        }
+      ]
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Profile identity actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 13
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "22px",
+          "weight": "600",
+          "lineHeight": "29.7px",
+          "text": "Demo Explorer"
+        }
+      }
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Profile input actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 1
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 15
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 1
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "16px",
+          "weight": "400",
+          "lineHeight": "23.2px",
+          "text": "",
+          "value": "Café 星 Explorer 👋"
+        }
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "laptop dark BUZZ keyboard focus is visible",
+      "passed": true
+    },
+    {
+      "label": "laptop dark Bungee BUZZ still triggers existing action",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "mobile dark empty has no horizontal page or history overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 390,
+        "innerHeight": 844,
+        "documentWidth": 390,
+        "historyWidth": 390,
+        "historyScrollWidth": 390,
+        "buzz": {
+          "box": {
+            "x": 17.796875,
+            "y": 710.0625,
+            "width": 56,
+            "height": 44.375
+          },
+          "text": {
+            "x": 25.921875,
+            "y": 716.65625,
+            "width": 39.734375,
+            "height": 31.796875
+          },
+          "scrollWidth": 54,
+          "clientWidth": 54
+        },
+        "displayHeadings": [
+          {
+            "text": "Chat with SecureBot",
+            "width": 112.296875,
+            "scrollWidth": 112,
+            "clientWidth": 112,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          },
+          {
+            "text": "No messages yet",
+            "width": 156.90625,
+            "scrollWidth": 157,
+            "clientWidth": 157,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          }
+        ]
+      }
+    },
+    {
+      "label": "mobile dark empty BUZZ glyph range stays inside its button",
+      "passed": true,
+      "detail": {
+        "box": {
+          "x": 17.796875,
+          "y": 710.0625,
+          "width": 56,
+          "height": 44.375
+        },
+        "text": {
+          "x": 25.921875,
+          "y": 716.65625,
+          "width": 39.734375,
+          "height": 31.796875
+        },
+        "scrollWidth": 54,
+        "clientWidth": 54
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "mobile dark multilingual messages has no horizontal page or history overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 390,
+        "innerHeight": 844,
+        "documentWidth": 390,
+        "historyWidth": 375,
+        "historyScrollWidth": 375,
+        "buzz": {
+          "box": {
+            "x": 17.796875,
+            "y": 710.0625,
+            "width": 56,
+            "height": 44.375
+          },
+          "text": {
+            "x": 25.921875,
+            "y": 716.65625,
+            "width": 39.734375,
+            "height": 31.796875
+          },
+          "scrollWidth": 54,
+          "clientWidth": 54
+        },
+        "displayHeadings": [
+          {
+            "text": "Chat with SecureBot",
+            "width": 112.296875,
+            "scrollWidth": 112,
+            "clientWidth": 112,
+            "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+          }
+        ]
+      }
+    },
+    {
+      "label": "mobile dark multilingual messages BUZZ glyph range stays inside its button",
+      "passed": true,
+      "detail": {
+        "box": {
+          "x": 17.796875,
+          "y": 710.0625,
+          "width": 56,
+          "height": 44.375
+        },
+        "text": {
+          "x": 25.921875,
+          "y": 716.65625,
+          "width": 39.734375,
+          "height": 31.796875
+        },
+        "scrollWidth": 54,
+        "clientWidth": 54
+      }
+    },
+    {
+      "label": "mobile dark preserves multilingual and intentional multiline content",
+      "passed": true,
+      "detail": [
+        {
+          "text": "hi",
+          "rendered": "hi",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 48.375,
+          "width": 42.0625,
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "hello",
+          "rendered": "hello",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 48.375,
+          "width": 63.890625,
+          "scrollWidth": 62,
+          "clientWidth": 62,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Hello! Welcome to Yahoo Messenger.",
+          "rendered": "Hello! Welcome to Yahoo Messenger.",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 72.375,
+          "width": 246.953125,
+          "scrollWidth": 245,
+          "clientWidth": 245,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+          "rendered": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 72.375,
+          "width": 246.953125,
+          "scrollWidth": 245,
+          "clientWidth": 245,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "Line one\n\nLine three\nLine four",
+          "rendered": "Line one\n\nLine three\nLine four",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 120.375,
+          "width": 102.234375,
+          "scrollWidth": 100,
+          "clientWidth": 100,
+          "lineHeight": "24px"
+        },
+        {
+          "text": "https://example.test/unbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbroken",
+          "rendered": "https://example.test/unbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbrokenunbroken",
+          "font": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "whiteSpace": "pre-wrap",
+          "wordBreak": "normal",
+          "overflowWrap": "anywhere",
+          "height": 360.375,
+          "width": 246.953125,
+          "scrollWidth": 245,
+          "clientWidth": 245,
+          "lineHeight": "24px"
+        }
+      ]
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Profile identity actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 13
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "18px",
+          "weight": "600",
+          "lineHeight": "24.3px",
+          "text": "Demo Explorer"
+        }
+      }
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Profile input actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 1
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 15
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 1
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "16px",
+          "weight": "400",
+          "lineHeight": "23.2px",
+          "text": "",
+          "value": "Café 星 Explorer 👋"
+        }
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "mobile dark BUZZ keyboard focus is visible",
+      "passed": true
+    },
+    {
+      "label": "mobile dark Bungee BUZZ still triggers existing action",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Actual multilingual message Latin glyphs actually renders Space Grotesk",
+      "passed": true,
+      "detail": {
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 2
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 30
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 5
+          }
+        ],
+        "style": {
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+          "size": "15px",
+          "weight": "400",
+          "lineHeight": "24px",
+          "text": "Café déjà vu — naïve façade. 你好，世界 👋🌻"
+        }
+      }
+    },
+    {
+      "label": "Multilingual text uses readable noncustom Unicode/emoji fallback",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 2
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 30
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 5
+        }
+      ]
+    },
+    {
+      "label": "Typography retains reduced-motion preference",
+      "passed": true
+    },
+    {
+      "label": "All font responses are local and successful",
+      "passed": true,
+      "detail": [
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        },
+        {
+          "kind": "font-response",
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200,
+          "mime": "font/ttf"
+        }
+      ]
+    },
+    {
+      "label": "No font request, CSP, or runtime failure",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "Fresh typography renders have no hydration warnings",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\typography\\after\\desktop-dark-security.png",
+    "artifacts\\typography\\after\\desktop-light-multilingual.png",
+    "artifacts\\typography\\after\\laptop-light-multilingual.png",
+    "artifacts\\typography\\after\\mobile-light-multilingual.png",
+    "artifacts\\typography\\after\\desktop-dark-multilingual.png",
+    "artifacts\\typography\\after\\laptop-dark-multilingual.png",
+    "artifacts\\typography\\after\\mobile-dark-multilingual.png"
+  ],
+  "runtimeErrors": [],
+  "fonts": [
+    {
+      "label": "Messages display heading",
+      "selector": ".conversation-sidebar-heading h2",
+      "style": {
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "24px",
+        "weight": "400",
+        "lineHeight": "31.2px",
+        "text": "Messages"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "BUZZ label",
+      "selector": "#buzz-button > span:last-child",
+      "style": {
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "13px",
+        "weight": "400",
+        "lineHeight": "15.6px",
+        "text": "BUZZ!"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 5
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Empty-state heading",
+      "selector": ".chat-empty-state h2",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "22px",
+        "weight": "600",
+        "lineHeight": "33px",
+        "text": "No messages yet"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Conversation name",
+      "selector": ".conversation-list-name",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "15px",
+        "weight": "600",
+        "lineHeight": "22.5px",
+        "text": "SecureBot"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 9
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Navigation",
+      "selector": ".messenger-navigation-item.is-active",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "14px",
+        "weight": "600",
+        "lineHeight": "21px",
+        "text": "Chats",
+        "value": ""
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 5
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Search input",
+      "selector": ".conversation-search-input",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "14px",
+        "weight": "400",
+        "lineHeight": "20.3px",
+        "text": "",
+        "value": "Font sample café"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 20
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Conversation header",
+      "selector": ".chat-title-heading",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "21.6px",
+        "weight": "700",
+        "lineHeight": "28.08px",
+        "text": "Chat with SecureBot"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Composer",
+      "selector": "#message-input",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "16px",
+        "weight": "400",
+        "lineHeight": "23.2px",
+        "text": "Font sample café",
+        "value": "Font sample café"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 16
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual user-agent shadow text nodes"
+    },
+    {
+      "label": "Security summary",
+      "selector": ".conversation-security-summary",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "lineHeight": "18px",
+        "text": "Local encryption onlySecurity detailsE2EE not established"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 21
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 16
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 20
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual user-agent shadow text nodes"
+    },
+    {
+      "label": "System log",
+      "selector": ".debug-summary",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "lineHeight": "18px",
+        "text": "System logLocal demo"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 20
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Security display heading",
+      "selector": "#security-page-title",
+      "style": {
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "26px",
+        "weight": "400",
+        "lineHeight": "33.8px",
+        "text": "Security"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Security explanation",
+      "selector": ".security-demo-limitation",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "lineHeight": "19.2px",
+        "text": "Demo conversations are local UI examples. Their keys are held in this page's memory and are not shared with another user."
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 120
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Profile identity",
+      "selector": ".profile-summary h3",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "22px",
+        "weight": "600",
+        "lineHeight": "29.7px",
+        "text": "Demo Explorer"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Profile input",
+      "selector": "#profile-display-name",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "16px",
+        "weight": "400",
+        "lineHeight": "23.2px",
+        "text": "",
+        "value": "Café 星 Explorer 👋"
+      },
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 1
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 15
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 1
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Profile identity",
+      "selector": ".profile-summary h3",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "22px",
+        "weight": "600",
+        "lineHeight": "29.7px",
+        "text": "Demo Explorer"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Profile input",
+      "selector": "#profile-display-name",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "16px",
+        "weight": "400",
+        "lineHeight": "23.2px",
+        "text": "",
+        "value": "Café 星 Explorer 👋"
+      },
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 1
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 15
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 1
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Profile identity",
+      "selector": ".profile-summary h3",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "18px",
+        "weight": "600",
+        "lineHeight": "24.3px",
+        "text": "Demo Explorer"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Profile input",
+      "selector": "#profile-display-name",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "16px",
+        "weight": "400",
+        "lineHeight": "23.2px",
+        "text": "",
+        "value": "Café 星 Explorer 👋"
+      },
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 1
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 15
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 1
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Profile identity",
+      "selector": ".profile-summary h3",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "22px",
+        "weight": "600",
+        "lineHeight": "29.7px",
+        "text": "Demo Explorer"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Profile input",
+      "selector": "#profile-display-name",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "16px",
+        "weight": "400",
+        "lineHeight": "23.2px",
+        "text": "",
+        "value": "Café 星 Explorer 👋"
+      },
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 1
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 15
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 1
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Profile identity",
+      "selector": ".profile-summary h3",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "22px",
+        "weight": "600",
+        "lineHeight": "29.7px",
+        "text": "Demo Explorer"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Profile input",
+      "selector": "#profile-display-name",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "16px",
+        "weight": "400",
+        "lineHeight": "23.2px",
+        "text": "",
+        "value": "Café 星 Explorer 👋"
+      },
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 1
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 15
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 1
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Profile identity",
+      "selector": ".profile-summary h3",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "18px",
+        "weight": "600",
+        "lineHeight": "24.3px",
+        "text": "Demo Explorer"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Profile input",
+      "selector": "#profile-display-name",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "16px",
+        "weight": "400",
+        "lineHeight": "23.2px",
+        "text": "",
+        "value": "Café 星 Explorer 👋"
+      },
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 1
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 15
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 1
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    },
+    {
+      "label": "Actual multilingual message Latin glyphs",
+      "selector": ".message-bubble",
+      "style": {
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "15px",
+        "weight": "400",
+        "lineHeight": "24px",
+        "text": "Café déjà vu — naïve façade. 你好，世界 👋🌻"
+      },
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 2
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 30
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 5
+        }
+      ],
+      "fontMeasurement": "CSS.getPlatformFontsForNode on actual element"
+    }
+  ],
+  "console": [],
+  "network": [
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABFklEQVRYR9WXURLDIAhE6/0PbSdOtUpcd1Gnpv1KGpTHBpCE1/cXq+vrMph7dGvXZTtpfW10DCA5jrH1H0Jhs5E0hnZdCR+vb5S8Nn8mQCeS9BdSalYJqMBjAGzq59xAESN7VFVUgV8AZB/dZBR7QTFDCqGquvUBVVoEtgIwpQRzmANSFHgWQKExHdIrPeuMvQNDarXe6nC/AutgV3JW+6bgqQLeV8FekRtgV+ToDKEKnACYKsfZjjkam7a0ZpYTytwmgainpC3HvwBocgKOxqRjehoR9DFKNFYtOwCGYCszobeCbl26N6yyQ6g8X/Wex/rBPsNEV6qAMaJPMynIHQCoSqS9JSMmwef51LflTgCRszU7DvAGiV6mHWfsaVUAAAAASUVORK5CYII=",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAzElEQVRYR+2X0Q6AIAhF5f8/2jYXZkwEjNSVvVUjDpcrGgT7FUkI2D9xRfQETwNIiWO85wfINfQUEyxBG2ArsLwC0jioGt5zFcwF4OYDPi/mBYKm4t0U8ATgRm3ThFoAqkhNgWkA0jJLvaOVSs7j3qMnSgXWBMiWPXe94QqMBMBc1VZIvaTu5u5pQewq0EqNZvIEMCmxAawK0DNkay9QmfFNAJUXfgGgUkLaE7j/h8fnASkxHTz0DGIBMCnBeeM7AArpUd3mz2x3C7wADglA8BcWMZhZAAAAAElFTkSuQmCC",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABFklEQVRYR9WXURLDIAhE6/0PbSdOtUpcd1Gnpv1KGpTHBpCE1/cXq+vrMph7dGvXZTtpfW10DCA5jrH1H0Jhs5E0hnZdCR+vb5S8Nn8mQCeS9BdSalYJqMBjAGzq59xAESN7VFVUgV8AZB/dZBR7QTFDCqGquvUBVVoEtgIwpQRzmANSFHgWQKExHdIrPeuMvQNDarXe6nC/AutgV3JW+6bgqQLeV8FekRtgV+ToDKEKnACYKsfZjjkam7a0ZpYTytwmgainpC3HvwBocgKOxqRjehoR9DFKNFYtOwCGYCszobeCbl26N6yyQ6g8X/Wex/rBPsNEV6qAMaJPMynIHQCoSqS9JSMmwef51LflTgCRszU7DvAGiV6mHWfsaVUAAAAASUVORK5CYII=",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAzElEQVRYR+2X0Q6AIAhF5f8/2jYXZkwEjNSVvVUjDpcrGgT7FUkI2D9xRfQETwNIiWO85wfINfQUEyxBG2ArsLwC0jioGt5zFcwF4OYDPi/mBYKm4t0U8ATgRm3ThFoAqkhNgWkA0jJLvaOVSs7j3qMnSgXWBMiWPXe94QqMBMBc1VZIvaTu5u5pQewq0EqNZvIEMCmxAawK0DNkay9QmfFNAJUXfgGgUkLaE7j/h8fnASkxHTz0DGIBMCnBeeM7AArpUd3mz2x3C7wADglA8BcWMZhZAAAAAElFTkSuQmCC",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABFklEQVRYR9WXURLDIAhE6/0PbSdOtUpcd1Gnpv1KGpTHBpCE1/cXq+vrMph7dGvXZTtpfW10DCA5jrH1H0Jhs5E0hnZdCR+vb5S8Nn8mQCeS9BdSalYJqMBjAGzq59xAESN7VFVUgV8AZB/dZBR7QTFDCqGquvUBVVoEtgIwpQRzmANSFHgWQKExHdIrPeuMvQNDarXe6nC/AutgV3JW+6bgqQLeV8FekRtgV+ToDKEKnACYKsfZjjkam7a0ZpYTytwmgainpC3HvwBocgKOxqRjehoR9DFKNFYtOwCGYCszobeCbl26N6yyQ6g8X/Wex/rBPsNEV6qAMaJPMynIHQCoSqS9JSMmwef51LflTgCRszU7DvAGiV6mHWfsaVUAAAAASUVORK5CYII=",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAzElEQVRYR+2X0Q6AIAhF5f8/2jYXZkwEjNSVvVUjDpcrGgT7FUkI2D9xRfQETwNIiWO85wfINfQUEyxBG2ArsLwC0jioGt5zFcwF4OYDPi/mBYKm4t0U8ATgRm3ThFoAqkhNgWkA0jJLvaOVSs7j3qMnSgXWBMiWPXe94QqMBMBc1VZIvaTu5u5pQewq0EqNZvIEMCmxAawK0DNkay9QmfFNAJUXfgGgUkLaE7j/h8fnASkxHTz0DGIBMCnBeeM7AArpUd3mz2x3C7wADglA8BcWMZhZAAAAAElFTkSuQmCC",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABFklEQVRYR9WXURLDIAhE6/0PbSdOtUpcd1Gnpv1KGpTHBpCE1/cXq+vrMph7dGvXZTtpfW10DCA5jrH1H0Jhs5E0hnZdCR+vb5S8Nn8mQCeS9BdSalYJqMBjAGzq59xAESN7VFVUgV8AZB/dZBR7QTFDCqGquvUBVVoEtgIwpQRzmANSFHgWQKExHdIrPeuMvQNDarXe6nC/AutgV3JW+6bgqQLeV8FekRtgV+ToDKEKnACYKsfZjjkam7a0ZpYTytwmgainpC3HvwBocgKOxqRjehoR9DFKNFYtOwCGYCszobeCbl26N6yyQ6g8X/Wex/rBPsNEV6qAMaJPMynIHQCoSqS9JSMmwef51LflTgCRszU7DvAGiV6mHWfsaVUAAAAASUVORK5CYII=",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAzElEQVRYR+2X0Q6AIAhF5f8/2jYXZkwEjNSVvVUjDpcrGgT7FUkI2D9xRfQETwNIiWO85wfINfQUEyxBG2ArsLwC0jioGt5zFcwF4OYDPi/mBYKm4t0U8ATgRm3ThFoAqkhNgWkA0jJLvaOVSs7j3qMnSgXWBMiWPXe94QqMBMBc1VZIvaTu5u5pQewq0EqNZvIEMCmxAawK0DNkay9QmfFNAJUXfgGgUkLaE7j/h8fnASkxHTz0DGIBMCnBeeM7AArpUd3mz2x3C7wADglA8BcWMZhZAAAAAElFTkSuQmCC",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABFklEQVRYR9WXURLDIAhE6/0PbSdOtUpcd1Gnpv1KGpTHBpCE1/cXq+vrMph7dGvXZTtpfW10DCA5jrH1H0Jhs5E0hnZdCR+vb5S8Nn8mQCeS9BdSalYJqMBjAGzq59xAESN7VFVUgV8AZB/dZBR7QTFDCqGquvUBVVoEtgIwpQRzmANSFHgWQKExHdIrPeuMvQNDarXe6nC/AutgV3JW+6bgqQLeV8FekRtgV+ToDKEKnACYKsfZjjkam7a0ZpYTytwmgainpC3HvwBocgKOxqRjehoR9DFKNFYtOwCGYCszobeCbl26N6yyQ6g8X/Wex/rBPsNEV6qAMaJPMynIHQCoSqS9JSMmwef51LflTgCRszU7DvAGiV6mHWfsaVUAAAAASUVORK5CYII=",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAzElEQVRYR+2X0Q6AIAhF5f8/2jYXZkwEjNSVvVUjDpcrGgT7FUkI2D9xRfQETwNIiWO85wfINfQUEyxBG2ArsLwC0jioGt5zFcwF4OYDPi/mBYKm4t0U8ATgRm3ThFoAqkhNgWkA0jJLvaOVSs7j3qMnSgXWBMiWPXe94QqMBMBc1VZIvaTu5u5pQewq0EqNZvIEMCmxAawK0DNkay9QmfFNAJUXfgGgUkLaE7j/h8fnASkxHTz0DGIBMCnBeeM7AArpUd3mz2x3C7wADglA8BcWMZhZAAAAAElFTkSuQmCC",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABFklEQVRYR9WXURLDIAhE6/0PbSdOtUpcd1Gnpv1KGpTHBpCE1/cXq+vrMph7dGvXZTtpfW10DCA5jrH1H0Jhs5E0hnZdCR+vb5S8Nn8mQCeS9BdSalYJqMBjAGzq59xAESN7VFVUgV8AZB/dZBR7QTFDCqGquvUBVVoEtgIwpQRzmANSFHgWQKExHdIrPeuMvQNDarXe6nC/AutgV3JW+6bgqQLeV8FekRtgV+ToDKEKnACYKsfZjjkam7a0ZpYTytwmgainpC3HvwBocgKOxqRjehoR9DFKNFYtOwCGYCszobeCbl26N6yyQ6g8X/Wex/rBPsNEV6qAMaJPMynIHQCoSqS9JSMmwef51LflTgCRszU7DvAGiV6mHWfsaVUAAAAASUVORK5CYII=",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAzElEQVRYR+2X0Q6AIAhF5f8/2jYXZkwEjNSVvVUjDpcrGgT7FUkI2D9xRfQETwNIiWO85wfINfQUEyxBG2ArsLwC0jioGt5zFcwF4OYDPi/mBYKm4t0U8ATgRm3ThFoAqkhNgWkA0jJLvaOVSs7j3qMnSgXWBMiWPXe94QqMBMBc1VZIvaTu5u5pQewq0EqNZvIEMCmxAawK0DNkay9QmfFNAJUXfgGgUkLaE7j/h8fnASkxHTz0DGIBMCnBeeM7AArpUd3mz2x3C7wADglA8BcWMZhZAAAAAElFTkSuQmCC",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABFklEQVRYR9WXURLDIAhE6/0PbSdOtUpcd1Gnpv1KGpTHBpCE1/cXq+vrMph7dGvXZTtpfW10DCA5jrH1H0Jhs5E0hnZdCR+vb5S8Nn8mQCeS9BdSalYJqMBjAGzq59xAESN7VFVUgV8AZB/dZBR7QTFDCqGquvUBVVoEtgIwpQRzmANSFHgWQKExHdIrPeuMvQNDarXe6nC/AutgV3JW+6bgqQLeV8FekRtgV+ToDKEKnACYKsfZjjkam7a0ZpYTytwmgainpC3HvwBocgKOxqRjehoR9DFKNFYtOwCGYCszobeCbl26N6yyQ6g8X/Wex/rBPsNEV6qAMaJPMynIHQCoSqS9JSMmwef51LflTgCRszU7DvAGiV6mHWfsaVUAAAAASUVORK5CYII=",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAzElEQVRYR+2X0Q6AIAhF5f8/2jYXZkwEjNSVvVUjDpcrGgT7FUkI2D9xRfQETwNIiWO85wfINfQUEyxBG2ArsLwC0jioGt5zFcwF4OYDPi/mBYKm4t0U8ATgRm3ThFoAqkhNgWkA0jJLvaOVSs7j3qMnSgXWBMiWPXe94QqMBMBc1VZIvaTu5u5pQewq0EqNZvIEMCmxAawK0DNkay9QmfFNAJUXfgGgUkLaE7j/h8fnASkxHTz0DGIBMCnBeeM7AArpUd3mz2x3C7wADglA8BcWMZhZAAAAAElFTkSuQmCC",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "font-response",
+      "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+      "status": 200,
+      "mime": "font/ttf"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABFklEQVRYR9WXURLDIAhE6/0PbSdOtUpcd1Gnpv1KGpTHBpCE1/cXq+vrMph7dGvXZTtpfW10DCA5jrH1H0Jhs5E0hnZdCR+vb5S8Nn8mQCeS9BdSalYJqMBjAGzq59xAESN7VFVUgV8AZB/dZBR7QTFDCqGquvUBVVoEtgIwpQRzmANSFHgWQKExHdIrPeuMvQNDarXe6nC/AutgV3JW+6bgqQLeV8FekRtgV+ToDKEKnACYKsfZjjkam7a0ZpYTytwmgainpC3HvwBocgKOxqRjehoR9DFKNFYtOwCGYCszobeCbl26N6yyQ6g8X/Wex/rBPsNEV6qAMaJPMynIHQCoSqS9JSMmwef51LflTgCRszU7DvAGiV6mHWfsaVUAAAAASUVORK5CYII=",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    },
+    {
+      "kind": "failed",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAzElEQVRYR+2X0Q6AIAhF5f8/2jYXZkwEjNSVvVUjDpcrGgT7FUkI2D9xRfQETwNIiWO85wfINfQUEyxBG2ArsLwC0jioGt5zFcwF4OYDPi/mBYKm4t0U8ATgRm3ThFoAqkhNgWkA0jJLvaOVSs7j3qMnSgXWBMiWPXe94QqMBMBc1VZIvaTu5u5pQewq0EqNZvIEMCmxAawK0DNkay9QmfFNAJUXfgGgUkLaE7j/h8fnASkxHTz0DGIBMCnBeeM7AArpUd3mz2x3C7wADglA8BcWMZhZAAAAAElFTkSuQmCC",
+      "type": "Image",
+      "error": "",
+      "blockedReason": "csp"
+    }
+  ],
+  "layouts": [
+    {
+      "label": "desktop light empty",
+      "innerWidth": 1440,
+      "innerHeight": 1000,
+      "documentWidth": 1440,
+      "historyWidth": 1070,
+      "historyScrollWidth": 1070,
+      "buzz": {
+        "box": {
+          "x": 380.390625,
+          "y": 850.640625,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 393.390625,
+          "y": 863.84375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      },
+      "displayHeadings": [
+        {
+          "text": "Messages",
+          "width": 135.84375,
+          "scrollWidth": 136,
+          "clientWidth": 136,
+          "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "Chat with SecureBot",
+          "width": 112.296875,
+          "scrollWidth": 112,
+          "clientWidth": 112,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "No messages yet",
+          "width": 172.609375,
+          "scrollWidth": 173,
+          "clientWidth": 173,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "Your profile",
+          "width": 283.078125,
+          "scrollWidth": 283,
+          "clientWidth": 283,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "Demo Explorer",
+          "width": 153.453125,
+          "scrollWidth": 153,
+          "clientWidth": 153,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        }
+      ]
+    },
+    {
+      "label": "desktop light multilingual messages",
+      "innerWidth": 1440,
+      "innerHeight": 1000,
+      "documentWidth": 1440,
+      "historyWidth": 1055,
+      "historyScrollWidth": 1055,
+      "buzz": {
+        "box": {
+          "x": 380.390625,
+          "y": 850.640625,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 393.390625,
+          "y": 863.84375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      },
+      "displayHeadings": [
+        {
+          "text": "Messages",
+          "width": 135.84375,
+          "scrollWidth": 136,
+          "clientWidth": 136,
+          "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "Chat with SecureBot",
+          "width": 112.296875,
+          "scrollWidth": 112,
+          "clientWidth": 112,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        }
+      ]
+    },
+    {
+      "label": "laptop light empty",
+      "innerWidth": 1024,
+      "innerHeight": 800,
+      "documentWidth": 1024,
+      "historyWidth": 701,
+      "historyScrollWidth": 701,
+      "buzz": {
+        "box": {
+          "x": 339.578125,
+          "y": 658.171875,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 352.578125,
+          "y": 671.375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      },
+      "displayHeadings": [
+        {
+          "text": "Messages",
+          "width": 135.84375,
+          "scrollWidth": 136,
+          "clientWidth": 136,
+          "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "Chat with SecureBot",
+          "width": 112.296875,
+          "scrollWidth": 112,
+          "clientWidth": 112,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "No messages yet",
+          "width": 172.609375,
+          "scrollWidth": 173,
+          "clientWidth": 173,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        }
+      ]
+    },
+    {
+      "label": "laptop light multilingual messages",
+      "innerWidth": 1024,
+      "innerHeight": 800,
+      "documentWidth": 1024,
+      "historyWidth": 686,
+      "historyScrollWidth": 686,
+      "buzz": {
+        "box": {
+          "x": 339.578125,
+          "y": 658.171875,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 352.578125,
+          "y": 671.375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      },
+      "displayHeadings": [
+        {
+          "text": "Messages",
+          "width": 135.84375,
+          "scrollWidth": 136,
+          "clientWidth": 136,
+          "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "Chat with SecureBot",
+          "width": 112.296875,
+          "scrollWidth": 112,
+          "clientWidth": 112,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        }
+      ]
+    },
+    {
+      "label": "mobile light empty",
+      "innerWidth": 390,
+      "innerHeight": 844,
+      "documentWidth": 390,
+      "historyWidth": 390,
+      "historyScrollWidth": 390,
+      "buzz": {
+        "box": {
+          "x": 17.796875,
+          "y": 710.0625,
+          "width": 56,
+          "height": 44.375
+        },
+        "text": {
+          "x": 25.921875,
+          "y": 716.65625,
+          "width": 39.734375,
+          "height": 31.796875
+        },
+        "scrollWidth": 54,
+        "clientWidth": 54
+      },
+      "displayHeadings": [
+        {
+          "text": "Chat with SecureBot",
+          "width": 112.296875,
+          "scrollWidth": 112,
+          "clientWidth": 112,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "No messages yet",
+          "width": 156.90625,
+          "scrollWidth": 157,
+          "clientWidth": 157,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        }
+      ]
+    },
+    {
+      "label": "mobile light multilingual messages",
+      "innerWidth": 390,
+      "innerHeight": 844,
+      "documentWidth": 390,
+      "historyWidth": 375,
+      "historyScrollWidth": 375,
+      "buzz": {
+        "box": {
+          "x": 17.796875,
+          "y": 710.0625,
+          "width": 56,
+          "height": 44.375
+        },
+        "text": {
+          "x": 25.921875,
+          "y": 716.65625,
+          "width": 39.734375,
+          "height": 31.796875
+        },
+        "scrollWidth": 54,
+        "clientWidth": 54
+      },
+      "displayHeadings": [
+        {
+          "text": "Chat with SecureBot",
+          "width": 112.296875,
+          "scrollWidth": 112,
+          "clientWidth": 112,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        }
+      ]
+    },
+    {
+      "label": "desktop dark empty",
+      "innerWidth": 1440,
+      "innerHeight": 1000,
+      "documentWidth": 1440,
+      "historyWidth": 1070,
+      "historyScrollWidth": 1070,
+      "buzz": {
+        "box": {
+          "x": 380.390625,
+          "y": 850.640625,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 393.390625,
+          "y": 863.84375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      },
+      "displayHeadings": [
+        {
+          "text": "Messages",
+          "width": 135.84375,
+          "scrollWidth": 136,
+          "clientWidth": 136,
+          "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "Chat with SecureBot",
+          "width": 112.296875,
+          "scrollWidth": 112,
+          "clientWidth": 112,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "No messages yet",
+          "width": 172.609375,
+          "scrollWidth": 173,
+          "clientWidth": 173,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "Your profile",
+          "width": 283.078125,
+          "scrollWidth": 283,
+          "clientWidth": 283,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "Demo Explorer",
+          "width": 153.453125,
+          "scrollWidth": 153,
+          "clientWidth": 153,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        }
+      ]
+    },
+    {
+      "label": "desktop dark multilingual messages",
+      "innerWidth": 1440,
+      "innerHeight": 1000,
+      "documentWidth": 1440,
+      "historyWidth": 1055,
+      "historyScrollWidth": 1055,
+      "buzz": {
+        "box": {
+          "x": 380.390625,
+          "y": 850.640625,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 393.390625,
+          "y": 863.84375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      },
+      "displayHeadings": [
+        {
+          "text": "Messages",
+          "width": 135.84375,
+          "scrollWidth": 136,
+          "clientWidth": 136,
+          "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "Chat with SecureBot",
+          "width": 112.296875,
+          "scrollWidth": 112,
+          "clientWidth": 112,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        }
+      ]
+    },
+    {
+      "label": "laptop dark empty",
+      "innerWidth": 1024,
+      "innerHeight": 800,
+      "documentWidth": 1024,
+      "historyWidth": 701,
+      "historyScrollWidth": 701,
+      "buzz": {
+        "box": {
+          "x": 339.578125,
+          "y": 658.171875,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 352.578125,
+          "y": 671.375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      },
+      "displayHeadings": [
+        {
+          "text": "Messages",
+          "width": 135.84375,
+          "scrollWidth": 136,
+          "clientWidth": 136,
+          "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "Chat with SecureBot",
+          "width": 112.296875,
+          "scrollWidth": 112,
+          "clientWidth": 112,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "No messages yet",
+          "width": 172.609375,
+          "scrollWidth": 173,
+          "clientWidth": 173,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        }
+      ]
+    },
+    {
+      "label": "laptop dark multilingual messages",
+      "innerWidth": 1024,
+      "innerHeight": 800,
+      "documentWidth": 1024,
+      "historyWidth": 686,
+      "historyScrollWidth": 686,
+      "buzz": {
+        "box": {
+          "x": 339.578125,
+          "y": 658.171875,
+          "width": 91.421875,
+          "height": 44
+        },
+        "text": {
+          "x": 352.578125,
+          "y": 671.375,
+          "width": 65.421875,
+          "height": 17
+        },
+        "scrollWidth": 89,
+        "clientWidth": 89
+      },
+      "displayHeadings": [
+        {
+          "text": "Messages",
+          "width": 135.84375,
+          "scrollWidth": 136,
+          "clientWidth": 136,
+          "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "Chat with SecureBot",
+          "width": 112.296875,
+          "scrollWidth": 112,
+          "clientWidth": 112,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        }
+      ]
+    },
+    {
+      "label": "mobile dark empty",
+      "innerWidth": 390,
+      "innerHeight": 844,
+      "documentWidth": 390,
+      "historyWidth": 390,
+      "historyScrollWidth": 390,
+      "buzz": {
+        "box": {
+          "x": 17.796875,
+          "y": 710.0625,
+          "width": 56,
+          "height": 44.375
+        },
+        "text": {
+          "x": 25.921875,
+          "y": 716.65625,
+          "width": 39.734375,
+          "height": 31.796875
+        },
+        "scrollWidth": 54,
+        "clientWidth": 54
+      },
+      "displayHeadings": [
+        {
+          "text": "Chat with SecureBot",
+          "width": 112.296875,
+          "scrollWidth": 112,
+          "clientWidth": 112,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        },
+        {
+          "text": "No messages yet",
+          "width": 156.90625,
+          "scrollWidth": 157,
+          "clientWidth": 157,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        }
+      ]
+    },
+    {
+      "label": "mobile dark multilingual messages",
+      "innerWidth": 390,
+      "innerHeight": 844,
+      "documentWidth": 390,
+      "historyWidth": 375,
+      "historyScrollWidth": 375,
+      "buzz": {
+        "box": {
+          "x": 17.796875,
+          "y": 710.0625,
+          "width": 56,
+          "height": 44.375
+        },
+        "text": {
+          "x": 25.921875,
+          "y": 716.65625,
+          "width": 39.734375,
+          "height": 31.796875
+        },
+        "scrollWidth": 54,
+        "clientWidth": 54
+      },
+      "displayHeadings": [
+        {
+          "text": "Chat with SecureBot",
+          "width": 112.296875,
+          "scrollWidth": 112,
+          "clientWidth": 112,
+          "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif"
+        }
+      ]
+    }
+  ],
+  "fontFaceSet": [
+    {
+      "family": "__bungee_7600f0",
+      "status": "loaded",
+      "weight": "400",
+      "style": "normal",
+      "display": "swap"
+    },
+    {
+      "family": "__bungee_Fallback_7600f0",
+      "status": "loaded",
+      "weight": "normal",
+      "style": "normal",
+      "display": "auto"
+    },
+    {
+      "family": "__spaceGrotesk_be0dd0",
+      "status": "loaded",
+      "weight": "400 700",
+      "style": "normal",
+      "display": "swap"
+    },
+    {
+      "family": "__spaceGrotesk_Fallback_be0dd0",
+      "status": "loaded",
+      "weight": "normal",
+      "style": "normal",
+      "display": "auto"
+    }
+  ]
+}

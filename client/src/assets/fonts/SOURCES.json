@@ -1,0 +1,47 @@
+{
+  "repository": "https://github.com/google/fonts",
+  "revision": "24ddc1f324cac5d9f5aedca126d298f56e3f1640",
+  "modified": false,
+  "fonts": [
+    {
+      "file": "bungee/Bungee-Regular.ttf",
+      "upstreamUrl": "https://raw.githubusercontent.com/google/fonts/24ddc1f324cac5d9f5aedca126d298f56e3f1640/ofl/bungee/Bungee-Regular.ttf",
+      "bytes": 118996,
+      "sha256": "c4f5361ce120af3e6b9156d0bf379fa19cda2ea0cd18ac01fd99596c6bf66e3f",
+      "format": "TrueType",
+      "axes": [],
+      "coverage": {
+        "latin": true,
+        "latinExtended": true,
+        "vietnamese": true,
+        "cjk": false,
+        "emoji": false
+      },
+      "license": "bungee/OFL.txt"
+    },
+    {
+      "file": "spacegrotesk/SpaceGrotesk-Variable.ttf",
+      "upstreamUrl": "https://raw.githubusercontent.com/google/fonts/24ddc1f324cac5d9f5aedca126d298f56e3f1640/ofl/spacegrotesk/SpaceGrotesk%5Bwght%5D.ttf",
+      "bytes": 136676,
+      "sha256": "acad6de1fc93436f5c0f1f4137751ef04f1aea3063e7036535970ffcfbd79f72",
+      "format": "TrueType",
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 300,
+          "default": 300,
+          "max": 700
+        }
+      ],
+      "coverage": {
+        "latin": true,
+        "latinExtended": true,
+        "vietnamese": true,
+        "cjk": false,
+        "emoji": false
+      },
+      "license": "spacegrotesk/OFL.txt"
+    }
+  ],
+  "coverageNote": "Complete upstream fonts are retained, not Latin-only subsets. CJK and emoji use the explicit OS fallback stack."
+}

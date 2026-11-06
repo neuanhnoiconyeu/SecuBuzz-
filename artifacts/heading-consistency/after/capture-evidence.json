@@ -1,0 +1,78 @@
+{
+  "startedAt": "2026-11-06T05:09:19.778Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Heading screenshot capture has no runtime errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\heading-consistency\\after\\desktop-light-profile.png",
+    "artifacts\\heading-consistency\\after\\desktop-light-profile-edit.png",
+    "artifacts\\heading-consistency\\after\\desktop-light-empty.png",
+    "artifacts\\heading-consistency\\after\\desktop-light-security.png",
+    "artifacts\\heading-consistency\\after\\mobile-light-profile.png",
+    "artifacts\\heading-consistency\\after\\mobile-light-profile-edit.png",
+    "artifacts\\heading-consistency\\after\\mobile-light-empty.png",
+    "artifacts\\heading-consistency\\after\\mobile-light-security.png",
+    "artifacts\\heading-consistency\\after\\desktop-dark-profile.png",
+    "artifacts\\heading-consistency\\after\\desktop-dark-profile-edit.png",
+    "artifacts\\heading-consistency\\after\\desktop-dark-empty.png",
+    "artifacts\\heading-consistency\\after\\desktop-dark-security.png",
+    "artifacts\\heading-consistency\\after\\mobile-dark-profile.png",
+    "artifacts\\heading-consistency\\after\\mobile-dark-profile-edit.png",
+    "artifacts\\heading-consistency\\after\\mobile-dark-empty.png",
+    "artifacts\\heading-consistency\\after\\mobile-dark-security.png"
+  ],
+  "runtimeErrors": []
+}

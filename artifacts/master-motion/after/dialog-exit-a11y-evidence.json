@@ -1,0 +1,47 @@
+{
+  "startedAt": "2026-11-06T03:24:09.498Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Control available: Close profile",
+      "passed": true
+    },
+    {
+      "label": "Closed profile exit blocks focus from returning inside",
+      "passed": true,
+      "detail": {
+        "open": false,
+        "display": "block",
+        "opacity": "1",
+        "interactivity": "auto",
+        "focusInside": false,
+        "focusLabel": "Open profile for Demo Explorer; Available local preference"
+      }
+    },
+    {
+      "label": "Closed profile exit removes profile content from accessibility tree",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "Dialog accessibility probe has no browser exceptions",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [],
+  "runtimeErrors": [],
+  "closedState": {
+    "open": false,
+    "display": "block",
+    "opacity": "1",
+    "interactivity": "auto",
+    "focusInside": false,
+    "focusLabel": "Open profile for Demo Explorer; Available local preference"
+  },
+  "closedAX": []
+}

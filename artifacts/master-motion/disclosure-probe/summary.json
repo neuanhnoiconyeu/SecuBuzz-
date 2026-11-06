@@ -1,0 +1,34 @@
+{
+  "scope": "Isolated native HTML/CSS browser probe of exact proposed disclosure-motion.css snippet. Application integration is verified separately.",
+  "modes": [
+    {
+      "file": "enhanced.json",
+      "mode": "enhanced",
+      "checks": 12,
+      "passed": 12,
+      "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+    },
+    {
+      "file": "reduced.json",
+      "mode": "reduced",
+      "checks": 11,
+      "passed": 11,
+      "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+    },
+    {
+      "file": "unsupported-gate-fallback.json",
+      "mode": "fallback",
+      "checks": 11,
+      "passed": 11,
+      "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+    }
+  ],
+  "checks": 34,
+  "passed": 34,
+  "fallbackScope": "Unsupported-feature condition forced in Chrome; this is not a Firefox/Safari browser test.",
+  "sources": [
+    "https://developer.chrome.com/blog/styling-details",
+    "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/::details-content",
+    "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/interactivity"
+  ]
+}

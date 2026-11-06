@@ -1,0 +1,29 @@
+{
+  "jest": {
+    "command": "npm test -- --runInBand",
+    "exitCode": 0,
+    "suitesPassed": 21,
+    "testsPassed": 159,
+    "testsFailed": 0,
+    "previousTestsPreserved": 143
+  },
+  "typescript": {
+    "command": "npm run type-check",
+    "exitCode": 0
+  },
+  "productionBuild": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "routeSize": "27.3 kB",
+    "firstLoadJs": "115 kB",
+    "warnings": [
+      "Existing external Press Start 2P stylesheet download failed; font optimization skipped.",
+      "Existing @next/next/no-page-custom-font warning in root layout."
+    ]
+  },
+  "protectedScope": {
+    "filesChecked": 33,
+    "filesChanged": 0,
+    "evidence": "protected-scope-evidence.json"
+  }
+}

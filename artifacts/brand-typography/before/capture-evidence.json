@@ -1,0 +1,50 @@
+{
+  "startedAt": "2026-11-06T05:14:12.287Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Brand typography capture has no runtime errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\brand-typography\\before\\desktop-light-messenger.png",
+    "artifacts\\brand-typography\\before\\mobile-light-messenger.png",
+    "artifacts\\brand-typography\\before\\desktop-dark-messenger.png",
+    "artifacts\\brand-typography\\before\\mobile-dark-messenger.png"
+  ],
+  "runtimeErrors": []
+}

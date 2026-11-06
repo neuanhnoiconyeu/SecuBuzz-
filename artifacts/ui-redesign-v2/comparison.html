@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SecuBuzz UI redesign V2 — before and after</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;padding:24px;font:15px/1.5 system-ui,sans-serif;color:#241b2a;background:#f5f3f8}main{max-width:1800px;margin:auto}h1{font-size:24px;margin:0 0 8px}p{margin:0 0 20px;color:#62586a}nav{display:flex;gap:8px;margin-bottom:20px}button{font:inherit;padding:8px 14px;border:1px solid #b8a6c9;border-radius:6px;color:#5d238f;background:white;cursor:pointer}button[aria-pressed=true]{color:white;background:#6f2da8;border-color:#6f2da8}button:focus-visible,a:focus-visible{outline:3px solid #8d56bb;outline-offset:3px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:20px}figure{margin:0;min-width:0}figcaption{font-weight:600;margin:0 0 8px}img{display:block;width:100%;height:auto;border:1px solid #ded5e8;background:white}.mobile img{max-width:390px;margin:auto}.mobile figcaption{text-align:center}footer{margin-top:24px;font-size:13px}a{color:#5d238f}section[hidden]{display:none}@media(max-width:700px){body{padding:16px}.pair{grid-template-columns:1fr}}
+</style>
+<main>
+<h1>SecuBuzz UI redesign V2</h1>
+<p>Actual Chrome screenshots of the same empty conversation before and after the redesign. Select a viewport to compare the window composition and message composer.</p>
+<nav aria-label="Screenshot viewport">
+  <button type="button" aria-pressed="true" data-view="desktop">Desktop · 1440 × 1000</button>
+  <button type="button" aria-pressed="false" data-view="laptop">Laptop · 1024 × 800</button>
+  <button type="button" aria-pressed="false" data-view="mobile">Mobile · 390 × 844</button>
+</nav>
+<section id="desktop" class="pair" aria-label="Desktop before and after">
+  <figure><figcaption>Before</figcaption><img src="before/desktop-messenger.png" alt="Original desktop messenger with a purple vertical rail, separated panels and stacked message form"></figure>
+  <figure><figcaption>After</figcaption><img src="after/desktop-empty.png" alt="Redesigned desktop messenger with one shared window, a horizontal navigation bar, local conversation search and compact composer"></figure>
+</section>
+<section id="laptop" class="pair" aria-label="Laptop before and after" hidden>
+  <figure><figcaption>Before</figcaption><img src="before/laptop-messenger.png" alt="Original laptop messenger"></figure>
+  <figure><figcaption>After</figcaption><img src="after/laptop-empty.png" alt="Redesigned laptop messenger"></figure>
+</section>
+<section id="mobile" class="pair mobile" aria-label="Mobile before and after" hidden>
+  <figure><figcaption>Before</figcaption><img src="before/mobile-messenger.png" alt="Original mobile messenger with a large message form"></figure>
+  <figure><figcaption>After</figcaption><img src="after/mobile-empty.png" alt="Redesigned mobile messenger with compact navigation and input dock"></figure>
+</section>
+<footer>
+  Representative messages: <a href="after/desktop-conversation.png">desktop</a> · <a href="after/mobile-conversation.png">mobile</a>.<br>
+  Browser evidence: <a href="after/browser-evidence.json">interaction checks</a> · <a href="after/extra-evidence.json">compact-height checks</a>.
+</footer>
+</main>
+<script>
+  document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{
+    document.querySelectorAll('[data-view]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+    document.querySelectorAll('main>section').forEach(section=>section.hidden=section.id!==button.dataset.view);
+  }));
+</script>
+</html>

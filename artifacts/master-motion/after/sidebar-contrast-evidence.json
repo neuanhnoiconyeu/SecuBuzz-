@@ -1,0 +1,52 @@
+{
+  "startedAt": "2026-11-06T03:39:33.288Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Selected conversation preview contrast is at least4.5:1",
+      "passed": true,
+      "detail": {
+        "foreground": [
+          98,
+          88,
+          106
+        ],
+        "background": "rgb(228, 215, 244)",
+        "ratio": 4.906695343470585
+      }
+    },
+    {
+      "label": "Inactive preview contrast passes against a conservative gradient bound",
+      "passed": true,
+      "detail": {
+        "foreground": [
+          98,
+          88,
+          106
+        ],
+        "gradient": "linear-gradient(rgb(246, 242, 251) 0%, rgb(240, 234, 247) 100%)",
+        "conservativeMinimum": [
+          240,
+          234,
+          247
+        ],
+        "ratio": 5.704544514623948
+      }
+    },
+    {
+      "label": "Hovered conversation preview contrast is at least4.5:1",
+      "passed": true,
+      "detail": {
+        "background": "rgb(234, 227, 243)",
+        "ratio": 5.372551564113392
+      }
+    },
+    {
+      "label": "Sidebar contrast check has no browser exceptions",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [],
+  "runtimeErrors": []
+}

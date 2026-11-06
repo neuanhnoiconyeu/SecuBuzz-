@@ -1,0 +1,1558 @@
+{
+  "completedAt": "2026-11-06T05:10:21.365Z",
+  "scope": "Focused browser-only heading consistency verification; no product files modified by this agent.",
+  "browser": "Actual headless Chrome on Windows via CDP",
+  "applicationChecks": {
+    "total": 289,
+    "passed": 289,
+    "failed": 0
+  },
+  "runtimeErrors": [],
+  "consoleWarnings": [],
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 1024,
+      "height": 800
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "actualFontMeasurements": 88,
+  "headingStateSnapshots": 36,
+  "verified": [
+    "Bungee-Regular is actually rendered for visible semantic headings, with computed weight400 and font-synthesis:none. Platform-font glyph counts substantiate rendering.",
+    "Messages, chat name, empty-state title, modal title, Profile settings, profile display name, Security page and panel title use the shared display-heading role.",
+    "Everyday conversation-list names, message text, profile inputs, validation, appearance choices, avatar field legends and security explanations still render Space Grotesk.",
+    "All visible headings fit at all three widths in both themes. Chat title remains20px desktop/laptop and18px mobile; security panel titles remain18/16px.",
+    "Long40-character unbroken profile names wrap without horizontal dialog overflow. Group conversation title remains readable.",
+    "Existing semantic heading levels and accessible names remain intact; chat accessible heading is level1 Chat with SecureBot, native modal is named Your profile.",
+    "Profile validation focuses the invalid field, Cancel returns to Edit profile, Escape returns to the opener, and mobile conversation selection focuses the chat heading.",
+    "Sending works and BUZZ retains its action with static visual feedback under reduced motion.",
+    "A temporary DOM-only shared-heading probe containing explicit br and long text wrapped safely; it was removed immediately without changing product state."
+  ],
+  "fontMeasurements": [
+    {
+      "label": "desktop light conversation title",
+      "expected": "Bungee",
+      "tag": "H1",
+      "size": "20px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ]
+    },
+    {
+      "label": "desktop light empty title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "22px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "desktop light Messages title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "24px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "desktop light message body",
+      "expected": "Space Grotesk",
+      "tag": "DIV",
+      "size": "15px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 1
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 50
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 1
+        }
+      ]
+    },
+    {
+      "label": "desktop light modal title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "20px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 12
+        }
+      ]
+    },
+    {
+      "label": "desktop light profile display name",
+      "expected": "Bungee",
+      "tag": "H3",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "desktop light appearance choice",
+      "expected": "Space Grotesk",
+      "tag": "SPAN",
+      "size": "12px",
+      "weight": "600",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 5
+        }
+      ]
+    },
+    {
+      "label": "desktop light Profile settings title",
+      "expected": "Bungee",
+      "tag": "H3",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 16
+        }
+      ]
+    },
+    {
+      "label": "desktop light profile form input",
+      "expected": "Space Grotesk",
+      "tag": "INPUT",
+      "size": "16px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 14
+        }
+      ]
+    },
+    {
+      "label": "desktop light avatar field legend",
+      "expected": "Space Grotesk",
+      "tag": "LEGEND",
+      "size": "14px",
+      "weight": "500",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 6
+        }
+      ]
+    },
+    {
+      "label": "desktop light validation text",
+      "expected": "Space Grotesk",
+      "tag": "P",
+      "size": "12px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 25
+        }
+      ]
+    },
+    {
+      "label": "desktop light ordinary conversation-list name",
+      "expected": "Space Grotesk",
+      "tag": "SPAN",
+      "size": "15px",
+      "weight": "600",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 9
+        }
+      ]
+    },
+    {
+      "label": "desktop light Security page title",
+      "expected": "Bungee",
+      "tag": "H1",
+      "size": "26px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "desktop light security panel title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 20
+        }
+      ]
+    },
+    {
+      "label": "desktop light security explanation",
+      "expected": "Space Grotesk",
+      "tag": "P",
+      "size": "12px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 120
+        }
+      ]
+    },
+    {
+      "label": "laptop light conversation title",
+      "expected": "Bungee",
+      "tag": "H1",
+      "size": "20px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ]
+    },
+    {
+      "label": "laptop light empty title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "22px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "laptop light Messages title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "24px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "laptop light message body",
+      "expected": "Space Grotesk",
+      "tag": "DIV",
+      "size": "15px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 1
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 50
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 1
+        }
+      ]
+    },
+    {
+      "label": "laptop light modal title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "20px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 12
+        }
+      ]
+    },
+    {
+      "label": "laptop light profile display name",
+      "expected": "Bungee",
+      "tag": "H3",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "laptop light appearance choice",
+      "expected": "Space Grotesk",
+      "tag": "SPAN",
+      "size": "12px",
+      "weight": "600",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 5
+        }
+      ]
+    },
+    {
+      "label": "laptop light Profile settings title",
+      "expected": "Bungee",
+      "tag": "H3",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 16
+        }
+      ]
+    },
+    {
+      "label": "laptop light profile form input",
+      "expected": "Space Grotesk",
+      "tag": "INPUT",
+      "size": "16px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 14
+        }
+      ]
+    },
+    {
+      "label": "laptop light avatar field legend",
+      "expected": "Space Grotesk",
+      "tag": "LEGEND",
+      "size": "14px",
+      "weight": "500",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 6
+        }
+      ]
+    },
+    {
+      "label": "laptop light validation text",
+      "expected": "Space Grotesk",
+      "tag": "P",
+      "size": "12px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 25
+        }
+      ]
+    },
+    {
+      "label": "laptop light ordinary conversation-list name",
+      "expected": "Space Grotesk",
+      "tag": "SPAN",
+      "size": "15px",
+      "weight": "600",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 9
+        }
+      ]
+    },
+    {
+      "label": "laptop light Security page title",
+      "expected": "Bungee",
+      "tag": "H1",
+      "size": "26px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "laptop light security panel title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 20
+        }
+      ]
+    },
+    {
+      "label": "laptop light security explanation",
+      "expected": "Space Grotesk",
+      "tag": "P",
+      "size": "12px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 120
+        }
+      ]
+    },
+    {
+      "label": "mobile light conversation title",
+      "expected": "Bungee",
+      "tag": "H1",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ]
+    },
+    {
+      "label": "mobile light empty title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "20px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "mobile light message body",
+      "expected": "Space Grotesk",
+      "tag": "DIV",
+      "size": "15px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 1
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 50
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 1
+        }
+      ]
+    },
+    {
+      "label": "mobile light modal title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 12
+        }
+      ]
+    },
+    {
+      "label": "mobile light profile display name",
+      "expected": "Bungee",
+      "tag": "H3",
+      "size": "16px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "mobile light appearance choice",
+      "expected": "Space Grotesk",
+      "tag": "SPAN",
+      "size": "12px",
+      "weight": "600",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 5
+        }
+      ]
+    },
+    {
+      "label": "mobile light Profile settings title",
+      "expected": "Bungee",
+      "tag": "H3",
+      "size": "16px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 16
+        }
+      ]
+    },
+    {
+      "label": "mobile light profile form input",
+      "expected": "Space Grotesk",
+      "tag": "INPUT",
+      "size": "16px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 14
+        }
+      ]
+    },
+    {
+      "label": "mobile light avatar field legend",
+      "expected": "Space Grotesk",
+      "tag": "LEGEND",
+      "size": "14px",
+      "weight": "500",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 6
+        }
+      ]
+    },
+    {
+      "label": "mobile light validation text",
+      "expected": "Space Grotesk",
+      "tag": "P",
+      "size": "12px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 25
+        }
+      ]
+    },
+    {
+      "label": "mobile light ordinary conversation-list name",
+      "expected": "Space Grotesk",
+      "tag": "SPAN",
+      "size": "15px",
+      "weight": "600",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 9
+        }
+      ]
+    },
+    {
+      "label": "mobile light Security page title",
+      "expected": "Bungee",
+      "tag": "H1",
+      "size": "24px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "mobile light security panel title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "16px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 20
+        }
+      ]
+    },
+    {
+      "label": "mobile light security explanation",
+      "expected": "Space Grotesk",
+      "tag": "P",
+      "size": "12px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 119
+        }
+      ]
+    },
+    {
+      "label": "desktop dark conversation title",
+      "expected": "Bungee",
+      "tag": "H1",
+      "size": "20px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ]
+    },
+    {
+      "label": "desktop dark empty title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "22px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "desktop dark Messages title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "24px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "desktop dark message body",
+      "expected": "Space Grotesk",
+      "tag": "DIV",
+      "size": "15px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 1
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 50
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 1
+        }
+      ]
+    },
+    {
+      "label": "desktop dark modal title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "20px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 12
+        }
+      ]
+    },
+    {
+      "label": "desktop dark profile display name",
+      "expected": "Bungee",
+      "tag": "H3",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "desktop dark appearance choice",
+      "expected": "Space Grotesk",
+      "tag": "SPAN",
+      "size": "12px",
+      "weight": "600",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 5
+        }
+      ]
+    },
+    {
+      "label": "desktop dark Profile settings title",
+      "expected": "Bungee",
+      "tag": "H3",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 16
+        }
+      ]
+    },
+    {
+      "label": "desktop dark profile form input",
+      "expected": "Space Grotesk",
+      "tag": "INPUT",
+      "size": "16px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 14
+        }
+      ]
+    },
+    {
+      "label": "desktop dark avatar field legend",
+      "expected": "Space Grotesk",
+      "tag": "LEGEND",
+      "size": "14px",
+      "weight": "500",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 6
+        }
+      ]
+    },
+    {
+      "label": "desktop dark validation text",
+      "expected": "Space Grotesk",
+      "tag": "P",
+      "size": "12px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 25
+        }
+      ]
+    },
+    {
+      "label": "desktop dark ordinary conversation-list name",
+      "expected": "Space Grotesk",
+      "tag": "SPAN",
+      "size": "15px",
+      "weight": "600",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 9
+        }
+      ]
+    },
+    {
+      "label": "desktop dark Security page title",
+      "expected": "Bungee",
+      "tag": "H1",
+      "size": "26px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "desktop dark security panel title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 20
+        }
+      ]
+    },
+    {
+      "label": "desktop dark security explanation",
+      "expected": "Space Grotesk",
+      "tag": "P",
+      "size": "12px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 120
+        }
+      ]
+    },
+    {
+      "label": "laptop dark conversation title",
+      "expected": "Bungee",
+      "tag": "H1",
+      "size": "20px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ]
+    },
+    {
+      "label": "laptop dark empty title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "22px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "laptop dark Messages title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "24px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "laptop dark message body",
+      "expected": "Space Grotesk",
+      "tag": "DIV",
+      "size": "15px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 1
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 50
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 1
+        }
+      ]
+    },
+    {
+      "label": "laptop dark modal title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "20px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 12
+        }
+      ]
+    },
+    {
+      "label": "laptop dark profile display name",
+      "expected": "Bungee",
+      "tag": "H3",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "laptop dark appearance choice",
+      "expected": "Space Grotesk",
+      "tag": "SPAN",
+      "size": "12px",
+      "weight": "600",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 5
+        }
+      ]
+    },
+    {
+      "label": "laptop dark Profile settings title",
+      "expected": "Bungee",
+      "tag": "H3",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 16
+        }
+      ]
+    },
+    {
+      "label": "laptop dark profile form input",
+      "expected": "Space Grotesk",
+      "tag": "INPUT",
+      "size": "16px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 14
+        }
+      ]
+    },
+    {
+      "label": "laptop dark avatar field legend",
+      "expected": "Space Grotesk",
+      "tag": "LEGEND",
+      "size": "14px",
+      "weight": "500",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 6
+        }
+      ]
+    },
+    {
+      "label": "laptop dark validation text",
+      "expected": "Space Grotesk",
+      "tag": "P",
+      "size": "12px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 25
+        }
+      ]
+    },
+    {
+      "label": "laptop dark ordinary conversation-list name",
+      "expected": "Space Grotesk",
+      "tag": "SPAN",
+      "size": "15px",
+      "weight": "600",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 9
+        }
+      ]
+    },
+    {
+      "label": "laptop dark Security page title",
+      "expected": "Bungee",
+      "tag": "H1",
+      "size": "26px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "laptop dark security panel title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 20
+        }
+      ]
+    },
+    {
+      "label": "laptop dark security explanation",
+      "expected": "Space Grotesk",
+      "tag": "P",
+      "size": "12px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 120
+        }
+      ]
+    },
+    {
+      "label": "mobile dark conversation title",
+      "expected": "Bungee",
+      "tag": "H1",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ]
+    },
+    {
+      "label": "mobile dark empty title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "20px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "mobile dark message body",
+      "expected": "Space Grotesk",
+      "tag": "DIV",
+      "size": "15px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Segoe UI Emoji",
+          "postScriptName": "SegoeUIEmoji",
+          "isCustomFont": false,
+          "glyphCount": 1
+        },
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 50
+        },
+        {
+          "familyName": "Microsoft YaHei",
+          "postScriptName": "MicrosoftYaHei",
+          "isCustomFont": false,
+          "glyphCount": 1
+        }
+      ]
+    },
+    {
+      "label": "mobile dark modal title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "18px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 12
+        }
+      ]
+    },
+    {
+      "label": "mobile dark profile display name",
+      "expected": "Bungee",
+      "tag": "H3",
+      "size": "16px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "mobile dark appearance choice",
+      "expected": "Space Grotesk",
+      "tag": "SPAN",
+      "size": "12px",
+      "weight": "600",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 5
+        }
+      ]
+    },
+    {
+      "label": "mobile dark Profile settings title",
+      "expected": "Bungee",
+      "tag": "H3",
+      "size": "16px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 16
+        }
+      ]
+    },
+    {
+      "label": "mobile dark profile form input",
+      "expected": "Space Grotesk",
+      "tag": "INPUT",
+      "size": "16px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 14
+        }
+      ]
+    },
+    {
+      "label": "mobile dark avatar field legend",
+      "expected": "Space Grotesk",
+      "tag": "LEGEND",
+      "size": "14px",
+      "weight": "500",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 6
+        }
+      ]
+    },
+    {
+      "label": "mobile dark validation text",
+      "expected": "Space Grotesk",
+      "tag": "P",
+      "size": "12px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 25
+        }
+      ]
+    },
+    {
+      "label": "mobile dark ordinary conversation-list name",
+      "expected": "Space Grotesk",
+      "tag": "SPAN",
+      "size": "15px",
+      "weight": "600",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 9
+        }
+      ]
+    },
+    {
+      "label": "mobile dark Security page title",
+      "expected": "Bungee",
+      "tag": "H1",
+      "size": "24px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "mobile dark security panel title",
+      "expected": "Bungee",
+      "tag": "H2",
+      "size": "16px",
+      "weight": "400",
+      "synthesis": "none",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 20
+        }
+      ]
+    },
+    {
+      "label": "mobile dark security explanation",
+      "expected": "Space Grotesk",
+      "tag": "P",
+      "size": "12px",
+      "weight": "400",
+      "synthesis": "weight style small-caps",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 119
+        }
+      ]
+    }
+  ],
+  "artifacts": {
+    "comparison": "comparison.html",
+    "fullEvidence": "after/browser-evidence.json",
+    "contentMatchedScreenshotPairs": 16,
+    "normalScreenshots": "after/{desktop,mobile}-{light,dark}-{empty,profile,profile-edit,security}.png",
+    "additionalLaptopScreenshots": "after/laptop-{light,dark}-{empty,conversation,profile,profile-edit,security}.png",
+    "longNameScreenshots": "after/{desktop,laptop,mobile}-{light,dark}-profile-long-name.png",
+    "groupSecurityScreenshots": "after/{desktop,laptop,mobile}-{light,dark}-security-group.png"
+  },
+  "limitations": [
+    "Chrome only; no full cross-browser certification is claimed.",
+    "Conditional no-conversation/choose-conversation fallback titles are not reachable through the currently seeded UI and were not visually exercised.",
+    "Explicit line-break test was labelled DOM-only instrumentation, not a new persisted profile-name capability.",
+    "No new motion recording, font-download benchmark or exhaustive765-check rerun was needed for this heading-class refinement.",
+    "No full multi-user E2EE claim; recipient key exchange remains outside scope."
+  ],
+  "cleanup": {
+    "status": "Completed",
+    "serverProcessId": 30204,
+    "browserProcessId": 32504,
+    "commandLinesVerified": true,
+    "portsReleased": [
+      3106,
+      9226
+    ],
+    "completedAt": "2026-11-06T05:11:18.1326494Z"
+  },
+  "comparisonViewerChecks": {
+    "checks": 3,
+    "passed": 3,
+    "failed": 0,
+    "evidence": "after/comparison-evidence.json"
+  }
+}

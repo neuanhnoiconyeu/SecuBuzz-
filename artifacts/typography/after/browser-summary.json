@@ -1,0 +1,824 @@
+{
+  "completedAt": "2026-11-06T04:59:29.992Z",
+  "browser": "Actual headless Chrome on Windows via CDP",
+  "scope": "Browser-only typography verification; no product source edited by this agent.",
+  "categories": {
+    "typography": {
+      "checks": 150,
+      "passed": 150,
+      "failed": 0,
+      "runtimeErrors": 0,
+      "evidence": "after/typography-evidence.json"
+    },
+    "nativeBrowserZoom200": {
+      "checks": 48,
+      "passed": 48,
+      "failed": 0,
+      "runtimeErrors": 0,
+      "evidence": "after/zoom-evidence.json"
+    },
+    "existingFunctionalRegression": {
+      "checks": 255,
+      "passed": 255,
+      "failed": 0,
+      "runtimeErrors": 0,
+      "evidence": "after/browser-evidence.json"
+    },
+    "coldFontLoad": {
+      "checks": 7,
+      "passed": 7,
+      "failed": 0,
+      "runtimeErrors": 0,
+      "evidence": "after/cold-font-evidence.json"
+    }
+  },
+  "applicationChecks": {
+    "total": 460,
+    "passed": 460,
+    "failed": 0
+  },
+  "runtimeErrors": 0,
+  "hydrationWarnings": [],
+  "viewportSizes": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "name": "laptop",
+      "width": 1024,
+      "height": 800
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "actualFonts": {
+    "fontFaceSet": [
+      {
+        "family": "__bungee_7600f0",
+        "status": "loaded",
+        "weight": "400",
+        "style": "normal",
+        "display": "swap"
+      },
+      {
+        "family": "__bungee_Fallback_7600f0",
+        "status": "loaded",
+        "weight": "normal",
+        "style": "normal",
+        "display": "auto"
+      },
+      {
+        "family": "__spaceGrotesk_be0dd0",
+        "status": "loaded",
+        "weight": "400 700",
+        "style": "normal",
+        "display": "swap"
+      },
+      {
+        "family": "__spaceGrotesk_Fallback_be0dd0",
+        "status": "loaded",
+        "weight": "normal",
+        "style": "normal",
+        "display": "auto"
+      }
+    ],
+    "platformFamilies": [
+      "Bungee",
+      "Space Grotesk Light",
+      "Segoe UI Emoji",
+      "Microsoft YaHei"
+    ],
+    "measurements": [
+      {
+        "label": "Messages display heading",
+        "selector": ".conversation-sidebar-heading h2",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "24px",
+        "computedWeight": "400",
+        "computedLineHeight": "31.2px",
+        "fonts": [
+          {
+            "familyName": "Bungee",
+            "postScriptName": "Bungee-Regular",
+            "isCustomFont": true,
+            "glyphCount": 8
+          }
+        ]
+      },
+      {
+        "label": "BUZZ label",
+        "selector": "#buzz-button > span:last-child",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "13px",
+        "computedWeight": "400",
+        "computedLineHeight": "15.6px",
+        "fonts": [
+          {
+            "familyName": "Bungee",
+            "postScriptName": "Bungee-Regular",
+            "isCustomFont": true,
+            "glyphCount": 5
+          }
+        ]
+      },
+      {
+        "label": "Empty-state heading",
+        "selector": ".chat-empty-state h2",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "22px",
+        "computedWeight": "600",
+        "computedLineHeight": "33px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 15
+          }
+        ]
+      },
+      {
+        "label": "Conversation name",
+        "selector": ".conversation-list-name",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "15px",
+        "computedWeight": "600",
+        "computedLineHeight": "22.5px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 9
+          }
+        ]
+      },
+      {
+        "label": "Navigation",
+        "selector": ".messenger-navigation-item.is-active",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "14px",
+        "computedWeight": "600",
+        "computedLineHeight": "21px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 5
+          }
+        ]
+      },
+      {
+        "label": "Search input",
+        "selector": ".conversation-search-input",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "14px",
+        "computedWeight": "400",
+        "computedLineHeight": "20.3px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 20
+          }
+        ]
+      },
+      {
+        "label": "Conversation header",
+        "selector": ".chat-title-heading",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "21.6px",
+        "computedWeight": "700",
+        "computedLineHeight": "28.08px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 18
+          }
+        ]
+      },
+      {
+        "label": "Composer",
+        "selector": "#message-input",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual user-agent shadow text nodes",
+        "computedSize": "16px",
+        "computedWeight": "400",
+        "computedLineHeight": "23.2px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 16
+          }
+        ]
+      },
+      {
+        "label": "Security summary",
+        "selector": ".conversation-security-summary",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual user-agent shadow text nodes",
+        "computedSize": "12px",
+        "computedWeight": "400",
+        "computedLineHeight": "18px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Medium",
+            "isCustomFont": true,
+            "glyphCount": 21
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Medium",
+            "isCustomFont": true,
+            "glyphCount": 16
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 20
+          }
+        ]
+      },
+      {
+        "label": "System log",
+        "selector": ".debug-summary",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "12px",
+        "computedWeight": "400",
+        "computedLineHeight": "18px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 20
+          }
+        ]
+      },
+      {
+        "label": "Security display heading",
+        "selector": "#security-page-title",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "26px",
+        "computedWeight": "400",
+        "computedLineHeight": "33.8px",
+        "fonts": [
+          {
+            "familyName": "Bungee",
+            "postScriptName": "Bungee-Regular",
+            "isCustomFont": true,
+            "glyphCount": 8
+          }
+        ]
+      },
+      {
+        "label": "Security explanation",
+        "selector": ".security-demo-limitation",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "12px",
+        "computedWeight": "400",
+        "computedLineHeight": "19.2px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 120
+          }
+        ]
+      },
+      {
+        "label": "Profile identity",
+        "selector": ".profile-summary h3",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "22px",
+        "computedWeight": "600",
+        "computedLineHeight": "29.7px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 13
+          }
+        ]
+      },
+      {
+        "label": "Profile input",
+        "selector": "#profile-display-name",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "16px",
+        "computedWeight": "400",
+        "computedLineHeight": "23.2px",
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 1
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 15
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 1
+          }
+        ]
+      },
+      {
+        "label": "Profile identity",
+        "selector": ".profile-summary h3",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "22px",
+        "computedWeight": "600",
+        "computedLineHeight": "29.7px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 13
+          }
+        ]
+      },
+      {
+        "label": "Profile input",
+        "selector": "#profile-display-name",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "16px",
+        "computedWeight": "400",
+        "computedLineHeight": "23.2px",
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 1
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 15
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 1
+          }
+        ]
+      },
+      {
+        "label": "Profile identity",
+        "selector": ".profile-summary h3",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "18px",
+        "computedWeight": "600",
+        "computedLineHeight": "24.3px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 13
+          }
+        ]
+      },
+      {
+        "label": "Profile input",
+        "selector": "#profile-display-name",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "16px",
+        "computedWeight": "400",
+        "computedLineHeight": "23.2px",
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 1
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 15
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 1
+          }
+        ]
+      },
+      {
+        "label": "Profile identity",
+        "selector": ".profile-summary h3",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "22px",
+        "computedWeight": "600",
+        "computedLineHeight": "29.7px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 13
+          }
+        ]
+      },
+      {
+        "label": "Profile input",
+        "selector": "#profile-display-name",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "16px",
+        "computedWeight": "400",
+        "computedLineHeight": "23.2px",
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 1
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 15
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 1
+          }
+        ]
+      },
+      {
+        "label": "Profile identity",
+        "selector": ".profile-summary h3",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "22px",
+        "computedWeight": "600",
+        "computedLineHeight": "29.7px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 13
+          }
+        ]
+      },
+      {
+        "label": "Profile input",
+        "selector": "#profile-display-name",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "16px",
+        "computedWeight": "400",
+        "computedLineHeight": "23.2px",
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 1
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 15
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 1
+          }
+        ]
+      },
+      {
+        "label": "Profile identity",
+        "selector": ".profile-summary h3",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "18px",
+        "computedWeight": "600",
+        "computedLineHeight": "24.3px",
+        "fonts": [
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk-Bold",
+            "isCustomFont": true,
+            "glyphCount": 13
+          }
+        ]
+      },
+      {
+        "label": "Profile input",
+        "selector": "#profile-display-name",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "16px",
+        "computedWeight": "400",
+        "computedLineHeight": "23.2px",
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 1
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 15
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 1
+          }
+        ]
+      },
+      {
+        "label": "Actual multilingual message Latin glyphs",
+        "selector": ".message-bubble",
+        "fontMeasurement": "CSS.getPlatformFontsForNode on actual element",
+        "computedSize": "15px",
+        "computedWeight": "400",
+        "computedLineHeight": "24px",
+        "fonts": [
+          {
+            "familyName": "Segoe UI Emoji",
+            "postScriptName": "SegoeUIEmoji",
+            "isCustomFont": false,
+            "glyphCount": 2
+          },
+          {
+            "familyName": "Space Grotesk Light",
+            "postScriptName": "Space-Grotesk",
+            "isCustomFont": true,
+            "glyphCount": 30
+          },
+          {
+            "familyName": "Microsoft YaHei",
+            "postScriptName": "MicrosoftYaHei",
+            "isCustomFont": false,
+            "glyphCount": 5
+          }
+        ]
+      }
+    ],
+    "successfulLocalFontURLs": [
+      "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+      "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf"
+    ]
+  },
+  "coldFontLoading": {
+    "method": "Fresh isolated Chrome browser context, cache disabled, actual Font requests paused before response bytes; fallback screenshot captured; both requests then resumed. Browser context disposed after probe.",
+    "requestCount": 2,
+    "networkRequestCount": 2,
+    "resourceCount": 2,
+    "resources": [
+      {
+        "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+        "startTime": 231.09999999403954,
+        "duration": 1786.2000000178814,
+        "transferSize": 64868,
+        "decodedBodySize": 136676
+      },
+      {
+        "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+        "startTime": 231.69999998807907,
+        "duration": 1784.9000000059605,
+        "transferSize": 56806,
+        "decodedBodySize": 118996
+      }
+    ],
+    "measuredStartupCLS": 0.0004376476447964892,
+    "measuredAfterFontReleaseCLS": 0.0002664574592496142,
+    "limitation": "Single instrumented controlled-delay desktop sample; not a general performance benchmark.",
+    "screenshots": [
+      "after/desktop-cold-font-fallback.png",
+      "after/desktop-cold-font-loaded.png"
+    ]
+  },
+  "displayUsage": "Bungee400 for Messages, Security, BUZZ. Empty-state heading intentionally remains Space Grotesk. Space Grotesk for interface, message bodies, inputs, metadata, profile, helper and security text.",
+  "unicode": {
+    "sample": "Café déjà vu — naïve façade. 你好，世界 👋🌻",
+    "observedFallbacks": [
+      "Microsoft YaHei for CJK",
+      "Segoe UI Emoji for emoji"
+    ],
+    "wrapping": "Verified short messages, normal sentence, accented/CJK/emoji, intentional blank lines, and long unbroken URL in both themes at all three widths. Existing functional regression also checks incoming/outgoing bubbles."
+  },
+  "trueBrowserZoom": {
+    "method": "Chrome native chrome.settingsPrivate.setDefaultZoom(2), from an isolated settings WebUI tab. No CSS transform or pinch scale. Native zoom restored to1 and owned test tabs closed in finally.",
+    "states": [
+      {
+        "viewport": "desktop",
+        "theme": "light",
+        "baseline": {
+          "innerWidth": 1440,
+          "innerHeight": 1000,
+          "outerWidth": 1458,
+          "outerHeight": 1096,
+          "dpr": 1,
+          "visualScale": 1,
+          "documentWidth": 1440
+        },
+        "zoomed": {
+          "innerWidth": 720,
+          "innerHeight": 500,
+          "outerWidth": 1458,
+          "outerHeight": 1096,
+          "dpr": 2,
+          "visualScale": 1,
+          "documentWidth": 720
+        },
+        "buzz": {
+          "font": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+          "box": {
+            "width": 91.4296875,
+            "height": 44,
+            "left": 324.390625,
+            "right": 415.8203125
+          },
+          "glyph": {
+            "left": 359.7890625,
+            "right": 402.8203125,
+            "height": 17.5
+          }
+        }
+      },
+      {
+        "viewport": "desktop",
+        "theme": "dark",
+        "baseline": {
+          "innerWidth": 1440,
+          "innerHeight": 1000,
+          "outerWidth": 1458,
+          "outerHeight": 1096,
+          "dpr": 1,
+          "visualScale": 1,
+          "documentWidth": 1440
+        },
+        "zoomed": {
+          "innerWidth": 720,
+          "innerHeight": 500,
+          "outerWidth": 1458,
+          "outerHeight": 1096,
+          "dpr": 2,
+          "visualScale": 1,
+          "documentWidth": 720
+        },
+        "buzz": {
+          "font": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+          "box": {
+            "width": 91.4296875,
+            "height": 44,
+            "left": 324.390625,
+            "right": 415.8203125
+          },
+          "glyph": {
+            "left": 359.7890625,
+            "right": 402.8203125,
+            "height": 17.5
+          }
+        }
+      },
+      {
+        "viewport": "laptop",
+        "theme": "light",
+        "baseline": {
+          "innerWidth": 1024,
+          "innerHeight": 800,
+          "outerWidth": 1042,
+          "outerHeight": 896,
+          "dpr": 1,
+          "visualScale": 1,
+          "documentWidth": 1024
+        },
+        "zoomed": {
+          "innerWidth": 512,
+          "innerHeight": 400,
+          "outerWidth": 1042,
+          "outerHeight": 896,
+          "dpr": 2,
+          "visualScale": 1,
+          "documentWidth": 512
+        },
+        "buzz": {
+          "font": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+          "box": {
+            "width": 56,
+            "height": 44.3828125,
+            "left": 17.796875,
+            "right": 73.796875
+          },
+          "glyph": {
+            "left": 25.9296875,
+            "right": 65.65625,
+            "height": 15.5
+          }
+        }
+      },
+      {
+        "viewport": "laptop",
+        "theme": "dark",
+        "baseline": {
+          "innerWidth": 1024,
+          "innerHeight": 800,
+          "outerWidth": 1042,
+          "outerHeight": 896,
+          "dpr": 1,
+          "visualScale": 1,
+          "documentWidth": 1024
+        },
+        "zoomed": {
+          "innerWidth": 512,
+          "innerHeight": 400,
+          "outerWidth": 1042,
+          "outerHeight": 896,
+          "dpr": 2,
+          "visualScale": 1,
+          "documentWidth": 512
+        },
+        "buzz": {
+          "font": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+          "box": {
+            "width": 56,
+            "height": 44.3828125,
+            "left": 17.796875,
+            "right": 73.796875
+          },
+          "glyph": {
+            "left": 25.9296875,
+            "right": 65.65625,
+            "height": 15.5
+          }
+        }
+      }
+    ],
+    "result": "1440×1000 CSS at100% becomes720×500 CSS at200%;1024×800 becomes512×400. Physical outer dimensions unchanged, devicePixelRatio doubles1→2, visualViewport.scale remains1. Profile close/footer remain visible, body scrolls, composer controls remain reachable, sends succeed,40-character profile names retain readable wrap without horizontal overflow.",
+    "limitation": "True zoom was tested at desktop/laptop native windows. Exact390px mobile was verified at100%; Chrome enforces a minimum native window width, so no claim of native390px200% zoom is made."
+  },
+  "visualObservations": [
+    "Bungee adds a clear display accent at Messages/Security and a recognizable BUZZ label while Space Grotesk keeps messages and dense UI readable.",
+    "Empty state remains balanced around the unchanged logo; its heading uses Space Grotesk.",
+    "Mobile BUZZ glyphs fit the56px button without clipping; existing motion and event behavior remain functional.",
+    "At200% with an intentional40-W stress profile name, existing nav wrapping makes the header taller; content remains reachable through existing internal scroll. Existing wrapping was retained to preserve the layout and full identity text."
+  ],
+  "artifacts": {
+    "comparison": "comparison.html",
+    "screenshots": "after/{desktop,laptop,mobile}-{light,dark}-{empty,conversation,profile,appearance,profile-edit}.png",
+    "unicode": "after/{desktop,laptop,mobile}-{light,dark}-multilingual.png",
+    "zoom": "after/{desktop,laptop}-{light,dark}-zoom200-{chat,profile,edit}.png",
+    "security": "after/desktop-dark-security.png"
+  },
+  "limitations": [
+    "Chrome only; no full cross-browser or WCAG certification is claimed.",
+    "Platform-font evidence uses actual text nodes, including native input user-agent shadow text. Computed font-family alone was not treated as proof.",
+    "No new motion recording was needed for this typography-only scope; reduced-motion and existing BUZZ behavior were checked.",
+    "No full multi-user E2EE claim; authenticated recipient key distribution remains outside scope."
+  ],
+  "cleanup": {
+    "status": "Completed",
+    "serverProcessId": 27672,
+    "browserProcessId": 25648,
+    "commandLinesVerified": true,
+    "portsReleased": [
+      3106,
+      9226
+    ],
+    "completedAt": "2026-11-06T05:00:17.4697129Z"
+  },
+  "comparisonViewerChecks": {
+    "checks": 3,
+    "passed": 3,
+    "failed": 0,
+    "evidence": "after/comparison-evidence.json"
+  }
+}

@@ -1,0 +1,76 @@
+/* Shared motion primitives. Reduced-motion behavior is applied in globals.css. */
+:root {
+  --motion-fast: 120ms;
+  --motion-standard: 200ms;
+  --motion-entry: 200ms;
+  --motion-dialog: 240ms;
+  --motion-ambient: 28s;
+  --motion-ambient-slow: 36s;
+  --motion-float: 12s;
+  --motion-buzz: 500ms;
+  --motion-loading: 650ms;
+  --motion-ease-out: cubic-bezier(0.2, 0.7, 0.25, 1);
+  --motion-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+  --motion-distance-sm: 3px;
+  --motion-distance-md: 6px;
+
+  /* Existing shared controls keep their public token names. */
+  --duration-fast: var(--motion-fast);
+  --duration-normal: var(--motion-standard);
+  --duration-entry: var(--motion-entry);
+  --duration-dialog: var(--motion-dialog);
+  --ease-out: var(--motion-ease-out);
+}
+
+@keyframes ambient-lavender {
+  0%, 100% { transform: translate3d(-3%, -2%, 0); }
+  50% { transform: translate3d(8%, 7%, 0); }
+}
+@keyframes ambient-violet {
+  0%, 100% { transform: translate3d(3%, 2%, 0); }
+  50% { transform: translate3d(-7%, -8%, 0); }
+}
+@keyframes empty-light-lavender {
+  0%, 100% { transform: translate3d(-12%, 6%, 0) scale(1); }
+  50% { transform: translate3d(16%, -10%, 0) scale(1.08); }
+}
+@keyframes empty-light-violet {
+  0%, 100% { transform: translate3d(12%, -6%, 0) scale(1.05); }
+  50% { transform: translate3d(-16%, 12%, 0) scale(1); }
+}
+@keyframes message-arrive {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes context-arrive {
+  from { opacity: 0.35; transform: translateX(var(--motion-distance-sm)); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes brand-arrive {
+  from { opacity: 0; transform: translateY(var(--motion-distance-md)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes brand-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes submit-confirm {
+  from { opacity: 0.3; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes unread-change {
+  from { opacity: 0.4; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes feedback-reveal {
+  from { opacity: 0.3; }
+  to { opacity: 1; }
+}
+@keyframes ui-spin { to { transform: rotate(360deg); } }
+@keyframes buzz-shake {
+  0%, 100% { transform: translateX(0); }
+  12%, 38% { transform: translateX(-3px); }
+  25%, 50% { transform: translateX(3px); }
+  65% { transform: translateX(-2px); }
+  80% { transform: translateX(1px); }
+}

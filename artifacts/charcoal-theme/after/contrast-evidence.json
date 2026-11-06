@@ -1,0 +1,1163 @@
+{
+  "startedAt": "2026-11-06T04:21:52.623Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "light text contrast conversation heading",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "conversation heading",
+        "foreground": "rgb(36, 27, 42)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 16.59790082698086
+      }
+    },
+    {
+      "label": "light text contrast conversation type",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "conversation type",
+        "foreground": "rgb(98, 88, 106)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.723560830182342
+      }
+    },
+    {
+      "label": "light text contrast selected preview",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "selected preview",
+        "foreground": "rgb(98, 88, 106)",
+        "background": "rgb(228, 215, 244)",
+        "ratio": 4.906695343470585
+      }
+    },
+    {
+      "label": "light text contrast selected timestamp",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "selected timestamp",
+        "foreground": "rgb(98, 88, 106)",
+        "background": "rgb(228, 215, 244)",
+        "ratio": 4.906695343470585
+      }
+    },
+    {
+      "label": "light text contrast hover timestamp",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "hover timestamp",
+        "foreground": "rgb(98, 88, 106)",
+        "background": "rgb(234, 227, 243)",
+        "ratio": 5.372551564113392
+      }
+    },
+    {
+      "label": "light text contrast input text",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "input text",
+        "foreground": "rgb(36, 27, 42)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 16.59790082698086
+      }
+    },
+    {
+      "label": "light text contrast placeholder",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "placeholder",
+        "foreground": "rgb(113, 103, 120)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 5.366103108199788
+      }
+    },
+    {
+      "label": "light text contrast BUZZ label",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "BUZZ label",
+        "foreground": "rgb(165, 34, 53)",
+        "background": "rgb(255, 241, 242)",
+        "ratio": 6.637399335516366
+      }
+    },
+    {
+      "label": "light control contrast default composer input boundary",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "default composer input boundary",
+        "foreground": "rgb(148, 129, 159)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 3.559368278092617
+      }
+    },
+    {
+      "label": "light control contrast default search boundary",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "default search boundary",
+        "foreground": "rgb(148, 129, 159)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 3.559368278092617
+      }
+    },
+    {
+      "label": "light text contrast enabled Send",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "enabled Send",
+        "foreground": "rgb(255, 255, 255)",
+        "background": "rgb(111, 45, 168)",
+        "ratio": 8.025416673354552
+      }
+    },
+    {
+      "label": "light control contrast focused composer boundary",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "focused composer boundary",
+        "foreground": "rgb(111, 45, 168)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 8.025416673354552
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "light text contrast outgoing message",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "outgoing message",
+        "foreground": "rgb(255, 255, 255)",
+        "background": "rgb(111, 45, 168)",
+        "ratio": 8.025416673354552
+      }
+    },
+    {
+      "label": "light text contrast incoming message",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "incoming message",
+        "foreground": "rgb(36, 27, 42)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 16.59790082698086
+      }
+    },
+    {
+      "label": "light text contrast message metadata",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "message metadata",
+        "foreground": "rgb(98, 88, 106)",
+        "background": "rgb(250, 249, 252)",
+        "ratio": 6.410027228888319
+      }
+    },
+    {
+      "label": "light text contrast security action hover",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "security action hover",
+        "foreground": "rgb(111, 45, 168)",
+        "background": "rgb(241, 234, 250)",
+        "ratio": 6.836778853588058
+      }
+    },
+    {
+      "label": "light text contrast security warning",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "security warning",
+        "foreground": "rgb(128, 85, 0)",
+        "background": "rgb(255, 244, 214)",
+        "ratio": 5.956437567687388
+      }
+    },
+    {
+      "label": "light text contrast security success",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "security success",
+        "foreground": "rgb(24, 116, 73)",
+        "background": "rgb(228, 244, 235)",
+        "ratio": 5.075054872599774
+      }
+    },
+    {
+      "label": "light text contrast system log hover",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "system log hover",
+        "foreground": "rgb(111, 45, 168)",
+        "background": "rgb(241, 234, 250)",
+        "ratio": 6.836778853588058
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "light text contrast profile title",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "profile title",
+        "foreground": "rgb(111, 45, 168)",
+        "background": "rgb(248, 245, 250)",
+        "ratio": 7.426445567950661
+      }
+    },
+    {
+      "label": "light text contrast profile body",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "profile body",
+        "foreground": "rgb(36, 27, 42)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 16.59790082698086
+      }
+    },
+    {
+      "label": "light text contrast appearance label",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "appearance label",
+        "foreground": "rgb(93, 35, 143)",
+        "background": "rgb(241, 234, 250)",
+        "ratio": 8.508868074908245
+      }
+    },
+    {
+      "label": "light control contrast dialog keyboard focus",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "dialog keyboard focus",
+        "foreground": "rgb(141, 86, 187)",
+        "background": "rgb(248, 245, 250)",
+        "ratio": 4.647598240112911
+      }
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "light text contrast field label",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "field label",
+        "foreground": "rgb(36, 27, 42)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 16.59790082698086
+      }
+    },
+    {
+      "label": "light text contrast field hint",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "field hint",
+        "foreground": "rgb(98, 88, 106)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.723560830182342
+      }
+    },
+    {
+      "label": "light text contrast selected avatar label",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "selected avatar label",
+        "foreground": "rgb(111, 45, 168)",
+        "background": "rgb(241, 234, 250)",
+        "ratio": 6.836778853588058
+      }
+    },
+    {
+      "label": "light text contrast Cancel button",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "Cancel button",
+        "foreground": "rgb(93, 35, 143)",
+        "background": "rgb(248, 245, 250)",
+        "ratio": 9.242751148812673
+      }
+    },
+    {
+      "label": "light text contrast Save button",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "Save button",
+        "foreground": "rgb(255, 255, 255)",
+        "background": "rgb(111, 45, 168)",
+        "ratio": 8.025416673354552
+      }
+    },
+    {
+      "label": "light control contrast profile input boundary",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "profile input boundary",
+        "foreground": "rgb(148, 129, 159)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 3.559368278092617
+      }
+    },
+    {
+      "label": "light control contrast Cancel boundary",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "Cancel boundary",
+        "foreground": "rgb(148, 129, 159)",
+        "background": "rgb(248, 245, 250)",
+        "ratio": 3.293717429190645
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "light text contrast validation error",
+      "passed": true,
+      "detail": {
+        "mode": "light",
+        "label": "validation error",
+        "foreground": "rgb(165, 34, 53)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 7.291449376570951
+      }
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "dark text contrast conversation heading",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "conversation heading",
+        "foreground": "rgb(245, 242, 250)",
+        "background": "rgb(29, 31, 41)",
+        "ratio": 14.812487288422767
+      }
+    },
+    {
+      "label": "dark text contrast conversation type",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "conversation type",
+        "foreground": "rgb(182, 176, 195)",
+        "background": "rgb(29, 31, 41)",
+        "ratio": 7.800922416878626
+      }
+    },
+    {
+      "label": "dark text contrast selected preview",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "selected preview",
+        "foreground": "rgb(182, 176, 195)",
+        "background": "rgb(57, 48, 71)",
+        "ratio": 5.917489236732412
+      }
+    },
+    {
+      "label": "dark text contrast selected timestamp",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "selected timestamp",
+        "foreground": "rgb(182, 176, 195)",
+        "background": "rgb(57, 48, 71)",
+        "ratio": 5.917489236732412
+      }
+    },
+    {
+      "label": "dark text contrast hover timestamp",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "hover timestamp",
+        "foreground": "rgb(182, 176, 195)",
+        "background": "rgb(52, 49, 63)",
+        "ratio": 6.026848481628035
+      }
+    },
+    {
+      "label": "dark text contrast input text",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "input text",
+        "foreground": "rgb(245, 242, 250)",
+        "background": "rgb(48, 49, 61)",
+        "ratio": 11.617217504746723
+      }
+    },
+    {
+      "label": "dark text contrast placeholder",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "placeholder",
+        "foreground": "rgb(171, 165, 186)",
+        "background": "rgb(48, 49, 61)",
+        "ratio": 5.404774068577637
+      }
+    },
+    {
+      "label": "dark text contrast BUZZ label",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "BUZZ label",
+        "foreground": "rgb(242, 123, 133)",
+        "background": "rgb(58, 41, 49)",
+        "ratio": 5.155800285001062
+      }
+    },
+    {
+      "label": "dark control contrast default composer input boundary",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "default composer input boundary",
+        "foreground": "rgb(133, 121, 146)",
+        "background": "rgb(48, 49, 61)",
+        "ratio": 3.153252487209733
+      }
+    },
+    {
+      "label": "dark text contrast enabled Send",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "enabled Send",
+        "foreground": "rgb(35, 22, 47)",
+        "background": "rgb(167, 122, 232)",
+        "ratio": 5.371367903078847
+      }
+    },
+    {
+      "label": "dark control contrast focused composer boundary",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "focused composer boundary",
+        "foreground": "rgb(167, 122, 232)",
+        "background": "rgb(48, 49, 61)",
+        "ratio": 4.038354847801586
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "dark text contrast outgoing message",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "outgoing message",
+        "foreground": "rgb(245, 242, 250)",
+        "background": "rgb(96, 64, 128)",
+        "ratio": 7.4589454021865915
+      }
+    },
+    {
+      "label": "dark text contrast incoming message",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "incoming message",
+        "foreground": "rgb(245, 242, 250)",
+        "background": "rgb(43, 44, 56)",
+        "ratio": 12.475379878261467
+      }
+    },
+    {
+      "label": "dark text contrast message metadata",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "message metadata",
+        "foreground": "rgb(182, 176, 195)",
+        "background": "rgb(32, 33, 43)",
+        "ratio": 7.601508197746735
+      }
+    },
+    {
+      "label": "dark text contrast security action hover",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "security action hover",
+        "foreground": "rgb(167, 122, 232)",
+        "background": "rgb(44, 37, 56)",
+        "ratio": 4.6136817436398925
+      }
+    },
+    {
+      "label": "dark text contrast security warning",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "security warning",
+        "foreground": "rgb(240, 188, 103)",
+        "background": "rgb(62, 51, 35)",
+        "ratio": 7.103255859345275
+      }
+    },
+    {
+      "label": "dark text contrast security success",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "security success",
+        "foreground": "rgb(81, 197, 138)",
+        "background": "rgb(32, 56, 44)",
+        "ratio": 5.833260377828575
+      }
+    },
+    {
+      "label": "dark text contrast system log hover",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "system log hover",
+        "foreground": "rgb(167, 122, 232)",
+        "background": "rgb(44, 37, 56)",
+        "ratio": 4.6136817436398925
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "dark text contrast profile title",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "profile title",
+        "foreground": "rgb(167, 122, 232)",
+        "background": "rgb(37, 38, 48)",
+        "ratio": 4.713431735292396
+      }
+    },
+    {
+      "label": "dark text contrast profile body",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "profile body",
+        "foreground": "rgb(245, 242, 250)",
+        "background": "rgb(29, 31, 41)",
+        "ratio": 14.812487288422767
+      }
+    },
+    {
+      "label": "dark text contrast appearance label",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "appearance label",
+        "foreground": "rgb(197, 161, 243)",
+        "background": "rgb(44, 37, 56)",
+        "ratio": 6.835136636786456
+      }
+    },
+    {
+      "label": "dark control contrast dialog keyboard focus",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "dialog keyboard focus",
+        "foreground": "rgb(197, 161, 243)",
+        "background": "rgb(37, 38, 48)",
+        "ratio": 6.982915538832107
+      }
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "dark text contrast field label",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "field label",
+        "foreground": "rgb(245, 242, 250)",
+        "background": "rgb(29, 31, 41)",
+        "ratio": 14.812487288422767
+      }
+    },
+    {
+      "label": "dark text contrast field hint",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "field hint",
+        "foreground": "rgb(182, 176, 195)",
+        "background": "rgb(29, 31, 41)",
+        "ratio": 7.800922416878626
+      }
+    },
+    {
+      "label": "dark text contrast selected avatar label",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "selected avatar label",
+        "foreground": "rgb(167, 122, 232)",
+        "background": "rgb(44, 37, 56)",
+        "ratio": 4.6136817436398925
+      }
+    },
+    {
+      "label": "dark text contrast Cancel button",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "Cancel button",
+        "foreground": "rgb(197, 161, 243)",
+        "background": "rgb(37, 38, 48)",
+        "ratio": 6.982915538832107
+      }
+    },
+    {
+      "label": "dark text contrast Save button",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "Save button",
+        "foreground": "rgb(35, 22, 47)",
+        "background": "rgb(167, 122, 232)",
+        "ratio": 5.371367903078847
+      }
+    },
+    {
+      "label": "dark control contrast profile input boundary",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "profile input boundary",
+        "foreground": "rgb(133, 121, 146)",
+        "background": "rgb(48, 49, 61)",
+        "ratio": 3.153252487209733
+      }
+    },
+    {
+      "label": "dark control contrast Cancel boundary",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "Cancel boundary",
+        "foreground": "rgb(116, 109, 133)",
+        "background": "rgb(37, 38, 48)",
+        "ratio": 3.0521830414406317
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "dark text contrast validation error",
+      "passed": true,
+      "detail": {
+        "mode": "dark",
+        "label": "validation error",
+        "foreground": "rgb(242, 123, 133)",
+        "background": "rgb(29, 31, 41)",
+        "ratio": 6.207605912451492
+      }
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Contrast checks have no uncaught runtime exceptions",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "All measured text and control pairs meet their stated thresholds",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\charcoal-theme\\after\\desktop-light-validation.png",
+    "artifacts\\charcoal-theme\\after\\desktop-dark-validation.png"
+  ],
+  "runtimeErrors": [],
+  "samples": [
+    {
+      "mode": "light",
+      "label": "conversation heading",
+      "foreground": "rgb(36, 27, 42)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 16.59790082698086
+    },
+    {
+      "mode": "light",
+      "label": "conversation type",
+      "foreground": "rgb(98, 88, 106)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 6.723560830182342
+    },
+    {
+      "mode": "light",
+      "label": "selected preview",
+      "foreground": "rgb(98, 88, 106)",
+      "background": "rgb(228, 215, 244)",
+      "ratio": 4.906695343470585
+    },
+    {
+      "mode": "light",
+      "label": "selected timestamp",
+      "foreground": "rgb(98, 88, 106)",
+      "background": "rgb(228, 215, 244)",
+      "ratio": 4.906695343470585
+    },
+    {
+      "mode": "light",
+      "label": "hover timestamp",
+      "foreground": "rgb(98, 88, 106)",
+      "background": "rgb(234, 227, 243)",
+      "ratio": 5.372551564113392
+    },
+    {
+      "mode": "light",
+      "label": "input text",
+      "foreground": "rgb(36, 27, 42)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 16.59790082698086
+    },
+    {
+      "mode": "light",
+      "label": "placeholder",
+      "foreground": "rgb(113, 103, 120)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 5.366103108199788
+    },
+    {
+      "mode": "light",
+      "label": "BUZZ label",
+      "foreground": "rgb(165, 34, 53)",
+      "background": "rgb(255, 241, 242)",
+      "ratio": 6.637399335516366
+    },
+    {
+      "mode": "light",
+      "label": "enabled Send",
+      "foreground": "rgb(255, 255, 255)",
+      "background": "rgb(111, 45, 168)",
+      "ratio": 8.025416673354552
+    },
+    {
+      "mode": "light",
+      "label": "outgoing message",
+      "foreground": "rgb(255, 255, 255)",
+      "background": "rgb(111, 45, 168)",
+      "ratio": 8.025416673354552
+    },
+    {
+      "mode": "light",
+      "label": "incoming message",
+      "foreground": "rgb(36, 27, 42)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 16.59790082698086
+    },
+    {
+      "mode": "light",
+      "label": "message metadata",
+      "foreground": "rgb(98, 88, 106)",
+      "background": "rgb(250, 249, 252)",
+      "ratio": 6.410027228888319
+    },
+    {
+      "mode": "light",
+      "label": "security action hover",
+      "foreground": "rgb(111, 45, 168)",
+      "background": "rgb(241, 234, 250)",
+      "ratio": 6.836778853588058
+    },
+    {
+      "mode": "light",
+      "label": "security warning",
+      "foreground": "rgb(128, 85, 0)",
+      "background": "rgb(255, 244, 214)",
+      "ratio": 5.956437567687388
+    },
+    {
+      "mode": "light",
+      "label": "security success",
+      "foreground": "rgb(24, 116, 73)",
+      "background": "rgb(228, 244, 235)",
+      "ratio": 5.075054872599774
+    },
+    {
+      "mode": "light",
+      "label": "system log hover",
+      "foreground": "rgb(111, 45, 168)",
+      "background": "rgb(241, 234, 250)",
+      "ratio": 6.836778853588058
+    },
+    {
+      "mode": "light",
+      "label": "profile title",
+      "foreground": "rgb(111, 45, 168)",
+      "background": "rgb(248, 245, 250)",
+      "ratio": 7.426445567950661
+    },
+    {
+      "mode": "light",
+      "label": "profile body",
+      "foreground": "rgb(36, 27, 42)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 16.59790082698086
+    },
+    {
+      "mode": "light",
+      "label": "appearance label",
+      "foreground": "rgb(93, 35, 143)",
+      "background": "rgb(241, 234, 250)",
+      "ratio": 8.508868074908245
+    },
+    {
+      "mode": "light",
+      "label": "field label",
+      "foreground": "rgb(36, 27, 42)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 16.59790082698086
+    },
+    {
+      "mode": "light",
+      "label": "field hint",
+      "foreground": "rgb(98, 88, 106)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 6.723560830182342
+    },
+    {
+      "mode": "light",
+      "label": "selected avatar label",
+      "foreground": "rgb(111, 45, 168)",
+      "background": "rgb(241, 234, 250)",
+      "ratio": 6.836778853588058
+    },
+    {
+      "mode": "light",
+      "label": "Cancel button",
+      "foreground": "rgb(93, 35, 143)",
+      "background": "rgb(248, 245, 250)",
+      "ratio": 9.242751148812673
+    },
+    {
+      "mode": "light",
+      "label": "Save button",
+      "foreground": "rgb(255, 255, 255)",
+      "background": "rgb(111, 45, 168)",
+      "ratio": 8.025416673354552
+    },
+    {
+      "mode": "light",
+      "label": "validation error",
+      "foreground": "rgb(165, 34, 53)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 7.291449376570951
+    },
+    {
+      "mode": "dark",
+      "label": "conversation heading",
+      "foreground": "rgb(245, 242, 250)",
+      "background": "rgb(29, 31, 41)",
+      "ratio": 14.812487288422767
+    },
+    {
+      "mode": "dark",
+      "label": "conversation type",
+      "foreground": "rgb(182, 176, 195)",
+      "background": "rgb(29, 31, 41)",
+      "ratio": 7.800922416878626
+    },
+    {
+      "mode": "dark",
+      "label": "selected preview",
+      "foreground": "rgb(182, 176, 195)",
+      "background": "rgb(57, 48, 71)",
+      "ratio": 5.917489236732412
+    },
+    {
+      "mode": "dark",
+      "label": "selected timestamp",
+      "foreground": "rgb(182, 176, 195)",
+      "background": "rgb(57, 48, 71)",
+      "ratio": 5.917489236732412
+    },
+    {
+      "mode": "dark",
+      "label": "hover timestamp",
+      "foreground": "rgb(182, 176, 195)",
+      "background": "rgb(52, 49, 63)",
+      "ratio": 6.026848481628035
+    },
+    {
+      "mode": "dark",
+      "label": "input text",
+      "foreground": "rgb(245, 242, 250)",
+      "background": "rgb(48, 49, 61)",
+      "ratio": 11.617217504746723
+    },
+    {
+      "mode": "dark",
+      "label": "placeholder",
+      "foreground": "rgb(171, 165, 186)",
+      "background": "rgb(48, 49, 61)",
+      "ratio": 5.404774068577637
+    },
+    {
+      "mode": "dark",
+      "label": "BUZZ label",
+      "foreground": "rgb(242, 123, 133)",
+      "background": "rgb(58, 41, 49)",
+      "ratio": 5.155800285001062
+    },
+    {
+      "mode": "dark",
+      "label": "enabled Send",
+      "foreground": "rgb(35, 22, 47)",
+      "background": "rgb(167, 122, 232)",
+      "ratio": 5.371367903078847
+    },
+    {
+      "mode": "dark",
+      "label": "outgoing message",
+      "foreground": "rgb(245, 242, 250)",
+      "background": "rgb(96, 64, 128)",
+      "ratio": 7.4589454021865915
+    },
+    {
+      "mode": "dark",
+      "label": "incoming message",
+      "foreground": "rgb(245, 242, 250)",
+      "background": "rgb(43, 44, 56)",
+      "ratio": 12.475379878261467
+    },
+    {
+      "mode": "dark",
+      "label": "message metadata",
+      "foreground": "rgb(182, 176, 195)",
+      "background": "rgb(32, 33, 43)",
+      "ratio": 7.601508197746735
+    },
+    {
+      "mode": "dark",
+      "label": "security action hover",
+      "foreground": "rgb(167, 122, 232)",
+      "background": "rgb(44, 37, 56)",
+      "ratio": 4.6136817436398925
+    },
+    {
+      "mode": "dark",
+      "label": "security warning",
+      "foreground": "rgb(240, 188, 103)",
+      "background": "rgb(62, 51, 35)",
+      "ratio": 7.103255859345275
+    },
+    {
+      "mode": "dark",
+      "label": "security success",
+      "foreground": "rgb(81, 197, 138)",
+      "background": "rgb(32, 56, 44)",
+      "ratio": 5.833260377828575
+    },
+    {
+      "mode": "dark",
+      "label": "system log hover",
+      "foreground": "rgb(167, 122, 232)",
+      "background": "rgb(44, 37, 56)",
+      "ratio": 4.6136817436398925
+    },
+    {
+      "mode": "dark",
+      "label": "profile title",
+      "foreground": "rgb(167, 122, 232)",
+      "background": "rgb(37, 38, 48)",
+      "ratio": 4.713431735292396
+    },
+    {
+      "mode": "dark",
+      "label": "profile body",
+      "foreground": "rgb(245, 242, 250)",
+      "background": "rgb(29, 31, 41)",
+      "ratio": 14.812487288422767
+    },
+    {
+      "mode": "dark",
+      "label": "appearance label",
+      "foreground": "rgb(197, 161, 243)",
+      "background": "rgb(44, 37, 56)",
+      "ratio": 6.835136636786456
+    },
+    {
+      "mode": "dark",
+      "label": "field label",
+      "foreground": "rgb(245, 242, 250)",
+      "background": "rgb(29, 31, 41)",
+      "ratio": 14.812487288422767
+    },
+    {
+      "mode": "dark",
+      "label": "field hint",
+      "foreground": "rgb(182, 176, 195)",
+      "background": "rgb(29, 31, 41)",
+      "ratio": 7.800922416878626
+    },
+    {
+      "mode": "dark",
+      "label": "selected avatar label",
+      "foreground": "rgb(167, 122, 232)",
+      "background": "rgb(44, 37, 56)",
+      "ratio": 4.6136817436398925
+    },
+    {
+      "mode": "dark",
+      "label": "Cancel button",
+      "foreground": "rgb(197, 161, 243)",
+      "background": "rgb(37, 38, 48)",
+      "ratio": 6.982915538832107
+    },
+    {
+      "mode": "dark",
+      "label": "Save button",
+      "foreground": "rgb(35, 22, 47)",
+      "background": "rgb(167, 122, 232)",
+      "ratio": 5.371367903078847
+    },
+    {
+      "mode": "dark",
+      "label": "validation error",
+      "foreground": "rgb(242, 123, 133)",
+      "background": "rgb(29, 31, 41)",
+      "ratio": 6.207605912451492
+    }
+  ],
+  "controls": [
+    {
+      "mode": "light",
+      "label": "default composer input boundary",
+      "foreground": "rgb(148, 129, 159)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 3.559368278092617
+    },
+    {
+      "mode": "light",
+      "label": "default search boundary",
+      "foreground": "rgb(148, 129, 159)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 3.559368278092617
+    },
+    {
+      "mode": "light",
+      "label": "focused composer boundary",
+      "foreground": "rgb(111, 45, 168)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 8.025416673354552
+    },
+    {
+      "mode": "light",
+      "label": "dialog keyboard focus",
+      "foreground": "rgb(141, 86, 187)",
+      "background": "rgb(248, 245, 250)",
+      "ratio": 4.647598240112911
+    },
+    {
+      "mode": "light",
+      "label": "profile input boundary",
+      "foreground": "rgb(148, 129, 159)",
+      "background": "rgb(255, 255, 255)",
+      "ratio": 3.559368278092617
+    },
+    {
+      "mode": "light",
+      "label": "Cancel boundary",
+      "foreground": "rgb(148, 129, 159)",
+      "background": "rgb(248, 245, 250)",
+      "ratio": 3.293717429190645
+    },
+    {
+      "mode": "dark",
+      "label": "default composer input boundary",
+      "foreground": "rgb(133, 121, 146)",
+      "background": "rgb(48, 49, 61)",
+      "ratio": 3.153252487209733
+    },
+    {
+      "mode": "dark",
+      "label": "focused composer boundary",
+      "foreground": "rgb(167, 122, 232)",
+      "background": "rgb(48, 49, 61)",
+      "ratio": 4.038354847801586
+    },
+    {
+      "mode": "dark",
+      "label": "dialog keyboard focus",
+      "foreground": "rgb(197, 161, 243)",
+      "background": "rgb(37, 38, 48)",
+      "ratio": 6.982915538832107
+    },
+    {
+      "mode": "dark",
+      "label": "profile input boundary",
+      "foreground": "rgb(133, 121, 146)",
+      "background": "rgb(48, 49, 61)",
+      "ratio": 3.153252487209733
+    },
+    {
+      "mode": "dark",
+      "label": "Cancel boundary",
+      "foreground": "rgb(116, 109, 133)",
+      "background": "rgb(37, 38, 48)",
+      "ratio": 3.0521830414406317
+    }
+  ]
+}

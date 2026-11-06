@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yahoo! Security Messenger - MASTER motion — before and after</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;padding:24px;font:15px/1.5 system-ui,sans-serif;color:#241b2a;background:#f5f3f8}main{max-width:1800px;margin:auto}h1{font-size:24px;margin:0 0 8px}p{margin:0 0 20px;color:#62586a}nav{display:flex;gap:8px;margin-bottom:20px}button{font:inherit;padding:8px 14px;border:1px solid #b8a6c9;border-radius:6px;color:#5d238f;background:white;cursor:pointer}button[aria-pressed=true]{color:white;background:#6f2da8;border-color:#6f2da8}button:focus-visible,a:focus-visible{outline:3px solid #8d56bb;outline-offset:3px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:20px}figure{margin:0;min-width:0}figcaption{font-weight:600;margin:0 0 8px}img{display:block;width:100%;height:auto;border:1px solid #ded5e8;background:white}.mobile img{max-width:390px;margin:auto}.mobile figcaption{text-align:center}footer{margin-top:24px;font-size:13px}a{color:#5d238f}section[hidden]{display:none}@media(max-width:700px){body{padding:16px}.pair{grid-template-columns:1fr}}
+</style>
+<main>
+<h1>Yahoo! Security Messenger - MASTER motion</h1>
+<p>Before and after the master motion pass. The empty canvas adds moving lavender light, texture and a logo glow, while the message-reading surface remains stable. Open the actual capture player for measured motion.</p>
+<p><a href="motion-player.html">Open the actual Chrome motion capture player</a></p><nav aria-label="Screenshot viewport">
+  <button type="button" aria-pressed="true" data-view="desktop">Desktop · 1440 × 1000</button>
+  <button type="button" aria-pressed="false" data-view="laptop">Laptop · 1024 × 800</button>
+  <button type="button" aria-pressed="false" data-view="mobile">Mobile · 390 × 844</button>
+</nav>
+<section id="desktop" class="pair" aria-label="Desktop before and after">
+  <figure><figcaption>Before</figcaption><img src="before/desktop-messenger.png" alt="Before desktop screenshot of Yahoo! Security Messenger"></figure>
+  <figure><figcaption>After</figcaption><img src="after/desktop-empty-verified.png" alt="After desktop screenshot of Yahoo! Security Messenger"></figure>
+</section>
+<section id="laptop" class="pair" aria-label="Laptop before and after" hidden>
+  <figure><figcaption>Before</figcaption><img src="before/laptop-messenger.png" alt="Before laptop screenshot of Yahoo! Security Messenger"></figure>
+  <figure><figcaption>After</figcaption><img src="after/laptop-empty-verified.png" alt="After laptop screenshot of Yahoo! Security Messenger"></figure>
+</section>
+<section id="mobile" class="pair mobile" aria-label="Mobile before and after" hidden>
+  <figure><figcaption>Before</figcaption><img src="before/mobile-messenger.png" alt="Before mobile screenshot of Yahoo! Security Messenger"></figure>
+  <figure><figcaption>After</figcaption><img src="after/mobile-final.png" alt="After mobile screenshot of Yahoo! Security Messenger"></figure>
+</section>
+<h2>Natural ambient movement · actual capture</h2><p>Two frames from the same32-second natural playback, with no animation seeking. The full sequence is available in the motion player.</p><div class="pair"><figure><figcaption>Capture start</figcaption><img src="after/clips/ambient-natural-32s/frame-000.png" alt="After clips/ambient screenshot of Yahoo! Security Messenger"></figure><figure><figcaption>About16 seconds later</figcaption><img src="after/clips/ambient-natural-32s/frame-008.png" alt="After clips/ambient screenshot of Yahoo! Security Messenger"></figure></div><footer>
+  Representative messages: <a href="after/desktop-conversation.png">desktop</a> · <a href="after/mobile-conversation.png">mobile</a>.<br>
+  Browser evidence: <a href="after/browser-evidence.json">interaction checks</a> · <a href="after/extra-evidence.json">compact-height checks</a> · <a href="after/overhaul-evidence.json">natural ambient and native panel evidence</a> · <a href="after/browser-summary.json">verification summary</a>.
+</footer>
+</main>
+<script>
+  document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{
+    document.querySelectorAll('[data-view]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+    document.querySelectorAll('main>section').forEach(section=>section.hidden=section.id!==button.dataset.view);
+  }));
+</script>
+</html>

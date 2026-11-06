@@ -11,9 +11,15 @@ describe('YahooChatWindow', () => {
 
     expect(screen.getByText('No messages yet')).toBeInTheDocument();
     expect(screen.getByText('Local demo')).toBeInTheDocument();
-    expect(screen.getByRole('tooltip')).toHaveTextContent('Recipient key exchange is unavailable');
-    expect(screen.getByText('Recipient key unavailable')).toBeInTheDocument();
     expect(screen.getByText('E2EE not established')).toBeInTheDocument();
+    const disclosure = screen.getByText('Security details').closest('details');
+    expect(disclosure).not.toHaveAttribute('open');
+    fireEvent.click(screen.getByText('Security details'));
+    expect(disclosure).toHaveAttribute('open');
+    const securityDetails = screen.getByRole('region', { name: 'Conversation security details' });
+    expect(securityDetails).toHaveTextContent('Recipient key exchange is unavailable');
+    expect(within(securityDetails).getByText('Recipient key unavailable')).toBeInTheDocument();
+    expect(securityDetails).toHaveTextContent('Local demo replies are mock text.');
     expect(screen.queryByText('Your messages are end-to-end encrypted.')).not.toBeInTheDocument();
   });
 

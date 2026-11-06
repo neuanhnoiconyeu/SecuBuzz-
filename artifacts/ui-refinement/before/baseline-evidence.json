@@ -1,0 +1,84 @@
+{
+  "startedAt": "2026-11-06T01:19:13.845Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "desktop baseline dimensions",
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1425,
+        "documentHeight": 1013,
+        "bodyHeight": 1013
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "laptop baseline dimensions",
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1009,
+        "documentHeight": 961,
+        "bodyHeight": 961
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "mobile baseline dimensions",
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 375,
+        "documentHeight": 939,
+        "bodyHeight": 939
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "artifacts\\ui-refinement\\before\\desktop-messenger.png",
+    "artifacts\\ui-refinement\\before\\desktop-profile.png",
+    "artifacts\\ui-refinement\\before\\desktop-profile-edit.png",
+    "artifacts\\ui-refinement\\before\\laptop-messenger.png",
+    "artifacts\\ui-refinement\\before\\laptop-profile.png",
+    "artifacts\\ui-refinement\\before\\laptop-profile-edit.png",
+    "artifacts\\ui-refinement\\before\\mobile-messenger.png",
+    "artifacts\\ui-refinement\\before\\mobile-profile.png",
+    "artifacts\\ui-refinement\\before\\mobile-profile-edit.png"
+  ],
+  "runtimeErrors": []
+}

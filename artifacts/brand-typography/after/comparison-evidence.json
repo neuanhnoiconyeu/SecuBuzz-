@@ -1,0 +1,23 @@
+{
+  "startedAt": "2026-11-06T05:20:36.615Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Comparison loads actual before and after screenshots",
+      "passed": true
+    },
+    {
+      "label": "Comparison switches to the matching mobile Dark branding pair",
+      "passed": true
+    },
+    {
+      "label": "Comparison has no browser runtime errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\brand-typography\\after\\comparison-preview.png"
+  ],
+  "runtimeErrors": []
+}

@@ -1,0 +1,4195 @@
+{
+  "startedAt": "2026-11-06T04:24:33.061Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Strong ambient layers are located in the empty chat canvas",
+      "passed": true
+    },
+    {
+      "label": "Empty canvas has two genuine long CSS animations",
+      "passed": true,
+      "detail": [
+        {
+          "name": "empty-light-lavender",
+          "kind": "CSSAnimation",
+          "target": "DIV.chat-empty-atmosphere",
+          "pseudo": "::before",
+          "messageId": null,
+          "currentTime": 3099.8559999889003,
+          "playState": "running",
+          "duration": 28000,
+          "iterations": "Infinity",
+          "progress": 0.11070914285674645,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "empty-light-violet",
+          "kind": "CSSAnimation",
+          "target": "DIV.chat-empty-atmosphere",
+          "pseudo": "::after",
+          "messageId": null,
+          "currentTime": 3099.8559999889003,
+          "playState": "running",
+          "duration": 36000,
+          "iterations": "Infinity",
+          "progress": 0.08610711111080278,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Empty canvas visibly changes during natural playback",
+      "passed": true,
+      "detail": [
+        {
+          "elapsed": 8646,
+          "pixels": 101864,
+          "meanAbsoluteChannelDelta": 1.2493226262467605,
+          "rmsChannelDelta": 1.695833366699914,
+          "maxChannelDelta": 6,
+          "changedPixelPercent": 29.521715228147333
+        },
+        {
+          "elapsed": 16795,
+          "pixels": 101864,
+          "meanAbsoluteChannelDelta": 1.3263239875389408,
+          "rmsChannelDelta": 1.843732480434711,
+          "maxChannelDelta": 8,
+          "changedPixelPercent": 29.58650750019634
+        },
+        {
+          "elapsed": 24509,
+          "pixels": 101864,
+          "meanAbsoluteChannelDelta": 0.7100087698630855,
+          "rmsChannelDelta": 1.0379664771595507,
+          "maxChannelDelta": 5,
+          "changedPixelPercent": 7.0358517238671165
+        },
+        {
+          "elapsed": 32679,
+          "pixels": 101864,
+          "meanAbsoluteChannelDelta": 0.7056303829943192,
+          "rmsChannelDelta": 1.0560129521277903,
+          "maxChannelDelta": 4,
+          "changedPixelPercent": 8.900102096913532
+        }
+      ]
+    },
+    {
+      "label": "Natural ambient clocks advance without a stylesheet restart",
+      "passed": true
+    },
+    {
+      "label": "All ambient frames retain zero horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "Ambient movement creates no idle layout shift",
+      "passed": true,
+      "detail": {
+        "idleLayoutShift": 0,
+        "layoutCountDelta": 1,
+        "scriptDurationDelta": 0.00637,
+        "shifts": []
+      }
+    },
+    {
+      "label": "Sampled empty-state caption contrast stays at least 4.5:1",
+      "passed": true,
+      "detail": [
+        {
+          "time": 746,
+          "minimumRatio": 7.335506862136644,
+          "backgroundAtMinimum": [
+            36,
+            35,
+            50,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 2558,
+          "minimumRatio": 7.223644214130189,
+          "backgroundAtMinimum": [
+            38,
+            36,
+            51,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 4576,
+          "minimumRatio": 7.175284101086656,
+          "backgroundAtMinimum": [
+            39,
+            36,
+            54,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 6594,
+          "minimumRatio": 7.032331293351183,
+          "backgroundAtMinimum": [
+            42,
+            37,
+            56,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 8646,
+          "minimumRatio": 6.951028974794429,
+          "backgroundAtMinimum": [
+            42,
+            38,
+            58,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 10961,
+          "minimumRatio": 6.940141427133028,
+          "backgroundAtMinimum": [
+            43,
+            38,
+            57,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 12740,
+          "minimumRatio": 6.951028974794429,
+          "backgroundAtMinimum": [
+            42,
+            38,
+            58,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 14675,
+          "minimumRatio": 6.940141427133028,
+          "backgroundAtMinimum": [
+            43,
+            38,
+            57,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 16795,
+          "minimumRatio": 6.940141427133028,
+          "backgroundAtMinimum": [
+            43,
+            38,
+            57,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 18917,
+          "minimumRatio": 6.960796496979902,
+          "backgroundAtMinimum": [
+            42,
+            38,
+            57,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 20567,
+          "minimumRatio": 6.930431745688437,
+          "backgroundAtMinimum": [
+            43,
+            38,
+            58,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 22565,
+          "minimumRatio": 6.960796496979902,
+          "backgroundAtMinimum": [
+            42,
+            38,
+            57,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 24509,
+          "minimumRatio": 7.083015977990251,
+          "backgroundAtMinimum": [
+            40,
+            37,
+            55,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 26542,
+          "minimumRatio": 7.184885731738884,
+          "backgroundAtMinimum": [
+            39,
+            36,
+            53,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 28652,
+          "minimumRatio": 7.315897205820496,
+          "backgroundAtMinimum": [
+            37,
+            35,
+            50,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 30666,
+          "minimumRatio": 7.335506862136644,
+          "backgroundAtMinimum": [
+            36,
+            35,
+            50,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        },
+        {
+          "time": 32679,
+          "minimumRatio": 7.353751306403125,
+          "backgroundAtMinimum": [
+            36,
+            35,
+            48,
+            255
+          ],
+          "foreground": [
+            182,
+            176,
+            195
+          ],
+          "samples": 132,
+          "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+        }
+      ]
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Reading messages removes the decorative empty atmosphere",
+      "passed": true
+    },
+    {
+      "label": "Message reading background stays visually stable",
+      "passed": true,
+      "detail": {
+        "pixels": 50932,
+        "meanAbsoluteChannelDelta": 0,
+        "rmsChannelDelta": 0,
+        "maxChannelDelta": 0,
+        "changedPixelPercent": 0
+      }
+    },
+    {
+      "label": "Dark natural ambient capture has no uncaught browser errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [],
+  "runtimeErrors": [],
+  "ambient": {
+    "method": "Natural CSS clock; no animation seeking or phase injection",
+    "duration": 34697,
+    "samplingMs": 2000,
+    "backgroundPatches": [
+      {
+        "x": 373.1,
+        "y": 259.838125,
+        "width": 214,
+        "height": 119.81562500000001
+      },
+      {
+        "x": 1143.5,
+        "y": 259.838125,
+        "width": 214,
+        "height": 119.81562500000001
+      },
+      {
+        "x": 373.1,
+        "y": 679.1928125,
+        "width": 214,
+        "height": 119.81562500000001
+      },
+      {
+        "x": 1143.5,
+        "y": 679.1928125,
+        "width": 214,
+        "height": 119.81562500000001
+      }
+    ],
+    "changes": [
+      {
+        "elapsed": 8646,
+        "pixels": 101864,
+        "meanAbsoluteChannelDelta": 1.2493226262467605,
+        "rmsChannelDelta": 1.695833366699914,
+        "maxChannelDelta": 6,
+        "changedPixelPercent": 29.521715228147333
+      },
+      {
+        "elapsed": 16795,
+        "pixels": 101864,
+        "meanAbsoluteChannelDelta": 1.3263239875389408,
+        "rmsChannelDelta": 1.843732480434711,
+        "maxChannelDelta": 8,
+        "changedPixelPercent": 29.58650750019634
+      },
+      {
+        "elapsed": 24509,
+        "pixels": 101864,
+        "meanAbsoluteChannelDelta": 0.7100087698630855,
+        "rmsChannelDelta": 1.0379664771595507,
+        "maxChannelDelta": 5,
+        "changedPixelPercent": 7.0358517238671165
+      },
+      {
+        "elapsed": 32679,
+        "pixels": 101864,
+        "meanAbsoluteChannelDelta": 0.7056303829943192,
+        "rmsChannelDelta": 1.0560129521277903,
+        "maxChannelDelta": 4,
+        "changedPixelPercent": 8.900102096913532
+      }
+    ],
+    "performance": {
+      "idleLayoutShift": 0,
+      "layoutCountDelta": 1,
+      "scriptDurationDelta": 0.00637,
+      "shifts": []
+    },
+    "captionContrast": [
+      {
+        "time": 746,
+        "minimumRatio": 7.335506862136644,
+        "backgroundAtMinimum": [
+          36,
+          35,
+          50,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 2558,
+        "minimumRatio": 7.223644214130189,
+        "backgroundAtMinimum": [
+          38,
+          36,
+          51,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 4576,
+        "minimumRatio": 7.175284101086656,
+        "backgroundAtMinimum": [
+          39,
+          36,
+          54,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 6594,
+        "minimumRatio": 7.032331293351183,
+        "backgroundAtMinimum": [
+          42,
+          37,
+          56,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 8646,
+        "minimumRatio": 6.951028974794429,
+        "backgroundAtMinimum": [
+          42,
+          38,
+          58,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 10961,
+        "minimumRatio": 6.940141427133028,
+        "backgroundAtMinimum": [
+          43,
+          38,
+          57,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 12740,
+        "minimumRatio": 6.951028974794429,
+        "backgroundAtMinimum": [
+          42,
+          38,
+          58,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 14675,
+        "minimumRatio": 6.940141427133028,
+        "backgroundAtMinimum": [
+          43,
+          38,
+          57,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 16795,
+        "minimumRatio": 6.940141427133028,
+        "backgroundAtMinimum": [
+          43,
+          38,
+          57,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 18917,
+        "minimumRatio": 6.960796496979902,
+        "backgroundAtMinimum": [
+          42,
+          38,
+          57,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 20567,
+        "minimumRatio": 6.930431745688437,
+        "backgroundAtMinimum": [
+          43,
+          38,
+          58,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 22565,
+        "minimumRatio": 6.960796496979902,
+        "backgroundAtMinimum": [
+          42,
+          38,
+          57,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 24509,
+        "minimumRatio": 7.083015977990251,
+        "backgroundAtMinimum": [
+          40,
+          37,
+          55,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 26542,
+        "minimumRatio": 7.184885731738884,
+        "backgroundAtMinimum": [
+          39,
+          36,
+          53,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 28652,
+        "minimumRatio": 7.315897205820496,
+        "backgroundAtMinimum": [
+          37,
+          35,
+          50,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 30666,
+        "minimumRatio": 7.335506862136644,
+        "backgroundAtMinimum": [
+          36,
+          35,
+          50,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      },
+      {
+        "time": 32679,
+        "minimumRatio": 7.353751306403125,
+        "backgroundAtMinimum": [
+          36,
+          35,
+          48,
+          255
+        ],
+        "foreground": [
+          182,
+          176,
+          195
+        ],
+        "samples": 132,
+        "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+      }
+    ]
+  },
+  "clips": [
+    {
+      "name": "ambient-natural-32s",
+      "captureMethod": "actual screenshot sequence, sampled every 2 seconds during natural playback",
+      "frames": [
+        {
+          "file": "clips/ambient-natural-32s/frame-000.png",
+          "time": 746
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-001.png",
+          "time": 2558
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-002.png",
+          "time": 4576
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-003.png",
+          "time": 6594
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-004.png",
+          "time": 8646
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-005.png",
+          "time": 10961
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-006.png",
+          "time": 12740
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-007.png",
+          "time": 14675
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-008.png",
+          "time": 16795
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-009.png",
+          "time": 18917
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-010.png",
+          "time": 20567
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-011.png",
+          "time": 22565
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-012.png",
+          "time": 24509
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-013.png",
+          "time": 26542
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-014.png",
+          "time": 28652
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-015.png",
+          "time": 30666
+        },
+        {
+          "file": "clips/ambient-natural-32s/frame-016.png",
+          "time": 32679
+        }
+      ],
+      "samples": [
+        {
+          "time": 746,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 4116.4399999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.14701571428531787,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 4116.4399999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.11434555555524722,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 4116.4399999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.14701571428531787,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 4116.4399999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.11434555555524722,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 4116.4399999889,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.3430366666657417,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 4661,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 7.335506862136644,
+            "backgroundAtMinimum": [
+              36,
+              35,
+              50,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 2558,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 5883.109999988901,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.21011107142817503,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 5883.109999988901,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.16341972222191392,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 5883.109999988901,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.21011107142817503,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 5883.109999988901,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.16341972222191392,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 5883.109999988901,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.4902591666657417,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 6425.800000011921,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 7.223644214130189,
+            "backgroundAtMinimum": [
+              38,
+              36,
+              51,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 4576,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 7916.351999988901,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.28272685714246076,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 7916.351999988901,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.21989866666635838,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 7916.351999988901,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.28272685714246076,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 7916.351999988901,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.21989866666635838,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 7916.351999988901,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.6596959999990751,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 8475,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 7.175284101086656,
+            "backgroundAtMinimum": [
+              39,
+              36,
+              54,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 6594,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 9933.0099999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.3547503571424607,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 9933.0099999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.2759169444441361,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 9933.0099999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.3547503571424607,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 9933.0099999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.2759169444441361,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 9933.0099999889,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.8277508333324084,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 10480.200000017881,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 7.032331293351183,
+            "backgroundAtMinimum": [
+              42,
+              37,
+              56,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 8646,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 12016.147999988902,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.42914814285674646,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 12016.147999988902,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.33378188888858057,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 12016.147999988902,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.42914814285674646,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 12016.147999988902,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.33378188888858057,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 12016.147999988902,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.0013456666657416516,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 12561.300000011921,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 6.951028974794429,
+            "backgroundAtMinimum": [
+              42,
+              38,
+              58,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 10961,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 14449.4359999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.5160512857138893,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 14449.4359999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.4013732222219139,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 14449.4359999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.5160512857138893,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 14449.4359999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.4013732222219139,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 14449.4359999889,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.20411966666574166,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 15012.300000011921,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 6.940141427133028,
+            "backgroundAtMinimum": [
+              43,
+              38,
+              57,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 12740,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 16282.6999999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.5815249999996036,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 16282.6999999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.4522972222219139,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 16282.6999999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.5815249999996036,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 16282.6999999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.4522972222219139,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 16282.6999999889,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.35689166666574157,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 16875.40000000596,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 6.951028974794429,
+            "backgroundAtMinimum": [
+              42,
+              38,
+              58,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 14675,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 18032.613999988902,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.6440219285710321,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 18032.613999988902,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.5009059444441362,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 18032.613999988902,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.6440219285710321,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 18032.613999988902,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.5009059444441362,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 18032.613999988902,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.5027178333324083,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 18585.70000001788,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 6.940141427133028,
+            "backgroundAtMinimum": [
+              43,
+              38,
+              57,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 16795,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 20182.4399999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.7208014285710321,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 20182.4399999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.560623333333025,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 20182.4399999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.7208014285710321,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 20182.4399999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.560623333333025,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 20182.4399999889,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.6818699999990752,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 20753.80000001192,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 6.940141427133028,
+            "backgroundAtMinimum": [
+              43,
+              38,
+              57,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 18917,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 22315.8059999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.796993071428175,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 22315.8059999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.6198834999996916,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 22315.8059999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.796993071428175,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 22315.8059999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.6198834999996916,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 22315.8059999889,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.8596504999990751,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 22855.90000000596,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 6.960796496979902,
+            "backgroundAtMinimum": [
+              42,
+              38,
+              57,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 20567,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 23882.341999988897,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.8529407857138892,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 23882.341999988897,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.6633983888885805,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 23882.341999988897,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.8529407857138892,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 23882.341999988897,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.6633983888885805,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 23882.341999988897,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.9901951666657416,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 24430.90000000596,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 6.930431745688437,
+            "backgroundAtMinimum": [
+              43,
+              38,
+              58,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 22565,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 25898.9079999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.9249609999996036,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 25898.9079999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.7194141111108028,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 25898.9079999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.9249609999996036,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 25898.9079999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.7194141111108028,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 25898.9079999889,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.15824233333240834,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 26445.600000023842,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 6.960796496979902,
+            "backgroundAtMinimum": [
+              42,
+              38,
+              57,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 24509,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 27848.9079999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.9946038571424607,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 27848.9079999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.7735807777774695,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 27848.9079999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.9946038571424607,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 27848.9079999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.7735807777774695,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 27848.9079999889,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.3207423333324084,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 28403.30000001192,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 7.083015977990251,
+            "backgroundAtMinimum": [
+              40,
+              37,
+              55,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 26542,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 29882.1739999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.06722049999960356,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 29882.1739999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.8300603888885806,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 29882.1739999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.06722049999960356,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 29882.1739999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.8300603888885806,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 29882.1739999889,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.49018116666574185,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 30430.100000023842,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 7.184885731738884,
+            "backgroundAtMinimum": [
+              39,
+              36,
+              53,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 28652,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 32015.339999988904,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.14340499999960366,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 32015.339999988904,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.8893149999996918,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 32015.339999988904,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.14340499999960366,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 32015.339999988904,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.8893149999996918,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 32015.339999988904,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.6679449999990754,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 32580.90000000596,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 7.315897205820496,
+            "backgroundAtMinimum": [
+              37,
+              35,
+              50,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 30666,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 33998.6079999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.21423599999960352,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 33998.6079999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.9444057777774694,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 33998.6079999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.21423599999960352,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 33998.6079999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.9444057777774694,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 33998.6079999889,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.8332173333324082,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 34542.30000001192,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 7.335506862136644,
+            "backgroundAtMinimum": [
+              36,
+              35,
+              50,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        },
+        {
+          "time": 32679,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 35998.4819999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.28566007142817496,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 35998.4819999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.9999578333330249,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 35998.4819999889,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.28566007142817496,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 35998.4819999889,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.9999578333330249,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 35998.4819999889,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.9998734999990746,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 36549.10000002384,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "security": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 54.984375,
+              "contentVisibility": "hidden"
+            },
+            "log": {
+              "open": false,
+              "opacity": "0",
+              "transform": "matrix(1, 0, 0, 1, 0, -3)",
+              "height": 28.78125,
+              "contentVisibility": "hidden"
+            }
+          },
+          "layout": {
+            "width": 1440,
+            "height": 1000,
+            "documentWidth": 1440,
+            "documentHeight": 1000,
+            "historyWidth": 1070,
+            "historyScrollWidth": 1070,
+            "history": {
+              "x": 341,
+              "y": 235.875,
+              "width": 1070,
+              "height": 599.078125
+            },
+            "hasAtmosphere": true,
+            "caption": {
+              "text": "A little hello starts a conversation. Try it in this local demo.",
+              "color": "rgb(182, 176, 195)",
+              "rect": {
+                "x": 700,
+                "y": 637.015625,
+                "width": 352,
+                "height": 46.1875,
+                "top": 637.015625,
+                "right": 1052,
+                "bottom": 683.203125,
+                "left": 700
+              },
+              "lineHeight": 23.1
+            }
+          },
+          "captionContrast": {
+            "minimumRatio": 7.353751306403125,
+            "backgroundAtMinimum": [
+              36,
+              35,
+              48,
+              255
+            ],
+            "foreground": [
+              182,
+              176,
+              195
+            ],
+            "samples": 132,
+            "method": "sampled line gaps and paragraph perimeter; no glyph pixels intended"
+          }
+        }
+      ]
+    }
+  ],
+  "finishedAt": "2026-11-06T04:25:14.918Z"
+}

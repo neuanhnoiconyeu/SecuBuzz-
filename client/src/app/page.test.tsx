@@ -50,5 +50,8 @@ describe('messenger application', () => {
     expect(screen.getAllByText('Not established')).toHaveLength(2);
     fireEvent.click(screen.getByRole('button', { name: 'Chats' }));
     expect(screen.getByRole('textbox', { name: 'Message to SecureBot' })).toHaveValue('Keep this draft');
+    fireEvent.click(screen.getByRole('button', { name: 'Security' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Yahoo Security Messenger home' }));
+    expect(screen.getByRole('textbox', { name: 'Message to SecureBot' })).toHaveValue('Keep this draft');
   });
 });

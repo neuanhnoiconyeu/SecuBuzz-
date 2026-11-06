@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, ArrowDown, LockKeyhole } from 'lucide-react';
+import { BrandLogo } from '@/components/branding';
 import { Badge, Button, Surface } from '@/components/ui';
 import type { ChatMessage, TransportMode } from '@/messaging/messageModel';
+import { useMessageEntryMotion } from './useMessageEntryMotion';
 
 export interface MessageListProps {
   messages: ChatMessage[];
   currentUserId: string;
+  /** Current display label only; stored authenticated sender metadata stays unchanged. */
+  currentUserName?: string;
+  /** Suppresses entry motion while this conversation's UI is hidden. */
+  active?: boolean;
   transportMode?: TransportMode;
   onRetryMessage(messageId: string): void;
 }
@@ -35,6 +41,8 @@ function deliveryLabel(status: ChatMessage['deliveryStatus'], transportMode: Tra
 export function MessageList({
   messages,
   currentUserId,
+  currentUserName = 'You',
+  active = true,
   onRetryMessage,
   transportMode = 'local-demo',
 }: MessageListProps) {
@@ -43,6 +51,7 @@ export function MessageList({
   const previousLength = useRef(messages.length);
   const initialScrollHandled = useRef(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
+  const { enteringIds, finishEntry } = useMessageEntryMotion(messages, active);
 
   useEffect(() => {
     const history = historyRef.current;
@@ -96,9 +105,14 @@ export function MessageList({
       >
         {messages.length === 0 ? (
           <div className="chat-empty-state">
-            <span className="chat-empty-mark" aria-hidden="true">Y!</span>
-            <h2>No messages yet</h2>
-            <p>Write a message to start this local demo conversation.</p>
+            <div className="chat-empty-atmosphere" aria-hidden="true" />
+            <div className="chat-empty-brand-stage">
+              <BrandLogo variant="full" size="lg" className="chat-empty-logo" />
+            </div>
+            <h2 className="display-heading display-heading--empty">No messages yet</h2>
+            <p>{transportMode === 'local-demo'
+              ? 'A little hello starts a conversation. Try it in this local demo.'
+              : 'Write a message to start this conversation.'}</p>
           </div>
         ) : (
           <div className="message-list">
@@ -138,22 +152,16 @@ export function MessageList({
                   className={`message-row ${isOutgoing ? 'message-row-outgoing' : ''} ${grouped ? 'message-row-grouped' : ''}`}
                   key={message.id}
                   data-message-id={message.id}
+                  data-message-enter={active && enteringIds.has(message.id) ? 'true' : undefined}
+                  onAnimationEnd={(event) => {
+                    if (event.target === event.currentTarget) finishEntry(message.id);
+                  }}
                 >
                   <div className="message-meta">
-                    {!grouped && <strong>{isOutgoing ? 'You' : message.senderName}</strong>}
+                    {!grouped && <strong>{isOutgoing ? currentUserName === 'You' ? 'You' : `${currentUserName} (You)` : message.senderName}</strong>}
                     <time dateTime={message.timestamp} title={new Date(message.timestamp).toLocaleString()}>
                       {formatTime(message.timestamp)}
                     </time>
-                    {message.encryption && (
-                      <Badge status="success" aria-label="Encrypted in this browser demo">
-                        <LockKeyhole size={12} aria-hidden="true" />
-                        Encrypted locally
-                      </Badge>
-                    )}
-                    {message.demoOnly && <Badge status="info">Demo reply</Badge>}
-                    {isOutgoing && <span className={`message-delivery message-delivery--${message.deliveryStatus}`}>
-                      {deliveryLabel(message.deliveryStatus, transportMode)}
-                    </span>}
                   </div>
                   <div className="message-content-row">
                     <div className="message-bubble">{message.content}</div>
@@ -163,6 +171,20 @@ export function MessageList({
                       </Button>
                     )}
                   </div>
+                  {(message.encryption || message.demoOnly || isOutgoing) && (
+                    <div className="message-status-line">
+                      {message.encryption && (
+                        <Badge status="success" aria-label="Encrypted in this browser demo">
+                          <LockKeyhole size={12} aria-hidden="true" />
+                          Encrypted locally
+                        </Badge>
+                      )}
+                      {message.demoOnly && <Badge status="info">Demo reply</Badge>}
+                      {isOutgoing && <span className={`message-delivery message-delivery--${message.deliveryStatus}`}>
+                        {deliveryLabel(message.deliveryStatus, transportMode)}
+                      </span>}
+                    </div>
+                  )}
                 </article>
               );
             })}

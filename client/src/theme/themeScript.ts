@@ -1,0 +1,4 @@
+import { SYSTEM_THEME_QUERY, THEME_BROWSER_COLORS, THEME_STORAGE_KEY } from './themeModel';
+
+/** Runs synchronously in the document head before the app can paint. */
+export const THEME_BOOTSTRAP_SCRIPT = `(function(){var preference='system';try{var stored=window.localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(stored==='light'||stored==='dark'||stored==='system')preference=stored;}catch(error){}var systemDark=false;try{systemDark=typeof window.matchMedia==='function'&&window.matchMedia(${JSON.stringify(SYSTEM_THEME_QUERY)}).matches===true;}catch(error){}var resolved=preference==='system'?(systemDark?'dark':'light'):preference;var root=document.documentElement;root.setAttribute('data-theme',resolved);root.style.colorScheme=resolved;var themeColor=document.querySelector('meta[name="theme-color"]');if(themeColor)themeColor.setAttribute('content',${JSON.stringify(THEME_BROWSER_COLORS)}[resolved]);})();`;

@@ -1,0 +1,1894 @@
+{
+  "completedAt": "2026-11-06T05:20:36.463Z",
+  "browser": "Actual headless Chrome on Windows via CDP",
+  "scope": "Focused browser-only compact branding typography verification; no product files changed by this agent.",
+  "applicationChecks": {
+    "total": 188,
+    "passed": 188,
+    "failed": 0
+  },
+  "categories": {
+    "main": {
+      "checks": 163,
+      "evidence": "after/browser-evidence.json"
+    },
+    "breakpointEdges": {
+      "checks": 25,
+      "evidence": "after/edge-evidence.json"
+    }
+  },
+  "runtimeErrors": [],
+  "consoleWarnings": [],
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 1024,
+      "height": 800
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "additionalBreakpointWidths": [
+    720,
+    681,
+    680
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "actualFontMeasurements": 54,
+  "verified": [
+    "Navigation Yahoo! Security uses actual Bungee-Regular400 without synthetic weight. Its Messenger2.0 subtitle remains actual Space Grotesk.",
+    "The complete title-bar wordmark, including Messenger2.0, uses actual Bungee-Regular400 without synthetic weight and stays on one unclipped line.",
+    "Mobile keeps the existing icon-only navigation branding; the title-bar full text remains visible.",
+    "Existing Messages, chat, empty, Security and modal headings remain actual Bungee. Message text remains actual Space Grotesk.",
+    "Both themes fit desktop/laptop/mobile viewports without horizontal page or wordmark overflow.",
+    "Each fresh document uses exactly the two existing local font resources with successful responses and no duplicate URL requests.",
+    "Full and icon artwork loads with preserved contain geometry.",
+    "Brand home keyboard navigation returns from Security to Chats while preserving the typed draft and accessible link name.",
+    "Theme switching, profile save/cancel and focus return, message sending and BUZZ busy feedback remain functional."
+  ],
+  "fontMeasurements": [
+    {
+      "label": "desktop light title-bar Yahoo Security",
+      "selector": ".messenger-window-chrome .brand-logo-name",
+      "expected": "Bungee",
+      "style": {
+        "text": "Yahoo! Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "desktop light title-bar Messenger2.0",
+      "selector": ".messenger-window-chrome .brand-logo-subtitle",
+      "expected": "Bungee",
+      "style": {
+        "text": "Messenger 2.0",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "desktop light navigation Yahoo Security",
+      "selector": ".messenger-navigation .brand-logo-name",
+      "expected": "Bungee",
+      "style": {
+        "text": "Yahoo! Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "16px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "19.2px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "desktop light navigation Messenger2.0 subtitle",
+      "selector": ".messenger-navigation .brand-logo-subtitle",
+      "expected": "Space Grotesk",
+      "style": {
+        "text": "Messenger 2.0",
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "500",
+        "synthesis": "weight style small-caps",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "desktop light chat heading",
+      "selector": ".chat-title-heading",
+      "expected": "Bungee",
+      "style": {
+        "text": "Chat with SecureBot",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "20px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "26px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ]
+    },
+    {
+      "label": "desktop light empty heading",
+      "selector": ".chat-empty-state h2",
+      "expected": "Bungee",
+      "style": {
+        "text": "No messages yet",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "22px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "28.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "desktop light Messages heading",
+      "selector": ".conversation-sidebar-heading h2",
+      "expected": "Bungee",
+      "style": {
+        "text": "Messages",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "24px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "31.2px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "desktop light Security heading",
+      "selector": "#security-page-title",
+      "expected": "Bungee",
+      "style": {
+        "text": "Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "26px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "33.8px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "desktop light message text",
+      "selector": ".message-bubble",
+      "expected": "Space Grotesk",
+      "style": {
+        "text": "Hello, Yahoo!",
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "15px",
+        "weight": "400",
+        "synthesis": "weight style small-caps",
+        "lineHeight": "24px"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "desktop light profile modal heading",
+      "selector": ".ui-dialog-title",
+      "expected": "Bungee",
+      "style": {
+        "text": "Your profile",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "20px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "26px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 12
+        }
+      ]
+    },
+    {
+      "label": "laptop light title-bar Yahoo Security",
+      "selector": ".messenger-window-chrome .brand-logo-name",
+      "expected": "Bungee",
+      "style": {
+        "text": "Yahoo! Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "laptop light title-bar Messenger2.0",
+      "selector": ".messenger-window-chrome .brand-logo-subtitle",
+      "expected": "Bungee",
+      "style": {
+        "text": "Messenger 2.0",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "laptop light navigation Yahoo Security",
+      "selector": ".messenger-navigation .brand-logo-name",
+      "expected": "Bungee",
+      "style": {
+        "text": "Yahoo! Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "15px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "18px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "laptop light navigation Messenger2.0 subtitle",
+      "selector": ".messenger-navigation .brand-logo-subtitle",
+      "expected": "Space Grotesk",
+      "style": {
+        "text": "Messenger 2.0",
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "500",
+        "synthesis": "weight style small-caps",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "laptop light chat heading",
+      "selector": ".chat-title-heading",
+      "expected": "Bungee",
+      "style": {
+        "text": "Chat with SecureBot",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "20px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "26px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ]
+    },
+    {
+      "label": "laptop light empty heading",
+      "selector": ".chat-empty-state h2",
+      "expected": "Bungee",
+      "style": {
+        "text": "No messages yet",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "22px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "28.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "laptop light Messages heading",
+      "selector": ".conversation-sidebar-heading h2",
+      "expected": "Bungee",
+      "style": {
+        "text": "Messages",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "24px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "31.2px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "laptop light Security heading",
+      "selector": "#security-page-title",
+      "expected": "Bungee",
+      "style": {
+        "text": "Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "26px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "33.8px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "laptop light message text",
+      "selector": ".message-bubble",
+      "expected": "Space Grotesk",
+      "style": {
+        "text": "Hello, Yahoo!",
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "15px",
+        "weight": "400",
+        "synthesis": "weight style small-caps",
+        "lineHeight": "24px"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "laptop light profile modal heading",
+      "selector": ".ui-dialog-title",
+      "expected": "Bungee",
+      "style": {
+        "text": "Your profile",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "20px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "26px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 12
+        }
+      ]
+    },
+    {
+      "label": "mobile light title-bar Yahoo Security",
+      "selector": ".messenger-window-chrome .brand-logo-name",
+      "expected": "Bungee",
+      "style": {
+        "text": "Yahoo! Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "mobile light title-bar Messenger2.0",
+      "selector": ".messenger-window-chrome .brand-logo-subtitle",
+      "expected": "Bungee",
+      "style": {
+        "text": "Messenger 2.0",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "mobile light chat heading",
+      "selector": ".chat-title-heading",
+      "expected": "Bungee",
+      "style": {
+        "text": "Chat with SecureBot",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "18px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "23.4px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ]
+    },
+    {
+      "label": "mobile light empty heading",
+      "selector": ".chat-empty-state h2",
+      "expected": "Bungee",
+      "style": {
+        "text": "No messages yet",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "20px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "26px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "mobile light Security heading",
+      "selector": "#security-page-title",
+      "expected": "Bungee",
+      "style": {
+        "text": "Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "24px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "31.2px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "mobile light message text",
+      "selector": ".message-bubble",
+      "expected": "Space Grotesk",
+      "style": {
+        "text": "Hello, Yahoo!",
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "15px",
+        "weight": "400",
+        "synthesis": "weight style small-caps",
+        "lineHeight": "24px"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "mobile light profile modal heading",
+      "selector": ".ui-dialog-title",
+      "expected": "Bungee",
+      "style": {
+        "text": "Your profile",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "18px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "23.4px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 12
+        }
+      ]
+    },
+    {
+      "label": "desktop dark title-bar Yahoo Security",
+      "selector": ".messenger-window-chrome .brand-logo-name",
+      "expected": "Bungee",
+      "style": {
+        "text": "Yahoo! Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "desktop dark title-bar Messenger2.0",
+      "selector": ".messenger-window-chrome .brand-logo-subtitle",
+      "expected": "Bungee",
+      "style": {
+        "text": "Messenger 2.0",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "desktop dark navigation Yahoo Security",
+      "selector": ".messenger-navigation .brand-logo-name",
+      "expected": "Bungee",
+      "style": {
+        "text": "Yahoo! Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "16px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "19.2px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "desktop dark navigation Messenger2.0 subtitle",
+      "selector": ".messenger-navigation .brand-logo-subtitle",
+      "expected": "Space Grotesk",
+      "style": {
+        "text": "Messenger 2.0",
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "500",
+        "synthesis": "weight style small-caps",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "desktop dark chat heading",
+      "selector": ".chat-title-heading",
+      "expected": "Bungee",
+      "style": {
+        "text": "Chat with SecureBot",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "20px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "26px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ]
+    },
+    {
+      "label": "desktop dark empty heading",
+      "selector": ".chat-empty-state h2",
+      "expected": "Bungee",
+      "style": {
+        "text": "No messages yet",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "22px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "28.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "desktop dark Messages heading",
+      "selector": ".conversation-sidebar-heading h2",
+      "expected": "Bungee",
+      "style": {
+        "text": "Messages",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "24px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "31.2px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "desktop dark Security heading",
+      "selector": "#security-page-title",
+      "expected": "Bungee",
+      "style": {
+        "text": "Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "26px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "33.8px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "desktop dark message text",
+      "selector": ".message-bubble",
+      "expected": "Space Grotesk",
+      "style": {
+        "text": "Hello, Yahoo!",
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "15px",
+        "weight": "400",
+        "synthesis": "weight style small-caps",
+        "lineHeight": "24px"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "desktop dark profile modal heading",
+      "selector": ".ui-dialog-title",
+      "expected": "Bungee",
+      "style": {
+        "text": "Your profile",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "20px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "26px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 12
+        }
+      ]
+    },
+    {
+      "label": "laptop dark title-bar Yahoo Security",
+      "selector": ".messenger-window-chrome .brand-logo-name",
+      "expected": "Bungee",
+      "style": {
+        "text": "Yahoo! Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "laptop dark title-bar Messenger2.0",
+      "selector": ".messenger-window-chrome .brand-logo-subtitle",
+      "expected": "Bungee",
+      "style": {
+        "text": "Messenger 2.0",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "laptop dark navigation Yahoo Security",
+      "selector": ".messenger-navigation .brand-logo-name",
+      "expected": "Bungee",
+      "style": {
+        "text": "Yahoo! Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "15px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "18px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "laptop dark navigation Messenger2.0 subtitle",
+      "selector": ".messenger-navigation .brand-logo-subtitle",
+      "expected": "Space Grotesk",
+      "style": {
+        "text": "Messenger 2.0",
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "500",
+        "synthesis": "weight style small-caps",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "laptop dark chat heading",
+      "selector": ".chat-title-heading",
+      "expected": "Bungee",
+      "style": {
+        "text": "Chat with SecureBot",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "20px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "26px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ]
+    },
+    {
+      "label": "laptop dark empty heading",
+      "selector": ".chat-empty-state h2",
+      "expected": "Bungee",
+      "style": {
+        "text": "No messages yet",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "22px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "28.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "laptop dark Messages heading",
+      "selector": ".conversation-sidebar-heading h2",
+      "expected": "Bungee",
+      "style": {
+        "text": "Messages",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "24px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "31.2px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "laptop dark Security heading",
+      "selector": "#security-page-title",
+      "expected": "Bungee",
+      "style": {
+        "text": "Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "26px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "33.8px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "laptop dark message text",
+      "selector": ".message-bubble",
+      "expected": "Space Grotesk",
+      "style": {
+        "text": "Hello, Yahoo!",
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "15px",
+        "weight": "400",
+        "synthesis": "weight style small-caps",
+        "lineHeight": "24px"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "laptop dark profile modal heading",
+      "selector": ".ui-dialog-title",
+      "expected": "Bungee",
+      "style": {
+        "text": "Your profile",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "20px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "26px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 12
+        }
+      ]
+    },
+    {
+      "label": "mobile dark title-bar Yahoo Security",
+      "selector": ".messenger-window-chrome .brand-logo-name",
+      "expected": "Bungee",
+      "style": {
+        "text": "Yahoo! Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "mobile dark title-bar Messenger2.0",
+      "selector": ".messenger-window-chrome .brand-logo-subtitle",
+      "expected": "Bungee",
+      "style": {
+        "text": "Messenger 2.0",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "12px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "15.6px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "mobile dark chat heading",
+      "selector": ".chat-title-heading",
+      "expected": "Bungee",
+      "style": {
+        "text": "Chat with SecureBot",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "18px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "23.4px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 18
+        }
+      ]
+    },
+    {
+      "label": "mobile dark empty heading",
+      "selector": ".chat-empty-state h2",
+      "expected": "Bungee",
+      "style": {
+        "text": "No messages yet",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "20px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "26px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 15
+        }
+      ]
+    },
+    {
+      "label": "mobile dark Security heading",
+      "selector": "#security-page-title",
+      "expected": "Bungee",
+      "style": {
+        "text": "Security",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "24px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "31.2px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 8
+        }
+      ]
+    },
+    {
+      "label": "mobile dark message text",
+      "selector": ".message-bubble",
+      "expected": "Space Grotesk",
+      "style": {
+        "text": "Hello, Yahoo!",
+        "family": "__spaceGrotesk_be0dd0, __spaceGrotesk_Fallback_be0dd0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "15px",
+        "weight": "400",
+        "synthesis": "weight style small-caps",
+        "lineHeight": "24px"
+      },
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "mobile dark profile modal heading",
+      "selector": ".ui-dialog-title",
+      "expected": "Bungee",
+      "style": {
+        "text": "Your profile",
+        "family": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "size": "18px",
+        "weight": "400",
+        "synthesis": "none",
+        "lineHeight": "23.4px"
+      },
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 12
+        }
+      ]
+    }
+  ],
+  "fontLoads": [
+    {
+      "label": "desktop light",
+      "responses": [
+        {
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "label": "laptop light",
+      "responses": [
+        {
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "label": "mobile light",
+      "responses": [
+        {
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "label": "desktop dark",
+      "responses": [
+        {
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "label": "laptop dark",
+      "responses": [
+        {
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "label": "mobile dark",
+      "responses": [
+        {
+          "url": "http://127.0.0.1:3106/_next/static/media/6e3b13862d2152fa-s.p.ttf",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:3106/_next/static/media/dcc2f1532f204149-s.p.ttf",
+          "status": 200
+        }
+      ]
+    }
+  ],
+  "brandingFitMeasurements": [
+    {
+      "label": "desktop light",
+      "width": 1440,
+      "documentWidth": 1440,
+      "chrome": {
+        "x": 29,
+        "y": 29,
+        "width": 1382,
+        "height": 28.796875
+      },
+      "mark": {
+        "x": 68.984375,
+        "y": 35.59375,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 68.984375,
+          "y": 34.59375,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 189.875,
+          "y": 34.59375,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": false,
+      "navName": {
+        "width": 154.796875,
+        "height": 19.1875,
+        "scrollWidth": 155,
+        "clientWidth": 155,
+        "lineHeight": 19.2
+      }
+    },
+    {
+      "label": "laptop light",
+      "width": 1024,
+      "documentWidth": 1024,
+      "chrome": {
+        "x": 21.46875,
+        "y": 21.46875,
+        "width": 981.0625,
+        "height": 28.796875
+      },
+      "mark": {
+        "x": 61.453125,
+        "y": 28.0625,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 61.453125,
+          "y": 27.0625,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 182.34375,
+          "y": 27.0625,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": false,
+      "navName": {
+        "width": 145.125,
+        "height": 18,
+        "scrollWidth": 145,
+        "clientWidth": 145,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "mobile light",
+      "width": 390,
+      "documentWidth": 390,
+      "chrome": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 24
+      },
+      "mark": {
+        "x": 39.984375,
+        "y": 4.203125,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 39.984375,
+          "y": 3.203125,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 160.875,
+          "y": 3.203125,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": true,
+      "navName": {
+        "width": 0,
+        "height": 0,
+        "scrollWidth": 0,
+        "clientWidth": 0,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "desktop dark",
+      "width": 1440,
+      "documentWidth": 1440,
+      "chrome": {
+        "x": 29,
+        "y": 29,
+        "width": 1382,
+        "height": 28.796875
+      },
+      "mark": {
+        "x": 68.984375,
+        "y": 35.59375,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 68.984375,
+          "y": 34.59375,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 189.875,
+          "y": 34.59375,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": false,
+      "navName": {
+        "width": 154.796875,
+        "height": 19.1875,
+        "scrollWidth": 155,
+        "clientWidth": 155,
+        "lineHeight": 19.2
+      }
+    },
+    {
+      "label": "laptop dark",
+      "width": 1024,
+      "documentWidth": 1024,
+      "chrome": {
+        "x": 21.46875,
+        "y": 21.46875,
+        "width": 981.0625,
+        "height": 28.796875
+      },
+      "mark": {
+        "x": 61.453125,
+        "y": 28.0625,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 61.453125,
+          "y": 27.0625,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 182.34375,
+          "y": 27.0625,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": false,
+      "navName": {
+        "width": 145.125,
+        "height": 18,
+        "scrollWidth": 145,
+        "clientWidth": 145,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "mobile dark",
+      "width": 390,
+      "documentWidth": 390,
+      "chrome": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 24
+      },
+      "mark": {
+        "x": 39.984375,
+        "y": 4.203125,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 39.984375,
+          "y": 3.203125,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 160.875,
+          "y": 3.203125,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": true,
+      "navName": {
+        "width": 0,
+        "height": 0,
+        "scrollWidth": 0,
+        "clientWidth": 0,
+        "lineHeight": 18
+      }
+    }
+  ],
+  "breakpointMeasurements": [
+    {
+      "label": "edge 720 light",
+      "width": 720,
+      "documentWidth": 720,
+      "chrome": {
+        "x": 15.390625,
+        "y": 15.390625,
+        "width": 689.21875,
+        "height": 28.796875
+      },
+      "mark": {
+        "x": 55.375,
+        "y": 21.984375,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 55.375,
+          "y": 20.984375,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 176.265625,
+          "y": 20.984375,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": false,
+      "navName": {
+        "width": 145.125,
+        "height": 18,
+        "scrollWidth": 145,
+        "clientWidth": 145,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "edge 681 light",
+      "width": 681,
+      "documentWidth": 681,
+      "chrome": {
+        "x": 14.609375,
+        "y": 14.609375,
+        "width": 651.78125,
+        "height": 28.796875
+      },
+      "mark": {
+        "x": 54.59375,
+        "y": 21.203125,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 54.59375,
+          "y": 20.203125,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 175.484375,
+          "y": 20.203125,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": false,
+      "navName": {
+        "width": 145.125,
+        "height": 18,
+        "scrollWidth": 145,
+        "clientWidth": 145,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "edge 680 light",
+      "width": 680,
+      "documentWidth": 680,
+      "chrome": {
+        "x": 0,
+        "y": 0,
+        "width": 680,
+        "height": 24
+      },
+      "mark": {
+        "x": 39.984375,
+        "y": 4.203125,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 39.984375,
+          "y": 3.203125,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 160.875,
+          "y": 3.203125,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": true,
+      "navName": {
+        "width": 0,
+        "height": 0,
+        "scrollWidth": 0,
+        "clientWidth": 0,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "edge 720 dark",
+      "width": 720,
+      "documentWidth": 720,
+      "chrome": {
+        "x": 15.390625,
+        "y": 15.390625,
+        "width": 689.21875,
+        "height": 28.796875
+      },
+      "mark": {
+        "x": 55.375,
+        "y": 21.984375,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 55.375,
+          "y": 20.984375,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 176.265625,
+          "y": 20.984375,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": false,
+      "navName": {
+        "width": 145.125,
+        "height": 18,
+        "scrollWidth": 145,
+        "clientWidth": 145,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "edge 681 dark",
+      "width": 681,
+      "documentWidth": 681,
+      "chrome": {
+        "x": 14.609375,
+        "y": 14.609375,
+        "width": 651.78125,
+        "height": 28.796875
+      },
+      "mark": {
+        "x": 54.59375,
+        "y": 21.203125,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 54.59375,
+          "y": 20.203125,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 175.484375,
+          "y": 20.203125,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": false,
+      "navName": {
+        "width": 145.125,
+        "height": 18,
+        "scrollWidth": 145,
+        "clientWidth": 145,
+        "lineHeight": 18
+      }
+    },
+    {
+      "label": "edge 680 dark",
+      "width": 680,
+      "documentWidth": 680,
+      "chrome": {
+        "x": 0,
+        "y": 0,
+        "width": 680,
+        "height": 24
+      },
+      "mark": {
+        "x": 39.984375,
+        "y": 4.203125,
+        "width": 220.3125,
+        "height": 15.59375
+      },
+      "parts": [
+        {
+          "text": "Yahoo! Security",
+          "x": 39.984375,
+          "y": 3.203125,
+          "width": 116.09375,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        },
+        {
+          "text": "Messenger 2.0",
+          "x": 160.875,
+          "y": 3.203125,
+          "width": 99.421875,
+          "height": 16,
+          "clientWidth": 0,
+          "scrollWidth": 0,
+          "lineHeight": 15.6,
+          "fontSize": 12
+        }
+      ],
+      "navMarkHidden": true,
+      "navName": {
+        "width": 0,
+        "height": 0,
+        "scrollWidth": 0,
+        "clientWidth": 0,
+        "lineHeight": 18
+      }
+    }
+  ],
+  "artifacts": {
+    "comparison": "comparison.html",
+    "fullEvidence": "after/browser-evidence.json",
+    "contentMatchedScreenshotPairs": 4,
+    "screenshots": "after/{desktop,laptop,mobile}-{light,dark}-{messenger,conversation}.png"
+  },
+  "limitations": [
+    "Chrome only; no cross-browser certification is claimed.",
+    "The mobile navigation wordmark remains intentionally hidden by the established responsive layout; it was not forced visible.",
+    "No new font benchmark or broad765-check regression rerun was needed for this CSS-only wordmark refinement.",
+    "No full multi-user E2EE claim; authenticated recipient key exchange remains outside scope."
+  ],
+  "cleanup": {
+    "status": "Completed",
+    "serverProcessId": 31988,
+    "browserProcessId": 32048,
+    "commandLinesVerified": true,
+    "portsReleased": [
+      3106,
+      9226
+    ],
+    "completedAt": "2026-11-06T05:21:23.7809704Z"
+  },
+  "comparisonViewerChecks": {
+    "checks": 3,
+    "passed": 3,
+    "failed": 0,
+    "evidence": "after/comparison-evidence.json"
+  }
+}

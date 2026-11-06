@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
 import { ConversationHeader } from '@/components/messenger/ConversationHeader';
 import { MessageComposer } from '@/components/messenger/MessageComposer';
 import { MessageList } from '@/components/messenger/MessageList';
@@ -18,6 +17,9 @@ export interface YahooChatWindowProps {
   presenceStatus?: PresenceStatus;
   currentUserId?: string;
   currentUserName?: string;
+  identityReady?: boolean;
+  /** Presentation visibility only; hidden chats consume arrivals without entrance motion. */
+  presentationActive?: boolean;
   avatarUrl?: string;
   transport?: MessagingTransport;
   onBuzz?: () => void | Promise<void>;
@@ -39,6 +41,8 @@ export function YahooChatWindow({
   conversationType = 'bot',
   currentUserId = 'local-user',
   currentUserName = 'You',
+  identityReady = true,
+  presentationActive = true,
   onBuzz,
   onSendMessage,
   conversationIds,
@@ -149,28 +153,12 @@ export function YahooChatWindow({
     : undefined;
 
   return (
-    <section className="chat-window" aria-label={`${contactName} conversation`}>
-      <header className="chat-titlebar">
-        {onBackToConversations && (
-          <button type="button" className="mobile-chat-back" onClick={onBackToConversations} aria-label="Back to conversations">
-            <ChevronLeft size={18} aria-hidden="true" />
-            <span>Chats</span>
-          </button>
-        )}
-        <span className="chat-brand-mark" aria-hidden="true">Y!</span>
-        <div className="chat-title-copy">
-          <p className="chat-title-eyebrow retro-label">Yahoo! Messenger 8.0</p>
-          <h1 ref={chatHeadingRef} tabIndex={-1} className="chat-title-heading">Chat with {contactName}</h1>
-        </div>
-        <div className="chat-window-controls" aria-hidden="true">
-          <span className="chat-window-control" />
-          <span className="chat-window-control" />
-          <span className="chat-window-control" />
-        </div>
-      </header>
-
+    <section className="chat-window" aria-label={`${contactName} conversation`} data-buzz-active={buzzBusy}>
       <ConversationHeader
         name={contactName}
+        transitionKey={conversationId}
+        headingRef={chatHeadingRef}
+        {...(onBackToConversations ? { onBackToConversations } : {})}
         {...(avatarUrl ? { avatarUrl } : {})}
         type={conversationType}
         {...(showPresence ? { presence } : {})}
@@ -183,6 +171,8 @@ export function YahooChatWindow({
         key={`messages:${conversationId}`}
         messages={messages}
         currentUserId={currentUserId}
+        currentUserName={currentUserName}
+        active={presentationActive}
         transportMode={transportMode}
         onRetryMessage={(messageId) => void retryMessage(messageId)}
       />
@@ -191,7 +181,7 @@ export function YahooChatWindow({
         key={`composer:${conversationId}`}
         conversationName={contactName}
         messageCount={messages.length}
-        disabled={!securityStatus?.localEncryptionAvailable}
+        disabled={!identityReady || !securityStatus?.localEncryptionAvailable}
         isSending={isSending}
         buzzBusy={buzzBusy}
         {...(draftValue !== undefined ? { draftValue } : {})}

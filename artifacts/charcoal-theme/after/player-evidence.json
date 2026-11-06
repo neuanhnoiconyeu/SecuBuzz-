@@ -1,0 +1,27 @@
+{
+  "startedAt": "2026-11-06T04:27:21.691Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Motion player loads real frame images",
+      "passed": true
+    },
+    {
+      "label": "Motion player advances recorded frames",
+      "passed": true
+    },
+    {
+      "label": "Motion player switches to the native dialog capture",
+      "passed": true
+    },
+    {
+      "label": "Motion player has no runtime exceptions",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\charcoal-theme\\after\\motion-player-preview.png"
+  ],
+  "runtimeErrors": []
+}

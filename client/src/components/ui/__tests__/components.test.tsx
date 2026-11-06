@@ -89,6 +89,7 @@ describe('shared UI components', () => {
             onOpenChange={setOpen}
             title="Conversation settings"
             description="Manage this conversation."
+            footer={<Button onClick={() => setOpen(false)}>Done</Button>}
           >
             Settings content
           </Dialog>
@@ -102,8 +103,12 @@ describe('shared UI components', () => {
       const dialog = screen.getByRole('dialog', { name: 'Conversation settings' });
       expect(dialog).toHaveAttribute('open');
       expect(dialog).toHaveAccessibleDescription('Manage this conversation.');
+      expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
+      expect(dialog).not.toHaveAttribute('open');
+      fireEvent.click(screen.getByRole('button', { name: 'Open settings' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Done' }));
       expect(dialog).not.toHaveAttribute('open');
     } finally {
       if (oldShowModal) {

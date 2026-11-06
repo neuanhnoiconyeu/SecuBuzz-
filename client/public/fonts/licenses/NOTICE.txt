@@ -1,0 +1,18 @@
+SecuBuzz / Yahoo! Security Messenger 2.0 - bundled font notices
+
+Bungee Regular
+Copyright 2023 The Bungee Project Authors (https://github.com/djrrb/Bungee)
+License: SIL Open Font License 1.1; full text: /fonts/licenses/Bungee-OFL.txt
+
+Space Grotesk
+Copyright 2020 The Space Grotesk Project Authors
+(https://github.com/floriankarsten/space-grotesk)
+License: SIL Open Font License 1.1; full text: /fonts/licenses/Space-Grotesk-OFL.txt
+
+The font binaries are unmodified official Google Fonts sources, from google/fonts
+revision 24ddc1f324cac5d9f5aedca126d298f56e3f1640:
+https://github.com/google/fonts/tree/24ddc1f324cac5d9f5aedca126d298f56e3f1640/ofl/bungee
+https://github.com/google/fonts/tree/24ddc1f324cac5d9f5aedca126d298f56e3f1640/ofl/spacegrotesk
+
+Application builds emit the font assets under /_next/static/media/. These notices
+and complete copyright/license texts remain available at /fonts/licenses/.

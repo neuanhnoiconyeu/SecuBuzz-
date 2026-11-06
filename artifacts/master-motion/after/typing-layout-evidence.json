@@ -1,0 +1,777 @@
+{
+  "startedAt": "2026-11-06T03:30:09.820Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "desktop normal empty ambient mode is correct",
+      "passed": true,
+      "detail": [
+        {
+          "name": "empty-light-lavender",
+          "kind": "CSSAnimation",
+          "target": "DIV.chat-empty-atmosphere",
+          "pseudo": "::before",
+          "messageId": null,
+          "currentTime": 1133.3390000065508,
+          "playState": "running",
+          "duration": 28000,
+          "iterations": "Infinity",
+          "progress": 0.040476392857376815,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "empty-light-violet",
+          "kind": "CSSAnimation",
+          "target": "DIV.chat-empty-atmosphere",
+          "pseudo": "::after",
+          "messageId": null,
+          "currentTime": 1133.3390000065508,
+          "playState": "running",
+          "duration": 36000,
+          "iterations": "Infinity",
+          "progress": 0.03148163888907086,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "desktop normal real text input is retained",
+      "passed": true,
+      "detail": {
+        "value": "Typing stays responsive",
+        "paintLatencyMs": 8.200000017881393,
+        "roundTripMs": 16,
+        "viewport": "desktop",
+        "reduced": false
+      }
+    },
+    {
+      "label": "desktop normal composer and log are within the viewport",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "documentHeight": 1000,
+        "historyWidth": 1070,
+        "historyScrollWidth": 1070,
+        "composer": {
+          "x": 341,
+          "y": 834.953125,
+          "width": 1070,
+          "height": 107.265625,
+          "top": 834.953125,
+          "right": 1411,
+          "bottom": 942.21875,
+          "left": 341
+        },
+        "input": {
+          "x": 470.203125,
+          "y": 855.140625,
+          "width": 803.734375,
+          "height": 44,
+          "top": 855.140625,
+          "right": 1273.9375,
+          "bottom": 899.140625,
+          "left": 470.203125
+        },
+        "buzz": {
+          "x": 380.390625,
+          "y": 855.140625,
+          "width": 81.8125,
+          "height": 44,
+          "top": 855.140625,
+          "right": 462.203125,
+          "bottom": 899.140625,
+          "left": 380.390625
+        },
+        "send": {
+          "x": 1281.9375,
+          "y": 855.140625,
+          "width": 89.671875,
+          "height": 44,
+          "top": 855.140625,
+          "right": 1371.609375,
+          "bottom": 899.140625,
+          "left": 1281.9375
+        },
+        "log": {
+          "x": 341,
+          "y": 943.21875,
+          "width": 1070,
+          "height": 27.78125,
+          "top": 943.21875,
+          "right": 1411,
+          "bottom": 971,
+          "left": 341
+        }
+      }
+    },
+    {
+      "label": "desktop reduced empty ambient mode is correct",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "desktop reduced real text input is retained",
+      "passed": true,
+      "detail": {
+        "value": "Typing stays responsive",
+        "paintLatencyMs": 6.300000011920929,
+        "roundTripMs": 14,
+        "viewport": "desktop",
+        "reduced": true
+      }
+    },
+    {
+      "label": "desktop reduced composer and log are within the viewport",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "documentHeight": 1000,
+        "historyWidth": 1070,
+        "historyScrollWidth": 1070,
+        "composer": {
+          "x": 341,
+          "y": 834.953125,
+          "width": 1070,
+          "height": 107.265625,
+          "top": 834.953125,
+          "right": 1411,
+          "bottom": 942.21875,
+          "left": 341
+        },
+        "input": {
+          "x": 470.203125,
+          "y": 855.140625,
+          "width": 803.734375,
+          "height": 44,
+          "top": 855.140625,
+          "right": 1273.9375,
+          "bottom": 899.140625,
+          "left": 470.203125
+        },
+        "buzz": {
+          "x": 380.390625,
+          "y": 855.140625,
+          "width": 81.8125,
+          "height": 44,
+          "top": 855.140625,
+          "right": 462.203125,
+          "bottom": 899.140625,
+          "left": 380.390625
+        },
+        "send": {
+          "x": 1281.9375,
+          "y": 855.140625,
+          "width": 89.671875,
+          "height": 44,
+          "top": 855.140625,
+          "right": 1371.609375,
+          "bottom": 899.140625,
+          "left": 1281.9375
+        },
+        "log": {
+          "x": 341,
+          "y": 943.21875,
+          "width": 1070,
+          "height": 27.78125,
+          "top": 943.21875,
+          "right": 1411,
+          "bottom": 971,
+          "left": 341
+        }
+      }
+    },
+    {
+      "label": "laptop normal empty ambient mode is correct",
+      "passed": true,
+      "detail": [
+        {
+          "name": "empty-light-lavender",
+          "kind": "CSSAnimation",
+          "target": "DIV.chat-empty-atmosphere",
+          "pseudo": "::before",
+          "messageId": null,
+          "currentTime": 833.313999999173,
+          "playState": "running",
+          "duration": 28000,
+          "iterations": "Infinity",
+          "progress": 0.02976121428568475,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        },
+        {
+          "name": "empty-light-violet",
+          "kind": "CSSAnimation",
+          "target": "DIV.chat-empty-atmosphere",
+          "pseudo": "::after",
+          "messageId": null,
+          "currentTime": 833.313999999173,
+          "playState": "running",
+          "duration": 36000,
+          "iterations": "Infinity",
+          "progress": 0.023147611111088137,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "laptop normal real text input is retained",
+      "passed": true,
+      "detail": {
+        "value": "Typing stays responsive",
+        "paintLatencyMs": 9.699999988079071,
+        "roundTripMs": 17,
+        "viewport": "laptop",
+        "reduced": false
+      }
+    },
+    {
+      "label": "laptop normal composer and log are within the viewport",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "documentHeight": 800,
+        "historyWidth": 701,
+        "historyScrollWidth": 701,
+        "composer": {
+          "x": 301.46875,
+          "y": 642.484375,
+          "width": 701.0625,
+          "height": 107.265625,
+          "top": 642.484375,
+          "right": 1002.53125,
+          "bottom": 749.75,
+          "left": 301.46875
+        },
+        "input": {
+          "x": 429.390625,
+          "y": 662.671875,
+          "width": 437.359375,
+          "height": 44,
+          "top": 662.671875,
+          "right": 866.75,
+          "bottom": 706.671875,
+          "left": 429.390625
+        },
+        "buzz": {
+          "x": 339.578125,
+          "y": 662.671875,
+          "width": 81.8125,
+          "height": 44,
+          "top": 662.671875,
+          "right": 421.390625,
+          "bottom": 706.671875,
+          "left": 339.578125
+        },
+        "send": {
+          "x": 874.75,
+          "y": 662.671875,
+          "width": 89.671875,
+          "height": 44,
+          "top": 662.671875,
+          "right": 964.421875,
+          "bottom": 706.671875,
+          "left": 874.75
+        },
+        "log": {
+          "x": 301.46875,
+          "y": 750.75,
+          "width": 701.0625,
+          "height": 27.78125,
+          "top": 750.75,
+          "right": 1002.53125,
+          "bottom": 778.53125,
+          "left": 301.46875
+        }
+      }
+    },
+    {
+      "label": "laptop reduced empty ambient mode is correct",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "laptop reduced real text input is retained",
+      "passed": true,
+      "detail": {
+        "value": "Typing stays responsive",
+        "paintLatencyMs": 11.599999994039536,
+        "roundTripMs": 123,
+        "viewport": "laptop",
+        "reduced": true
+      }
+    },
+    {
+      "label": "laptop reduced composer and log are within the viewport",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "documentHeight": 800,
+        "historyWidth": 701,
+        "historyScrollWidth": 701,
+        "composer": {
+          "x": 301.46875,
+          "y": 642.484375,
+          "width": 701.0625,
+          "height": 107.265625,
+          "top": 642.484375,
+          "right": 1002.53125,
+          "bottom": 749.75,
+          "left": 301.46875
+        },
+        "input": {
+          "x": 429.390625,
+          "y": 662.671875,
+          "width": 437.359375,
+          "height": 44,
+          "top": 662.671875,
+          "right": 866.75,
+          "bottom": 706.671875,
+          "left": 429.390625
+        },
+        "buzz": {
+          "x": 339.578125,
+          "y": 662.671875,
+          "width": 81.8125,
+          "height": 44,
+          "top": 662.671875,
+          "right": 421.390625,
+          "bottom": 706.671875,
+          "left": 339.578125
+        },
+        "send": {
+          "x": 874.75,
+          "y": 662.671875,
+          "width": 89.671875,
+          "height": 44,
+          "top": 662.671875,
+          "right": 964.421875,
+          "bottom": 706.671875,
+          "left": 874.75
+        },
+        "log": {
+          "x": 301.46875,
+          "y": 750.75,
+          "width": 701.0625,
+          "height": 27.78125,
+          "top": 750.75,
+          "right": 1002.53125,
+          "bottom": 778.53125,
+          "left": 301.46875
+        }
+      }
+    },
+    {
+      "label": "mobile normal empty ambient mode is correct",
+      "passed": true,
+      "detail": [
+        {
+          "name": "empty-light-lavender",
+          "kind": "CSSAnimation",
+          "target": "DIV.chat-empty-atmosphere",
+          "pseudo": "::before",
+          "messageId": null,
+          "currentTime": 983.2990000085738,
+          "playState": "running",
+          "duration": 36000,
+          "iterations": "Infinity",
+          "progress": 0.027313861111349272,
+          "keyframeProperties": [
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ],
+            [
+              "transform"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "label": "mobile normal real text input is retained",
+      "passed": true,
+      "detail": {
+        "value": "Typing stays responsive",
+        "paintLatencyMs": 15,
+        "roundTripMs": 121,
+        "viewport": "mobile",
+        "reduced": false
+      }
+    },
+    {
+      "label": "mobile normal composer and log are within the viewport",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "documentHeight": 844,
+        "historyWidth": 390,
+        "historyScrollWidth": 390,
+        "composer": {
+          "x": 0,
+          "y": 700.25,
+          "width": 390,
+          "height": 114.96875,
+          "top": 700.25,
+          "right": 390,
+          "bottom": 815.21875,
+          "left": 0
+        },
+        "input": {
+          "x": 64.984375,
+          "y": 716.4375,
+          "width": 260.03125,
+          "height": 44,
+          "top": 716.4375,
+          "right": 325.015625,
+          "bottom": 760.4375,
+          "left": 64.984375
+        },
+        "buzz": {
+          "x": 17.796875,
+          "y": 716.4375,
+          "width": 44,
+          "height": 44,
+          "top": 716.4375,
+          "right": 61.796875,
+          "bottom": 760.4375,
+          "left": 17.796875
+        },
+        "send": {
+          "x": 328.203125,
+          "y": 716.4375,
+          "width": 44,
+          "height": 44,
+          "top": 716.4375,
+          "right": 372.203125,
+          "bottom": 760.4375,
+          "left": 328.203125
+        },
+        "log": {
+          "x": 0,
+          "y": 816.21875,
+          "width": 390,
+          "height": 27.78125,
+          "top": 816.21875,
+          "right": 390,
+          "bottom": 844,
+          "left": 0
+        }
+      }
+    },
+    {
+      "label": "Mobile final PNG contains actual white input, pink BUZZ and purple Send pixels",
+      "passed": true,
+      "detail": [
+        {
+          "name": "input",
+          "x": 73,
+          "y": 724,
+          "rgba": [
+            255,
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "name": "buzz",
+          "x": 26,
+          "y": 724,
+          "rgba": [
+            255,
+            241,
+            242,
+            255
+          ]
+        },
+        {
+          "name": "send",
+          "x": 336,
+          "y": 724,
+          "rgba": [
+            111,
+            45,
+            168,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "label": "mobile reduced empty ambient mode is correct",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "mobile reduced real text input is retained",
+      "passed": true,
+      "detail": {
+        "value": "Typing stays responsive",
+        "paintLatencyMs": 9.299999982118607,
+        "roundTripMs": 16,
+        "viewport": "mobile",
+        "reduced": true
+      }
+    },
+    {
+      "label": "mobile reduced composer and log are within the viewport",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "documentHeight": 844,
+        "historyWidth": 390,
+        "historyScrollWidth": 390,
+        "composer": {
+          "x": 0,
+          "y": 700.25,
+          "width": 390,
+          "height": 114.96875,
+          "top": 700.25,
+          "right": 390,
+          "bottom": 815.21875,
+          "left": 0
+        },
+        "input": {
+          "x": 64.984375,
+          "y": 716.4375,
+          "width": 260.03125,
+          "height": 44,
+          "top": 716.4375,
+          "right": 325.015625,
+          "bottom": 760.4375,
+          "left": 64.984375
+        },
+        "buzz": {
+          "x": 17.796875,
+          "y": 716.4375,
+          "width": 44,
+          "height": 44,
+          "top": 716.4375,
+          "right": 61.796875,
+          "bottom": 760.4375,
+          "left": 17.796875
+        },
+        "send": {
+          "x": 328.203125,
+          "y": 716.4375,
+          "width": 44,
+          "height": 44,
+          "top": 716.4375,
+          "right": 372.203125,
+          "bottom": 760.4375,
+          "left": 328.203125
+        },
+        "log": {
+          "x": 0,
+          "y": 816.21875,
+          "width": 390,
+          "height": 27.78125,
+          "top": 816.21875,
+          "right": 390,
+          "bottom": 844,
+          "left": 0
+        }
+      }
+    },
+    {
+      "label": "Typing/layout checks have no uncaught browser errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [],
+  "runtimeErrors": [],
+  "typing": [
+    {
+      "value": "Typing stays responsive",
+      "paintLatencyMs": 8.200000017881393,
+      "roundTripMs": 16,
+      "viewport": "desktop",
+      "reduced": false
+    },
+    {
+      "value": "Typing stays responsive",
+      "paintLatencyMs": 6.300000011920929,
+      "roundTripMs": 14,
+      "viewport": "desktop",
+      "reduced": true
+    },
+    {
+      "value": "Typing stays responsive",
+      "paintLatencyMs": 9.699999988079071,
+      "roundTripMs": 17,
+      "viewport": "laptop",
+      "reduced": false
+    },
+    {
+      "value": "Typing stays responsive",
+      "paintLatencyMs": 11.599999994039536,
+      "roundTripMs": 123,
+      "viewport": "laptop",
+      "reduced": true
+    },
+    {
+      "value": "Typing stays responsive",
+      "paintLatencyMs": 15,
+      "roundTripMs": 121,
+      "viewport": "mobile",
+      "reduced": false
+    },
+    {
+      "value": "Typing stays responsive",
+      "paintLatencyMs": 9.299999982118607,
+      "roundTripMs": 16,
+      "viewport": "mobile",
+      "reduced": true
+    }
+  ],
+  "mobileFinal": {
+    "layout": {
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390,
+      "documentHeight": 844,
+      "historyWidth": 390,
+      "historyScrollWidth": 390,
+      "composer": {
+        "x": 0,
+        "y": 700.25,
+        "width": 390,
+        "height": 114.96875,
+        "top": 700.25,
+        "right": 390,
+        "bottom": 815.21875,
+        "left": 0
+      },
+      "input": {
+        "x": 64.984375,
+        "y": 716.4375,
+        "width": 260.03125,
+        "height": 44,
+        "top": 716.4375,
+        "right": 325.015625,
+        "bottom": 760.4375,
+        "left": 64.984375
+      },
+      "buzz": {
+        "x": 17.796875,
+        "y": 716.4375,
+        "width": 44,
+        "height": 44,
+        "top": 716.4375,
+        "right": 61.796875,
+        "bottom": 760.4375,
+        "left": 17.796875
+      },
+      "send": {
+        "x": 328.203125,
+        "y": 716.4375,
+        "width": 44,
+        "height": 44,
+        "top": 716.4375,
+        "right": 372.203125,
+        "bottom": 760.4375,
+        "left": 328.203125
+      },
+      "log": {
+        "x": 0,
+        "y": 816.21875,
+        "width": 390,
+        "height": 27.78125,
+        "top": 816.21875,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      }
+    },
+    "pixels": [
+      {
+        "name": "input",
+        "x": 73,
+        "y": 724,
+        "rgba": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "name": "buzz",
+        "x": 26,
+        "y": 724,
+        "rgba": [
+          255,
+          241,
+          242,
+          255
+        ]
+      },
+      {
+        "name": "send",
+        "x": 336,
+        "y": 724,
+        "rgba": [
+          111,
+          45,
+          168,
+          255
+        ]
+      }
+    ]
+  }
+}

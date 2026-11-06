@@ -1,0 +1,717 @@
+{
+  "startedAt": "2026-11-06T02:28:22.881Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "desktop DPR2 branding images load",
+      "passed": true,
+      "detail": [
+        {
+          "src": "http://127.0.0.1:3106/_next/image?url=%2Fbranding%2Fyahoo-security-icon.png&w=48&q=90",
+          "alt": "",
+          "hidden": "true",
+          "complete": true,
+          "naturalWidth": 20,
+          "naturalHeight": 20,
+          "width": 20,
+          "height": 20,
+          "objectFit": "contain",
+          "position": {
+            "left": 42.59375,
+            "right": 62.59375,
+            "top": 33.390625,
+            "bottom": 53.390625
+          },
+          "resourceWidth": 48,
+          "resourceHeight": 48,
+          "resourceBytes": 2246,
+          "resourceType": "image/webp",
+          "resourceCornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "src": "http://127.0.0.1:3106/_next/image?url=%2Fbranding%2Fyahoo-security-icon.png&w=96&q=90",
+          "alt": "",
+          "hidden": "true",
+          "complete": true,
+          "naturalWidth": 48,
+          "naturalHeight": 48,
+          "width": 48,
+          "height": 48,
+          "objectFit": "contain",
+          "position": {
+            "left": 49,
+            "right": 97,
+            "top": 70.59375,
+            "bottom": 118.59375
+          },
+          "resourceWidth": 96,
+          "resourceHeight": 96,
+          "resourceBytes": 5328,
+          "resourceType": "image/webp",
+          "resourceCornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "src": "http://127.0.0.1:3106/_next/image?url=%2Fbranding%2Fyahoo-security-logo-source.png&w=1080&q=90",
+          "alt": "Yahoo! Security Messenger 2.0",
+          "hidden": null,
+          "complete": true,
+          "naturalWidth": 416,
+          "naturalHeight": 205,
+          "width": 416,
+          "height": 205.6875,
+          "objectFit": "contain",
+          "position": {
+            "left": 668,
+            "right": 1084,
+            "top": 387.43701171875,
+            "bottom": 593.12451171875
+          },
+          "resourceWidth": 1080,
+          "resourceHeight": 534,
+          "resourceBytes": 67142,
+          "resourceType": "image/webp",
+          "resourceCornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "label": "desktop logo images preserve aspect ratio",
+      "passed": true
+    },
+    {
+      "label": "desktop raster images have sufficient retina resource resolution",
+      "passed": true
+    },
+    {
+      "label": "desktop optimized brand artwork retains transparent corners",
+      "passed": true
+    },
+    {
+      "label": "desktop image alternative text is explicitly defined",
+      "passed": true
+    },
+    {
+      "label": "desktop DPR2 page has no horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "desktop user identity avatar remains distinct from app brand",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "desktop profile keeps the user avatar",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "laptop DPR2 branding images load",
+      "passed": true,
+      "detail": [
+        {
+          "src": "http://127.0.0.1:3106/_next/image?url=%2Fbranding%2Fyahoo-security-icon.png&w=48&q=90",
+          "alt": "",
+          "hidden": "true",
+          "complete": true,
+          "naturalWidth": 20,
+          "naturalHeight": 20,
+          "width": 20,
+          "height": 20,
+          "objectFit": "contain",
+          "position": {
+            "left": 35.0625,
+            "right": 55.0625,
+            "top": 25.859375,
+            "bottom": 45.859375
+          },
+          "resourceWidth": 48,
+          "resourceHeight": 48,
+          "resourceBytes": 2246,
+          "resourceType": "image/webp",
+          "resourceCornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "src": "http://127.0.0.1:3106/_next/image?url=%2Fbranding%2Fyahoo-security-icon.png&w=96&q=90",
+          "alt": "",
+          "hidden": "true",
+          "complete": true,
+          "naturalWidth": 48,
+          "naturalHeight": 48,
+          "width": 48,
+          "height": 48,
+          "objectFit": "contain",
+          "position": {
+            "left": 37.46875,
+            "right": 85.46875,
+            "top": 63.0625,
+            "bottom": 111.0625
+          },
+          "resourceWidth": 96,
+          "resourceHeight": 96,
+          "resourceBytes": 5328,
+          "resourceType": "image/webp",
+          "resourceCornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "src": "http://127.0.0.1:3106/_next/image?url=%2Fbranding%2Fyahoo-security-logo-source.png&w=1080&q=90",
+          "alt": "Yahoo! Security Messenger 2.0",
+          "hidden": null,
+          "complete": true,
+          "naturalWidth": 416,
+          "naturalHeight": 205,
+          "width": 416,
+          "height": 205.6875,
+          "objectFit": "contain",
+          "position": {
+            "left": 444,
+            "right": 860,
+            "top": 284.2619323730469,
+            "bottom": 489.9494323730469
+          },
+          "resourceWidth": 1080,
+          "resourceHeight": 534,
+          "resourceBytes": 67142,
+          "resourceType": "image/webp",
+          "resourceCornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "label": "laptop logo images preserve aspect ratio",
+      "passed": true
+    },
+    {
+      "label": "laptop raster images have sufficient retina resource resolution",
+      "passed": true
+    },
+    {
+      "label": "laptop optimized brand artwork retains transparent corners",
+      "passed": true
+    },
+    {
+      "label": "laptop image alternative text is explicitly defined",
+      "passed": true
+    },
+    {
+      "label": "laptop DPR2 page has no horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "laptop user identity avatar remains distinct from app brand",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "laptop profile keeps the user avatar",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "mobile DPR2 branding images load",
+      "passed": true,
+      "detail": [
+        {
+          "src": "http://127.0.0.1:3106/_next/image?url=%2Fbranding%2Fyahoo-security-icon.png&w=48&q=90",
+          "alt": "",
+          "hidden": "true",
+          "complete": true,
+          "naturalWidth": 20,
+          "naturalHeight": 20,
+          "width": 20,
+          "height": 20,
+          "objectFit": "contain",
+          "position": {
+            "left": 13.59375,
+            "right": 33.59375,
+            "top": 2,
+            "bottom": 22
+          },
+          "resourceWidth": 48,
+          "resourceHeight": 48,
+          "resourceBytes": 2246,
+          "resourceType": "image/webp",
+          "resourceCornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "src": "http://127.0.0.1:3106/_next/image?url=%2Fbranding%2Fyahoo-security-icon.png&w=96&q=90",
+          "alt": "",
+          "hidden": "true",
+          "complete": true,
+          "naturalWidth": 48,
+          "naturalHeight": 48,
+          "width": 44,
+          "height": 44,
+          "objectFit": "contain",
+          "position": {
+            "left": 12.796875,
+            "right": 56.796875,
+            "top": 32.796875,
+            "bottom": 76.796875
+          },
+          "resourceWidth": 96,
+          "resourceHeight": 96,
+          "resourceBytes": 5328,
+          "resourceType": "image/webp",
+          "resourceCornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "src": "http://127.0.0.1:3106/_next/image?url=%2Fbranding%2Fyahoo-security-logo-source.png&w=640&q=90",
+          "alt": "Yahoo! Security Messenger 2.0",
+          "hidden": null,
+          "complete": true,
+          "naturalWidth": 279,
+          "naturalHeight": 138,
+          "width": 280,
+          "height": 138.25,
+          "objectFit": "contain",
+          "position": {
+            "left": 55,
+            "right": 335,
+            "top": 352.328125,
+            "bottom": 490.578125
+          },
+          "resourceWidth": 640,
+          "resourceHeight": 316,
+          "resourceBytes": 30892,
+          "resourceType": "image/webp",
+          "resourceCornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "label": "mobile logo images preserve aspect ratio",
+      "passed": true
+    },
+    {
+      "label": "mobile raster images have sufficient retina resource resolution",
+      "passed": true
+    },
+    {
+      "label": "mobile optimized brand artwork retains transparent corners",
+      "passed": true
+    },
+    {
+      "label": "mobile image alternative text is explicitly defined",
+      "passed": true
+    },
+    {
+      "label": "mobile DPR2 page has no horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "mobile user identity avatar remains distinct from app brand",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "mobile profile keeps the user avatar",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Browser title uses consistent product name",
+      "passed": true,
+      "detail": {
+        "title": "Yahoo! Security Messenger 2.0",
+        "ogTitle": "Yahoo! Security Messenger 2.0",
+        "twitterTitle": "Yahoo! Security Messenger 2.0",
+        "icons": [
+          {
+            "rel": "shortcut icon",
+            "href": "http://127.0.0.1:3106/branding/favicon-32.png",
+            "type": "",
+            "sizes": ""
+          },
+          {
+            "rel": "icon",
+            "href": "http://127.0.0.1:3106/branding/favicon.svg",
+            "type": "image/svg+xml",
+            "sizes": "any"
+          },
+          {
+            "rel": "icon",
+            "href": "http://127.0.0.1:3106/branding/favicon-32.png",
+            "type": "image/png",
+            "sizes": "32x32"
+          },
+          {
+            "rel": "icon",
+            "href": "http://127.0.0.1:3106/branding/favicon-16.png",
+            "type": "image/png",
+            "sizes": "16x16"
+          },
+          {
+            "rel": "apple-touch-icon",
+            "href": "http://127.0.0.1:3106/branding/apple-touch-icon.png",
+            "type": "image/png",
+            "sizes": "180x180"
+          }
+        ]
+      }
+    },
+    {
+      "label": "Social metadata uses consistent product name",
+      "passed": true
+    },
+    {
+      "label": "Favicon links are declared",
+      "passed": true
+    },
+    {
+      "label": "Favicon asset responds favicon-32.png",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "rel": "shortcut icon",
+        "href": "http://127.0.0.1:3106/branding/favicon-32.png",
+        "type": "",
+        "sizes": ""
+      }
+    },
+    {
+      "label": "Favicon asset responds favicon.svg",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "rel": "icon",
+        "href": "http://127.0.0.1:3106/branding/favicon.svg",
+        "type": "image/svg+xml",
+        "sizes": "any"
+      }
+    },
+    {
+      "label": "Favicon asset responds favicon-32.png",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "rel": "icon",
+        "href": "http://127.0.0.1:3106/branding/favicon-32.png",
+        "type": "image/png",
+        "sizes": "32x32"
+      }
+    },
+    {
+      "label": "Favicon asset responds favicon-16.png",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "rel": "icon",
+        "href": "http://127.0.0.1:3106/branding/favicon-16.png",
+        "type": "image/png",
+        "sizes": "16x16"
+      }
+    },
+    {
+      "label": "Favicon asset responds apple-touch-icon.png",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "rel": "apple-touch-icon",
+        "href": "http://127.0.0.1:3106/branding/apple-touch-icon.png",
+        "type": "image/png",
+        "sizes": "180x180"
+      }
+    },
+    {
+      "label": "Brand asset responds apple-touch-icon.png",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "contentType": "image/png"
+      }
+    },
+    {
+      "label": "Brand asset responds favicon-16.png",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "contentType": "image/png"
+      }
+    },
+    {
+      "label": "Brand artwork has transparent corners favicon-16.png",
+      "passed": true,
+      "detail": {
+        "width": 16,
+        "height": 16,
+        "cornerAlpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "label": "Brand asset responds favicon-32.png",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "contentType": "image/png"
+      }
+    },
+    {
+      "label": "Brand artwork has transparent corners favicon-32.png",
+      "passed": true,
+      "detail": {
+        "width": 32,
+        "height": 32,
+        "cornerAlpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "label": "Brand asset responds favicon.svg",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "contentType": "image/svg+xml"
+      }
+    },
+    {
+      "label": "Brand artwork has transparent corners favicon.svg",
+      "passed": true,
+      "detail": {
+        "width": 150,
+        "height": 150,
+        "cornerAlpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "label": "Brand asset responds yahoo-security-icon.png",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "contentType": "image/png"
+      }
+    },
+    {
+      "label": "Brand artwork has transparent corners yahoo-security-icon.png",
+      "passed": true,
+      "detail": {
+        "width": 1254,
+        "height": 1254,
+        "cornerAlpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "label": "Brand asset responds yahoo-security-logo-source.png",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "contentType": "image/png"
+      }
+    },
+    {
+      "label": "Brand artwork has transparent corners yahoo-security-logo-source.png",
+      "passed": true,
+      "detail": {
+        "width": 1784,
+        "height": 882,
+        "cornerAlpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "label": "No uncaught runtime exceptions during brand verification",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\motion\\after\\desktop-retina-branding.png",
+    "artifacts\\motion\\after\\desktop-retina-profile.png",
+    "artifacts\\motion\\after\\laptop-retina-branding.png",
+    "artifacts\\motion\\after\\laptop-retina-profile.png",
+    "artifacts\\motion\\after\\mobile-retina-branding.png",
+    "artifacts\\motion\\after\\mobile-retina-profile.png"
+  ],
+  "runtimeErrors": [],
+  "metadata": {
+    "title": "Yahoo! Security Messenger 2.0",
+    "ogTitle": "Yahoo! Security Messenger 2.0",
+    "twitterTitle": "Yahoo! Security Messenger 2.0",
+    "icons": [
+      {
+        "rel": "shortcut icon",
+        "href": "http://127.0.0.1:3106/branding/favicon-32.png",
+        "type": "",
+        "sizes": ""
+      },
+      {
+        "rel": "icon",
+        "href": "http://127.0.0.1:3106/branding/favicon.svg",
+        "type": "image/svg+xml",
+        "sizes": "any"
+      },
+      {
+        "rel": "icon",
+        "href": "http://127.0.0.1:3106/branding/favicon-32.png",
+        "type": "image/png",
+        "sizes": "32x32"
+      },
+      {
+        "rel": "icon",
+        "href": "http://127.0.0.1:3106/branding/favicon-16.png",
+        "type": "image/png",
+        "sizes": "16x16"
+      },
+      {
+        "rel": "apple-touch-icon",
+        "href": "http://127.0.0.1:3106/branding/apple-touch-icon.png",
+        "type": "image/png",
+        "sizes": "180x180"
+      }
+    ]
+  },
+  "assets": [
+    {
+      "fileName": "apple-touch-icon.png",
+      "width": 180,
+      "height": 180,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "fileName": "favicon-16.png",
+      "width": 16,
+      "height": 16,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "fileName": "favicon-32.png",
+      "width": 32,
+      "height": 32,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "fileName": "favicon.svg",
+      "width": 150,
+      "height": 150,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "fileName": "yahoo-security-icon.png",
+      "width": 1254,
+      "height": 1254,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "fileName": "yahoo-security-logo-source.png",
+      "width": 1784,
+      "height": 882,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "finishedAt": "2026-11-06T02:28:27.315Z"
+}

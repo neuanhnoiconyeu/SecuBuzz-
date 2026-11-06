@@ -1,0 +1,244 @@
+{
+  "startedAt": "2026-11-05T21:13:34.488Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Profile entry loads a coherent demo identity",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Control available: Ava Morgan, Direct",
+      "passed": true
+    },
+    {
+      "label": "Draft is isolated from direct conversation",
+      "passed": true
+    },
+    {
+      "label": "Control available: SecureBot, Bot",
+      "passed": true
+    },
+    {
+      "label": "SecureBot draft survives conversation switching",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Profile dialog opens with native modal focus",
+      "passed": true
+    },
+    {
+      "label": "Demo account and local storage limitations are visible",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Invalid input stays in the form with linked error",
+      "passed": true
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Unicode profile name and status save locally",
+      "passed": true
+    },
+    {
+      "label": "Avatar and local Busy preference update",
+      "passed": true
+    },
+    {
+      "label": "Navigation reflects the saved profile",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Button available: Cancel",
+      "passed": true
+    },
+    {
+      "label": "Cancel discards unsaved changes",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Existing own message shows updated display identity",
+      "passed": true
+    },
+    {
+      "label": "Demo contacts and E2EE limitation remain intact",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Closing an editor discards its unsaved status",
+      "passed": true
+    },
+    {
+      "label": "Immediate reopen stays open after the preceding native close event",
+      "passed": true
+    },
+    {
+      "label": "Small-screen profile has no horizontal overflow",
+      "passed": true,
+      "detail": {
+        "viewport": 390,
+        "document": 375,
+        "body": 375,
+        "dialogLeft": 0.5,
+        "dialogRight": 374.5,
+        "dialogWidth": 374
+      }
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Small-screen form keeps selected avatar and presence",
+      "passed": true
+    },
+    {
+      "label": "Small-screen save controls are reachable by scrolling",
+      "passed": true
+    },
+    {
+      "label": "Button available: Cancel",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Small-screen profile entry remains in the viewport",
+      "passed": true,
+      "detail": {
+        "top": 675.578125,
+        "bottom": 793.46875,
+        "height": 117.890625,
+        "viewport": 844
+      }
+    },
+    {
+      "label": "Small-screen messenger has no horizontal overflow",
+      "passed": true,
+      "detail": {
+        "viewport": 390,
+        "document": 375,
+        "body": 375
+      }
+    },
+    {
+      "label": "Refresh resets the demo profile and presence preference",
+      "passed": true
+    },
+    {
+      "label": "Refresh resets local messages and drafts",
+      "passed": true
+    },
+    {
+      "label": "No uncaught runtime exceptions during profile flow",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\phase5\\phase5-desktop-messenger.png",
+    "artifacts\\phase5\\phase5-desktop-profile.png",
+    "artifacts\\phase5\\phase5-mobile-profile.png",
+    "artifacts\\phase5\\phase5-mobile-edit.png",
+    "artifacts\\phase5\\phase5-mobile-messenger.png"
+  ],
+  "runtimeErrors": [],
+  "beforeMobileResize": {
+    "open": true,
+    "activeElement": "<button type=\"button\" class=\"ui-button ui-button--primary ui-button--md\"><span>Edit profile</span></button>",
+    "events": [
+      {
+        "type": "cancel",
+        "openAtEvent": true,
+        "time": 1005
+      },
+      {
+        "type": "close",
+        "openAtEvent": false,
+        "time": 1048.5999999940395
+      },
+      {
+        "type": "cancel",
+        "openAtEvent": true,
+        "time": 1524.5
+      },
+      {
+        "type": "close",
+        "openAtEvent": true,
+        "time": 1569.199999988079
+      }
+    ]
+  },
+  "afterMobileResize": {
+    "open": true,
+    "activeElement": "<button type=\"button\" class=\"ui-button ui-button--primary ui-button--md\"><span>Edit profile</span></button>",
+    "events": [
+      {
+        "type": "cancel",
+        "openAtEvent": true,
+        "time": 1005
+      },
+      {
+        "type": "close",
+        "openAtEvent": false,
+        "time": 1048.5999999940395
+      },
+      {
+        "type": "cancel",
+        "openAtEvent": true,
+        "time": 1524.5
+      },
+      {
+        "type": "close",
+        "openAtEvent": true,
+        "time": 1569.199999988079
+      }
+    ]
+  },
+  "completedAt": "2026-11-05T21:13:42.234Z",
+  "passed": true
+}

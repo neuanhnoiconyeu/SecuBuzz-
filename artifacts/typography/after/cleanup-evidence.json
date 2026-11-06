@@ -1,0 +1,11 @@
+{
+    "status":  "Completed",
+    "serverProcessId":  27672,
+    "browserProcessId":  25648,
+    "commandLinesVerified":  true,
+    "portsReleased":  [
+                          3106,
+                          9226
+                      ],
+    "completedAt":  "2026-11-06T05:00:17.4697129Z"
+}

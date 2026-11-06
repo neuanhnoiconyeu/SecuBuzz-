@@ -1,0 +1,6217 @@
+{
+  "startedAt": "2026-11-06T04:20:06.676Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Dark empty ambient is real advancing CSS motion",
+      "passed": true,
+      "detail": {
+        "first": [
+          {
+            "name": "empty-light-lavender",
+            "kind": "CSSAnimation",
+            "target": "DIV.chat-empty-atmosphere",
+            "pseudo": "::before",
+            "messageId": null,
+            "currentTime": 1566.6590000163112,
+            "playState": "running",
+            "duration": 28000,
+            "iterations": "Infinity",
+            "progress": 0.055952107143439685,
+            "keyframeProperties": [
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ]
+            ]
+          },
+          {
+            "name": "empty-light-violet",
+            "kind": "CSSAnimation",
+            "target": "DIV.chat-empty-atmosphere",
+            "pseudo": "::after",
+            "messageId": null,
+            "currentTime": 1566.6590000163112,
+            "playState": "running",
+            "duration": 36000,
+            "iterations": "Infinity",
+            "progress": 0.04351830555600864,
+            "keyframeProperties": [
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ]
+            ]
+          }
+        ],
+        "last": [
+          {
+            "name": "empty-light-lavender",
+            "kind": "CSSAnimation",
+            "target": "DIV.chat-empty-atmosphere",
+            "pseudo": "::before",
+            "messageId": null,
+            "currentTime": 3766.5450000163114,
+            "playState": "running",
+            "duration": 28000,
+            "iterations": "Infinity",
+            "progress": 0.13451946428629682,
+            "keyframeProperties": [
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ]
+            ]
+          },
+          {
+            "name": "empty-light-violet",
+            "kind": "CSSAnimation",
+            "target": "DIV.chat-empty-atmosphere",
+            "pseudo": "::after",
+            "messageId": null,
+            "currentTime": 3766.5450000163114,
+            "playState": "running",
+            "duration": 36000,
+            "iterations": "Infinity",
+            "progress": 0.10462625000045309,
+            "keyframeProperties": [
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ],
+              [
+                "transform"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "label": "Dark ambient retains the Midnight Charcoal application background",
+      "passed": true
+    },
+    {
+      "label": "Dark logos are loaded and retain their intrinsic aspect ratio",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Captured theme switching changes appearance without a reload",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Dark reduced motion disables all decorative loops",
+      "passed": true
+    },
+    {
+      "label": "Theme motion capture has no uncaught runtime errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\charcoal-theme\\after\\desktop-dark-motion-empty.png",
+    "artifacts\\charcoal-theme\\after\\desktop-dark-reduced-empty.png"
+  ],
+  "runtimeErrors": [],
+  "clips": [
+    {
+      "name": "dark-ambient",
+      "frames": [
+        {
+          "file": "clips/dark-ambient/frame-000.jpg",
+          "time": 71,
+          "browserTimestamp": 1793938808.878059
+        },
+        {
+          "file": "clips/dark-ambient/frame-001.jpg",
+          "time": 187,
+          "browserTimestamp": 1793938808.928057
+        },
+        {
+          "file": "clips/dark-ambient/frame-002.jpg",
+          "time": 208,
+          "browserTimestamp": 1793938808.961389
+        },
+        {
+          "file": "clips/dark-ambient/frame-003.jpg",
+          "time": 258,
+          "browserTimestamp": 1793938809.061385
+        },
+        {
+          "file": "clips/dark-ambient/frame-004.jpg",
+          "time": 263,
+          "browserTimestamp": 1793938809.011387
+        },
+        {
+          "file": "clips/dark-ambient/frame-005.jpg",
+          "time": 305,
+          "browserTimestamp": 1793938809.111383
+        },
+        {
+          "file": "clips/dark-ambient/frame-006.jpg",
+          "time": 344,
+          "browserTimestamp": 1793938809.161381
+        },
+        {
+          "file": "clips/dark-ambient/frame-007.jpg",
+          "time": 387,
+          "browserTimestamp": 1793938809.194713
+        },
+        {
+          "file": "clips/dark-ambient/frame-008.jpg",
+          "time": 434,
+          "browserTimestamp": 1793938809.244711
+        },
+        {
+          "file": "clips/dark-ambient/frame-009.jpg",
+          "time": 479,
+          "browserTimestamp": 1793938809.294709
+        },
+        {
+          "file": "clips/dark-ambient/frame-010.jpg",
+          "time": 522,
+          "browserTimestamp": 1793938809.328041
+        },
+        {
+          "file": "clips/dark-ambient/frame-011.jpg",
+          "time": 570,
+          "browserTimestamp": 1793938809.378039
+        },
+        {
+          "file": "clips/dark-ambient/frame-012.jpg",
+          "time": 623,
+          "browserTimestamp": 1793938809.428037
+        },
+        {
+          "file": "clips/dark-ambient/frame-013.jpg",
+          "time": 660,
+          "browserTimestamp": 1793938809.461369
+        },
+        {
+          "file": "clips/dark-ambient/frame-014.jpg",
+          "time": 708,
+          "browserTimestamp": 1793938809.511367
+        },
+        {
+          "file": "clips/dark-ambient/frame-015.jpg",
+          "time": 756,
+          "browserTimestamp": 1793938809.561365
+        },
+        {
+          "file": "clips/dark-ambient/frame-016.jpg",
+          "time": 803,
+          "browserTimestamp": 1793938809.611363
+        },
+        {
+          "file": "clips/dark-ambient/frame-017.jpg",
+          "time": 843,
+          "browserTimestamp": 1793938809.661361
+        },
+        {
+          "file": "clips/dark-ambient/frame-018.jpg",
+          "time": 882,
+          "browserTimestamp": 1793938809.694693
+        },
+        {
+          "file": "clips/dark-ambient/frame-019.jpg",
+          "time": 918,
+          "browserTimestamp": 1793938809.744691
+        },
+        {
+          "file": "clips/dark-ambient/frame-020.jpg",
+          "time": 955,
+          "browserTimestamp": 1793938809.778023
+        },
+        {
+          "file": "clips/dark-ambient/frame-021.jpg",
+          "time": 992,
+          "browserTimestamp": 1793938809.811355
+        },
+        {
+          "file": "clips/dark-ambient/frame-022.jpg",
+          "time": 1027,
+          "browserTimestamp": 1793938809.844687
+        },
+        {
+          "file": "clips/dark-ambient/frame-023.jpg",
+          "time": 1061,
+          "browserTimestamp": 1793938809.878019
+        },
+        {
+          "file": "clips/dark-ambient/frame-024.jpg",
+          "time": 1120,
+          "browserTimestamp": 1793938809.944683
+        },
+        {
+          "file": "clips/dark-ambient/frame-025.jpg",
+          "time": 1153,
+          "browserTimestamp": 1793938809.978015
+        },
+        {
+          "file": "clips/dark-ambient/frame-026.jpg",
+          "time": 1191,
+          "browserTimestamp": 1793938810.011347
+        },
+        {
+          "file": "clips/dark-ambient/frame-027.jpg",
+          "time": 1240,
+          "browserTimestamp": 1793938810.044679
+        },
+        {
+          "file": "clips/dark-ambient/frame-028.jpg",
+          "time": 1285,
+          "browserTimestamp": 1793938810.094677
+        },
+        {
+          "file": "clips/dark-ambient/frame-029.jpg",
+          "time": 1328,
+          "browserTimestamp": 1793938810.128009
+        },
+        {
+          "file": "clips/dark-ambient/frame-030.jpg",
+          "time": 1370,
+          "browserTimestamp": 1793938810.178007
+        },
+        {
+          "file": "clips/dark-ambient/frame-031.jpg",
+          "time": 1417,
+          "browserTimestamp": 1793938810.228005
+        },
+        {
+          "file": "clips/dark-ambient/frame-032.jpg",
+          "time": 1465,
+          "browserTimestamp": 1793938810.278003
+        },
+        {
+          "file": "clips/dark-ambient/frame-033.jpg",
+          "time": 1508,
+          "browserTimestamp": 1793938810.311335
+        },
+        {
+          "file": "clips/dark-ambient/frame-034.jpg",
+          "time": 1547,
+          "browserTimestamp": 1793938810.361333
+        },
+        {
+          "file": "clips/dark-ambient/frame-035.jpg",
+          "time": 1585,
+          "browserTimestamp": 1793938810.394665
+        },
+        {
+          "file": "clips/dark-ambient/frame-036.jpg",
+          "time": 1624,
+          "browserTimestamp": 1793938810.444663
+        },
+        {
+          "file": "clips/dark-ambient/frame-037.jpg",
+          "time": 1664,
+          "browserTimestamp": 1793938810.477995
+        },
+        {
+          "file": "clips/dark-ambient/frame-038.jpg",
+          "time": 1702,
+          "browserTimestamp": 1793938810.527993
+        },
+        {
+          "file": "clips/dark-ambient/frame-039.jpg",
+          "time": 1741,
+          "browserTimestamp": 1793938810.561325
+        },
+        {
+          "file": "clips/dark-ambient/frame-040.jpg",
+          "time": 1775,
+          "browserTimestamp": 1793938810.594657
+        },
+        {
+          "file": "clips/dark-ambient/frame-041.jpg",
+          "time": 1862,
+          "browserTimestamp": 1793938810.627989
+        },
+        {
+          "file": "clips/dark-ambient/frame-042.jpg",
+          "time": 1910,
+          "browserTimestamp": 1793938810.661321
+        },
+        {
+          "file": "clips/dark-ambient/frame-043.jpg",
+          "time": 1922,
+          "browserTimestamp": 1793938810.711319
+        },
+        {
+          "file": "clips/dark-ambient/frame-044.jpg",
+          "time": 1977,
+          "browserTimestamp": 1793938810.761317
+        },
+        {
+          "file": "clips/dark-ambient/frame-045.jpg",
+          "time": 1995,
+          "browserTimestamp": 1793938810.811315
+        },
+        {
+          "file": "clips/dark-ambient/frame-046.jpg",
+          "time": 2039,
+          "browserTimestamp": 1793938810.844647
+        },
+        {
+          "file": "clips/dark-ambient/frame-047.jpg",
+          "time": 2077,
+          "browserTimestamp": 1793938810.894645
+        },
+        {
+          "file": "clips/dark-ambient/frame-048.jpg",
+          "time": 2119,
+          "browserTimestamp": 1793938810.927977
+        },
+        {
+          "file": "clips/dark-ambient/frame-049.jpg",
+          "time": 2153,
+          "browserTimestamp": 1793938810.977975
+        },
+        {
+          "file": "clips/dark-ambient/frame-050.jpg",
+          "time": 2191,
+          "browserTimestamp": 1793938811.011307
+        }
+      ],
+      "samples": [
+        {
+          "time": 3,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1566.6590000163112,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.055952107143439685,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1566.6590000163112,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.04351830555600864,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1566.6590000163112,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.055952107143439685,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1566.6590000163112,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.04351830555600864,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 1566.6590000163112,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.13055491666802593,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 1904.6000000238419,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "theme": "dark",
+            "bodyBackground": "rgb(20, 21, 28)"
+          }
+        },
+        {
+          "time": 151,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1733.3190000163113,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.06190425000058254,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1733.3190000163113,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.04814775000045309,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1733.3190000163113,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.06190425000058254,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1733.3190000163113,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.04814775000045309,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 1733.3190000163113,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.14444325000135927,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2100.4000000059605,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "theme": "dark",
+            "bodyBackground": "rgb(20, 21, 28)"
+          }
+        },
+        {
+          "time": 302,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1866.603000016311,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.0666643928577254,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1866.603000016311,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.05185008333378641,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 1866.603000016311,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.0666643928577254,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 1866.603000016311,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.05185008333378641,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 1866.603000016311,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.15555025000135925,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2203.9000000059605,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "theme": "dark",
+            "bodyBackground": "rgb(20, 21, 28)"
+          }
+        },
+        {
+          "time": 612,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 2183.227000016311,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.07797239285772539,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 2183.227000016311,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.06064519444489753,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 2183.227000016311,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.07797239285772539,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 2183.227000016311,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.06064519444489753,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 2183.227000016311,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.1819355833346926,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2521.800000011921,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "theme": "dark",
+            "bodyBackground": "rgb(20, 21, 28)"
+          }
+        },
+        {
+          "time": 902,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 2466.5990000163115,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.08809282142915398,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 2466.5990000163115,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.06851663888934198,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 2466.5990000163115,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.08809282142915398,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 2466.5990000163115,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.06851663888934198,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 2466.5990000163115,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.20554991666802594,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 2803.2000000178814,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "theme": "dark",
+            "bodyBackground": "rgb(20, 21, 28)"
+          }
+        },
+        {
+          "time": 1506,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 3066.583000016311,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.10952082142915397,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 3066.583000016311,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.0851828611115642,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 3066.583000016311,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.10952082142915397,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 3066.583000016311,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.0851828611115642,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 3066.583000016311,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.2555485833346926,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 3406.5,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "theme": "dark",
+            "bodyBackground": "rgb(20, 21, 28)"
+          }
+        },
+        {
+          "time": 2211,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 3766.5450000163114,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.13451946428629682,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 3766.5450000163114,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.10462625000045309,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 3766.5450000163114,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.13451946428629682,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 3766.5450000163114,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.10462625000045309,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 3766.5450000163114,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.3138787500013593,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 4114.100000023842,
+            "dialog": {
+              "open": false,
+              "opacity": "0",
+              "transform": "none",
+              "display": "none",
+              "pointerEvents": "none"
+            },
+            "focused": "BODY",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "theme": "dark",
+            "bodyBackground": "rgb(20, 21, 28)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "live-light-dark-switch",
+      "frames": [
+        {
+          "file": "clips/live-light-dark-switch/frame-000.jpg",
+          "time": 180,
+          "browserTimestamp": 1793938811.778534
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-001.jpg",
+          "time": 234,
+          "browserTimestamp": 1793938811.794609
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-002.jpg",
+          "time": 277,
+          "browserTimestamp": 1793938811.844607
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-003.jpg",
+          "time": 324,
+          "browserTimestamp": 1793938811.944603
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-004.jpg",
+          "time": 371,
+          "browserTimestamp": 1793938811.994601
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-005.jpg",
+          "time": 415,
+          "browserTimestamp": 1793938812.044599
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-006.jpg",
+          "time": 458,
+          "browserTimestamp": 1793938812.077931
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-007.jpg",
+          "time": 506,
+          "browserTimestamp": 1793938812.127929
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-008.jpg",
+          "time": 547,
+          "browserTimestamp": 1793938812.177926
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-009.jpg",
+          "time": 619,
+          "browserTimestamp": 1793938812.244591
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-010.jpg",
+          "time": 662,
+          "browserTimestamp": 1793938812.294589
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-011.jpg",
+          "time": 706,
+          "browserTimestamp": 1793938812.327921
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-012.jpg",
+          "time": 748,
+          "browserTimestamp": 1793938812.377919
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-013.jpg",
+          "time": 794,
+          "browserTimestamp": 1793938812.427916
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-014.jpg",
+          "time": 834,
+          "browserTimestamp": 1793938812.461249
+        },
+        {
+          "file": "clips/live-light-dark-switch/frame-015.jpg",
+          "time": 876,
+          "browserTimestamp": 1793938812.511247
+        }
+      ],
+      "samples": [
+        {
+          "time": 4,
+          "animations": [
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.messenger-navigation-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.messenger-navigation-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.messenger-navigation-item ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.navigation-profile-dot navigation-profile-dot--available",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "box-shadow",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "boxShadow"
+                ],
+                [
+                  "boxShadow"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.debug-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--sm ui-dialog-close",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 4383.239000016311,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.15654425000058253,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 4383.239000016311,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.12175663888934198,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 4383.239000016311,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.15654425000058253,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 4383.239000016311,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.12175663888934198,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 4383.239000016311,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.36526991666802594,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 4740,
+            "dialog": {
+              "open": true,
+              "opacity": "1",
+              "transform": "matrix(1, 0, 0, 1, 0, 0)",
+              "display": "block",
+              "pointerEvents": "auto"
+            },
+            "focused": "Close profile",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "theme": "light",
+            "bodyBackground": "rgb(233, 228, 239)"
+          }
+        },
+        {
+          "time": 120,
+          "animations": [
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.messenger-navigation-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.messenger-navigation-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.messenger-navigation-item ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.navigation-profile-dot navigation-profile-dot--available",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "box-shadow",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "boxShadow"
+                ],
+                [
+                  "boxShadow"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.debug-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--sm ui-dialog-close",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 0,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 4499.805000016311,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.16070732142915395,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 4499.805000016311,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.12499458333378641,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 4499.805000016311,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.16070732142915395,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 4499.805000016311,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.12499458333378641,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 4499.805000016311,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.37498375000135925,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 4840,
+            "dialog": {
+              "open": true,
+              "opacity": "1",
+              "transform": "matrix(1, 0, 0, 1, 0, 0)",
+              "display": "block",
+              "pointerEvents": "auto"
+            },
+            "focused": "Close profile",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "theme": "light",
+            "bodyBackground": "rgb(233, 228, 239)"
+          }
+        },
+        {
+          "time": 300,
+          "animations": [
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.messenger-navigation-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.messenger-navigation-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.messenger-navigation-item ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.navigation-profile-dot navigation-profile-dot--available",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "box-shadow",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "boxShadow"
+                ],
+                [
+                  "boxShadow"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 199.98300000038148,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.9999999961464708,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 4683.137000016311,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.16725489285772538,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 4683.137000016311,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.13008713888934198,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 4683.137000016311,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.16725489285772538,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 4683.137000016311,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.13008713888934198,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 4683.137000016311,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.3902614166680259,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 5022.600000023842,
+            "dialog": {
+              "open": true,
+              "opacity": "1",
+              "transform": "matrix(1, 0, 0, 1, 0, 0)",
+              "display": "block",
+              "pointerEvents": "auto"
+            },
+            "focused": "Close profile",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "theme": "light",
+            "bodyBackground": "rgb(233, 228, 239)"
+          }
+        },
+        {
+          "time": 603,
+          "animations": [
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.messenger-navigation-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.messenger-navigation-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.messenger-navigation-item ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.navigation-profile-dot navigation-profile-dot--available",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "INPUT.ui-input conversation-search-input",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item is-active",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.conversation-list-item ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.conversation-security-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "box-shadow",
+              "kind": "CSSTransition",
+              "target": "DIV.composer-dock",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "boxShadow"
+                ],
+                [
+                  "boxShadow"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--md composer-buzz",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md composer-send",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "SUMMARY.debug-summary",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--ghost ui-button--sm ui-dialog-close",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "SPAN.profile-presence-dot",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 200,
+              "iterations": "1",
+              "progress": 0.8731776610938167,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option is-selected",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "LABEL.appearance-option ",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "background-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "backgroundColor"
+                ],
+                [
+                  "backgroundColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-bottom-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderBottomColor"
+                ],
+                [
+                  "borderBottomColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-left-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderLeftColor"
+                ],
+                [
+                  "borderLeftColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-right-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderRightColor"
+                ],
+                [
+                  "borderRightColor"
+                ]
+              ]
+            },
+            {
+              "name": "border-top-color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "borderTopColor"
+                ],
+                [
+                  "borderTopColor"
+                ]
+              ]
+            },
+            {
+              "name": "color",
+              "kind": "CSSTransition",
+              "target": "BUTTON.ui-button ui-button--primary ui-button--md",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 116.56700002206489,
+              "playState": "running",
+              "duration": 120,
+              "iterations": "1",
+              "progress": 0.9995557345020125,
+              "keyframeProperties": [
+                [
+                  "color"
+                ],
+                [
+                  "color"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 4983.039000016312,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.17796567857201112,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 4983.039000016312,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.1384177500004531,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 4983.039000016312,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.17796567857201112,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 4983.039000016312,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.1384177500004531,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 4983.039000016312,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.41525325000135926,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 5328.200000017881,
+            "dialog": {
+              "open": true,
+              "opacity": "1",
+              "transform": "matrix(1, 0, 0, 1, 0, 0)",
+              "display": "block",
+              "pointerEvents": "auto"
+            },
+            "focused": "Close profile",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "theme": "dark",
+            "bodyBackground": "rgb(20, 21, 28)"
+          }
+        },
+        {
+          "time": 903,
+          "animations": [
+            {
+              "name": "ambient-lavender",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 5283.067000016312,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.18868096428629683,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "ambient-violet",
+              "kind": "CSSAnimation",
+              "target": "MAIN.app-shell",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 5283.067000016312,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.1467518611115642,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-lavender",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::before",
+              "messageId": null,
+              "currentTime": 5283.067000016312,
+              "playState": "running",
+              "duration": 28000,
+              "iterations": "Infinity",
+              "progress": 0.18868096428629683,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "empty-light-violet",
+              "kind": "CSSAnimation",
+              "target": "DIV.chat-empty-atmosphere",
+              "pseudo": "::after",
+              "messageId": null,
+              "currentTime": 5283.067000016312,
+              "playState": "running",
+              "duration": 36000,
+              "iterations": "Infinity",
+              "progress": 0.1467518611115642,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            },
+            {
+              "name": "brand-float",
+              "kind": "CSSAnimation",
+              "target": "SPAN.brand-logo brand-logo--full brand-logo--lg chat-empty-logo",
+              "pseudo": null,
+              "messageId": null,
+              "currentTime": 5283.067000016312,
+              "playState": "running",
+              "duration": 12000,
+              "iterations": "Infinity",
+              "progress": 0.4402555833346926,
+              "keyframeProperties": [
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ],
+                [
+                  "transform"
+                ]
+              ]
+            }
+          ],
+          "state": {
+            "now": 5618.9000000059605,
+            "dialog": {
+              "open": true,
+              "opacity": "1",
+              "transform": "matrix(1, 0, 0, 1, 0, 0)",
+              "display": "block",
+              "pointerEvents": "auto"
+            },
+            "focused": "Close profile",
+            "buzz": "false",
+            "historyTop": 0,
+            "pageWidth": 1440,
+            "viewportWidth": 1440,
+            "theme": "dark",
+            "bodyBackground": "rgb(20, 21, 28)"
+          }
+        }
+      ]
+    }
+  ]
+}

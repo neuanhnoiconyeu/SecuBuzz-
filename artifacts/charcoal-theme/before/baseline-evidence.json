@@ -1,0 +1,99 @@
+{
+  "startedAt": "2026-11-06T03:51:08.814Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "desktop baseline dimensions",
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "documentHeight": 1000,
+        "bodyHeight": 1000
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "laptop baseline dimensions",
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "documentHeight": 800,
+        "bodyHeight": 800
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "mobile baseline dimensions",
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "documentHeight": 844,
+        "bodyHeight": 844
+      }
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "artifacts\\charcoal-theme\\before\\desktop-messenger.png",
+    "artifacts\\charcoal-theme\\before\\desktop-conversation.png",
+    "artifacts\\charcoal-theme\\before\\desktop-profile.png",
+    "artifacts\\charcoal-theme\\before\\desktop-profile-edit.png",
+    "artifacts\\charcoal-theme\\before\\laptop-messenger.png",
+    "artifacts\\charcoal-theme\\before\\laptop-conversation.png",
+    "artifacts\\charcoal-theme\\before\\laptop-profile.png",
+    "artifacts\\charcoal-theme\\before\\laptop-profile-edit.png",
+    "artifacts\\charcoal-theme\\before\\mobile-messenger.png",
+    "artifacts\\charcoal-theme\\before\\mobile-conversation.png",
+    "artifacts\\charcoal-theme\\before\\mobile-profile.png",
+    "artifacts\\charcoal-theme\\before\\mobile-profile-edit.png"
+  ],
+  "runtimeErrors": []
+}

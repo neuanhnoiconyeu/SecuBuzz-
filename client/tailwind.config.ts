@@ -37,8 +37,19 @@ const config: Config = {
         'xp-blue-dark': 'var(--color-xp-blue-dark)',
       },
       fontFamily: {
-        sans: ['var(--font-family-base)'],
-        retro: ['var(--font-family-retro)'],
+        sans: ['var(--font-body)'],
+        body: ['var(--font-body)'],
+        display: ['var(--font-display)'],
+        retro: ['var(--font-display)'],
+      },
+      fontSize: {
+        display: ['var(--type-display-size)', { lineHeight: 'var(--type-display-line)', fontWeight: '400', letterSpacing: 'var(--type-display-tracking)' }],
+        heading: ['var(--type-heading-size)', { lineHeight: 'var(--type-display-line)', fontWeight: '400', letterSpacing: 'var(--type-display-tracking)' }],
+        body: ['var(--type-body-size)', { lineHeight: 'var(--type-body-line)' }],
+        label: ['var(--type-label-size)', { lineHeight: 'var(--type-label-line)', fontWeight: '600' }],
+        caption: ['var(--type-caption-size)', { lineHeight: 'var(--type-caption-line)' }],
+        button: ['var(--type-button-size)', { lineHeight: 'var(--type-button-line)', fontWeight: '600' }],
+        buzz: ['var(--type-buzz-size)', { lineHeight: 'var(--type-buzz-line)', fontWeight: '400', letterSpacing: 'var(--type-buzz-tracking)' }],
       },
       spacing: {
         '18': '4.5rem',
@@ -60,23 +71,16 @@ const config: Config = {
       transitionDuration: {
         fast: 'var(--duration-fast)',
         normal: 'var(--duration-normal)',
+        entry: 'var(--motion-entry)',
+        dialog: 'var(--motion-dialog)',
+      },
+      transitionTimingFunction: {
+        'motion-out': 'var(--motion-ease-out)',
+        'motion-in-out': 'var(--motion-ease-in-out)',
       },
       animation: {
-        'buzz-shake': 'buzz-shake 0.5s ease-in-out',
-      },
-      keyframes: {
-        'buzz-shake': {
-          '0%, 100%': { transform: 'translateX(0)' },
-          '10%': { transform: 'translateX(-4px) rotateZ(-0.5deg)' },
-          '20%': { transform: 'translateX(4px) rotateZ(0.5deg)' },
-          '30%': { transform: 'translateX(-4px) rotateZ(-0.5deg)' },
-          '40%': { transform: 'translateX(4px) rotateZ(0.5deg)' },
-          '50%': { transform: 'translateX(-4px) rotateZ(-0.5deg)' },
-          '60%': { transform: 'translateX(4px) rotateZ(0.5deg)' },
-          '70%': { transform: 'translateX(-2px) rotateZ(-0.25deg)' },
-          '80%': { transform: 'translateX(2px) rotateZ(0.25deg)' },
-          '90%': { transform: 'translateX(-1px) rotateZ(0)' },
-        },
+        // The shared keyframe is defined once in styles/motion.css.
+        'buzz-shake': 'buzz-shake var(--motion-buzz) steps(2, end)',
       },
     },
   },

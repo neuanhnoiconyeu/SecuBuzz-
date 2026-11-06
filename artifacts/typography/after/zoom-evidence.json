@@ -1,0 +1,492 @@
+{
+  "startedAt": "2026-11-06T04:52:51.306Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "Native browser zoom API available",
+      "passed": true
+    },
+    {
+      "label": "desktop applies genuine 200% browser zoom",
+      "passed": true,
+      "detail": {
+        "baseline": {
+          "innerWidth": 1440,
+          "innerHeight": 1000,
+          "outerWidth": 1458,
+          "outerHeight": 1096,
+          "dpr": 1,
+          "visualScale": 1,
+          "documentWidth": 1440
+        },
+        "zoomed": {
+          "innerWidth": 720,
+          "innerHeight": 500,
+          "outerWidth": 1458,
+          "outerHeight": 1096,
+          "dpr": 2,
+          "visualScale": 1,
+          "documentWidth": 720
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "desktop light 200% profile footer and close stay usable",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "desktop light 200% edit footer remains visible",
+      "passed": true
+    },
+    {
+      "label": "desktop light 200% dialog scroll avoids horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "desktop light 200% has no horizontal page overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 720,
+        "innerHeight": 500,
+        "outerWidth": 1458,
+        "outerHeight": 1096,
+        "dpr": 2,
+        "visualScale": 1,
+        "documentWidth": 720
+      }
+    },
+    {
+      "label": "desktop light 200% composer controls remain reachable",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "desktop light 200% BUZZ glyphs fit",
+      "passed": true,
+      "detail": {
+        "font": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "box": {
+          "width": 91.4296875,
+          "height": 44,
+          "left": 324.390625,
+          "right": 415.8203125
+        },
+        "glyph": {
+          "left": 359.7890625,
+          "right": 402.8203125,
+          "height": 17.5
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "desktop dark 200% profile footer and close stay usable",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "desktop dark 200% edit footer remains visible",
+      "passed": true
+    },
+    {
+      "label": "desktop dark 200% dialog scroll avoids horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "desktop dark 200% has no horizontal page overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 720,
+        "innerHeight": 500,
+        "outerWidth": 1458,
+        "outerHeight": 1096,
+        "dpr": 2,
+        "visualScale": 1,
+        "documentWidth": 720
+      }
+    },
+    {
+      "label": "desktop dark 200% composer controls remain reachable",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "desktop dark 200% BUZZ glyphs fit",
+      "passed": true,
+      "detail": {
+        "font": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "box": {
+          "width": 91.4296875,
+          "height": 44,
+          "left": 324.390625,
+          "right": 415.8203125
+        },
+        "glyph": {
+          "left": 359.7890625,
+          "right": 402.8203125,
+          "height": 17.5
+        }
+      }
+    },
+    {
+      "label": "laptop applies genuine 200% browser zoom",
+      "passed": true,
+      "detail": {
+        "baseline": {
+          "innerWidth": 1024,
+          "innerHeight": 800,
+          "outerWidth": 1042,
+          "outerHeight": 896,
+          "dpr": 1,
+          "visualScale": 1,
+          "documentWidth": 1024
+        },
+        "zoomed": {
+          "innerWidth": 512,
+          "innerHeight": 400,
+          "outerWidth": 1042,
+          "outerHeight": 896,
+          "dpr": 2,
+          "visualScale": 1,
+          "documentWidth": 512
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "laptop light 200% profile footer and close stay usable",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "laptop light 200% edit footer remains visible",
+      "passed": true
+    },
+    {
+      "label": "laptop light 200% dialog scroll avoids horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "laptop light 200% has no horizontal page overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 512,
+        "innerHeight": 400,
+        "outerWidth": 1042,
+        "outerHeight": 896,
+        "dpr": 2,
+        "visualScale": 1,
+        "documentWidth": 512
+      }
+    },
+    {
+      "label": "laptop light 200% composer controls remain reachable",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "laptop light 200% BUZZ glyphs fit",
+      "passed": true,
+      "detail": {
+        "font": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "box": {
+          "width": 56,
+          "height": 44.3828125,
+          "left": 17.796875,
+          "right": 73.796875
+        },
+        "glyph": {
+          "left": 25.9296875,
+          "right": 65.65625,
+          "height": 15.5
+        }
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "laptop dark 200% profile footer and close stay usable",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "laptop dark 200% edit footer remains visible",
+      "passed": true
+    },
+    {
+      "label": "laptop dark 200% dialog scroll avoids horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "laptop dark 200% has no horizontal page overflow",
+      "passed": true,
+      "detail": {
+        "innerWidth": 512,
+        "innerHeight": 400,
+        "outerWidth": 1042,
+        "outerHeight": 896,
+        "dpr": 2,
+        "visualScale": 1,
+        "documentWidth": 512
+      }
+    },
+    {
+      "label": "laptop dark 200% composer controls remain reachable",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "laptop dark 200% BUZZ glyphs fit",
+      "passed": true,
+      "detail": {
+        "font": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "box": {
+          "width": 56,
+          "height": 44.3828125,
+          "left": 17.796875,
+          "right": 73.796875
+        },
+        "glyph": {
+          "left": 25.9296875,
+          "right": 65.65625,
+          "height": 15.5
+        }
+      }
+    },
+    {
+      "label": "True browser zoom cases have no runtime errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\typography\\after\\desktop-light-zoom200-profile.png",
+    "artifacts\\typography\\after\\desktop-light-zoom200-edit.png",
+    "artifacts\\typography\\after\\desktop-light-zoom200-chat.png",
+    "artifacts\\typography\\after\\desktop-dark-zoom200-profile.png",
+    "artifacts\\typography\\after\\desktop-dark-zoom200-edit.png",
+    "artifacts\\typography\\after\\desktop-dark-zoom200-chat.png",
+    "artifacts\\typography\\after\\laptop-light-zoom200-profile.png",
+    "artifacts\\typography\\after\\laptop-light-zoom200-edit.png",
+    "artifacts\\typography\\after\\laptop-light-zoom200-chat.png",
+    "artifacts\\typography\\after\\laptop-dark-zoom200-profile.png",
+    "artifacts\\typography\\after\\laptop-dark-zoom200-edit.png",
+    "artifacts\\typography\\after\\laptop-dark-zoom200-chat.png"
+  ],
+  "runtimeErrors": [],
+  "zoom": [
+    {
+      "label": "desktop",
+      "mode": "light",
+      "baseline": {
+        "innerWidth": 1440,
+        "innerHeight": 1000,
+        "outerWidth": 1458,
+        "outerHeight": 1096,
+        "dpr": 1,
+        "visualScale": 1,
+        "documentWidth": 1440
+      },
+      "zoomed": {
+        "innerWidth": 720,
+        "innerHeight": 500,
+        "outerWidth": 1458,
+        "outerHeight": 1096,
+        "dpr": 2,
+        "visualScale": 1,
+        "documentWidth": 720
+      },
+      "buzz": {
+        "font": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "box": {
+          "width": 91.4296875,
+          "height": 44,
+          "left": 324.390625,
+          "right": 415.8203125
+        },
+        "glyph": {
+          "left": 359.7890625,
+          "right": 402.8203125,
+          "height": 17.5
+        }
+      }
+    },
+    {
+      "label": "desktop",
+      "mode": "dark",
+      "baseline": {
+        "innerWidth": 1440,
+        "innerHeight": 1000,
+        "outerWidth": 1458,
+        "outerHeight": 1096,
+        "dpr": 1,
+        "visualScale": 1,
+        "documentWidth": 1440
+      },
+      "zoomed": {
+        "innerWidth": 720,
+        "innerHeight": 500,
+        "outerWidth": 1458,
+        "outerHeight": 1096,
+        "dpr": 2,
+        "visualScale": 1,
+        "documentWidth": 720
+      },
+      "buzz": {
+        "font": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "box": {
+          "width": 91.4296875,
+          "height": 44,
+          "left": 324.390625,
+          "right": 415.8203125
+        },
+        "glyph": {
+          "left": 359.7890625,
+          "right": 402.8203125,
+          "height": 17.5
+        }
+      }
+    },
+    {
+      "label": "laptop",
+      "mode": "light",
+      "baseline": {
+        "innerWidth": 1024,
+        "innerHeight": 800,
+        "outerWidth": 1042,
+        "outerHeight": 896,
+        "dpr": 1,
+        "visualScale": 1,
+        "documentWidth": 1024
+      },
+      "zoomed": {
+        "innerWidth": 512,
+        "innerHeight": 400,
+        "outerWidth": 1042,
+        "outerHeight": 896,
+        "dpr": 2,
+        "visualScale": 1,
+        "documentWidth": 512
+      },
+      "buzz": {
+        "font": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "box": {
+          "width": 56,
+          "height": 44.3828125,
+          "left": 17.796875,
+          "right": 73.796875
+        },
+        "glyph": {
+          "left": 25.9296875,
+          "right": 65.65625,
+          "height": 15.5
+        }
+      }
+    },
+    {
+      "label": "laptop",
+      "mode": "dark",
+      "baseline": {
+        "innerWidth": 1024,
+        "innerHeight": 800,
+        "outerWidth": 1042,
+        "outerHeight": 896,
+        "dpr": 1,
+        "visualScale": 1,
+        "documentWidth": 1024
+      },
+      "zoomed": {
+        "innerWidth": 512,
+        "innerHeight": 400,
+        "outerWidth": 1042,
+        "outerHeight": 896,
+        "dpr": 2,
+        "visualScale": 1,
+        "documentWidth": 512
+      },
+      "buzz": {
+        "font": "__bungee_7600f0, __bungee_Fallback_7600f0, system-ui, \"Segoe UI\", Arial, \"Noto Sans CJK SC\", \"Microsoft YaHei\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif",
+        "box": {
+          "width": 56,
+          "height": 44.3828125,
+          "left": 17.796875,
+          "right": 73.796875
+        },
+        "glyph": {
+          "left": 25.9296875,
+          "right": 65.65625,
+          "height": 15.5
+        }
+      }
+    }
+  ]
+}

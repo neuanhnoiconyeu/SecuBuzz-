@@ -1,0 +1,1629 @@
+{
+  "startedAt": "2026-11-06T01:29:40.187Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "desktop has no horizontal page overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "documentHeight": 1000,
+        "pageY": 0
+      }
+    },
+    {
+      "label": "desktop shell fits viewport height",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "documentHeight": 1000,
+        "pageY": 0
+      }
+    },
+    {
+      "label": "desktop composer is visible",
+      "passed": true,
+      "detail": {
+        "x": 441,
+        "y": 713.9375,
+        "width": 982,
+        "height": 225.0625,
+        "right": 1423,
+        "bottom": 939,
+        "scrollHeight": 224,
+        "clientHeight": 224,
+        "scrollWidth": 982,
+        "clientWidth": 982
+      }
+    },
+    {
+      "label": "desktop BUZZ control is visible",
+      "passed": true,
+      "detail": {
+        "x": 565,
+        "y": 859.921875,
+        "width": 99.78125,
+        "height": 38.28125,
+        "right": 664.78125,
+        "bottom": 898.203125,
+        "scrollHeight": 34,
+        "clientHeight": 30,
+        "scrollWidth": 96,
+        "clientWidth": 92
+      }
+    },
+    {
+      "label": "desktop profile entry is visible",
+      "passed": true,
+      "detail": {
+        "x": 25,
+        "y": 777.0625,
+        "width": 94,
+        "height": 146.75,
+        "right": 119,
+        "bottom": 923.8125,
+        "scrollHeight": 145,
+        "clientHeight": 145,
+        "scrollWidth": 92,
+        "clientWidth": 92
+      }
+    },
+    {
+      "label": "desktop message region has usable height",
+      "passed": true,
+      "detail": {
+        "x": 441,
+        "y": 144.734375,
+        "width": 982,
+        "height": 569.203125,
+        "right": 1423,
+        "bottom": 713.9375,
+        "scrollHeight": 569,
+        "clientHeight": 569,
+        "scrollWidth": 982,
+        "clientWidth": 982
+      }
+    },
+    {
+      "label": "desktop security details has keyboard entry",
+      "passed": true,
+      "detail": {
+        "text": "Local encryption onlySecurity detailsE2EE not established",
+        "tag": "SUMMARY",
+        "focus": true
+      }
+    },
+    {
+      "label": "desktop security details accurately disclose all boundaries",
+      "passed": true,
+      "detail": {
+        "text": "Local AES-256-GCM availableRecipient key unavailableAuthenticated key exchange unavailableMessages use a non-extractable key held in this page's memory. Recipient key exchange is unavailable, so remote end-to-end encryption is not established.Local demo replies are mock text. No other user receives messages in these demo conversations.",
+        "summaryFocused": true,
+        "nativeDisclosure": true
+      }
+    },
+    {
+      "label": "desktop security disclosure uses native keyboard semantics",
+      "passed": true
+    },
+    {
+      "label": "desktop security details keeps keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "desktop short bubble remains one line",
+      "passed": true,
+      "detail": {
+        "height": 47.578125,
+        "lineHeight": 24.8,
+        "padding": 20.8,
+        "whiteSpace": "pre-wrap"
+      }
+    },
+    {
+      "label": "Control available: Ava Morgan, Direct",
+      "passed": true
+    },
+    {
+      "label": "desktop direct conversation starts with independent draft",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "desktop intentional newlines are retained",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "desktop long unbroken content stays within message area",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "desktop history scrolls independently from page",
+      "passed": true,
+      "detail": {
+        "scrollHeight": 1134,
+        "clientHeight": 569,
+        "pageY": 0,
+        "overflowY": "auto"
+      }
+    },
+    {
+      "label": "Control available: SecureBot, Bot",
+      "passed": true
+    },
+    {
+      "label": "desktop original conversation draft survives switching",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "desktop profile modal receives focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "desktop edit starts at display name",
+      "passed": true
+    },
+    {
+      "label": "desktop Save footer remains visible before scroll",
+      "passed": true,
+      "detail": {
+        "x": 433,
+        "y": 814.8125,
+        "width": 574,
+        "height": 68.1875,
+        "right": 1007,
+        "bottom": 883,
+        "scrollHeight": 67,
+        "clientHeight": 67,
+        "scrollWidth": 574,
+        "clientWidth": 574
+      }
+    },
+    {
+      "label": "desktop profile content scrolls independently",
+      "passed": true,
+      "detail": {
+        "scrollHeight": 702,
+        "clientHeight": 610,
+        "scrollTop": 92,
+        "overflowY": "auto"
+      }
+    },
+    {
+      "label": "desktop Save footer stays visible after content scroll",
+      "passed": true,
+      "detail": {
+        "x": 433,
+        "y": 814.8125,
+        "width": 574,
+        "height": 68.1875,
+        "right": 1007,
+        "bottom": 883,
+        "scrollHeight": 67,
+        "clientHeight": 67,
+        "scrollWidth": 574,
+        "clientWidth": 574
+      }
+    },
+    {
+      "label": "desktop profile Close stays visible after content scroll",
+      "passed": true,
+      "detail": {
+        "x": 955,
+        "y": 146.4375,
+        "width": 32,
+        "height": 32,
+        "right": 987,
+        "bottom": 178.4375,
+        "scrollHeight": 30,
+        "clientHeight": 30,
+        "scrollWidth": 30,
+        "clientWidth": 30
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "desktop invalid profile name is linked and focused",
+      "passed": true,
+      "detail": {
+        "invalid": "true",
+        "describedby": "profile-display-name-error",
+        "focused": true,
+        "errors": []
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "desktop save updates profile identity and local presence",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Button available: Cancel",
+      "passed": true
+    },
+    {
+      "label": "desktop Cancel preserves saved name",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "desktop saved identity is readable from navigation",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "desktop Escape discards uncommitted changes after immediate reopen",
+      "passed": true
+    },
+    {
+      "label": "desktop native modal Tab never enters background application",
+      "passed": true,
+      "detail": [
+        {
+          "tag": "BODY",
+          "label": null,
+          "inDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Close profile",
+          "inDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "label": null,
+          "inDialog": true
+        },
+        {
+          "tag": "BODY",
+          "label": null,
+          "inDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Close profile",
+          "inDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "label": null,
+          "inDialog": true
+        }
+      ]
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Sampled text contrast .contact-name",
+      "passed": true,
+      "detail": {
+        "selector": ".contact-name",
+        "foreground": "rgb(36, 27, 42)",
+        "background": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 16.59790082698086,
+        "gradient": false,
+        "fontSize": "14px"
+      }
+    },
+    {
+      "label": "Sampled text contrast .conversation-list-preview",
+      "passed": true,
+      "detail": {
+        "selector": ".conversation-list-preview",
+        "foreground": "rgb(98, 88, 106)",
+        "background": [
+          241,
+          234,
+          250
+        ],
+        "ratio": 5.727739801625726,
+        "gradient": false,
+        "fontSize": "13px"
+      }
+    },
+    {
+      "label": "Sampled text contrast .composer-demo-notice",
+      "passed": true,
+      "detail": {
+        "selector": ".composer-demo-notice",
+        "foreground": "rgb(98, 88, 106)",
+        "background": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.723560830182342,
+        "gradient": false,
+        "fontSize": "12px"
+      }
+    },
+    {
+      "label": "Sampled text contrast .messenger-navigation-item.is-active",
+      "passed": true,
+      "detail": {
+        "selector": ".messenger-navigation-item.is-active",
+        "foreground": "rgb(255, 255, 255)",
+        "background": [
+          100.2,
+          60.64,
+          132.01999999999998
+        ],
+        "ratio": 8.276569176590213,
+        "gradient": false,
+        "fontSize": "12px"
+      }
+    },
+    {
+      "label": "Sampled text contrast .message-meta",
+      "passed": true,
+      "detail": {
+        "selector": ".message-meta",
+        "foreground": "rgb(98, 88, 106)",
+        "background": [
+          248,
+          245,
+          250
+        ],
+        "ratio": 6.2217527837446385,
+        "gradient": false,
+        "fontSize": "12px"
+      }
+    },
+    {
+      "label": "Sampled text contrast .ui-field-message",
+      "passed": true,
+      "detail": {
+        "selector": ".ui-field-message",
+        "foreground": "rgb(98, 88, 106)",
+        "background": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.723560830182342,
+        "gradient": false,
+        "fontSize": "12px"
+      }
+    },
+    {
+      "label": "desktop after interactions has no horizontal page overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "documentHeight": 1000,
+        "pageY": 0
+      }
+    },
+    {
+      "label": "desktop after interactions shell fits viewport height",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "documentHeight": 1000,
+        "pageY": 0
+      }
+    },
+    {
+      "label": "desktop after interactions composer is visible",
+      "passed": true,
+      "detail": {
+        "x": 441,
+        "y": 713.9375,
+        "width": 982,
+        "height": 225.0625,
+        "right": 1423,
+        "bottom": 939,
+        "scrollHeight": 224,
+        "clientHeight": 224,
+        "scrollWidth": 982,
+        "clientWidth": 982
+      }
+    },
+    {
+      "label": "desktop after interactions BUZZ control is visible",
+      "passed": true,
+      "detail": {
+        "x": 565,
+        "y": 859.921875,
+        "width": 99.78125,
+        "height": 38.28125,
+        "right": 664.78125,
+        "bottom": 898.203125,
+        "scrollHeight": 34,
+        "clientHeight": 30,
+        "scrollWidth": 96,
+        "clientWidth": 92
+      }
+    },
+    {
+      "label": "desktop after interactions profile entry is visible",
+      "passed": true,
+      "detail": {
+        "x": 25,
+        "y": 777.0625,
+        "width": 94,
+        "height": 146.75,
+        "right": 119,
+        "bottom": 923.8125,
+        "scrollHeight": 145,
+        "clientHeight": 145,
+        "scrollWidth": 92,
+        "clientWidth": 92
+      }
+    },
+    {
+      "label": "desktop after interactions message region has usable height",
+      "passed": true,
+      "detail": {
+        "x": 441,
+        "y": 144.734375,
+        "width": 982,
+        "height": 569.203125,
+        "right": 1423,
+        "bottom": 713.9375,
+        "scrollHeight": 569,
+        "clientHeight": 569,
+        "scrollWidth": 982,
+        "clientWidth": 982
+      }
+    },
+    {
+      "label": "desktop Security navigation supports keyboard",
+      "passed": true
+    },
+    {
+      "label": "desktop Chats navigation preserves current draft",
+      "passed": true
+    },
+    {
+      "label": "desktop BUZZ gives busy feedback",
+      "passed": true
+    },
+    {
+      "label": "desktop keyboard focus ring is visible",
+      "passed": true,
+      "detail": {
+        "style": "solid",
+        "width": "3px",
+        "color": "rgb(255, 255, 255)",
+        "railBackground": "rgb(75, 29, 112)"
+      }
+    },
+    {
+      "label": "laptop has no horizontal page overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "documentHeight": 800,
+        "pageY": 0
+      }
+    },
+    {
+      "label": "laptop shell fits viewport height",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "documentHeight": 800,
+        "pageY": 0
+      }
+    },
+    {
+      "label": "laptop composer is visible",
+      "passed": true,
+      "detail": {
+        "x": 373,
+        "y": 517.9375,
+        "width": 638,
+        "height": 225.0625,
+        "right": 1011,
+        "bottom": 743,
+        "scrollHeight": 224,
+        "clientHeight": 224,
+        "scrollWidth": 638,
+        "clientWidth": 638
+      }
+    },
+    {
+      "label": "laptop BUZZ control is visible",
+      "passed": true,
+      "detail": {
+        "x": 497,
+        "y": 663.921875,
+        "width": 99.78125,
+        "height": 38.28125,
+        "right": 596.78125,
+        "bottom": 702.203125,
+        "scrollHeight": 34,
+        "clientHeight": 30,
+        "scrollWidth": 96,
+        "clientWidth": 92
+      }
+    },
+    {
+      "label": "laptop profile entry is visible",
+      "passed": true,
+      "detail": {
+        "x": 21,
+        "y": 567.5625,
+        "width": 78,
+        "height": 160.25,
+        "right": 99,
+        "bottom": 727.8125,
+        "scrollHeight": 158,
+        "clientHeight": 158,
+        "scrollWidth": 76,
+        "clientWidth": 76
+      }
+    },
+    {
+      "label": "laptop message region has usable height",
+      "passed": true,
+      "detail": {
+        "x": 373,
+        "y": 140.734375,
+        "width": 638,
+        "height": 377.203125,
+        "right": 1011,
+        "bottom": 517.9375,
+        "scrollHeight": 377,
+        "clientHeight": 377,
+        "scrollWidth": 638,
+        "clientWidth": 638
+      }
+    },
+    {
+      "label": "laptop security details has keyboard entry",
+      "passed": true,
+      "detail": {
+        "text": "Local encryption onlySecurity detailsE2EE not established",
+        "tag": "SUMMARY",
+        "focus": true
+      }
+    },
+    {
+      "label": "laptop security details accurately disclose all boundaries",
+      "passed": true,
+      "detail": {
+        "text": "Local AES-256-GCM availableRecipient key unavailableAuthenticated key exchange unavailableMessages use a non-extractable key held in this page's memory. Recipient key exchange is unavailable, so remote end-to-end encryption is not established.Local demo replies are mock text. No other user receives messages in these demo conversations.",
+        "summaryFocused": true,
+        "nativeDisclosure": true
+      }
+    },
+    {
+      "label": "laptop security disclosure uses native keyboard semantics",
+      "passed": true
+    },
+    {
+      "label": "laptop security details keeps keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "laptop short bubble remains one line",
+      "passed": true,
+      "detail": {
+        "height": 47.578125,
+        "lineHeight": 24.8,
+        "padding": 20.8,
+        "whiteSpace": "pre-wrap"
+      }
+    },
+    {
+      "label": "Control available: Ava Morgan, Direct",
+      "passed": true
+    },
+    {
+      "label": "laptop direct conversation starts with independent draft",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "laptop intentional newlines are retained",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "laptop long unbroken content stays within message area",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "laptop history scrolls independently from page",
+      "passed": true,
+      "detail": {
+        "scrollHeight": 1606,
+        "clientHeight": 377,
+        "pageY": 0,
+        "overflowY": "auto"
+      }
+    },
+    {
+      "label": "Control available: SecureBot, Bot",
+      "passed": true
+    },
+    {
+      "label": "laptop original conversation draft survives switching",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "laptop profile modal receives focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "laptop edit starts at display name",
+      "passed": true
+    },
+    {
+      "label": "laptop Save footer remains visible before scroll",
+      "passed": true,
+      "detail": {
+        "x": 225,
+        "y": 690.8125,
+        "width": 574,
+        "height": 68.1875,
+        "right": 799,
+        "bottom": 759,
+        "scrollHeight": 67,
+        "clientHeight": 67,
+        "scrollWidth": 574,
+        "clientWidth": 574
+      }
+    },
+    {
+      "label": "laptop profile content scrolls independently",
+      "passed": true,
+      "detail": {
+        "scrollHeight": 702,
+        "clientHeight": 562,
+        "scrollTop": 140,
+        "overflowY": "auto"
+      }
+    },
+    {
+      "label": "laptop Save footer stays visible after content scroll",
+      "passed": true,
+      "detail": {
+        "x": 225,
+        "y": 690.8125,
+        "width": 574,
+        "height": 68.1875,
+        "right": 799,
+        "bottom": 759,
+        "scrollHeight": 67,
+        "clientHeight": 67,
+        "scrollWidth": 574,
+        "clientWidth": 574
+      }
+    },
+    {
+      "label": "laptop profile Close stays visible after content scroll",
+      "passed": true,
+      "detail": {
+        "x": 747,
+        "y": 70.4375,
+        "width": 32,
+        "height": 32,
+        "right": 779,
+        "bottom": 102.4375,
+        "scrollHeight": 30,
+        "clientHeight": 30,
+        "scrollWidth": 30,
+        "clientWidth": 30
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "laptop invalid profile name is linked and focused",
+      "passed": true,
+      "detail": {
+        "invalid": "true",
+        "describedby": "profile-display-name-error",
+        "focused": true,
+        "errors": []
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "laptop save updates profile identity and local presence",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Button available: Cancel",
+      "passed": true
+    },
+    {
+      "label": "laptop Cancel preserves saved name",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "laptop saved identity is readable from navigation",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "laptop Escape discards uncommitted changes after immediate reopen",
+      "passed": true
+    },
+    {
+      "label": "laptop native modal Tab never enters background application",
+      "passed": true,
+      "detail": [
+        {
+          "tag": "BUTTON",
+          "label": "Close profile",
+          "inDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "label": null,
+          "inDialog": true
+        },
+        {
+          "tag": "BODY",
+          "label": null,
+          "inDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Close profile",
+          "inDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "label": null,
+          "inDialog": true
+        },
+        {
+          "tag": "BODY",
+          "label": null,
+          "inDialog": false
+        }
+      ]
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "laptop after interactions has no horizontal page overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "documentHeight": 800,
+        "pageY": 0
+      }
+    },
+    {
+      "label": "laptop after interactions shell fits viewport height",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "documentHeight": 800,
+        "pageY": 0
+      }
+    },
+    {
+      "label": "laptop after interactions composer is visible",
+      "passed": true,
+      "detail": {
+        "x": 373,
+        "y": 517.9375,
+        "width": 638,
+        "height": 225.0625,
+        "right": 1011,
+        "bottom": 743,
+        "scrollHeight": 224,
+        "clientHeight": 224,
+        "scrollWidth": 638,
+        "clientWidth": 638
+      }
+    },
+    {
+      "label": "laptop after interactions BUZZ control is visible",
+      "passed": true,
+      "detail": {
+        "x": 497,
+        "y": 663.921875,
+        "width": 99.78125,
+        "height": 38.28125,
+        "right": 596.78125,
+        "bottom": 702.203125,
+        "scrollHeight": 34,
+        "clientHeight": 30,
+        "scrollWidth": 96,
+        "clientWidth": 92
+      }
+    },
+    {
+      "label": "laptop after interactions profile entry is visible",
+      "passed": true,
+      "detail": {
+        "x": 21,
+        "y": 567.5625,
+        "width": 78,
+        "height": 160.25,
+        "right": 99,
+        "bottom": 727.8125,
+        "scrollHeight": 158,
+        "clientHeight": 158,
+        "scrollWidth": 76,
+        "clientWidth": 76
+      }
+    },
+    {
+      "label": "laptop after interactions message region has usable height",
+      "passed": true,
+      "detail": {
+        "x": 373,
+        "y": 140.734375,
+        "width": 638,
+        "height": 377.203125,
+        "right": 1011,
+        "bottom": 517.9375,
+        "scrollHeight": 377,
+        "clientHeight": 377,
+        "scrollWidth": 638,
+        "clientWidth": 638
+      }
+    },
+    {
+      "label": "laptop Security navigation supports keyboard",
+      "passed": true
+    },
+    {
+      "label": "laptop Chats navigation preserves current draft",
+      "passed": true
+    },
+    {
+      "label": "laptop BUZZ gives busy feedback",
+      "passed": true
+    },
+    {
+      "label": "laptop keyboard focus ring is visible",
+      "passed": true,
+      "detail": {
+        "style": "solid",
+        "width": "3px",
+        "color": "rgb(255, 255, 255)",
+        "railBackground": "rgb(75, 29, 112)"
+      }
+    },
+    {
+      "label": "mobile has no horizontal page overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "documentHeight": 844,
+        "pageY": 0
+      }
+    },
+    {
+      "label": "mobile shell fits viewport height",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "documentHeight": 844,
+        "pageY": 0
+      }
+    },
+    {
+      "label": "mobile composer is visible",
+      "passed": true,
+      "detail": {
+        "x": 9,
+        "y": 558.171875,
+        "width": 372,
+        "height": 232.828125,
+        "right": 381,
+        "bottom": 791,
+        "scrollHeight": 232,
+        "clientHeight": 232,
+        "scrollWidth": 372,
+        "clientWidth": 372
+      }
+    },
+    {
+      "label": "mobile BUZZ control is visible",
+      "passed": true,
+      "detail": {
+        "x": 119.453125,
+        "y": 697.9375,
+        "width": 99.78125,
+        "height": 38.28125,
+        "right": 219.234375,
+        "bottom": 736.21875,
+        "scrollHeight": 34,
+        "clientHeight": 30,
+        "scrollWidth": 96,
+        "clientWidth": 92
+      }
+    },
+    {
+      "label": "mobile profile entry is visible",
+      "passed": true,
+      "detail": {
+        "x": 235.625,
+        "y": 15.390625,
+        "width": 138.984375,
+        "height": 48.265625,
+        "right": 374.609375,
+        "bottom": 63.65625,
+        "scrollHeight": 46,
+        "clientHeight": 46,
+        "scrollWidth": 137,
+        "clientWidth": 137
+      }
+    },
+    {
+      "label": "mobile message region has usable height",
+      "passed": true,
+      "detail": {
+        "x": 9,
+        "y": 251.015625,
+        "width": 372,
+        "height": 307.15625,
+        "right": 381,
+        "bottom": 558.171875,
+        "scrollHeight": 307,
+        "clientHeight": 307,
+        "scrollWidth": 372,
+        "clientWidth": 372
+      }
+    },
+    {
+      "label": "mobile security details has keyboard entry",
+      "passed": true,
+      "detail": {
+        "text": "Local encryption onlySecurity detailsE2EE not established",
+        "tag": "SUMMARY",
+        "focus": true
+      }
+    },
+    {
+      "label": "mobile security details accurately disclose all boundaries",
+      "passed": true,
+      "detail": {
+        "text": "Local AES-256-GCM availableRecipient key unavailableAuthenticated key exchange unavailableMessages use a non-extractable key held in this page's memory. Recipient key exchange is unavailable, so remote end-to-end encryption is not established.Local demo replies are mock text. No other user receives messages in these demo conversations.",
+        "summaryFocused": true,
+        "nativeDisclosure": true
+      }
+    },
+    {
+      "label": "mobile security disclosure uses native keyboard semantics",
+      "passed": true
+    },
+    {
+      "label": "mobile security details keeps keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "mobile short bubble remains one line",
+      "passed": true,
+      "detail": {
+        "height": 47.578125,
+        "lineHeight": 24.8,
+        "padding": 20.8,
+        "whiteSpace": "pre-wrap"
+      }
+    },
+    {
+      "label": "Control available: Back to conversations",
+      "passed": true
+    },
+    {
+      "label": "Control available: Ava Morgan, Direct",
+      "passed": true
+    },
+    {
+      "label": "mobile direct conversation starts with independent draft",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "mobile intentional newlines are retained",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "mobile long unbroken content stays within message area",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "Button available: Send",
+      "passed": true
+    },
+    {
+      "label": "mobile history scrolls independently from page",
+      "passed": true,
+      "detail": {
+        "scrollHeight": 2281,
+        "clientHeight": 307,
+        "pageY": 0,
+        "overflowY": "auto"
+      }
+    },
+    {
+      "label": "Control available: Back to conversations",
+      "passed": true
+    },
+    {
+      "label": "Control available: SecureBot, Bot",
+      "passed": true
+    },
+    {
+      "label": "mobile original conversation draft survives switching",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "mobile profile modal receives focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "mobile edit starts at display name",
+      "passed": true
+    },
+    {
+      "label": "mobile Save footer remains visible before scroll",
+      "passed": true,
+      "detail": {
+        "x": 9,
+        "y": 770,
+        "width": 372,
+        "height": 65,
+        "right": 381,
+        "bottom": 835,
+        "scrollHeight": 64,
+        "clientHeight": 64,
+        "scrollWidth": 372,
+        "clientWidth": 372
+      }
+    },
+    {
+      "label": "mobile profile content scrolls independently",
+      "passed": true,
+      "detail": {
+        "scrollHeight": 815,
+        "clientHeight": 673,
+        "scrollTop": 142,
+        "overflowY": "auto"
+      }
+    },
+    {
+      "label": "mobile Save footer stays visible after content scroll",
+      "passed": true,
+      "detail": {
+        "x": 9,
+        "y": 770,
+        "width": 372,
+        "height": 65,
+        "right": 381,
+        "bottom": 835,
+        "scrollHeight": 64,
+        "clientHeight": 64,
+        "scrollWidth": 372,
+        "clientWidth": 372
+      }
+    },
+    {
+      "label": "mobile profile Close stays visible after content scroll",
+      "passed": true,
+      "detail": {
+        "x": 333,
+        "y": 38.4375,
+        "width": 32,
+        "height": 32,
+        "right": 365,
+        "bottom": 70.4375,
+        "scrollHeight": 30,
+        "clientHeight": 30,
+        "scrollWidth": 30,
+        "clientWidth": 30
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "mobile invalid profile name is linked and focused",
+      "passed": true,
+      "detail": {
+        "invalid": "true",
+        "describedby": "profile-display-name-error",
+        "focused": true,
+        "errors": []
+      }
+    },
+    {
+      "label": "Button available: Save changes",
+      "passed": true
+    },
+    {
+      "label": "mobile save updates profile identity and local presence",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Button available: Cancel",
+      "passed": true
+    },
+    {
+      "label": "mobile Cancel preserves saved name",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "mobile saved identity is readable from navigation",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "mobile Escape discards uncommitted changes after immediate reopen",
+      "passed": true
+    },
+    {
+      "label": "mobile native modal Tab never enters background application",
+      "passed": true,
+      "detail": [
+        {
+          "tag": "BODY",
+          "label": null,
+          "inDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Close profile",
+          "inDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "label": null,
+          "inDialog": true
+        },
+        {
+          "tag": "BODY",
+          "label": null,
+          "inDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "label": "Close profile",
+          "inDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "label": null,
+          "inDialog": true
+        }
+      ]
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "mobile after interactions has no horizontal page overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "documentHeight": 844,
+        "pageY": 0
+      }
+    },
+    {
+      "label": "mobile after interactions shell fits viewport height",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "documentHeight": 844,
+        "pageY": 0
+      }
+    },
+    {
+      "label": "mobile after interactions composer is visible",
+      "passed": true,
+      "detail": {
+        "x": 9,
+        "y": 558.171875,
+        "width": 372,
+        "height": 232.828125,
+        "right": 381,
+        "bottom": 791,
+        "scrollHeight": 232,
+        "clientHeight": 232,
+        "scrollWidth": 372,
+        "clientWidth": 372
+      }
+    },
+    {
+      "label": "mobile after interactions BUZZ control is visible",
+      "passed": true,
+      "detail": {
+        "x": 119.453125,
+        "y": 697.9375,
+        "width": 99.78125,
+        "height": 38.28125,
+        "right": 219.234375,
+        "bottom": 736.21875,
+        "scrollHeight": 34,
+        "clientHeight": 30,
+        "scrollWidth": 96,
+        "clientWidth": 92
+      }
+    },
+    {
+      "label": "mobile after interactions profile entry is visible",
+      "passed": true,
+      "detail": {
+        "x": 204.609375,
+        "y": 15.390625,
+        "width": 170,
+        "height": 48.265625,
+        "right": 374.609375,
+        "bottom": 63.65625,
+        "scrollHeight": 46,
+        "clientHeight": 46,
+        "scrollWidth": 168,
+        "clientWidth": 168
+      }
+    },
+    {
+      "label": "mobile after interactions message region has usable height",
+      "passed": true,
+      "detail": {
+        "x": 9,
+        "y": 251.015625,
+        "width": 372,
+        "height": 307.15625,
+        "right": 381,
+        "bottom": 558.171875,
+        "scrollHeight": 307,
+        "clientHeight": 307,
+        "scrollWidth": 372,
+        "clientWidth": 372
+      }
+    },
+    {
+      "label": "mobile Security navigation supports keyboard",
+      "passed": true
+    },
+    {
+      "label": "mobile Chats navigation preserves current draft",
+      "passed": true
+    },
+    {
+      "label": "mobile BUZZ gives busy feedback",
+      "passed": true
+    },
+    {
+      "label": "mobile keyboard focus ring is visible",
+      "passed": true,
+      "detail": {
+        "style": "solid",
+        "width": "3px",
+        "color": "rgb(255, 255, 255)",
+        "railBackground": "rgb(75, 29, 112)"
+      }
+    },
+    {
+      "label": "Reduced-motion preference disables selection animation",
+      "passed": true,
+      "detail": {
+        "matches": true,
+        "transition": "1e-05s"
+      }
+    },
+    {
+      "label": "No uncaught browser runtime exceptions",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "artifacts\\ui-refinement\\after\\desktop-empty.png",
+    "artifacts\\ui-refinement\\after\\desktop-security-details.png",
+    "artifacts\\ui-refinement\\after\\desktop-messenger.png",
+    "artifacts\\ui-refinement\\after\\desktop-conversation.png",
+    "artifacts\\ui-refinement\\after\\desktop-profile.png",
+    "artifacts\\ui-refinement\\after\\desktop-profile-edit.png",
+    "artifacts\\ui-refinement\\after\\desktop-profile-edit-scrolled.png",
+    "artifacts\\ui-refinement\\after\\desktop-navigation-focus.png",
+    "artifacts\\ui-refinement\\after\\laptop-empty.png",
+    "artifacts\\ui-refinement\\after\\laptop-security-details.png",
+    "artifacts\\ui-refinement\\after\\laptop-messenger.png",
+    "artifacts\\ui-refinement\\after\\laptop-conversation.png",
+    "artifacts\\ui-refinement\\after\\laptop-profile.png",
+    "artifacts\\ui-refinement\\after\\laptop-profile-edit.png",
+    "artifacts\\ui-refinement\\after\\laptop-profile-edit-scrolled.png",
+    "artifacts\\ui-refinement\\after\\laptop-navigation-focus.png",
+    "artifacts\\ui-refinement\\after\\mobile-empty.png",
+    "artifacts\\ui-refinement\\after\\mobile-security-details.png",
+    "artifacts\\ui-refinement\\after\\mobile-messenger.png",
+    "artifacts\\ui-refinement\\after\\mobile-conversation.png",
+    "artifacts\\ui-refinement\\after\\mobile-profile.png",
+    "artifacts\\ui-refinement\\after\\mobile-profile-edit.png",
+    "artifacts\\ui-refinement\\after\\mobile-profile-edit-scrolled.png",
+    "artifacts\\ui-refinement\\after\\mobile-navigation-focus.png"
+  ],
+  "runtimeErrors": [],
+  "contrastSamples": [
+    {
+      "selector": ".contact-name",
+      "foreground": "rgb(36, 27, 42)",
+      "background": [
+        255,
+        255,
+        255
+      ],
+      "ratio": 16.59790082698086,
+      "gradient": false,
+      "fontSize": "14px"
+    },
+    {
+      "selector": ".conversation-list-preview",
+      "foreground": "rgb(98, 88, 106)",
+      "background": [
+        241,
+        234,
+        250
+      ],
+      "ratio": 5.727739801625726,
+      "gradient": false,
+      "fontSize": "13px"
+    },
+    {
+      "selector": ".composer-demo-notice",
+      "foreground": "rgb(98, 88, 106)",
+      "background": [
+        255,
+        255,
+        255
+      ],
+      "ratio": 6.723560830182342,
+      "gradient": false,
+      "fontSize": "12px"
+    },
+    {
+      "selector": ".messenger-navigation-item.is-active",
+      "foreground": "rgb(255, 255, 255)",
+      "background": [
+        100.2,
+        60.64,
+        132.01999999999998
+      ],
+      "ratio": 8.276569176590213,
+      "gradient": false,
+      "fontSize": "12px"
+    },
+    {
+      "selector": ".message-meta",
+      "foreground": "rgb(98, 88, 106)",
+      "background": [
+        248,
+        245,
+        250
+      ],
+      "ratio": 6.2217527837446385,
+      "gradient": false,
+      "fontSize": "12px"
+    },
+    {
+      "selector": ".ui-field-message",
+      "foreground": "rgb(98, 88, 106)",
+      "background": [
+        255,
+        255,
+        255
+      ],
+      "ratio": 6.723560830182342,
+      "gradient": false,
+      "fontSize": "12px"
+    }
+  ],
+  "finishedAt": "2026-11-06T01:29:48.915Z"
+}

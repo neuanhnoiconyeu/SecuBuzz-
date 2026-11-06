@@ -10,6 +10,7 @@ export interface DialogProps {
   title: string;
   description?: string;
   children: ReactNode;
+  footer?: ReactNode;
   className?: string;
   closeLabel?: string;
   dismissible?: boolean;
@@ -21,6 +22,7 @@ export function Dialog({
   closeLabel = 'Close dialog',
   description,
   dismissible = true,
+  footer,
   onOpenChange,
   open,
   title,
@@ -65,7 +67,7 @@ export function Dialog({
       <div className="ui-dialog-panel">
         <header className="ui-dialog-header">
           <div>
-            <h2 id={titleId} className="ui-dialog-title">{title}</h2>
+            <h2 id={titleId} className="ui-dialog-title display-heading display-heading--modal">{title}</h2>
             {description ? <p id={descriptionId} className="ui-dialog-description">{description}</p> : null}
           </div>
           <Button
@@ -80,6 +82,7 @@ export function Dialog({
           </Button>
         </header>
         <div className="ui-dialog-body">{children}</div>
+        {footer ? <footer className="ui-dialog-footer">{footer}</footer> : null}
       </div>
     </dialog>
   );

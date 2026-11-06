@@ -1,0 +1,84 @@
+{
+  "startedAt": "2026-11-06T02:15:53.924Z",
+  "browser": "Chrome headless, CDP",
+  "checks": [
+    {
+      "label": "desktop baseline dimensions",
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "documentHeight": 1000,
+        "bodyHeight": 1000
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "laptop baseline dimensions",
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "documentHeight": 800,
+        "bodyHeight": 800
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    },
+    {
+      "label": "mobile baseline dimensions",
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "documentHeight": 844,
+        "bodyHeight": 844
+      }
+    },
+    {
+      "label": "Profile entry accepts keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Button available: Edit profile",
+      "passed": true
+    },
+    {
+      "label": "Escape closes profile and restores focus",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "artifacts\\motion\\before\\desktop-messenger.png",
+    "artifacts\\motion\\before\\desktop-profile.png",
+    "artifacts\\motion\\before\\desktop-profile-edit.png",
+    "artifacts\\motion\\before\\laptop-messenger.png",
+    "artifacts\\motion\\before\\laptop-profile.png",
+    "artifacts\\motion\\before\\laptop-profile-edit.png",
+    "artifacts\\motion\\before\\mobile-messenger.png",
+    "artifacts\\motion\\before\\mobile-profile.png",
+    "artifacts\\motion\\before\\mobile-profile-edit.png"
+  ],
+  "runtimeErrors": []
+}
