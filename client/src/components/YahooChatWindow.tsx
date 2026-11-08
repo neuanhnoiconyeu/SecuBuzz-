@@ -5,7 +5,7 @@ import { ConversationHeader } from '@/components/messenger/ConversationHeader';
 import { MessageComposer } from '@/components/messenger/MessageComposer';
 import { MessageList } from '@/components/messenger/MessageList';
 import { useConversationMessages } from '@/hooks/useConversationMessages';
-import type { PresenceStatus } from '@/messaging/messageModel';
+import type { ChatMessage, PresenceStatus } from '@/messaging/messageModel';
 import type { MessagingTransport } from '@/messaging/transport';
 import type { ConversationMessageActivity, ConversationType } from '@/conversations/conversationModel';
 import type { ConversationSecurityStatus } from '@/security/keyManagement';
@@ -56,18 +56,23 @@ export function YahooChatWindow({
   transport,
 }: YahooChatWindowProps) {
   const [buzzBusy, setBuzzBusy] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const chatHeadingRef = useRef<HTMLHeadingElement>(null);
   const previousConversationId = useRef(conversationId);
   const buzzLock = useRef(false);
   const buzzTimeout = useRef<number | null>(null);
   const {
     connectionStatus,
+    deleteMessage, 
+    editMessage,
     isSending,
     messages,
     presence,
     retryMessage,
     securityStatus,
     sendMessage,
+    togglePin,
+    toggleReaction,
     transportMode,
   } = useConversationMessages({
     conversationId,
@@ -92,13 +97,26 @@ export function YahooChatWindow({
       chatHeadingRef.current?.focus();
     }
     previousConversationId.current = conversationId;
+    setReplyingTo(null);
   }, [conversationId]);
 
-  const handleSendMessage = useCallback(async (content: string) => {
-    const accepted = await sendMessage(content);
-    if (accepted) onSendMessage?.();
-    return accepted;
-  }, [onSendMessage, sendMessage]);
+const handleSendMessage = useCallback(async (content: string) => {
+  const options = replyingTo
+    ? {
+        replyTo: {
+          messageId: replyingTo.id,
+          senderName: replyingTo.senderName,
+          contentSnippet: replyingTo.content.slice(0, 60),
+        },
+      }
+    : undefined;
+  const accepted = await sendMessage(content, options);
+  if (accepted) {
+    setReplyingTo(null);
+    onSendMessage?.();
+  }
+  return accepted;
+}, [onSendMessage, replyingTo, sendMessage]);
 
   const playBuzzSound = useCallback(() => {
     try {
@@ -175,7 +193,47 @@ export function YahooChatWindow({
         active={presentationActive}
         transportMode={transportMode}
         onRetryMessage={(messageId) => void retryMessage(messageId)}
+        onReplyMessage={(message) => setReplyingTo(message)}
+        onEditMessage={editMessage}
+        onDeleteMessage={deleteMessage}
+        onTogglePin={togglePin}
+        onToggleReaction={toggleReaction}
       />
+
+      {replyingTo && (
+        <div
+          className="reply-preview-banner"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '6px 12px',
+            background: 'rgba(139, 92, 246, 0.12)',
+            borderTop: '1px solid rgba(139, 92, 246, 0.3)',
+            fontSize: '0.8rem',
+          }}
+        >
+          <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+            <strong>Replying to {replyingTo.senderName}: </strong>
+            <span>{replyingTo.content}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setReplyingTo(null)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'inherit',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              padding: '0 6px',
+            }}
+            aria-label="Cancel reply"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <MessageComposer
         key={`composer:${conversationId}`}

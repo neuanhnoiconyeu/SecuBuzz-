@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { appendMessage, createClientMessageId, updateMessageDeliveryStatus } from '@/messaging/messageState';
+import { appendMessage, createClientMessageId, deleteMessageById, editMessageContent, toggleMessagePin, toggleMessageReaction, updateMessageDeliveryStatus, } from '@/messaging/messageState';
 import type {
   ChatMessage,
   ConnectionStatus,
   IncomingMessage,
+  MessageAttachment,
+  MessageReplyReference,
   MessageEncryptionMetadata,
   PresenceStatus,
   TransportMode,
+  VoiceMessageMetadata,
 } from '@/messaging/messageModel';
 import type { ConversationMessageActivity } from '@/conversations/conversationModel';
 import type { ConversationKeyContext, ConversationSecurityStatus } from '@/security/keyManagement';
@@ -33,8 +36,19 @@ export interface UseConversationMessagesResult {
   transportMode: TransportMode;
   securityStatus: ConversationSecurityStatus | null;
   isSending: boolean;
-  sendMessage(content: string): Promise<boolean>;
+  sendMessage(
+    content: string,
+    option?: {
+      replyTo?: MessageReplyReference;
+      attachements?: MessageAttachment[];
+      voice?: VoiceMessageMetadata;
+    }
+  ): Promise<boolean>;
   retryMessage(messageId: string): Promise<boolean>;
+  editMessage(messageId: string, newConten: string): void;
+  deleteMessage(messageId: string): void;
+  togglePin(messageId: string): void;
+  toggleReaction(messageId: string, emoji: string): void;
 }
 
 function cryptoContext(message: Pick<ChatMessage, 'conversationId' | 'id' | 'senderId' | 'senderName' | 'timestamp'>) {
@@ -216,7 +230,14 @@ export function useConversationMessages({
     };
   }, [conversationId, currentUserId, cryptoService, initialPresence, keyContext, notifyActivity, trackedConversationIds, transport]);
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (
+    content: string,
+    options?: {
+      replyTo?: MessageReplyReference;
+      attachments?: MessageAttachment[];
+      voice?: VoiceMessageMetadata;
+    }
+  ) => {
     const trimmedContent = content.trim();
     if (!trimmedContent || sendLocks.current.has(conversationId)) return false;
     sendLocks.current.add(conversationId);
@@ -232,6 +253,9 @@ export function useConversationMessages({
         timestamp: new Date().toISOString(),
         type: 'text',
         deliveryStatus: 'sending',
+        replyTo: options?.replyTo,
+        attachments: options?.attachments,
+        voice: options?.voice,
       };
       const encrypted = await cryptoService.encrypt(keyContext, trimmedContent, cryptoContext(message));
       const encryption: MessageEncryptionMetadata = { ...encrypted, scope: 'browser-demo' };
@@ -300,6 +324,30 @@ export function useConversationMessages({
     }
   }, [conversationId, messagesByConversation, transport]);
 
+    const editMessage = useCallback((messageId: string, newContent: string) => {
+      setMessagesByConversation((state) =>
+        editMessageContent(state, conversationId, messageId, newContent)
+      );
+    }, [conversationId]);
+
+    const deleteMessage = useCallback((messageId: string) => {
+      setMessagesByConversation((state) =>
+        deleteMessageById(state, conversationId, messageId)
+      );
+    }, [conversationId]);
+
+    const togglePin = useCallback((messageId: string) => {
+      setMessagesByConversation((state) =>
+        toggleMessagePin(state, conversationId, messageId)
+      );
+    }, [conversationId]);
+
+    const toggleReaction = useCallback((messageId: string, emoji: string) => {
+      setMessagesByConversation((state) =>
+        toggleMessageReaction(state, conversationId, messageId, emoji, currentUserId)
+      );
+    }, [conversationId, currentUserId]);
+
   return {
     messages,
     presence,
@@ -309,5 +357,9 @@ export function useConversationMessages({
     isSending: (pendingCounts[conversationId] ?? 0) > 0,
     sendMessage,
     retryMessage,
+    editMessage,
+    deleteMessage,
+    togglePin,
+    toggleReaction,
   };
 }
