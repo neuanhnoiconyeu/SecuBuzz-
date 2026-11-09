@@ -5,7 +5,7 @@ import { ConversationHeader } from '@/components/messenger/ConversationHeader';
 import { MessageComposer } from '@/components/messenger/MessageComposer';
 import { MessageList } from '@/components/messenger/MessageList';
 import { useConversationMessages } from '@/hooks/useConversationMessages';
-import type { ChatMessage, PresenceStatus } from '@/messaging/messageModel';
+import type { ChatMessage, MessageAttachment, PresenceStatus, VoiceMessageMetadata } from '@/messaging/messageModel';
 import type { MessagingTransport } from '@/messaging/transport';
 import type { ConversationMessageActivity, ConversationType } from '@/conversations/conversationModel';
 import type { ConversationSecurityStatus } from '@/security/keyManagement';
@@ -100,8 +100,12 @@ export function YahooChatWindow({
     setReplyingTo(null);
   }, [conversationId]);
 
-const handleSendMessage = useCallback(async (content: string) => {
-  const options = replyingTo
+const handleSendMessage = useCallback(async (
+  content: string,
+  extras?: {attachments?: MessageAttachment[]; voice?: VoiceMessageMetadata }
+) => {
+  const options = {
+    ...(replyingTo
     ? {
         replyTo: {
           messageId: replyingTo.id,
@@ -109,7 +113,10 @@ const handleSendMessage = useCallback(async (content: string) => {
           contentSnippet: replyingTo.content.slice(0, 60),
         },
       }
-    : undefined;
+    : {}),
+      ...(extras?.attachments ? { attachments: extras.attachments } : {}),
+      ...(extras?.voice ? { voice: extras.voice } : {}),
+    };
   const accepted = await sendMessage(content, options);
   if (accepted) {
     setReplyingTo(null);
