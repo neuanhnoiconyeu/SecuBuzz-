@@ -1,0 +1,132 @@
+{
+  "result": "PASS",
+  "browser": "Chrome/156.0.8078.81",
+  "buildId": "jx4vQHFlQrhXOVZ9uL6P1",
+  "startedAt": "2026-11-09T02:52:21.849Z",
+  "completedAt": "2026-11-09T02:52:48.468Z",
+  "assertions": {
+    "passed": 630,
+    "failed": 0
+  },
+  "fullLifecycleCases": [
+    "laptop light 1024x800",
+    "desktop light 1440x1000",
+    "mobile light 390x844",
+    "laptop dark 1024x800",
+    "desktop dark 1440x1000",
+    "mobile dark 390x844"
+  ],
+  "additionalResponsiveCases": [
+    {
+      "width": 720,
+      "height": 900,
+      "mode": "light"
+    },
+    {
+      "width": 720,
+      "height": 900,
+      "mode": "dark"
+    },
+    {
+      "width": 681,
+      "height": 900,
+      "mode": "light"
+    },
+    {
+      "width": 681,
+      "height": 900,
+      "mode": "dark"
+    },
+    {
+      "width": 680,
+      "height": 900,
+      "mode": "light"
+    },
+    {
+      "width": 680,
+      "height": 900,
+      "mode": "dark"
+    },
+    {
+      "width": 320,
+      "height": 900,
+      "mode": "light"
+    },
+    {
+      "width": 320,
+      "height": 900,
+      "mode": "dark"
+    }
+  ],
+  "actualFontSamples": 12,
+  "runtimeErrors": [],
+  "consoleErrors": [],
+  "sourceFingerprint": {
+    "fileCount": 82,
+    "sha256": "c665df76520f97f840bc00cf8bb7163f8cdd4778d6d90973bbb5d136cd976c87"
+  },
+  "finalSourceFingerprint": {
+    "fileCount": 82,
+    "sha256": "c665df76520f97f840bc00cf8bb7163f8cdd4778d6d90973bbb5d136cd976c87"
+  },
+  "sourceUnchanged": true,
+  "visualReview": {
+    "method": "Direct inspection of rendered final PNGs via view_image",
+    "reviewed": [
+      "desktop-light-friends.png",
+      "desktop-dark-friends.png",
+      "laptop-light-friends.png",
+      "laptop-dark-friends.png",
+      "mobile-light-friends.png",
+      "mobile-dark-friends.png"
+    ],
+    "additionalReviewed": [
+      "edge-320-dark-friends.png",
+      "edge-681-light-friends.png"
+    ],
+    "finding": "Yahoo branding, Midnight Charcoal/Light palettes, Bungee headings, readable Space Grotesk content, responsive cards and controls are preserved. No clipped headings or horizontal overflow observed. Narrow 320px layout scrolls vertically to reach card actions."
+  },
+  "verifiedFlows": [
+    "Four tabs with arrow/Home/End keyboard navigation and visible focus",
+    "All discovery relationship states, self prevention, unknown username empty state and privacy-safe public profile",
+    "Send/cancel request, accept/decline incoming request, cancel outgoing request and live list/count updates",
+    "Remove confirmation cancel/success and menu focus/Escape",
+    "Nested public-profile block confirmation and post-confirmation modal focus",
+    "Block/unblock without implicit friendship restoration or chat deletion",
+    "Existing Ava DM navigation without duplicate threads, preserved history/drafts and chat-heading focus",
+    "Disabled blocked local chat controls and mobile Browse chats escape to another conversation",
+    "Theme persistence with in-memory demo reset on refresh"
+  ],
+  "limitations": [
+    "No authenticated friends API or real presence is connected; browser flows exercise the explicitly labeled memory-only demo.",
+    "Existing Ava DM reused; new DM creation and group member selection are unavailable in the current checkout and were not fabricated.",
+    "Unauthorized/stale/remote API failure handling is covered in focused unit/hook tests rather than a real backend browser environment."
+  ],
+  "cleanup": {
+    "ownedProcessesStopped": true,
+    "ports": [
+      {
+        "port": 3106,
+        "released": true
+      },
+      {
+        "port": 9226,
+        "released": true
+      }
+    ]
+  },
+  "screenshots": [
+    "artifacts/phase6/laptop-light-friends.png",
+    "artifacts/phase6/desktop-light-friends.png",
+    "artifacts/phase6/desktop-light-request-profile.png",
+    "artifacts/phase6/mobile-light-friends.png",
+    "artifacts/phase6/laptop-dark-friends.png",
+    "artifacts/phase6/desktop-dark-friends.png",
+    "artifacts/phase6/desktop-dark-blocked-chat.png",
+    "artifacts/phase6/mobile-dark-friends.png",
+    "artifacts/phase6/mobile-dark-remove-confirmation.png",
+    "artifacts/phase6/edge-681-light-friends.png",
+    "artifacts/phase6/edge-320-dark-friends.png"
+  ],
+  "productionRuntimeAdvisory": "Next.js recommends the optional sharp image optimizer package. Image loading and browser checks passed; no dependency change was introduced."
+}

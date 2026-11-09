@@ -26,8 +26,12 @@ const editableKeys = new Set(['displayName', 'statusMessage', 'avatar', 'presenc
 
 /** A fresh service instance is a fresh demo session. Nothing is persisted or broadcast. */
 export class LocalDemoProfileService implements ProfileService {
-  private profile: UserProfile = createDemoProfile();
+  private profile: UserProfile;
   private readonly listeners = new Set<(profile: UserProfile) => void>();
+
+  constructor(initialProfile: UserProfile = createDemoProfile()) {
+    this.profile = { ...initialProfile };
+  }
 
   async getCurrentProfile(): Promise<UserProfile> {
     return { ...this.profile };

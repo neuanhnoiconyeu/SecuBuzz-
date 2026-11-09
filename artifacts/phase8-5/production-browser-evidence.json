@@ -1,0 +1,1711 @@
+{
+  "startedAt": "2026-11-09T03:36:52.992Z",
+  "browser": "Chrome headless via CDP",
+  "mode": "production",
+  "checks": [
+    {
+      "label": "production / no production demo or protected content",
+      "passed": true
+    },
+    {
+      "label": "production / unconfigured backend is explicit and submit stays disabled",
+      "passed": true
+    },
+    {
+      "label": "production /login no production demo or protected content",
+      "passed": true
+    },
+    {
+      "label": "production /login unconfigured backend is explicit and submit stays disabled",
+      "passed": true
+    },
+    {
+      "label": "production /signup no production demo or protected content",
+      "passed": true
+    },
+    {
+      "label": "production /signup unconfigured backend is explicit and submit stays disabled",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "production desktop light login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "bodyWidth": 1440,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 112,
+            "right": 1328,
+            "top": 63.390625,
+            "bottom": 936.59375,
+            "width": 1216,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-header",
+            "x": 113,
+            "right": 1327,
+            "top": 93.765625,
+            "bottom": 175.546875,
+            "width": 1214,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-card",
+            "x": 807.5,
+            "right": 1239.5,
+            "top": 280.84375,
+            "bottom": 785.59375,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          },
+          {
+            "selector": ".auth-form",
+            "x": 807.5,
+            "right": 1239.5,
+            "top": 515.046875,
+            "bottom": 742.203125,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          }
+        ]
+      }
+    },
+    {
+      "label": "production desktop light heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "production desktop light label actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "production desktop light demo action cannot authenticate production users",
+      "passed": true
+    },
+    {
+      "label": "production desktop light signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1425,
+        "bodyWidth": 1425,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 104.5,
+            "right": 1320.5,
+            "top": 43.1875,
+            "bottom": 1015.921875,
+            "width": 1216,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-header",
+            "x": 105.5,
+            "right": 1319.5,
+            "top": 73.5625,
+            "bottom": 155.34375,
+            "width": 1214,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-card",
+            "x": 800,
+            "right": 1232,
+            "top": 211.34375,
+            "bottom": 914.234375,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          },
+          {
+            "selector": ".auth-form",
+            "x": 800,
+            "right": 1232,
+            "top": 445.546875,
+            "bottom": 870.84375,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          }
+        ]
+      }
+    },
+    {
+      "label": "production desktop light real registration remains safely unavailable",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "production laptop light login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 900,
+        "documentWidth": 1024,
+        "bodyWidth": 1024,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 30.71875,
+            "right": 993.28125,
+            "top": 54.390625,
+            "bottom": 845.59375,
+            "width": 962.5625,
+            "scrollWidth": 961,
+            "clientWidth": 961
+          },
+          {
+            "selector": ".auth-header",
+            "x": 31.71875,
+            "right": 992.28125,
+            "top": 84.765625,
+            "bottom": 166.546875,
+            "width": 960.5625,
+            "scrollWidth": 961,
+            "clientWidth": 961
+          },
+          {
+            "selector": ".auth-card",
+            "x": 548,
+            "right": 956.28125,
+            "top": 224.859375,
+            "bottom": 741.59375,
+            "width": 408.28125,
+            "scrollWidth": 408,
+            "clientWidth": 408
+          },
+          {
+            "selector": ".auth-form",
+            "x": 548,
+            "right": 956.28125,
+            "top": 471.046875,
+            "bottom": 698.203125,
+            "width": 408.28125,
+            "scrollWidth": 408,
+            "clientWidth": 408
+          }
+        ]
+      }
+    },
+    {
+      "label": "production laptop light heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "production laptop light label actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "production laptop light demo action cannot authenticate production users",
+      "passed": true
+    },
+    {
+      "label": "production laptop light signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 900,
+        "documentWidth": 1009,
+        "bodyWidth": 1009,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 30.71875,
+            "right": 978.28125,
+            "top": 30.71875,
+            "bottom": 975.4375,
+            "width": 947.5625,
+            "scrollWidth": 946,
+            "clientWidth": 946
+          },
+          {
+            "selector": ".auth-header",
+            "x": 31.71875,
+            "right": 977.28125,
+            "top": 61.09375,
+            "bottom": 142.875,
+            "width": 945.5625,
+            "scrollWidth": 946,
+            "clientWidth": 946
+          },
+          {
+            "selector": ".auth-card",
+            "x": 540.5,
+            "right": 941.28125,
+            "top": 178.875,
+            "bottom": 893.75,
+            "width": 400.78125,
+            "scrollWidth": 401,
+            "clientWidth": 401
+          },
+          {
+            "selector": ".auth-form",
+            "x": 540.5,
+            "right": 941.28125,
+            "top": 425.0625,
+            "bottom": 850.359375,
+            "width": 400.78125,
+            "scrollWidth": 401,
+            "clientWidth": 401
+          }
+        ]
+      }
+    },
+    {
+      "label": "production laptop light real registration remains safely unavailable",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "production mobile light login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 844,
+            "width": 390,
+            "scrollWidth": 390,
+            "clientWidth": 390
+          },
+          {
+            "selector": ".auth-header",
+            "x": 0,
+            "right": 390,
+            "top": 27.875,
+            "bottom": 100.0625,
+            "width": 390,
+            "scrollWidth": 390,
+            "clientWidth": 390
+          },
+          {
+            "selector": ".auth-card",
+            "x": 20,
+            "right": 370,
+            "top": 163.25,
+            "bottom": 680.515625,
+            "width": 350,
+            "scrollWidth": 350,
+            "clientWidth": 350
+          },
+          {
+            "selector": ".auth-form",
+            "x": 20,
+            "right": 370,
+            "top": 409.96875,
+            "bottom": 637.125,
+            "width": 350,
+            "scrollWidth": 350,
+            "clientWidth": 350
+          }
+        ]
+      }
+    },
+    {
+      "label": "production mobile light heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "production mobile light label actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "production mobile light demo action cannot authenticate production users",
+      "passed": true
+    },
+    {
+      "label": "production mobile light signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 375,
+        "bodyWidth": 375,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 0,
+            "right": 375,
+            "top": 0,
+            "bottom": 971.828125,
+            "width": 375,
+            "scrollWidth": 375,
+            "clientWidth": 375
+          },
+          {
+            "selector": ".auth-header",
+            "x": 0,
+            "right": 375,
+            "top": 27.875,
+            "bottom": 100.0625,
+            "width": 375,
+            "scrollWidth": 375,
+            "clientWidth": 375
+          },
+          {
+            "selector": ".auth-card",
+            "x": 20,
+            "right": 355,
+            "top": 163.25,
+            "bottom": 878.65625,
+            "width": 335,
+            "scrollWidth": 335,
+            "clientWidth": 335
+          },
+          {
+            "selector": ".auth-form",
+            "x": 20,
+            "right": 355,
+            "top": 409.96875,
+            "bottom": 835.265625,
+            "width": 335,
+            "scrollWidth": 335,
+            "clientWidth": 335
+          }
+        ]
+      }
+    },
+    {
+      "label": "production mobile light real registration remains safely unavailable",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "production desktop dark login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "bodyWidth": 1440,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 112,
+            "right": 1328,
+            "top": 63.390625,
+            "bottom": 936.59375,
+            "width": 1216,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-header",
+            "x": 113,
+            "right": 1327,
+            "top": 93.765625,
+            "bottom": 175.546875,
+            "width": 1214,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-card",
+            "x": 807.5,
+            "right": 1239.5,
+            "top": 280.84375,
+            "bottom": 785.59375,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          },
+          {
+            "selector": ".auth-form",
+            "x": 807.5,
+            "right": 1239.5,
+            "top": 515.046875,
+            "bottom": 742.203125,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          }
+        ]
+      }
+    },
+    {
+      "label": "production desktop dark heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "production desktop dark label actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "production desktop dark demo action cannot authenticate production users",
+      "passed": true
+    },
+    {
+      "label": "production desktop dark signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1425,
+        "bodyWidth": 1425,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 104.5,
+            "right": 1320.5,
+            "top": 43.1875,
+            "bottom": 1015.921875,
+            "width": 1216,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-header",
+            "x": 105.5,
+            "right": 1319.5,
+            "top": 73.5625,
+            "bottom": 155.34375,
+            "width": 1214,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-card",
+            "x": 800,
+            "right": 1232,
+            "top": 211.34375,
+            "bottom": 914.234375,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          },
+          {
+            "selector": ".auth-form",
+            "x": 800,
+            "right": 1232,
+            "top": 445.546875,
+            "bottom": 870.84375,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          }
+        ]
+      }
+    },
+    {
+      "label": "production desktop dark real registration remains safely unavailable",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "production laptop dark login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 900,
+        "documentWidth": 1024,
+        "bodyWidth": 1024,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 30.71875,
+            "right": 993.28125,
+            "top": 54.390625,
+            "bottom": 845.59375,
+            "width": 962.5625,
+            "scrollWidth": 961,
+            "clientWidth": 961
+          },
+          {
+            "selector": ".auth-header",
+            "x": 31.71875,
+            "right": 992.28125,
+            "top": 84.765625,
+            "bottom": 166.546875,
+            "width": 960.5625,
+            "scrollWidth": 961,
+            "clientWidth": 961
+          },
+          {
+            "selector": ".auth-card",
+            "x": 548,
+            "right": 956.28125,
+            "top": 224.859375,
+            "bottom": 741.59375,
+            "width": 408.28125,
+            "scrollWidth": 408,
+            "clientWidth": 408
+          },
+          {
+            "selector": ".auth-form",
+            "x": 548,
+            "right": 956.28125,
+            "top": 471.046875,
+            "bottom": 698.203125,
+            "width": 408.28125,
+            "scrollWidth": 408,
+            "clientWidth": 408
+          }
+        ]
+      }
+    },
+    {
+      "label": "production laptop dark heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "production laptop dark label actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "production laptop dark demo action cannot authenticate production users",
+      "passed": true
+    },
+    {
+      "label": "production laptop dark signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 900,
+        "documentWidth": 1009,
+        "bodyWidth": 1009,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 30.71875,
+            "right": 978.28125,
+            "top": 30.71875,
+            "bottom": 975.4375,
+            "width": 947.5625,
+            "scrollWidth": 946,
+            "clientWidth": 946
+          },
+          {
+            "selector": ".auth-header",
+            "x": 31.71875,
+            "right": 977.28125,
+            "top": 61.09375,
+            "bottom": 142.875,
+            "width": 945.5625,
+            "scrollWidth": 946,
+            "clientWidth": 946
+          },
+          {
+            "selector": ".auth-card",
+            "x": 540.5,
+            "right": 941.28125,
+            "top": 178.875,
+            "bottom": 893.75,
+            "width": 400.78125,
+            "scrollWidth": 401,
+            "clientWidth": 401
+          },
+          {
+            "selector": ".auth-form",
+            "x": 540.5,
+            "right": 941.28125,
+            "top": 425.0625,
+            "bottom": 850.359375,
+            "width": 400.78125,
+            "scrollWidth": 401,
+            "clientWidth": 401
+          }
+        ]
+      }
+    },
+    {
+      "label": "production laptop dark real registration remains safely unavailable",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "production mobile dark login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 844,
+            "width": 390,
+            "scrollWidth": 390,
+            "clientWidth": 390
+          },
+          {
+            "selector": ".auth-header",
+            "x": 0,
+            "right": 390,
+            "top": 27.875,
+            "bottom": 100.0625,
+            "width": 390,
+            "scrollWidth": 390,
+            "clientWidth": 390
+          },
+          {
+            "selector": ".auth-card",
+            "x": 20,
+            "right": 370,
+            "top": 163.25,
+            "bottom": 680.515625,
+            "width": 350,
+            "scrollWidth": 350,
+            "clientWidth": 350
+          },
+          {
+            "selector": ".auth-form",
+            "x": 20,
+            "right": 370,
+            "top": 409.96875,
+            "bottom": 637.125,
+            "width": 350,
+            "scrollWidth": 350,
+            "clientWidth": 350
+          }
+        ]
+      }
+    },
+    {
+      "label": "production mobile dark heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "production mobile dark label actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "production mobile dark demo action cannot authenticate production users",
+      "passed": true
+    },
+    {
+      "label": "production mobile dark signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 375,
+        "bodyWidth": 375,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 0,
+            "right": 375,
+            "top": 0,
+            "bottom": 971.828125,
+            "width": 375,
+            "scrollWidth": 375,
+            "clientWidth": 375
+          },
+          {
+            "selector": ".auth-header",
+            "x": 0,
+            "right": 375,
+            "top": 27.875,
+            "bottom": 100.0625,
+            "width": 375,
+            "scrollWidth": 375,
+            "clientWidth": 375
+          },
+          {
+            "selector": ".auth-card",
+            "x": 20,
+            "right": 355,
+            "top": 163.25,
+            "bottom": 878.65625,
+            "width": 335,
+            "scrollWidth": 335,
+            "clientWidth": 335
+          },
+          {
+            "selector": ".auth-form",
+            "x": 20,
+            "right": 355,
+            "top": 409.96875,
+            "bottom": 835.265625,
+            "width": 335,
+            "scrollWidth": 335,
+            "clientWidth": 335
+          }
+        ]
+      }
+    },
+    {
+      "label": "production mobile dark real registration remains safely unavailable",
+      "passed": true
+    },
+    {
+      "label": "No auth API requests or fallback success were fabricated",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "No uncaught runtime or hydration errors",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "Source unchanged during browser run",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "artifacts/phase8-5/production-dark-login.png",
+    "artifacts/phase8-5/production-dark-signup.png"
+  ],
+  "runtimeErrors": [],
+  "consoleErrors": [],
+  "fonts": [
+    {
+      "label": "production desktop light heading",
+      "selector": "#auth-form-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "production desktop light label",
+      "selector": "label[for=auth-identifier]",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "production laptop light heading",
+      "selector": "#auth-form-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "production laptop light label",
+      "selector": "label[for=auth-identifier]",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "production mobile light heading",
+      "selector": "#auth-form-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "production mobile light label",
+      "selector": "label[for=auth-identifier]",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "production desktop dark heading",
+      "selector": "#auth-form-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "production desktop dark label",
+      "selector": "label[for=auth-identifier]",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "production laptop dark heading",
+      "selector": "#auth-form-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "production laptop dark label",
+      "selector": "label[for=auth-identifier]",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "production mobile dark heading",
+      "selector": "#auth-form-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "production mobile dark label",
+      "selector": "label[for=auth-identifier]",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    }
+  ],
+  "geometry": [
+    {
+      "label": "production desktop light login",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 112,
+          "right": 1328,
+          "top": 63.390625,
+          "bottom": 936.59375,
+          "width": 1216,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-header",
+          "x": 113,
+          "right": 1327,
+          "top": 93.765625,
+          "bottom": 175.546875,
+          "width": 1214,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-card",
+          "x": 807.5,
+          "right": 1239.5,
+          "top": 280.84375,
+          "bottom": 785.59375,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        },
+        {
+          "selector": ".auth-form",
+          "x": 807.5,
+          "right": 1239.5,
+          "top": 515.046875,
+          "bottom": 742.203125,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        }
+      ]
+    },
+    {
+      "label": "production desktop light signup",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1425,
+      "bodyWidth": 1425,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 104.5,
+          "right": 1320.5,
+          "top": 43.1875,
+          "bottom": 1015.921875,
+          "width": 1216,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-header",
+          "x": 105.5,
+          "right": 1319.5,
+          "top": 73.5625,
+          "bottom": 155.34375,
+          "width": 1214,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-card",
+          "x": 800,
+          "right": 1232,
+          "top": 211.34375,
+          "bottom": 914.234375,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        },
+        {
+          "selector": ".auth-form",
+          "x": 800,
+          "right": 1232,
+          "top": 445.546875,
+          "bottom": 870.84375,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        }
+      ]
+    },
+    {
+      "label": "production laptop light login",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 30.71875,
+          "right": 993.28125,
+          "top": 54.390625,
+          "bottom": 845.59375,
+          "width": 962.5625,
+          "scrollWidth": 961,
+          "clientWidth": 961
+        },
+        {
+          "selector": ".auth-header",
+          "x": 31.71875,
+          "right": 992.28125,
+          "top": 84.765625,
+          "bottom": 166.546875,
+          "width": 960.5625,
+          "scrollWidth": 961,
+          "clientWidth": 961
+        },
+        {
+          "selector": ".auth-card",
+          "x": 548,
+          "right": 956.28125,
+          "top": 224.859375,
+          "bottom": 741.59375,
+          "width": 408.28125,
+          "scrollWidth": 408,
+          "clientWidth": 408
+        },
+        {
+          "selector": ".auth-form",
+          "x": 548,
+          "right": 956.28125,
+          "top": 471.046875,
+          "bottom": 698.203125,
+          "width": 408.28125,
+          "scrollWidth": 408,
+          "clientWidth": 408
+        }
+      ]
+    },
+    {
+      "label": "production laptop light signup",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1009,
+      "bodyWidth": 1009,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 30.71875,
+          "right": 978.28125,
+          "top": 30.71875,
+          "bottom": 975.4375,
+          "width": 947.5625,
+          "scrollWidth": 946,
+          "clientWidth": 946
+        },
+        {
+          "selector": ".auth-header",
+          "x": 31.71875,
+          "right": 977.28125,
+          "top": 61.09375,
+          "bottom": 142.875,
+          "width": 945.5625,
+          "scrollWidth": 946,
+          "clientWidth": 946
+        },
+        {
+          "selector": ".auth-card",
+          "x": 540.5,
+          "right": 941.28125,
+          "top": 178.875,
+          "bottom": 893.75,
+          "width": 400.78125,
+          "scrollWidth": 401,
+          "clientWidth": 401
+        },
+        {
+          "selector": ".auth-form",
+          "x": 540.5,
+          "right": 941.28125,
+          "top": 425.0625,
+          "bottom": 850.359375,
+          "width": 400.78125,
+          "scrollWidth": 401,
+          "clientWidth": 401
+        }
+      ]
+    },
+    {
+      "label": "production mobile light login",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 0,
+          "right": 390,
+          "top": 0,
+          "bottom": 844,
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        },
+        {
+          "selector": ".auth-header",
+          "x": 0,
+          "right": 390,
+          "top": 27.875,
+          "bottom": 100.0625,
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        },
+        {
+          "selector": ".auth-card",
+          "x": 20,
+          "right": 370,
+          "top": 163.25,
+          "bottom": 680.515625,
+          "width": 350,
+          "scrollWidth": 350,
+          "clientWidth": 350
+        },
+        {
+          "selector": ".auth-form",
+          "x": 20,
+          "right": 370,
+          "top": 409.96875,
+          "bottom": 637.125,
+          "width": 350,
+          "scrollWidth": 350,
+          "clientWidth": 350
+        }
+      ]
+    },
+    {
+      "label": "production mobile light signup",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 0,
+          "right": 375,
+          "top": 0,
+          "bottom": 971.828125,
+          "width": 375,
+          "scrollWidth": 375,
+          "clientWidth": 375
+        },
+        {
+          "selector": ".auth-header",
+          "x": 0,
+          "right": 375,
+          "top": 27.875,
+          "bottom": 100.0625,
+          "width": 375,
+          "scrollWidth": 375,
+          "clientWidth": 375
+        },
+        {
+          "selector": ".auth-card",
+          "x": 20,
+          "right": 355,
+          "top": 163.25,
+          "bottom": 878.65625,
+          "width": 335,
+          "scrollWidth": 335,
+          "clientWidth": 335
+        },
+        {
+          "selector": ".auth-form",
+          "x": 20,
+          "right": 355,
+          "top": 409.96875,
+          "bottom": 835.265625,
+          "width": 335,
+          "scrollWidth": 335,
+          "clientWidth": 335
+        }
+      ]
+    },
+    {
+      "label": "production desktop dark login",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 112,
+          "right": 1328,
+          "top": 63.390625,
+          "bottom": 936.59375,
+          "width": 1216,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-header",
+          "x": 113,
+          "right": 1327,
+          "top": 93.765625,
+          "bottom": 175.546875,
+          "width": 1214,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-card",
+          "x": 807.5,
+          "right": 1239.5,
+          "top": 280.84375,
+          "bottom": 785.59375,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        },
+        {
+          "selector": ".auth-form",
+          "x": 807.5,
+          "right": 1239.5,
+          "top": 515.046875,
+          "bottom": 742.203125,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        }
+      ]
+    },
+    {
+      "label": "production desktop dark signup",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1425,
+      "bodyWidth": 1425,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 104.5,
+          "right": 1320.5,
+          "top": 43.1875,
+          "bottom": 1015.921875,
+          "width": 1216,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-header",
+          "x": 105.5,
+          "right": 1319.5,
+          "top": 73.5625,
+          "bottom": 155.34375,
+          "width": 1214,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-card",
+          "x": 800,
+          "right": 1232,
+          "top": 211.34375,
+          "bottom": 914.234375,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        },
+        {
+          "selector": ".auth-form",
+          "x": 800,
+          "right": 1232,
+          "top": 445.546875,
+          "bottom": 870.84375,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        }
+      ]
+    },
+    {
+      "label": "production laptop dark login",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 30.71875,
+          "right": 993.28125,
+          "top": 54.390625,
+          "bottom": 845.59375,
+          "width": 962.5625,
+          "scrollWidth": 961,
+          "clientWidth": 961
+        },
+        {
+          "selector": ".auth-header",
+          "x": 31.71875,
+          "right": 992.28125,
+          "top": 84.765625,
+          "bottom": 166.546875,
+          "width": 960.5625,
+          "scrollWidth": 961,
+          "clientWidth": 961
+        },
+        {
+          "selector": ".auth-card",
+          "x": 548,
+          "right": 956.28125,
+          "top": 224.859375,
+          "bottom": 741.59375,
+          "width": 408.28125,
+          "scrollWidth": 408,
+          "clientWidth": 408
+        },
+        {
+          "selector": ".auth-form",
+          "x": 548,
+          "right": 956.28125,
+          "top": 471.046875,
+          "bottom": 698.203125,
+          "width": 408.28125,
+          "scrollWidth": 408,
+          "clientWidth": 408
+        }
+      ]
+    },
+    {
+      "label": "production laptop dark signup",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1009,
+      "bodyWidth": 1009,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 30.71875,
+          "right": 978.28125,
+          "top": 30.71875,
+          "bottom": 975.4375,
+          "width": 947.5625,
+          "scrollWidth": 946,
+          "clientWidth": 946
+        },
+        {
+          "selector": ".auth-header",
+          "x": 31.71875,
+          "right": 977.28125,
+          "top": 61.09375,
+          "bottom": 142.875,
+          "width": 945.5625,
+          "scrollWidth": 946,
+          "clientWidth": 946
+        },
+        {
+          "selector": ".auth-card",
+          "x": 540.5,
+          "right": 941.28125,
+          "top": 178.875,
+          "bottom": 893.75,
+          "width": 400.78125,
+          "scrollWidth": 401,
+          "clientWidth": 401
+        },
+        {
+          "selector": ".auth-form",
+          "x": 540.5,
+          "right": 941.28125,
+          "top": 425.0625,
+          "bottom": 850.359375,
+          "width": 400.78125,
+          "scrollWidth": 401,
+          "clientWidth": 401
+        }
+      ]
+    },
+    {
+      "label": "production mobile dark login",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 0,
+          "right": 390,
+          "top": 0,
+          "bottom": 844,
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        },
+        {
+          "selector": ".auth-header",
+          "x": 0,
+          "right": 390,
+          "top": 27.875,
+          "bottom": 100.0625,
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        },
+        {
+          "selector": ".auth-card",
+          "x": 20,
+          "right": 370,
+          "top": 163.25,
+          "bottom": 680.515625,
+          "width": 350,
+          "scrollWidth": 350,
+          "clientWidth": 350
+        },
+        {
+          "selector": ".auth-form",
+          "x": 20,
+          "right": 370,
+          "top": 409.96875,
+          "bottom": 637.125,
+          "width": 350,
+          "scrollWidth": 350,
+          "clientWidth": 350
+        }
+      ]
+    },
+    {
+      "label": "production mobile dark signup",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 0,
+          "right": 375,
+          "top": 0,
+          "bottom": 971.828125,
+          "width": 375,
+          "scrollWidth": 375,
+          "clientWidth": 375
+        },
+        {
+          "selector": ".auth-header",
+          "x": 0,
+          "right": 375,
+          "top": 27.875,
+          "bottom": 100.0625,
+          "width": 375,
+          "scrollWidth": 375,
+          "clientWidth": 375
+        },
+        {
+          "selector": ".auth-card",
+          "x": 20,
+          "right": 355,
+          "top": 163.25,
+          "bottom": 878.65625,
+          "width": 335,
+          "scrollWidth": 335,
+          "clientWidth": 335
+        },
+        {
+          "selector": ".auth-form",
+          "x": 20,
+          "right": 355,
+          "top": 409.96875,
+          "bottom": 835.265625,
+          "width": 335,
+          "scrollWidth": 335,
+          "clientWidth": 335
+        }
+      ]
+    }
+  ],
+  "buildId": "6sHkbMVBldnqkp0iqAPsR",
+  "sourceFingerprint": {
+    "fileCount": 109,
+    "sha256": "0215a0414efefb98226228b9984dbeffb525c6905b22377b2170b4f0e6ce3b1e"
+  },
+  "browserVersion": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/156.0.8078.81",
+    "revision": "@060bedfb508f73250e93aeb9ca8149b3958995d8",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+    "jsVersion": "15.6.75.27"
+  },
+  "authRequests": [],
+  "finalSourceFingerprint": {
+    "fileCount": 109,
+    "sha256": "0215a0414efefb98226228b9984dbeffb525c6905b22377b2170b4f0e6ce3b1e"
+  },
+  "completedAt": "2026-11-09T03:36:58.094Z",
+  "passed": true,
+  "cleanup": {
+    "requestedOwnedProcessCleanup": true,
+    "serverPid": 17656,
+    "browserPid": 33464
+  }
+}

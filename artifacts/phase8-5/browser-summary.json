@@ -1,0 +1,134 @@
+{
+  "result": "PASS",
+  "browser": "Chrome/156.0.8078.81",
+  "assertions": {
+    "total": 501,
+    "production": 63,
+    "development": 386,
+    "additional": 52,
+    "failed": 0
+  },
+  "productionBuildId": "6sHkbMVBldnqkp0iqAPsR",
+  "sourceFingerprint": {
+    "fileCount": 109,
+    "sha256": "0215a0414efefb98226228b9984dbeffb525c6905b22377b2170b4f0e6ce3b1e"
+  },
+  "sourcesUnchangedAcrossAllRuns": true,
+  "matrices": {
+    "production": [
+      "1440x1000 Light",
+      "1024x900 Light",
+      "390x844 Light",
+      "1440x1000 Dark",
+      "1024x900 Dark",
+      "390x844 Dark"
+    ],
+    "development": [
+      "1440x1000 Light",
+      "1024x900 Light",
+      "390x844 Light",
+      "1440x1000 Dark",
+      "1024x900 Dark",
+      "390x844 Dark"
+    ],
+    "additional": [
+      "320px Light/Dark login and signup",
+      "System appearance follows live OS Dark/Light changes",
+      "Reduced-motion auth entrance and background disabled",
+      "Native 200% zoom in Light/Dark for login/signup with every input and submit reachable"
+    ]
+  },
+  "actualFontSamples": 24,
+  "nativeBrowserZoom": [
+    {
+      "baseline": {
+        "innerWidth": 1422,
+        "innerHeight": 904,
+        "outerWidth": 1440,
+        "outerHeight": 1000,
+        "dpr": 1,
+        "visualScale": 1,
+        "documentWidth": 1407
+      },
+      "zoomed": {
+        "innerWidth": 711,
+        "innerHeight": 452,
+        "outerWidth": 1440,
+        "outerHeight": 1000,
+        "dpr": 2,
+        "visualScale": 1,
+        "documentWidth": 703
+      }
+    }
+  ],
+  "verified": [
+    "Protected root redirects without displaying Messenger during authentication initialization",
+    "Production exposes no demo sign-in/registration mechanism and makes unavailable backend explicit",
+    "Development forms validate required values, invalid email and confirmation mismatch with field-linked messages and first-error focus",
+    "Password show/hide preserves literal spaces; native Enter form sign-in works",
+    "Explicit Demo Explorer sign-in, encrypted local message, Friends and existing canonical Ava DM, Sign Out",
+    "Nova identity has distinct stable ID/username and isolated messages/drafts/friends self-discovery",
+    "Existing group demo selection and honest E2EE limitations preserved",
+    "Temporary registration supplies one consistent profile identity without credential/session storage",
+    "Refresh ends memory-only demo sessions; theme remains independent",
+    "External intended redirects rejected and supported Friends destination restored"
+  ],
+  "visualReview": {
+    "method": "Rendered screenshots inspected directly via view_image",
+    "finding": "Yahoo artwork, purple/Charcoal/Light palettes, Bungee display hierarchy, Space Grotesk labels, visible focus, responsive form spacing and Messenger identity remain coherent. Long mobile/signup forms scroll vertically; inputs and actions remain reachable. Native 200% screenshots show the complete reflowed page.",
+    "primaryDevelopmentScreensReviewed": 12,
+    "fullPageAndMessengerSamplesReviewed": true
+  },
+  "runtimeErrors": [],
+  "consoleErrors": [],
+  "consoleAdvisories": {
+    "distinct": [
+      "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority"
+    ],
+    "occurrences": 13,
+    "scope": "Development-only Next.js image LCP priority recommendation for existing full logo artwork; production browser console is clear."
+  },
+  "limitations": [
+    "No live authentication backend, session cookie validation, account persistence or server authorization was available; these browser flows verify the explicit development adapter and production-disabled demo boundary.",
+    "API failure, logout failure, expiry/invalidation, registration response variants, timeout and CSRF behavior are covered by focused tests using contract fixtures, not a connected production service.",
+    "Current DM/group examples remain local UI scaffolding; teammate advanced messaging branch is unmerged and no group lifecycle/member selector is present.",
+    "No database, Socket.IO, Kiro or crypto protocol integration was added or claimed."
+  ],
+  "screenshots": [
+    "artifacts/phase8-5/production-dark-login.png",
+    "artifacts/phase8-5/production-dark-signup.png",
+    "artifacts/phase8-5/development-desktop-light-login.png",
+    "artifacts/phase8-5/development-desktop-light-signup.png",
+    "artifacts/phase8-5/development-laptop-light-login.png",
+    "artifacts/phase8-5/development-laptop-light-signup.png",
+    "artifacts/phase8-5/development-mobile-light-login.png",
+    "artifacts/phase8-5/development-mobile-light-signup.png",
+    "artifacts/phase8-5/development-mobile-light-messenger.png",
+    "artifacts/phase8-5/development-desktop-dark-login.png",
+    "artifacts/phase8-5/development-desktop-dark-signup.png",
+    "artifacts/phase8-5/development-desktop-dark-messenger.png",
+    "artifacts/phase8-5/development-laptop-dark-login.png",
+    "artifacts/phase8-5/development-laptop-dark-signup.png",
+    "artifacts/phase8-5/development-mobile-dark-login.png",
+    "artifacts/phase8-5/development-mobile-dark-signup.png",
+    "artifacts/phase8-5/development-mobile-dark-login-full.png",
+    "artifacts/phase8-5/development-mobile-dark-signup-full.png",
+    "artifacts/phase8-5/native200-light-login-full.png",
+    "artifacts/phase8-5/native200-light-signup-full.png",
+    "artifacts/phase8-5/native200-dark-login-full.png",
+    "artifacts/phase8-5/native200-dark-signup-full.png"
+  ],
+  "cleanup": {
+    "ownedProcessesStopped": true,
+    "ports": [
+      {
+        "port": 3108,
+        "released": true
+      },
+      {
+        "port": 9228,
+        "released": true
+      }
+    ]
+  }
+}
