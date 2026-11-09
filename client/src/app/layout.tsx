@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { BRAND_NAME } from '@/components/branding/brandConstants';
 import { ThemeProvider } from '@/theme';
+import { AuthProvider } from '@/auth/AuthProvider';
 import { THEME_BOOTSTRAP_SCRIPT } from '@/theme/themeScript';
 import { THEME_BROWSER_COLORS } from '@/theme/themeModel';
 import { bungee, spaceGrotesk } from './fonts';
@@ -8,6 +9,8 @@ import 'nes.css/css/nes.min.css';
 import '@/styles/motion.css';
 import '@/styles/themes.css';
 import './globals.css';
+import '@/styles/friends.css';
+import '@/styles/auth.css';
 import '@/styles/typography.css';
 
 export const metadata: Metadata = {
@@ -74,7 +77,7 @@ export default function RootLayout({
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider><AuthProvider>{children}</AuthProvider></ThemeProvider>
       </body>
     </html>
   );

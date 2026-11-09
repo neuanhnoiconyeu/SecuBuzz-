@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import Home from './page';
+import { MessengerHarness as Home } from '@/test-support/MessengerHarness';
 
 async function selectConversation(label: RegExp) {
   await act(async () => {

@@ -1,0 +1,3180 @@
+{
+  "startedAt": "2026-11-09T03:37:59.414Z",
+  "browser": "Chrome headless via CDP",
+  "mode": "development",
+  "checks": [
+    {
+      "label": "desktop light protected route never exposes Messenger while resolving session",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "desktop light development demo has honest credential/session limitations",
+      "passed": true
+    },
+    {
+      "label": "desktop light login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1425,
+        "bodyWidth": 1425,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 104.5,
+            "right": 1320.5,
+            "top": 43.1875,
+            "bottom": 1000.703125,
+            "width": 1216,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-header",
+            "x": 105.5,
+            "right": 1319.5,
+            "top": 73.5625,
+            "bottom": 155.34375,
+            "width": 1214,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-card",
+            "x": 800,
+            "right": 1232,
+            "top": 211.34375,
+            "bottom": 899.015625,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          },
+          {
+            "selector": ".auth-form",
+            "x": 800,
+            "right": 1232,
+            "top": 461.5,
+            "bottom": 688.65625,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          }
+        ]
+      }
+    },
+    {
+      "label": "desktop light main heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "desktop light form label actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "desktop light explicit labels, autocomplete, keyboard and password semantics",
+      "passed": true
+    },
+    {
+      "label": "desktop light comfortable action and reduced-motion state",
+      "passed": true,
+      "detail": {
+        "width": 432,
+        "height": 48,
+        "animation": "none"
+      }
+    },
+    {
+      "label": "desktop light field exposes visible keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "desktop light signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1425,
+        "bodyWidth": 1425,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 104.5,
+            "right": 1320.5,
+            "top": 43.1875,
+            "bottom": 1198.84375,
+            "width": 1216,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-header",
+            "x": 105.5,
+            "right": 1319.5,
+            "top": 73.5625,
+            "bottom": 155.34375,
+            "width": 1214,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-card",
+            "x": 800,
+            "right": 1232,
+            "top": 211.34375,
+            "bottom": 1097.15625,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          },
+          {
+            "selector": ".auth-form",
+            "x": 800,
+            "right": 1232,
+            "top": 461.5,
+            "bottom": 886.796875,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          }
+        ]
+      }
+    },
+    {
+      "label": "desktop light explicit labels, autocomplete, keyboard and password semantics",
+      "passed": true
+    },
+    {
+      "label": "desktop light comfortable action and reduced-motion state",
+      "passed": true,
+      "detail": {
+        "width": 432,
+        "height": 48,
+        "animation": "none"
+      }
+    },
+    {
+      "label": "desktop light field exposes visible keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign In",
+      "passed": true
+    },
+    {
+      "label": "desktop light required sign-in errors are linked to fields",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Show password\"]",
+      "passed": true
+    },
+    {
+      "label": "desktop light password visibility preserves entered value and accessible toggle state",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Hide password\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "desktop light registration validates email and mismatch without changing password",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "desktop light demo login seeds the existing profile identity",
+      "passed": true
+    },
+    {
+      "label": "Available action Send",
+      "passed": true
+    },
+    {
+      "label": "desktop light navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light Friends integration remains bound to current identity",
+      "passed": true
+    },
+    {
+      "label": "Available control #friends button[aria-label=\"Message Ava Morgan\"]",
+      "passed": true
+    },
+    {
+      "label": "desktop light existing canonical DM still opens without duplicate conversations",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "desktop light sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "desktop light only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available action Try Nova Demo User",
+      "passed": true
+    },
+    {
+      "label": "desktop light second identity is consistent and cannot see previous messages/drafts",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "desktop light Nova profile has its stable distinct ID and username",
+      "passed": true
+    },
+    {
+      "label": "desktop light navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light self-discovery uses the authenticated actor",
+      "passed": true
+    },
+    {
+      "label": "desktop light navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "Available control .conversation-list-item[aria-label^=\"Security Study Group, Group\"]",
+      "passed": true
+    },
+    {
+      "label": "desktop light group demo and security limitations remain intact",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "desktop light sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "desktop light theme survives sign-out",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "desktop light refresh restores signed-out UI without protected flash",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "desktop light registration creates only the disclosed temporary identity",
+      "passed": true
+    },
+    {
+      "label": "desktop light only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "desktop light sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "Native Enter submission creates the disclosed synthetic identity",
+      "passed": true
+    },
+    {
+      "label": "desktop light only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "desktop light sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "laptop light protected route never exposes Messenger while resolving session",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "laptop light development demo has honest credential/session limitations",
+      "passed": true
+    },
+    {
+      "label": "laptop light login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 900,
+        "documentWidth": 1009,
+        "bodyWidth": 1009,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 30.71875,
+            "right": 978.28125,
+            "top": 30.71875,
+            "bottom": 937.828125,
+            "width": 947.5625,
+            "scrollWidth": 946,
+            "clientWidth": 946
+          },
+          {
+            "selector": ".auth-header",
+            "x": 31.71875,
+            "right": 977.28125,
+            "top": 61.09375,
+            "bottom": 142.875,
+            "width": 945.5625,
+            "scrollWidth": 946,
+            "clientWidth": 946
+          },
+          {
+            "selector": ".auth-card",
+            "x": 540.5,
+            "right": 941.28125,
+            "top": 178.875,
+            "bottom": 856.140625,
+            "width": 400.78125,
+            "scrollWidth": 401,
+            "clientWidth": 401
+          },
+          {
+            "selector": ".auth-form",
+            "x": 540.5,
+            "right": 941.28125,
+            "top": 418.625,
+            "bottom": 645.78125,
+            "width": 400.78125,
+            "scrollWidth": 401,
+            "clientWidth": 401
+          }
+        ]
+      }
+    },
+    {
+      "label": "laptop light main heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "laptop light form label actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "laptop light explicit labels, autocomplete, keyboard and password semantics",
+      "passed": true
+    },
+    {
+      "label": "laptop light comfortable action and reduced-motion state",
+      "passed": true,
+      "detail": {
+        "width": 400.78125,
+        "height": 48,
+        "animation": "none"
+      }
+    },
+    {
+      "label": "laptop light field exposes visible keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "laptop light signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 900,
+        "documentWidth": 1009,
+        "bodyWidth": 1009,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 30.71875,
+            "right": 978.28125,
+            "top": 30.71875,
+            "bottom": 1135.96875,
+            "width": 947.5625,
+            "scrollWidth": 946,
+            "clientWidth": 946
+          },
+          {
+            "selector": ".auth-header",
+            "x": 31.71875,
+            "right": 977.28125,
+            "top": 61.09375,
+            "bottom": 142.875,
+            "width": 945.5625,
+            "scrollWidth": 946,
+            "clientWidth": 946
+          },
+          {
+            "selector": ".auth-card",
+            "x": 540.5,
+            "right": 941.28125,
+            "top": 178.875,
+            "bottom": 1054.28125,
+            "width": 400.78125,
+            "scrollWidth": 401,
+            "clientWidth": 401
+          },
+          {
+            "selector": ".auth-form",
+            "x": 540.5,
+            "right": 941.28125,
+            "top": 418.625,
+            "bottom": 843.921875,
+            "width": 400.78125,
+            "scrollWidth": 401,
+            "clientWidth": 401
+          }
+        ]
+      }
+    },
+    {
+      "label": "laptop light explicit labels, autocomplete, keyboard and password semantics",
+      "passed": true
+    },
+    {
+      "label": "laptop light comfortable action and reduced-motion state",
+      "passed": true,
+      "detail": {
+        "width": 400.78125,
+        "height": 48,
+        "animation": "none"
+      }
+    },
+    {
+      "label": "laptop light field exposes visible keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign In",
+      "passed": true
+    },
+    {
+      "label": "laptop light required sign-in errors are linked to fields",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Show password\"]",
+      "passed": true
+    },
+    {
+      "label": "laptop light password visibility preserves entered value and accessible toggle state",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Hide password\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "laptop light registration validates email and mismatch without changing password",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "laptop light demo login seeds the existing profile identity",
+      "passed": true
+    },
+    {
+      "label": "Available action Send",
+      "passed": true
+    },
+    {
+      "label": "laptop light navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light Friends integration remains bound to current identity",
+      "passed": true
+    },
+    {
+      "label": "Available control #friends button[aria-label=\"Message Ava Morgan\"]",
+      "passed": true
+    },
+    {
+      "label": "laptop light existing canonical DM still opens without duplicate conversations",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "laptop light sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "laptop light only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available action Try Nova Demo User",
+      "passed": true
+    },
+    {
+      "label": "laptop light second identity is consistent and cannot see previous messages/drafts",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "laptop light Nova profile has its stable distinct ID and username",
+      "passed": true
+    },
+    {
+      "label": "laptop light navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light self-discovery uses the authenticated actor",
+      "passed": true
+    },
+    {
+      "label": "laptop light navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "Available control .conversation-list-item[aria-label^=\"Security Study Group, Group\"]",
+      "passed": true
+    },
+    {
+      "label": "laptop light group demo and security limitations remain intact",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "laptop light sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "laptop light theme survives sign-out",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "laptop light refresh restores signed-out UI without protected flash",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "laptop light registration creates only the disclosed temporary identity",
+      "passed": true
+    },
+    {
+      "label": "laptop light only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "laptop light sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "mobile light protected route never exposes Messenger while resolving session",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "mobile light development demo has honest credential/session limitations",
+      "passed": true
+    },
+    {
+      "label": "mobile light login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 375,
+        "bodyWidth": 375,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 0,
+            "right": 375,
+            "top": 0,
+            "bottom": 972.59375,
+            "width": 375,
+            "scrollWidth": 375,
+            "clientWidth": 375
+          },
+          {
+            "selector": ".auth-header",
+            "x": 0,
+            "right": 375,
+            "top": 27.875,
+            "bottom": 100.0625,
+            "width": 375,
+            "scrollWidth": 375,
+            "clientWidth": 375
+          },
+          {
+            "selector": ".auth-card",
+            "x": 20,
+            "right": 355,
+            "top": 163.25,
+            "bottom": 879.421875,
+            "width": 335,
+            "scrollWidth": 335,
+            "clientWidth": 335
+          },
+          {
+            "selector": ".auth-form",
+            "x": 20,
+            "right": 355,
+            "top": 441.90625,
+            "bottom": 669.0625,
+            "width": 335,
+            "scrollWidth": 335,
+            "clientWidth": 335
+          }
+        ]
+      }
+    },
+    {
+      "label": "mobile light main heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "mobile light form label actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "mobile light explicit labels, autocomplete, keyboard and password semantics",
+      "passed": true
+    },
+    {
+      "label": "mobile light comfortable action and reduced-motion state",
+      "passed": true,
+      "detail": {
+        "width": 335,
+        "height": 48,
+        "animation": "none"
+      }
+    },
+    {
+      "label": "mobile light field exposes visible keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "mobile light signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 375,
+        "bodyWidth": 375,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 0,
+            "right": 375,
+            "top": 0,
+            "bottom": 1170.734375,
+            "width": 375,
+            "scrollWidth": 375,
+            "clientWidth": 375
+          },
+          {
+            "selector": ".auth-header",
+            "x": 0,
+            "right": 375,
+            "top": 27.875,
+            "bottom": 100.0625,
+            "width": 375,
+            "scrollWidth": 375,
+            "clientWidth": 375
+          },
+          {
+            "selector": ".auth-card",
+            "x": 20,
+            "right": 355,
+            "top": 163.25,
+            "bottom": 1077.5625,
+            "width": 335,
+            "scrollWidth": 335,
+            "clientWidth": 335
+          },
+          {
+            "selector": ".auth-form",
+            "x": 20,
+            "right": 355,
+            "top": 441.90625,
+            "bottom": 867.203125,
+            "width": 335,
+            "scrollWidth": 335,
+            "clientWidth": 335
+          }
+        ]
+      }
+    },
+    {
+      "label": "mobile light explicit labels, autocomplete, keyboard and password semantics",
+      "passed": true
+    },
+    {
+      "label": "mobile light comfortable action and reduced-motion state",
+      "passed": true,
+      "detail": {
+        "width": 335,
+        "height": 48,
+        "animation": "none"
+      }
+    },
+    {
+      "label": "mobile light field exposes visible keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign In",
+      "passed": true
+    },
+    {
+      "label": "mobile light required sign-in errors are linked to fields",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Show password\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile light password visibility preserves entered value and accessible toggle state",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Hide password\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "mobile light registration validates email and mismatch without changing password",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "mobile light demo login seeds the existing profile identity",
+      "passed": true
+    },
+    {
+      "label": "Available action Send",
+      "passed": true
+    },
+    {
+      "label": "mobile light navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light Friends integration remains bound to current identity",
+      "passed": true
+    },
+    {
+      "label": "Available control #friends button[aria-label=\"Message Ava Morgan\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile light existing canonical DM still opens without duplicate conversations",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "mobile light sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "mobile light only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available action Try Nova Demo User",
+      "passed": true
+    },
+    {
+      "label": "mobile light second identity is consistent and cannot see previous messages/drafts",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile light Nova profile has its stable distinct ID and username",
+      "passed": true
+    },
+    {
+      "label": "mobile light navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light self-discovery uses the authenticated actor",
+      "passed": true
+    },
+    {
+      "label": "mobile light navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Back to conversations\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control .conversation-list-item[aria-label^=\"Security Study Group, Group\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile light group demo and security limitations remain intact",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "mobile light sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "mobile light theme survives sign-out",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "mobile light refresh restores signed-out UI without protected flash",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile light registration creates only the disclosed temporary identity",
+      "passed": true
+    },
+    {
+      "label": "mobile light only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "mobile light sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "desktop dark protected route never exposes Messenger while resolving session",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "desktop dark development demo has honest credential/session limitations",
+      "passed": true
+    },
+    {
+      "label": "desktop dark login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1425,
+        "bodyWidth": 1425,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 104.5,
+            "right": 1320.5,
+            "top": 43.1875,
+            "bottom": 1000.703125,
+            "width": 1216,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-header",
+            "x": 105.5,
+            "right": 1319.5,
+            "top": 73.5625,
+            "bottom": 155.34375,
+            "width": 1214,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-card",
+            "x": 800,
+            "right": 1232,
+            "top": 211.34375,
+            "bottom": 899.015625,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          },
+          {
+            "selector": ".auth-form",
+            "x": 800,
+            "right": 1232,
+            "top": 461.5,
+            "bottom": 688.65625,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          }
+        ]
+      }
+    },
+    {
+      "label": "desktop dark main heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "desktop dark form label actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "desktop dark explicit labels, autocomplete, keyboard and password semantics",
+      "passed": true
+    },
+    {
+      "label": "desktop dark comfortable action and reduced-motion state",
+      "passed": true,
+      "detail": {
+        "width": 432,
+        "height": 48,
+        "animation": "none"
+      }
+    },
+    {
+      "label": "desktop dark field exposes visible keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "desktop dark signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1425,
+        "bodyWidth": 1425,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 104.5,
+            "right": 1320.5,
+            "top": 43.1875,
+            "bottom": 1198.84375,
+            "width": 1216,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-header",
+            "x": 105.5,
+            "right": 1319.5,
+            "top": 73.5625,
+            "bottom": 155.34375,
+            "width": 1214,
+            "scrollWidth": 1214,
+            "clientWidth": 1214
+          },
+          {
+            "selector": ".auth-card",
+            "x": 800,
+            "right": 1232,
+            "top": 211.34375,
+            "bottom": 1097.15625,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          },
+          {
+            "selector": ".auth-form",
+            "x": 800,
+            "right": 1232,
+            "top": 461.5,
+            "bottom": 886.796875,
+            "width": 432,
+            "scrollWidth": 432,
+            "clientWidth": 432
+          }
+        ]
+      }
+    },
+    {
+      "label": "desktop dark explicit labels, autocomplete, keyboard and password semantics",
+      "passed": true
+    },
+    {
+      "label": "desktop dark comfortable action and reduced-motion state",
+      "passed": true,
+      "detail": {
+        "width": 432,
+        "height": 48,
+        "animation": "none"
+      }
+    },
+    {
+      "label": "desktop dark field exposes visible keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign In",
+      "passed": true
+    },
+    {
+      "label": "desktop dark required sign-in errors are linked to fields",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Show password\"]",
+      "passed": true
+    },
+    {
+      "label": "desktop dark password visibility preserves entered value and accessible toggle state",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Hide password\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "desktop dark registration validates email and mismatch without changing password",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "desktop dark demo login seeds the existing profile identity",
+      "passed": true
+    },
+    {
+      "label": "Available action Send",
+      "passed": true
+    },
+    {
+      "label": "desktop dark navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark Friends integration remains bound to current identity",
+      "passed": true
+    },
+    {
+      "label": "Available control #friends button[aria-label=\"Message Ava Morgan\"]",
+      "passed": true
+    },
+    {
+      "label": "desktop dark existing canonical DM still opens without duplicate conversations",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "desktop dark sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "desktop dark only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available action Try Nova Demo User",
+      "passed": true
+    },
+    {
+      "label": "desktop dark second identity is consistent and cannot see previous messages/drafts",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "desktop dark Nova profile has its stable distinct ID and username",
+      "passed": true
+    },
+    {
+      "label": "desktop dark navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark self-discovery uses the authenticated actor",
+      "passed": true
+    },
+    {
+      "label": "desktop dark navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "Available control .conversation-list-item[aria-label^=\"Security Study Group, Group\"]",
+      "passed": true
+    },
+    {
+      "label": "desktop dark group demo and security limitations remain intact",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "desktop dark sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "desktop dark theme survives sign-out",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "desktop dark refresh restores signed-out UI without protected flash",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "desktop dark registration creates only the disclosed temporary identity",
+      "passed": true
+    },
+    {
+      "label": "desktop dark only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "desktop dark sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "laptop dark protected route never exposes Messenger while resolving session",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "laptop dark development demo has honest credential/session limitations",
+      "passed": true
+    },
+    {
+      "label": "laptop dark login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 900,
+        "documentWidth": 1009,
+        "bodyWidth": 1009,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 30.71875,
+            "right": 978.28125,
+            "top": 30.71875,
+            "bottom": 937.828125,
+            "width": 947.5625,
+            "scrollWidth": 946,
+            "clientWidth": 946
+          },
+          {
+            "selector": ".auth-header",
+            "x": 31.71875,
+            "right": 977.28125,
+            "top": 61.09375,
+            "bottom": 142.875,
+            "width": 945.5625,
+            "scrollWidth": 946,
+            "clientWidth": 946
+          },
+          {
+            "selector": ".auth-card",
+            "x": 540.5,
+            "right": 941.28125,
+            "top": 178.875,
+            "bottom": 856.140625,
+            "width": 400.78125,
+            "scrollWidth": 401,
+            "clientWidth": 401
+          },
+          {
+            "selector": ".auth-form",
+            "x": 540.5,
+            "right": 941.28125,
+            "top": 418.625,
+            "bottom": 645.78125,
+            "width": 400.78125,
+            "scrollWidth": 401,
+            "clientWidth": 401
+          }
+        ]
+      }
+    },
+    {
+      "label": "laptop dark main heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "laptop dark form label actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "laptop dark explicit labels, autocomplete, keyboard and password semantics",
+      "passed": true
+    },
+    {
+      "label": "laptop dark comfortable action and reduced-motion state",
+      "passed": true,
+      "detail": {
+        "width": 400.78125,
+        "height": 48,
+        "animation": "none"
+      }
+    },
+    {
+      "label": "laptop dark field exposes visible keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "laptop dark signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 900,
+        "documentWidth": 1009,
+        "bodyWidth": 1009,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 30.71875,
+            "right": 978.28125,
+            "top": 30.71875,
+            "bottom": 1135.96875,
+            "width": 947.5625,
+            "scrollWidth": 946,
+            "clientWidth": 946
+          },
+          {
+            "selector": ".auth-header",
+            "x": 31.71875,
+            "right": 977.28125,
+            "top": 61.09375,
+            "bottom": 142.875,
+            "width": 945.5625,
+            "scrollWidth": 946,
+            "clientWidth": 946
+          },
+          {
+            "selector": ".auth-card",
+            "x": 540.5,
+            "right": 941.28125,
+            "top": 178.875,
+            "bottom": 1054.28125,
+            "width": 400.78125,
+            "scrollWidth": 401,
+            "clientWidth": 401
+          },
+          {
+            "selector": ".auth-form",
+            "x": 540.5,
+            "right": 941.28125,
+            "top": 418.625,
+            "bottom": 843.921875,
+            "width": 400.78125,
+            "scrollWidth": 401,
+            "clientWidth": 401
+          }
+        ]
+      }
+    },
+    {
+      "label": "laptop dark explicit labels, autocomplete, keyboard and password semantics",
+      "passed": true
+    },
+    {
+      "label": "laptop dark comfortable action and reduced-motion state",
+      "passed": true,
+      "detail": {
+        "width": 400.78125,
+        "height": 48,
+        "animation": "none"
+      }
+    },
+    {
+      "label": "laptop dark field exposes visible keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign In",
+      "passed": true
+    },
+    {
+      "label": "laptop dark required sign-in errors are linked to fields",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Show password\"]",
+      "passed": true
+    },
+    {
+      "label": "laptop dark password visibility preserves entered value and accessible toggle state",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Hide password\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "laptop dark registration validates email and mismatch without changing password",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "laptop dark demo login seeds the existing profile identity",
+      "passed": true
+    },
+    {
+      "label": "Available action Send",
+      "passed": true
+    },
+    {
+      "label": "laptop dark navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark Friends integration remains bound to current identity",
+      "passed": true
+    },
+    {
+      "label": "Available control #friends button[aria-label=\"Message Ava Morgan\"]",
+      "passed": true
+    },
+    {
+      "label": "laptop dark existing canonical DM still opens without duplicate conversations",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "laptop dark sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "laptop dark only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available action Try Nova Demo User",
+      "passed": true
+    },
+    {
+      "label": "laptop dark second identity is consistent and cannot see previous messages/drafts",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "laptop dark Nova profile has its stable distinct ID and username",
+      "passed": true
+    },
+    {
+      "label": "laptop dark navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark self-discovery uses the authenticated actor",
+      "passed": true
+    },
+    {
+      "label": "laptop dark navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "Available control .conversation-list-item[aria-label^=\"Security Study Group, Group\"]",
+      "passed": true
+    },
+    {
+      "label": "laptop dark group demo and security limitations remain intact",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "laptop dark sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "laptop dark theme survives sign-out",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "laptop dark refresh restores signed-out UI without protected flash",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "laptop dark registration creates only the disclosed temporary identity",
+      "passed": true
+    },
+    {
+      "label": "laptop dark only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "laptop dark sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "mobile dark protected route never exposes Messenger while resolving session",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "mobile dark development demo has honest credential/session limitations",
+      "passed": true
+    },
+    {
+      "label": "mobile dark login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 375,
+        "bodyWidth": 375,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 0,
+            "right": 375,
+            "top": 0,
+            "bottom": 972.59375,
+            "width": 375,
+            "scrollWidth": 375,
+            "clientWidth": 375
+          },
+          {
+            "selector": ".auth-header",
+            "x": 0,
+            "right": 375,
+            "top": 27.875,
+            "bottom": 100.0625,
+            "width": 375,
+            "scrollWidth": 375,
+            "clientWidth": 375
+          },
+          {
+            "selector": ".auth-card",
+            "x": 20,
+            "right": 355,
+            "top": 163.25,
+            "bottom": 879.421875,
+            "width": 335,
+            "scrollWidth": 335,
+            "clientWidth": 335
+          },
+          {
+            "selector": ".auth-form",
+            "x": 20,
+            "right": 355,
+            "top": 441.90625,
+            "bottom": 669.0625,
+            "width": 335,
+            "scrollWidth": 335,
+            "clientWidth": 335
+          }
+        ]
+      }
+    },
+    {
+      "label": "mobile dark main heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "mobile dark form label actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "mobile dark explicit labels, autocomplete, keyboard and password semantics",
+      "passed": true
+    },
+    {
+      "label": "mobile dark comfortable action and reduced-motion state",
+      "passed": true,
+      "detail": {
+        "width": 335,
+        "height": 48,
+        "animation": "none"
+      }
+    },
+    {
+      "label": "mobile dark field exposes visible keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "mobile dark signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 375,
+        "bodyWidth": 375,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 0,
+            "right": 375,
+            "top": 0,
+            "bottom": 1170.734375,
+            "width": 375,
+            "scrollWidth": 375,
+            "clientWidth": 375
+          },
+          {
+            "selector": ".auth-header",
+            "x": 0,
+            "right": 375,
+            "top": 27.875,
+            "bottom": 100.0625,
+            "width": 375,
+            "scrollWidth": 375,
+            "clientWidth": 375
+          },
+          {
+            "selector": ".auth-card",
+            "x": 20,
+            "right": 355,
+            "top": 163.25,
+            "bottom": 1077.5625,
+            "width": 335,
+            "scrollWidth": 335,
+            "clientWidth": 335
+          },
+          {
+            "selector": ".auth-form",
+            "x": 20,
+            "right": 355,
+            "top": 441.90625,
+            "bottom": 867.203125,
+            "width": 335,
+            "scrollWidth": 335,
+            "clientWidth": 335
+          }
+        ]
+      }
+    },
+    {
+      "label": "mobile dark explicit labels, autocomplete, keyboard and password semantics",
+      "passed": true
+    },
+    {
+      "label": "mobile dark comfortable action and reduced-motion state",
+      "passed": true,
+      "detail": {
+        "width": 335,
+        "height": 48,
+        "animation": "none"
+      }
+    },
+    {
+      "label": "mobile dark field exposes visible keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign In",
+      "passed": true
+    },
+    {
+      "label": "mobile dark required sign-in errors are linked to fields",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Show password\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile dark password visibility preserves entered value and accessible toggle state",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Hide password\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "mobile dark registration validates email and mismatch without changing password",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "mobile dark demo login seeds the existing profile identity",
+      "passed": true
+    },
+    {
+      "label": "Available action Send",
+      "passed": true
+    },
+    {
+      "label": "mobile dark navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark Friends integration remains bound to current identity",
+      "passed": true
+    },
+    {
+      "label": "Available control #friends button[aria-label=\"Message Ava Morgan\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile dark existing canonical DM still opens without duplicate conversations",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "mobile dark sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "mobile dark only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available action Try Nova Demo User",
+      "passed": true
+    },
+    {
+      "label": "mobile dark second identity is consistent and cannot see previous messages/drafts",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile dark Nova profile has its stable distinct ID and username",
+      "passed": true
+    },
+    {
+      "label": "mobile dark navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark self-discovery uses the authenticated actor",
+      "passed": true
+    },
+    {
+      "label": "mobile dark navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Back to conversations\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control .conversation-list-item[aria-label^=\"Security Study Group, Group\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile dark group demo and security limitations remain intact",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "mobile dark sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "mobile dark theme survives sign-out",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "mobile dark refresh restores signed-out UI without protected flash",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-switch a",
+      "passed": true
+    },
+    {
+      "label": "Available action Create Account",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile dark registration creates only the disclosed temporary identity",
+      "passed": true
+    },
+    {
+      "label": "mobile dark only appearance preference is persisted",
+      "passed": true,
+      "detail": {
+        "localKeys": [
+          "secubuzz-theme"
+        ],
+        "sessionKeys": [],
+        "cookies": ""
+      }
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "mobile dark sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "External return destination cannot leave the app",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "safe intended destinations sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "Supported Friends destination is preserved after login",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available action Sign Out",
+      "passed": true
+    },
+    {
+      "label": "safe intended destinations sign-out clears protected view",
+      "passed": true
+    },
+    {
+      "label": "No auth API requests or fallback success were fabricated",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "No uncaught runtime or hydration errors",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "Source unchanged during browser run",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "artifacts/phase8-5/development-desktop-light-login.png",
+    "artifacts/phase8-5/development-desktop-light-signup.png",
+    "artifacts/phase8-5/development-laptop-light-login.png",
+    "artifacts/phase8-5/development-laptop-light-signup.png",
+    "artifacts/phase8-5/development-mobile-light-login.png",
+    "artifacts/phase8-5/development-mobile-light-signup.png",
+    "artifacts/phase8-5/development-mobile-light-messenger.png",
+    "artifacts/phase8-5/development-desktop-dark-login.png",
+    "artifacts/phase8-5/development-desktop-dark-signup.png",
+    "artifacts/phase8-5/development-desktop-dark-messenger.png",
+    "artifacts/phase8-5/development-laptop-dark-login.png",
+    "artifacts/phase8-5/development-laptop-dark-signup.png",
+    "artifacts/phase8-5/development-mobile-dark-login.png",
+    "artifacts/phase8-5/development-mobile-dark-signup.png"
+  ],
+  "runtimeErrors": [],
+  "consoleErrors": [
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority"
+  ],
+  "fonts": [
+    {
+      "label": "desktop light main heading",
+      "selector": "#auth-form-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "desktop light form label",
+      "selector": "label[for=auth-identifier]",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "laptop light main heading",
+      "selector": "#auth-form-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "laptop light form label",
+      "selector": "label[for=auth-identifier]",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "mobile light main heading",
+      "selector": "#auth-form-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "mobile light form label",
+      "selector": "label[for=auth-identifier]",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "desktop dark main heading",
+      "selector": "#auth-form-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "desktop dark form label",
+      "selector": "label[for=auth-identifier]",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "laptop dark main heading",
+      "selector": "#auth-form-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "laptop dark form label",
+      "selector": "label[for=auth-identifier]",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    },
+    {
+      "label": "mobile dark main heading",
+      "selector": "#auth-form-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 13
+        }
+      ]
+    },
+    {
+      "label": "mobile dark form label",
+      "selector": "label[for=auth-identifier]",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Medium",
+          "isCustomFont": true,
+          "glyphCount": 17
+        }
+      ]
+    }
+  ],
+  "geometry": [
+    {
+      "label": "desktop light login",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1425,
+      "bodyWidth": 1425,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 104.5,
+          "right": 1320.5,
+          "top": 43.1875,
+          "bottom": 1000.703125,
+          "width": 1216,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-header",
+          "x": 105.5,
+          "right": 1319.5,
+          "top": 73.5625,
+          "bottom": 155.34375,
+          "width": 1214,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-card",
+          "x": 800,
+          "right": 1232,
+          "top": 211.34375,
+          "bottom": 899.015625,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        },
+        {
+          "selector": ".auth-form",
+          "x": 800,
+          "right": 1232,
+          "top": 461.5,
+          "bottom": 688.65625,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        }
+      ]
+    },
+    {
+      "label": "desktop light signup",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1425,
+      "bodyWidth": 1425,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 104.5,
+          "right": 1320.5,
+          "top": 43.1875,
+          "bottom": 1198.84375,
+          "width": 1216,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-header",
+          "x": 105.5,
+          "right": 1319.5,
+          "top": 73.5625,
+          "bottom": 155.34375,
+          "width": 1214,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-card",
+          "x": 800,
+          "right": 1232,
+          "top": 211.34375,
+          "bottom": 1097.15625,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        },
+        {
+          "selector": ".auth-form",
+          "x": 800,
+          "right": 1232,
+          "top": 461.5,
+          "bottom": 886.796875,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        }
+      ]
+    },
+    {
+      "label": "laptop light login",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1009,
+      "bodyWidth": 1009,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 30.71875,
+          "right": 978.28125,
+          "top": 30.71875,
+          "bottom": 937.828125,
+          "width": 947.5625,
+          "scrollWidth": 946,
+          "clientWidth": 946
+        },
+        {
+          "selector": ".auth-header",
+          "x": 31.71875,
+          "right": 977.28125,
+          "top": 61.09375,
+          "bottom": 142.875,
+          "width": 945.5625,
+          "scrollWidth": 946,
+          "clientWidth": 946
+        },
+        {
+          "selector": ".auth-card",
+          "x": 540.5,
+          "right": 941.28125,
+          "top": 178.875,
+          "bottom": 856.140625,
+          "width": 400.78125,
+          "scrollWidth": 401,
+          "clientWidth": 401
+        },
+        {
+          "selector": ".auth-form",
+          "x": 540.5,
+          "right": 941.28125,
+          "top": 418.625,
+          "bottom": 645.78125,
+          "width": 400.78125,
+          "scrollWidth": 401,
+          "clientWidth": 401
+        }
+      ]
+    },
+    {
+      "label": "laptop light signup",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1009,
+      "bodyWidth": 1009,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 30.71875,
+          "right": 978.28125,
+          "top": 30.71875,
+          "bottom": 1135.96875,
+          "width": 947.5625,
+          "scrollWidth": 946,
+          "clientWidth": 946
+        },
+        {
+          "selector": ".auth-header",
+          "x": 31.71875,
+          "right": 977.28125,
+          "top": 61.09375,
+          "bottom": 142.875,
+          "width": 945.5625,
+          "scrollWidth": 946,
+          "clientWidth": 946
+        },
+        {
+          "selector": ".auth-card",
+          "x": 540.5,
+          "right": 941.28125,
+          "top": 178.875,
+          "bottom": 1054.28125,
+          "width": 400.78125,
+          "scrollWidth": 401,
+          "clientWidth": 401
+        },
+        {
+          "selector": ".auth-form",
+          "x": 540.5,
+          "right": 941.28125,
+          "top": 418.625,
+          "bottom": 843.921875,
+          "width": 400.78125,
+          "scrollWidth": 401,
+          "clientWidth": 401
+        }
+      ]
+    },
+    {
+      "label": "mobile light login",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 0,
+          "right": 375,
+          "top": 0,
+          "bottom": 972.59375,
+          "width": 375,
+          "scrollWidth": 375,
+          "clientWidth": 375
+        },
+        {
+          "selector": ".auth-header",
+          "x": 0,
+          "right": 375,
+          "top": 27.875,
+          "bottom": 100.0625,
+          "width": 375,
+          "scrollWidth": 375,
+          "clientWidth": 375
+        },
+        {
+          "selector": ".auth-card",
+          "x": 20,
+          "right": 355,
+          "top": 163.25,
+          "bottom": 879.421875,
+          "width": 335,
+          "scrollWidth": 335,
+          "clientWidth": 335
+        },
+        {
+          "selector": ".auth-form",
+          "x": 20,
+          "right": 355,
+          "top": 441.90625,
+          "bottom": 669.0625,
+          "width": 335,
+          "scrollWidth": 335,
+          "clientWidth": 335
+        }
+      ]
+    },
+    {
+      "label": "mobile light signup",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 0,
+          "right": 375,
+          "top": 0,
+          "bottom": 1170.734375,
+          "width": 375,
+          "scrollWidth": 375,
+          "clientWidth": 375
+        },
+        {
+          "selector": ".auth-header",
+          "x": 0,
+          "right": 375,
+          "top": 27.875,
+          "bottom": 100.0625,
+          "width": 375,
+          "scrollWidth": 375,
+          "clientWidth": 375
+        },
+        {
+          "selector": ".auth-card",
+          "x": 20,
+          "right": 355,
+          "top": 163.25,
+          "bottom": 1077.5625,
+          "width": 335,
+          "scrollWidth": 335,
+          "clientWidth": 335
+        },
+        {
+          "selector": ".auth-form",
+          "x": 20,
+          "right": 355,
+          "top": 441.90625,
+          "bottom": 867.203125,
+          "width": 335,
+          "scrollWidth": 335,
+          "clientWidth": 335
+        }
+      ]
+    },
+    {
+      "label": "desktop dark login",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1425,
+      "bodyWidth": 1425,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 104.5,
+          "right": 1320.5,
+          "top": 43.1875,
+          "bottom": 1000.703125,
+          "width": 1216,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-header",
+          "x": 105.5,
+          "right": 1319.5,
+          "top": 73.5625,
+          "bottom": 155.34375,
+          "width": 1214,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-card",
+          "x": 800,
+          "right": 1232,
+          "top": 211.34375,
+          "bottom": 899.015625,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        },
+        {
+          "selector": ".auth-form",
+          "x": 800,
+          "right": 1232,
+          "top": 461.5,
+          "bottom": 688.65625,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        }
+      ]
+    },
+    {
+      "label": "desktop dark signup",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1425,
+      "bodyWidth": 1425,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 104.5,
+          "right": 1320.5,
+          "top": 43.1875,
+          "bottom": 1198.84375,
+          "width": 1216,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-header",
+          "x": 105.5,
+          "right": 1319.5,
+          "top": 73.5625,
+          "bottom": 155.34375,
+          "width": 1214,
+          "scrollWidth": 1214,
+          "clientWidth": 1214
+        },
+        {
+          "selector": ".auth-card",
+          "x": 800,
+          "right": 1232,
+          "top": 211.34375,
+          "bottom": 1097.15625,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        },
+        {
+          "selector": ".auth-form",
+          "x": 800,
+          "right": 1232,
+          "top": 461.5,
+          "bottom": 886.796875,
+          "width": 432,
+          "scrollWidth": 432,
+          "clientWidth": 432
+        }
+      ]
+    },
+    {
+      "label": "laptop dark login",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1009,
+      "bodyWidth": 1009,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 30.71875,
+          "right": 978.28125,
+          "top": 30.71875,
+          "bottom": 937.828125,
+          "width": 947.5625,
+          "scrollWidth": 946,
+          "clientWidth": 946
+        },
+        {
+          "selector": ".auth-header",
+          "x": 31.71875,
+          "right": 977.28125,
+          "top": 61.09375,
+          "bottom": 142.875,
+          "width": 945.5625,
+          "scrollWidth": 946,
+          "clientWidth": 946
+        },
+        {
+          "selector": ".auth-card",
+          "x": 540.5,
+          "right": 941.28125,
+          "top": 178.875,
+          "bottom": 856.140625,
+          "width": 400.78125,
+          "scrollWidth": 401,
+          "clientWidth": 401
+        },
+        {
+          "selector": ".auth-form",
+          "x": 540.5,
+          "right": 941.28125,
+          "top": 418.625,
+          "bottom": 645.78125,
+          "width": 400.78125,
+          "scrollWidth": 401,
+          "clientWidth": 401
+        }
+      ]
+    },
+    {
+      "label": "laptop dark signup",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1009,
+      "bodyWidth": 1009,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 30.71875,
+          "right": 978.28125,
+          "top": 30.71875,
+          "bottom": 1135.96875,
+          "width": 947.5625,
+          "scrollWidth": 946,
+          "clientWidth": 946
+        },
+        {
+          "selector": ".auth-header",
+          "x": 31.71875,
+          "right": 977.28125,
+          "top": 61.09375,
+          "bottom": 142.875,
+          "width": 945.5625,
+          "scrollWidth": 946,
+          "clientWidth": 946
+        },
+        {
+          "selector": ".auth-card",
+          "x": 540.5,
+          "right": 941.28125,
+          "top": 178.875,
+          "bottom": 1054.28125,
+          "width": 400.78125,
+          "scrollWidth": 401,
+          "clientWidth": 401
+        },
+        {
+          "selector": ".auth-form",
+          "x": 540.5,
+          "right": 941.28125,
+          "top": 418.625,
+          "bottom": 843.921875,
+          "width": 400.78125,
+          "scrollWidth": 401,
+          "clientWidth": 401
+        }
+      ]
+    },
+    {
+      "label": "mobile dark login",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 0,
+          "right": 375,
+          "top": 0,
+          "bottom": 972.59375,
+          "width": 375,
+          "scrollWidth": 375,
+          "clientWidth": 375
+        },
+        {
+          "selector": ".auth-header",
+          "x": 0,
+          "right": 375,
+          "top": 27.875,
+          "bottom": 100.0625,
+          "width": 375,
+          "scrollWidth": 375,
+          "clientWidth": 375
+        },
+        {
+          "selector": ".auth-card",
+          "x": 20,
+          "right": 355,
+          "top": 163.25,
+          "bottom": 879.421875,
+          "width": 335,
+          "scrollWidth": 335,
+          "clientWidth": 335
+        },
+        {
+          "selector": ".auth-form",
+          "x": 20,
+          "right": 355,
+          "top": 441.90625,
+          "bottom": 669.0625,
+          "width": 335,
+          "scrollWidth": 335,
+          "clientWidth": 335
+        }
+      ]
+    },
+    {
+      "label": "mobile dark signup",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 0,
+          "right": 375,
+          "top": 0,
+          "bottom": 1170.734375,
+          "width": 375,
+          "scrollWidth": 375,
+          "clientWidth": 375
+        },
+        {
+          "selector": ".auth-header",
+          "x": 0,
+          "right": 375,
+          "top": 27.875,
+          "bottom": 100.0625,
+          "width": 375,
+          "scrollWidth": 375,
+          "clientWidth": 375
+        },
+        {
+          "selector": ".auth-card",
+          "x": 20,
+          "right": 355,
+          "top": 163.25,
+          "bottom": 1077.5625,
+          "width": 335,
+          "scrollWidth": 335,
+          "clientWidth": 335
+        },
+        {
+          "selector": ".auth-form",
+          "x": 20,
+          "right": 355,
+          "top": 441.90625,
+          "bottom": 867.203125,
+          "width": 335,
+          "scrollWidth": 335,
+          "clientWidth": 335
+        }
+      ]
+    }
+  ],
+  "buildId": "development",
+  "sourceFingerprint": {
+    "fileCount": 109,
+    "sha256": "0215a0414efefb98226228b9984dbeffb525c6905b22377b2170b4f0e6ce3b1e"
+  },
+  "browserVersion": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/156.0.8078.81",
+    "revision": "@060bedfb508f73250e93aeb9ca8149b3958995d8",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+    "jsVersion": "15.6.75.27"
+  },
+  "authRequests": [],
+  "finalSourceFingerprint": {
+    "fileCount": 109,
+    "sha256": "0215a0414efefb98226228b9984dbeffb525c6905b22377b2170b4f0e6ce3b1e"
+  },
+  "completedAt": "2026-11-09T03:38:32.168Z",
+  "passed": true,
+  "cleanup": {
+    "requestedOwnedProcessCleanup": true,
+    "serverPid": 22820,
+    "browserPid": 10832
+  }
+}

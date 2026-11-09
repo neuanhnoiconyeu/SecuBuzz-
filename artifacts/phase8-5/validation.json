@@ -1,0 +1,281 @@
+﻿{
+    "phase":  "8.5 Authentication UI and Session Management",
+    "initialState":  "Phase 6 uncommitted changes preserved on main",
+    "tests":  {
+                  "passed":  356,
+                  "command":  "npm test -- --runInBand",
+                  "addedSincePhase6":  142,
+                  "failed":  0,
+                  "suites":  37
+              },
+    "typeCheck":  {
+                      "command":  "npm run type-check",
+                      "passed":  true
+                  },
+    "lint":  {
+                 "command":  "npm run lint",
+                 "warnings":  0,
+                 "passed":  true
+             },
+    "productionBuild":  {
+                            "buildId":  "6sHkbMVBldnqkp0iqAPsR",
+                            "command":  "npm run build",
+                            "routes":  [
+                                           "/",
+                                           "/login",
+                                           "/signup"
+                                       ],
+                            "sandboxNote":  "Approved execution permitted Next build worker processes.",
+                            "passed":  true
+                        },
+    "createdFiles":  [
+                         "client/src/app/login/page.tsx",
+                         "client/src/app/signup/page.tsx",
+                         "client/src/auth/__tests__/authModel.test.ts",
+                         "client/src/auth/__tests__/AuthProvider.test.tsx",
+                         "client/src/auth/__tests__/AuthRouteGuards.test.tsx",
+                         "client/src/auth/__tests__/authService.test.ts",
+                         "client/src/auth/__tests__/developmentAuthService.test.ts",
+                         "client/src/auth/__tests__/httpAuthService.test.ts",
+                         "client/src/auth/__tests__/messengerSession.test.ts",
+                         "client/src/auth/__tests__/workspaceIntegration.test.tsx",
+                         "client/src/auth/AuthenticatedWorkspace.tsx",
+                         "client/src/auth/authModel.ts",
+                         "client/src/auth/authNavigation.ts",
+                         "client/src/auth/AuthProvider.tsx",
+                         "client/src/auth/AuthRouteGuards.tsx",
+                         "client/src/auth/authService.ts",
+                         "client/src/auth/developmentAuthService.ts",
+                         "client/src/auth/httpAuthService.ts",
+                         "client/src/auth/INTEGRATION.md",
+                         "client/src/auth/messengerSession.ts",
+                         "client/src/components/auth/__tests__/AuthForm.test.tsx",
+                         "client/src/components/auth/__tests__/PasswordField.test.tsx",
+                         "client/src/components/auth/AuthForm.tsx",
+                         "client/src/components/auth/AuthShell.tsx",
+                         "client/src/components/auth/PasswordField.tsx",
+                         "client/src/components/messenger/MessengerApp.tsx",
+                         "client/src/styles/auth.css",
+                         "client/src/test-support/MessengerHarness.tsx"
+                     ],
+    "modifiedFiles":  [
+                          "README.md",
+                          "client/.env.example",
+                          "client/src/app/layout.tsx",
+                          "client/src/app/page.tsx",
+                          "client/src/app/page.test.tsx",
+                          "client/src/app/profile.test.tsx",
+                          "client/src/app/friends.test.tsx",
+                          "client/src/components/profile/ProfileDialog.tsx",
+                          "client/src/components/YahooChatWindow.tsx",
+                          "client/src/conversations/demoConversations.ts",
+                          "client/src/hooks/useCurrentProfile.ts",
+                          "client/src/messaging/localDemoTransport.ts",
+                          "client/src/profiles/profileService.ts"
+                      ],
+    "sourceFiles":  [
+                        {
+                            "path":  "client/.env.example",
+                            "sha256":  "ad1933d1b18c63315b11133dcfcedc4a17e908e9b4e02a5122b3e459ba2c71e3"
+                        },
+                        {
+                            "path":  "client/src/app/friends.test.tsx",
+                            "sha256":  "8632deb18cb6ac1c77f44ebb334536dc676559113a24d9f63f11d12d23bf5ad5"
+                        },
+                        {
+                            "path":  "client/src/app/layout.tsx",
+                            "sha256":  "48fec3d14406cfe03a19114bd9585d59af8708473fc46c58d82c001ba7980dd9"
+                        },
+                        {
+                            "path":  "client/src/app/login/page.tsx",
+                            "sha256":  "d1441ac380d004de5e66b07ea22cce401668394bd74a4e401e40a8f2e4bcdf7a"
+                        },
+                        {
+                            "path":  "client/src/app/page.test.tsx",
+                            "sha256":  "d02ea5557441c892699f0deb7c1698c8b2cd4d6e4f35e7bd156a0ac9508dbd4a"
+                        },
+                        {
+                            "path":  "client/src/app/page.tsx",
+                            "sha256":  "120004ee3624ef38b4144c730ed935c69cdf4ed640a59d9eb6ecbf1f3b8a4b10"
+                        },
+                        {
+                            "path":  "client/src/app/profile.test.tsx",
+                            "sha256":  "a8b367add060282146f6808591aeea4013911e49d59b2b7d43deb867ddaaa1e3"
+                        },
+                        {
+                            "path":  "client/src/app/signup/page.tsx",
+                            "sha256":  "9f96bc0dac311dd6df22170ce27d8655b18d6764a6634cf1d268932e3b16fa7d"
+                        },
+                        {
+                            "path":  "client/src/auth/__tests__/authModel.test.ts",
+                            "sha256":  "b8ed24c57162a1e39a10d8ae6d7c00d7e7bae551af1491199fe98cf1ca880013"
+                        },
+                        {
+                            "path":  "client/src/auth/__tests__/AuthProvider.test.tsx",
+                            "sha256":  "794761e56d93eb2a847066417189eef9076f20511d7fccec998bd892c796e86b"
+                        },
+                        {
+                            "path":  "client/src/auth/__tests__/AuthRouteGuards.test.tsx",
+                            "sha256":  "78f4f1b5909436da18e96750f9878a57a6186f071445cf66647c55c9dac8654b"
+                        },
+                        {
+                            "path":  "client/src/auth/__tests__/authService.test.ts",
+                            "sha256":  "a9347c423d37ab9d4c13cdadc8f229bd59fc4cec084c8f564311b2af5b63b9a9"
+                        },
+                        {
+                            "path":  "client/src/auth/__tests__/developmentAuthService.test.ts",
+                            "sha256":  "b1c10f8046521ddbffdb47dbe2690d2973d233f7793ad9637b91183d1fc18e60"
+                        },
+                        {
+                            "path":  "client/src/auth/__tests__/httpAuthService.test.ts",
+                            "sha256":  "9247b815d89400582093c11a9e90b114108586d72405c2aa97dd76fcfc613a43"
+                        },
+                        {
+                            "path":  "client/src/auth/__tests__/messengerSession.test.ts",
+                            "sha256":  "92619db184495a54b337d15450ce4d2fa50a41b18b0fe5cac36d2655d7b45ca6"
+                        },
+                        {
+                            "path":  "client/src/auth/__tests__/workspaceIntegration.test.tsx",
+                            "sha256":  "b25f02f8103db61f64c1c40717230643251c04eb16d0e2236fef0df11a1045b3"
+                        },
+                        {
+                            "path":  "client/src/auth/AuthenticatedWorkspace.tsx",
+                            "sha256":  "91752d0a58625b6305894b4b3ca181419331bef7c0b3822441006a492b2b1570"
+                        },
+                        {
+                            "path":  "client/src/auth/authModel.ts",
+                            "sha256":  "03475ead1d51ece1ac5dbdb61e22bbb51b885116e31a3fb6830d73c14643d381"
+                        },
+                        {
+                            "path":  "client/src/auth/authNavigation.ts",
+                            "sha256":  "927ce8ab5fd80eef275e13932bff4fc427cafbee67f80f2e3e163badbd2cd8f1"
+                        },
+                        {
+                            "path":  "client/src/auth/AuthProvider.tsx",
+                            "sha256":  "4362315de21a4898c1f597e257f6066dc649c42c443e7f5a91b2b92d4d3962bb"
+                        },
+                        {
+                            "path":  "client/src/auth/AuthRouteGuards.tsx",
+                            "sha256":  "389936ee73121cb965854627d8cb9c34455178c0e90abae35acfa0efd30e22f5"
+                        },
+                        {
+                            "path":  "client/src/auth/authService.ts",
+                            "sha256":  "bf2d8f9415a8bdfb6473a93b6fbdfc3fd27f19bb8c8cc4d304733ce4960659ad"
+                        },
+                        {
+                            "path":  "client/src/auth/developmentAuthService.ts",
+                            "sha256":  "e9acc668f850f9bfd1e21e71b2230129a18180122fb1201834fcdd1b0620b04f"
+                        },
+                        {
+                            "path":  "client/src/auth/httpAuthService.ts",
+                            "sha256":  "a9bca70ab275a350f89b955063d2866e70b87506f095cd8fdaabffcddfaae99a"
+                        },
+                        {
+                            "path":  "client/src/auth/INTEGRATION.md",
+                            "sha256":  "781eb909340359822fd6048caa62d66e54c6af9c731a2f98a4b8b41a08a80ebd"
+                        },
+                        {
+                            "path":  "client/src/auth/messengerSession.ts",
+                            "sha256":  "1c0b2e876e786846921f86af270cbd4e795d6cab5f37bcc7efefeb42ab8b6eae"
+                        },
+                        {
+                            "path":  "client/src/components/auth/__tests__/AuthForm.test.tsx",
+                            "sha256":  "0bdcc4b05f25ff29dd7bb63eb982d8da5259428074cc484394dfe4f0b4a0c24f"
+                        },
+                        {
+                            "path":  "client/src/components/auth/__tests__/PasswordField.test.tsx",
+                            "sha256":  "037e4f7a95398893c54fe1bff80bba33776ac5c10a167bc843910edbc64a207b"
+                        },
+                        {
+                            "path":  "client/src/components/auth/AuthForm.tsx",
+                            "sha256":  "e4fbd5a5b5e383185d6332a8012f3b69c3f79d997e6e5808a956309475902871"
+                        },
+                        {
+                            "path":  "client/src/components/auth/AuthShell.tsx",
+                            "sha256":  "e330af98950475305949cfe143eee903de9f36cf4a7b68f488f41fde99f90c44"
+                        },
+                        {
+                            "path":  "client/src/components/auth/PasswordField.tsx",
+                            "sha256":  "f4147345a4672db7fccfa955400af0c3c8a91f7c54f628fcf93b74ca7cb451d6"
+                        },
+                        {
+                            "path":  "client/src/components/messenger/MessengerApp.tsx",
+                            "sha256":  "65cca5409350654f38574737dc3a016a88a8465d49345b63ec7e0b4c1abe67d6"
+                        },
+                        {
+                            "path":  "client/src/components/profile/ProfileDialog.tsx",
+                            "sha256":  "46fc2ef1a695358eb7ea076bc2a6be607a65ee6f66075b783a096cc6ae928fe1"
+                        },
+                        {
+                            "path":  "client/src/components/YahooChatWindow.tsx",
+                            "sha256":  "72421c2e3734d568eabad36de1ff21cbbad536c4fd9c34c340aef1ad4126adff"
+                        },
+                        {
+                            "path":  "client/src/conversations/demoConversations.ts",
+                            "sha256":  "71635ab893d3b09d0587ec8972604f14f8fbdba61037ba1024549d579f58882c"
+                        },
+                        {
+                            "path":  "client/src/hooks/useCurrentProfile.ts",
+                            "sha256":  "d9b4cd36c854708da6f98d7dc2b718ac313499f61f708e2ea9907de4c201beda"
+                        },
+                        {
+                            "path":  "client/src/messaging/localDemoTransport.ts",
+                            "sha256":  "e64d7585eb1ee41965c3d50376bcea2442e8df8912eb2959fb82bcb64d8d33ac"
+                        },
+                        {
+                            "path":  "client/src/profiles/profileService.ts",
+                            "sha256":  "6a75594ca1507ca6da947173ad44962c2a24558e6a2a43168c466fd1584c2549"
+                        },
+                        {
+                            "path":  "client/src/styles/auth.css",
+                            "sha256":  "138038a343df8f84fb24169bc8c4d9a976139bee9312ae72defef6ff3b59f6a3"
+                        },
+                        {
+                            "path":  "client/src/test-support/MessengerHarness.tsx",
+                            "sha256":  "5a448a7902523ada6e9171e1f7209734c6af3dcd56c421196956f6af77f418fd"
+                        },
+                        {
+                            "path":  "README.md",
+                            "sha256":  "7db22709c9d6e6931115c8f046228a3ccb233059e7e8f564c2b7fbd08103d0a5"
+                        }
+                    ],
+    "unchangedProtectedPaths":  [
+                                    "server",
+                                    ".kiro",
+                                    "client/src/security",
+                                    "client/src/utils/crypto.ts",
+                                    "client/src/components/messenger/MessageList.tsx",
+                                    "client/src/hooks/useConversationMessages.ts",
+                                    "client/src/messaging/messageModel.ts",
+                                    "client/src/messaging/messageState.ts",
+                                    "client/src/messaging/transport.ts"
+                                ],
+    "scope":  "Frontend only; no database/auth server/Socket.io/Kiro/AI integration",
+    "backendStatus":  "Proposed auth API and CSRF bootstrap not connected; production fails closed, demo disabled",
+    "browserEvidence":  [
+                            "production-browser-evidence.json",
+                            "development-browser-evidence.json"
+                        ],
+    "browser":  {
+                    "production":  63,
+                    "development":  386,
+                    "additionalAccessibilityAndZoom":  52,
+                    "totalPassed":  501,
+                    "failed":  0,
+                    "runtimeAndHydrationErrors":  0,
+                    "widths":  [
+                                   1440,
+                                   1024,
+                                   390,
+                                   320
+                               ],
+                    "themes":  [
+                                   "Light",
+                                   "Dark",
+                                   "System"
+                               ],
+                    "zoom":  "Genuine native Chrome 200%, CSS viewport 1422 to 711, DPR 1 to 2, pinch scale 1",
+                    "productionDemoDenied":  true,
+                    "realAuthApiVerified":  false
+                }
+}

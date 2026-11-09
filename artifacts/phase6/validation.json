@@ -1,0 +1,121 @@
+﻿{
+    "scope":  "Phase 6 Friends System",
+    "initialCommit":  "25f50c0e9802d2fafd6c75d02c0cb72d248126ec",
+    "inspectedTeammateBranch":  "origin/bon-7-8",
+    "inspectedTeammateCommit":  "07f3c15951bee6cd8a8c124fccac6bcee1f3bc54",
+    "gitBranch":  "main",
+    "mode":  "Explicit local demo; authenticated backend not connected",
+    "tests":  {
+                  "failed":  0,
+                  "command":  "npm test -- --runInBand",
+                  "addedTests":  55,
+                  "suites":  27,
+                  "passed":  214
+              },
+    "typescript":  {
+                       "command":  "npm run type-check",
+                       "passed":  true
+                   },
+    "productionBuild":  {
+                            "passed":  true,
+                            "buildId":  "jx4vQHFlQrhXOVZ9uL6P1",
+                            "command":  "npm run build",
+                            "firstLoadJs":  "122 kB",
+                            "routeSize":  "34.9 kB",
+                            "sandboxNote":  "Next build workers required approved execution outside sandbox after initial EPERM."
+                        },
+    "protectedFilesUnchanged":  true,
+    "protectedPaths":  [
+                           "client/src/components/YahooChatWindow.tsx",
+                           "client/src/components/messenger/MessageList.tsx",
+                           "client/src/hooks/useConversationMessages.ts",
+                           "client/src/messaging/messageModel.ts",
+                           "client/src/messaging/messageState.ts",
+                           "client/src/messaging/transport.ts",
+                           "client/src/messaging/localDemoTransport.ts",
+                           "client/src/security/keyManagement.ts",
+                           "client/src/security/conversationCryptoService.ts",
+                           "client/src/utils/crypto.ts",
+                           "server",
+                           ".kiro"
+                       ],
+    "sourceFiles":  [
+                        {
+                            "path":  "client/src/app/friends.test.tsx",
+                            "sha256":  "be0c9269868f5ef04affea500d2664ec7126e40e18e9073b237aea6827b79d0d"
+                        },
+                        {
+                            "path":  "client/src/app/layout.tsx",
+                            "sha256":  "3d794a551893f81d6bbf42d1043a4a54cadc7ceed4238e2dfb0dedc14eb425b8"
+                        },
+                        {
+                            "path":  "client/src/app/page.tsx",
+                            "sha256":  "e8cfdc7cca6d99f723878975559ab9adfd515ce3becd7241ae513e30d52f0b47"
+                        },
+                        {
+                            "path":  "client/src/components/friends/__tests__/FriendsPage.test.tsx",
+                            "sha256":  "817bd8830474b820cefa3863a98b295ae57ca638a12c3cad4167a94e8b16ba2d"
+                        },
+                        {
+                            "path":  "client/src/components/friends/FriendsPage.tsx",
+                            "sha256":  "798f66e08682ff5710aba3cd3b4dc0fe80b3f624bbe02df293c9077fef2449ec"
+                        },
+                        {
+                            "path":  "client/src/components/messenger/MainNavigation.tsx",
+                            "sha256":  "1224fb35fbe6a41bfd19369779c149e3e5e50ed765b65e1345d8042f65bd2668"
+                        },
+                        {
+                            "path":  "client/src/friends/__tests__/conversationAdapter.test.ts",
+                            "sha256":  "27d8adfa44d49595b7eeefadeff3db1f6b6eb8724dd3f08e4ac89bca090380aa"
+                        },
+                        {
+                            "path":  "client/src/friends/__tests__/friendsModel.test.ts",
+                            "sha256":  "3bf9fdc144fdad4659453f11677d303abba85fe7a90af85bb96001aef986a1ca"
+                        },
+                        {
+                            "path":  "client/src/friends/__tests__/friendsService.test.ts",
+                            "sha256":  "6607ce9773b15146c73a740fa2abdfc1a8d0b9c5084e3785c1264c376e8cdef2"
+                        },
+                        {
+                            "path":  "client/src/friends/conversationAdapter.ts",
+                            "sha256":  "590df555487ab4333511cf711cf0eb87e0a644efc6ba83b010b77e813bb1f1ab"
+                        },
+                        {
+                            "path":  "client/src/friends/friendsModel.ts",
+                            "sha256":  "bbc8fe233ea41ef940f7fbdfae463a241f18ff1a9ec79fc256ca8f64fbb6071b"
+                        },
+                        {
+                            "path":  "client/src/friends/friendsService.ts",
+                            "sha256":  "0bb49f7d26bc1e96bb39031a71e05c932dee7ec45a1825ce30ae0adc032ca89c"
+                        },
+                        {
+                            "path":  "client/src/friends/INTEGRATION.md",
+                            "sha256":  "2b428678b4ae244a0e050a4307935f1d09c24cff777ceea5b23343720bb7fbdc"
+                        },
+                        {
+                            "path":  "client/src/hooks/__tests__/useFriends.test.tsx",
+                            "sha256":  "42dc7e1218a74e79bc67443d6d73945d87165fc2422628601b61e7ba0f7439eb"
+                        },
+                        {
+                            "path":  "client/src/hooks/useFriends.ts",
+                            "sha256":  "8999de9230b4af63ea03e4f2d6fbaa429adb154d9b9c00599d8940d711ff8cea"
+                        },
+                        {
+                            "path":  "client/src/styles/friends.css",
+                            "sha256":  "bd88178c19da58772b0bdc16a2cfbe9338033f5797fbf7ac7b402d1a61d13290"
+                        },
+                        {
+                            "path":  "README.md",
+                            "sha256":  "4538900eac73d3087218aaa5b6b86b50bbb9e464f7b3969918555a25ebbc40e7"
+                        }
+                    ],
+    "browserEvidence":  "browser-evidence.json",
+    "limitations":  [
+                        "No authenticated social/search endpoints or persistence",
+                        "Unknown presence; no realtime presence connected",
+                        "No idempotent new-DM creation or conversation registration API",
+                        "No Phase 8 group selector/invitation interface on inspected branches",
+                        "Local UI blocking is not server authorization",
+                        "Recipient key exchange and multi-user E2EE remain outside this feature"
+                    ]
+}

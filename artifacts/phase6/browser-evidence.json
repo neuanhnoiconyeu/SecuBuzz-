@@ -1,0 +1,4816 @@
+{
+  "startedAt": "2026-11-09T02:52:21.849Z",
+  "browser": "Chrome headless via CDP",
+  "mode": "Production Next.js build",
+  "checks": [
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "laptop light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light fictional data, local blocking and reset disclosures are visible",
+      "passed": true
+    },
+    {
+      "label": "laptop light presence remains explicitly unknown for demo users",
+      "passed": true
+    },
+    {
+      "label": "laptop light Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "bodyWidth": 1024,
+        "elements": [
+          {
+            "selector": "#friends",
+            "x": 21.46875,
+            "right": 1002.53125,
+            "top": 124.859375,
+            "bottom": 778.53125,
+            "width": 981.0625,
+            "scrollWidth": 981,
+            "clientWidth": 981
+          },
+          {
+            "selector": ".friends-page",
+            "x": 21.46875,
+            "right": 1002.53125,
+            "top": 124.859375,
+            "bottom": 712.890625,
+            "width": 981.0625,
+            "scrollWidth": 981,
+            "clientWidth": 981
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 52.1875,
+            "right": 971.8125,
+            "top": 363.03125,
+            "bottom": 420.21875,
+            "width": 919.625,
+            "scrollWidth": 918,
+            "clientWidth": 918
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 52.1875,
+            "right": 971.8125,
+            "top": 420.21875,
+            "bottom": 682.171875,
+            "width": 919.625,
+            "scrollWidth": 920,
+            "clientWidth": 920
+          },
+          {
+            "selector": ".friends-row",
+            "x": 52.1875,
+            "right": 971.8125,
+            "top": 583.484375,
+            "bottom": 682.171875,
+            "width": 919.625,
+            "scrollWidth": 918,
+            "clientWidth": 918
+          }
+        ]
+      }
+    },
+    {
+      "label": "laptop light Friends heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 7
+        }
+      ]
+    },
+    {
+      "label": "laptop light friend name actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    },
+    {
+      "label": "laptop light ArrowRight selects pending tab and moves focus",
+      "passed": true
+    },
+    {
+      "label": "laptop light End selects blocked tab",
+      "passed": true
+    },
+    {
+      "label": "laptop light Home returns to All Friends with one tab stop",
+      "passed": true
+    },
+    {
+      "label": "laptop light selected tab has visible focus outline",
+      "passed": true
+    },
+    {
+      "label": "laptop light available action Message Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "laptop light opening DM returns keyboard focus to chat heading",
+      "passed": true
+    },
+    {
+      "label": "laptop light Friends Message selects existing Ava conversation id",
+      "passed": true
+    },
+    {
+      "label": "Available action Send",
+      "passed": true
+    },
+    {
+      "label": "laptop light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light available action Message Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "laptop light repeated Message preserves draft/history and does not duplicate DM",
+      "passed": true
+    },
+    {
+      "label": "laptop light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light demo-explorer relationship self",
+      "passed": true
+    },
+    {
+      "label": "laptop light self discovery prevents adding own account",
+      "passed": true
+    },
+    {
+      "label": "laptop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light unknown username produces no invented users",
+      "passed": true
+    },
+    {
+      "label": "laptop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light ava.morgan relationship friend",
+      "passed": true
+    },
+    {
+      "label": "laptop light jules.park relationship incoming",
+      "passed": true
+    },
+    {
+      "label": "laptop light kai.chen relationship outgoing",
+      "passed": true
+    },
+    {
+      "label": "laptop light rowan.blake relationship blocked",
+      "passed": true
+    },
+    {
+      "label": "laptop light mina.patel relationship none",
+      "passed": true
+    },
+    {
+      "label": "laptop light blocked result hides Message and Add actions",
+      "passed": true
+    },
+    {
+      "label": "laptop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light available action View profile for Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "laptop light public profile exposes public identity only and unknown presence",
+      "passed": true
+    },
+    {
+      "label": "laptop light available action Add Mina Patel as a friend",
+      "passed": true
+    },
+    {
+      "label": "laptop light sent request immediately synchronizes open profile and prevents duplicate Add",
+      "passed": true
+    },
+    {
+      "label": "laptop light available action Cancel request to Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "laptop light confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "laptop light nested confirmation keeps public profile synchronized and focus inside active modal",
+      "passed": true
+    },
+    {
+      "label": "laptop light available action Unblock Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "laptop light Escape restores focus to public-profile opener",
+      "passed": true
+    },
+    {
+      "label": "laptop light mina.patel relationship none",
+      "passed": true
+    },
+    {
+      "label": "laptop light tab Pending Requests",
+      "passed": true
+    },
+    {
+      "label": "laptop light available action Cancel request to Kai Chen",
+      "passed": true
+    },
+    {
+      "label": "laptop light cancel removes outgoing request from pending list",
+      "passed": true
+    },
+    {
+      "label": "laptop light available action Accept request from Jules Park",
+      "passed": true
+    },
+    {
+      "label": "laptop light accept removes incoming request and updates counts",
+      "passed": true
+    },
+    {
+      "label": "laptop light tab All Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light accepted friend appears once and unavailable DM is clearly disabled",
+      "passed": true
+    },
+    {
+      "label": "laptop light friends filter searches username without changing data",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "laptop light More Actions focuses first menuitem",
+      "passed": true
+    },
+    {
+      "label": "laptop light menu ArrowDown reaches Block user",
+      "passed": true
+    },
+    {
+      "label": "laptop light menu Escape returns focus to trigger",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "laptop light confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "laptop light remove confirmation no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "bodyWidth": 1024,
+        "elements": [
+          {
+            "selector": "dialog[open].friends-confirm-dialog",
+            "x": 256,
+            "right": 768,
+            "top": 266.515625,
+            "bottom": 533.484375,
+            "width": 512,
+            "scrollWidth": 512,
+            "clientWidth": 512
+          },
+          {
+            "selector": ".friends-confirm-dialog .ui-dialog-panel",
+            "x": 256,
+            "right": 768,
+            "top": 266.515625,
+            "bottom": 533.484375,
+            "width": 512,
+            "scrollWidth": 510,
+            "clientWidth": 510
+          }
+        ]
+      }
+    },
+    {
+      "label": "Available action Cancel",
+      "passed": true
+    },
+    {
+      "label": "laptop light canceled removal keeps friendship and restores menu trigger focus",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "laptop light confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "laptop light confirmed removal updates list and leaves stable keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "laptop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light ava.morgan relationship none",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "laptop light confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "laptop light block dialog discloses local-only enforcement",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "laptop light ava.morgan relationship blocked",
+      "passed": true
+    },
+    {
+      "label": "laptop light main navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "laptop light blocked chat reflects relationship, disables local controls and preserves history",
+      "passed": true
+    },
+    {
+      "label": "laptop light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light tab Blocked Users",
+      "passed": true
+    },
+    {
+      "label": "laptop light blocked list updates and hides request/message actions",
+      "passed": true
+    },
+    {
+      "label": "laptop light available action Unblock Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "laptop light unblock removes entry without restoring friendship",
+      "passed": true
+    },
+    {
+      "label": "laptop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light ava.morgan relationship none",
+      "passed": true
+    },
+    {
+      "label": "laptop light main navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "laptop light relationship changes preserve existing chat history and draft",
+      "passed": true
+    },
+    {
+      "label": "laptop light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light appearance persists while demo relationships reset",
+      "passed": true
+    },
+    {
+      "label": "laptop light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light tab Pending Requests",
+      "passed": true
+    },
+    {
+      "label": "laptop light available action Decline request from Jules Park",
+      "passed": true
+    },
+    {
+      "label": "laptop light declined request is removed and cannot be accepted again",
+      "passed": true
+    },
+    {
+      "label": "laptop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop light jules.park relationship none",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "desktop light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light fictional data, local blocking and reset disclosures are visible",
+      "passed": true
+    },
+    {
+      "label": "desktop light presence remains explicitly unknown for demo users",
+      "passed": true
+    },
+    {
+      "label": "desktop light Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "bodyWidth": 1440,
+        "elements": [
+          {
+            "selector": "#friends",
+            "x": 29,
+            "right": 1411,
+            "top": 132.390625,
+            "bottom": 971,
+            "width": 1382,
+            "scrollWidth": 1382,
+            "clientWidth": 1382
+          },
+          {
+            "selector": ".friends-page",
+            "x": 144,
+            "right": 1296,
+            "top": 132.390625,
+            "bottom": 738.984375,
+            "width": 1152,
+            "scrollWidth": 1152,
+            "clientWidth": 1152
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 184,
+            "right": 1256,
+            "top": 379.84375,
+            "bottom": 437.03125,
+            "width": 1072,
+            "scrollWidth": 1070,
+            "clientWidth": 1070
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 184,
+            "right": 1256,
+            "top": 437.03125,
+            "bottom": 698.984375,
+            "width": 1072,
+            "scrollWidth": 1072,
+            "clientWidth": 1072
+          },
+          {
+            "selector": ".friends-row",
+            "x": 184,
+            "right": 1256,
+            "top": 600.296875,
+            "bottom": 698.984375,
+            "width": 1072,
+            "scrollWidth": 1070,
+            "clientWidth": 1070
+          }
+        ]
+      }
+    },
+    {
+      "label": "desktop light Friends heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 7
+        }
+      ]
+    },
+    {
+      "label": "desktop light friend name actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    },
+    {
+      "label": "desktop light ArrowRight selects pending tab and moves focus",
+      "passed": true
+    },
+    {
+      "label": "desktop light End selects blocked tab",
+      "passed": true
+    },
+    {
+      "label": "desktop light Home returns to All Friends with one tab stop",
+      "passed": true
+    },
+    {
+      "label": "desktop light selected tab has visible focus outline",
+      "passed": true
+    },
+    {
+      "label": "desktop light available action Message Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "desktop light opening DM returns keyboard focus to chat heading",
+      "passed": true
+    },
+    {
+      "label": "desktop light Friends Message selects existing Ava conversation id",
+      "passed": true
+    },
+    {
+      "label": "Available action Send",
+      "passed": true
+    },
+    {
+      "label": "desktop light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light available action Message Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "desktop light repeated Message preserves draft/history and does not duplicate DM",
+      "passed": true
+    },
+    {
+      "label": "desktop light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light demo-explorer relationship self",
+      "passed": true
+    },
+    {
+      "label": "desktop light self discovery prevents adding own account",
+      "passed": true
+    },
+    {
+      "label": "desktop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light unknown username produces no invented users",
+      "passed": true
+    },
+    {
+      "label": "desktop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light ava.morgan relationship friend",
+      "passed": true
+    },
+    {
+      "label": "desktop light jules.park relationship incoming",
+      "passed": true
+    },
+    {
+      "label": "desktop light kai.chen relationship outgoing",
+      "passed": true
+    },
+    {
+      "label": "desktop light rowan.blake relationship blocked",
+      "passed": true
+    },
+    {
+      "label": "desktop light mina.patel relationship none",
+      "passed": true
+    },
+    {
+      "label": "desktop light blocked result hides Message and Add actions",
+      "passed": true
+    },
+    {
+      "label": "desktop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light available action View profile for Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "desktop light public profile exposes public identity only and unknown presence",
+      "passed": true
+    },
+    {
+      "label": "desktop light available action Add Mina Patel as a friend",
+      "passed": true
+    },
+    {
+      "label": "desktop light sent request immediately synchronizes open profile and prevents duplicate Add",
+      "passed": true
+    },
+    {
+      "label": "desktop light available action Cancel request to Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "desktop light confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "desktop light nested confirmation keeps public profile synchronized and focus inside active modal",
+      "passed": true
+    },
+    {
+      "label": "desktop light available action Unblock Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "desktop light Escape restores focus to public-profile opener",
+      "passed": true
+    },
+    {
+      "label": "desktop light mina.patel relationship none",
+      "passed": true
+    },
+    {
+      "label": "desktop light tab Pending Requests",
+      "passed": true
+    },
+    {
+      "label": "desktop light available action Cancel request to Kai Chen",
+      "passed": true
+    },
+    {
+      "label": "desktop light cancel removes outgoing request from pending list",
+      "passed": true
+    },
+    {
+      "label": "desktop light available action Accept request from Jules Park",
+      "passed": true
+    },
+    {
+      "label": "desktop light accept removes incoming request and updates counts",
+      "passed": true
+    },
+    {
+      "label": "desktop light tab All Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light accepted friend appears once and unavailable DM is clearly disabled",
+      "passed": true
+    },
+    {
+      "label": "desktop light friends filter searches username without changing data",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "desktop light More Actions focuses first menuitem",
+      "passed": true
+    },
+    {
+      "label": "desktop light menu ArrowDown reaches Block user",
+      "passed": true
+    },
+    {
+      "label": "desktop light menu Escape returns focus to trigger",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "desktop light confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "desktop light remove confirmation no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "bodyWidth": 1440,
+        "elements": [
+          {
+            "selector": "dialog[open].friends-confirm-dialog",
+            "x": 464,
+            "right": 976,
+            "top": 366.515625,
+            "bottom": 633.484375,
+            "width": 512,
+            "scrollWidth": 512,
+            "clientWidth": 512
+          },
+          {
+            "selector": ".friends-confirm-dialog .ui-dialog-panel",
+            "x": 464,
+            "right": 976,
+            "top": 366.515625,
+            "bottom": 633.484375,
+            "width": 512,
+            "scrollWidth": 510,
+            "clientWidth": 510
+          }
+        ]
+      }
+    },
+    {
+      "label": "Available action Cancel",
+      "passed": true
+    },
+    {
+      "label": "desktop light canceled removal keeps friendship and restores menu trigger focus",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "desktop light confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "desktop light confirmed removal updates list and leaves stable keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "desktop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light ava.morgan relationship none",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "desktop light confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "desktop light block dialog discloses local-only enforcement",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "desktop light ava.morgan relationship blocked",
+      "passed": true
+    },
+    {
+      "label": "desktop light main navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "desktop light blocked chat reflects relationship, disables local controls and preserves history",
+      "passed": true
+    },
+    {
+      "label": "desktop light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light tab Blocked Users",
+      "passed": true
+    },
+    {
+      "label": "desktop light blocked list updates and hides request/message actions",
+      "passed": true
+    },
+    {
+      "label": "desktop light available action Unblock Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "desktop light unblock removes entry without restoring friendship",
+      "passed": true
+    },
+    {
+      "label": "desktop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light ava.morgan relationship none",
+      "passed": true
+    },
+    {
+      "label": "desktop light main navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "desktop light relationship changes preserve existing chat history and draft",
+      "passed": true
+    },
+    {
+      "label": "desktop light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light appearance persists while demo relationships reset",
+      "passed": true
+    },
+    {
+      "label": "desktop light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light tab Pending Requests",
+      "passed": true
+    },
+    {
+      "label": "desktop light available action Decline request from Jules Park",
+      "passed": true
+    },
+    {
+      "label": "desktop light declined request is removed and cannot be accepted again",
+      "passed": true
+    },
+    {
+      "label": "desktop light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop light jules.park relationship none",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "mobile light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light fictional data, local blocking and reset disclosures are visible",
+      "passed": true
+    },
+    {
+      "label": "mobile light presence remains explicitly unknown for demo users",
+      "passed": true
+    },
+    {
+      "label": "mobile light Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "elements": [
+          {
+            "selector": "#friends",
+            "x": 0,
+            "right": 390,
+            "top": 86.59375,
+            "bottom": 844,
+            "width": 390,
+            "scrollWidth": 390,
+            "clientWidth": 390
+          },
+          {
+            "selector": ".friends-page",
+            "x": 0,
+            "right": 390,
+            "top": 86.59375,
+            "bottom": 807.84375,
+            "width": 390,
+            "scrollWidth": 390,
+            "clientWidth": 390
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 16,
+            "right": 374,
+            "top": 362.625,
+            "bottom": 467.8125,
+            "width": 358,
+            "scrollWidth": 356,
+            "clientWidth": 356
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 16,
+            "right": 374,
+            "top": 467.8125,
+            "bottom": 775.84375,
+            "width": 358,
+            "scrollWidth": 358,
+            "clientWidth": 358
+          },
+          {
+            "selector": ".friends-row",
+            "x": 16,
+            "right": 374,
+            "top": 624.375,
+            "bottom": 775.84375,
+            "width": 358,
+            "scrollWidth": 356,
+            "clientWidth": 356
+          }
+        ]
+      }
+    },
+    {
+      "label": "mobile light Friends heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 7
+        }
+      ]
+    },
+    {
+      "label": "mobile light friend name actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    },
+    {
+      "label": "mobile light ArrowRight selects pending tab and moves focus",
+      "passed": true
+    },
+    {
+      "label": "mobile light End selects blocked tab",
+      "passed": true
+    },
+    {
+      "label": "mobile light Home returns to All Friends with one tab stop",
+      "passed": true
+    },
+    {
+      "label": "mobile light selected tab has visible focus outline",
+      "passed": true
+    },
+    {
+      "label": "mobile light available action Message Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "mobile light opening DM returns keyboard focus to chat heading",
+      "passed": true
+    },
+    {
+      "label": "mobile light Friends Message selects existing Ava conversation id",
+      "passed": true
+    },
+    {
+      "label": "Available action Send",
+      "passed": true
+    },
+    {
+      "label": "mobile light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light available action Message Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "mobile light repeated Message preserves draft/history and does not duplicate DM",
+      "passed": true
+    },
+    {
+      "label": "mobile light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light demo-explorer relationship self",
+      "passed": true
+    },
+    {
+      "label": "mobile light self discovery prevents adding own account",
+      "passed": true
+    },
+    {
+      "label": "mobile light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light unknown username produces no invented users",
+      "passed": true
+    },
+    {
+      "label": "mobile light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light ava.morgan relationship friend",
+      "passed": true
+    },
+    {
+      "label": "mobile light jules.park relationship incoming",
+      "passed": true
+    },
+    {
+      "label": "mobile light kai.chen relationship outgoing",
+      "passed": true
+    },
+    {
+      "label": "mobile light rowan.blake relationship blocked",
+      "passed": true
+    },
+    {
+      "label": "mobile light mina.patel relationship none",
+      "passed": true
+    },
+    {
+      "label": "mobile light blocked result hides Message and Add actions",
+      "passed": true
+    },
+    {
+      "label": "mobile light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light available action View profile for Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "mobile light public profile exposes public identity only and unknown presence",
+      "passed": true
+    },
+    {
+      "label": "mobile light available action Add Mina Patel as a friend",
+      "passed": true
+    },
+    {
+      "label": "mobile light sent request immediately synchronizes open profile and prevents duplicate Add",
+      "passed": true
+    },
+    {
+      "label": "mobile light available action Cancel request to Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "mobile light confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "mobile light nested confirmation keeps public profile synchronized and focus inside active modal",
+      "passed": true
+    },
+    {
+      "label": "mobile light available action Unblock Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "mobile light Escape restores focus to public-profile opener",
+      "passed": true
+    },
+    {
+      "label": "mobile light mina.patel relationship none",
+      "passed": true
+    },
+    {
+      "label": "mobile light tab Pending Requests",
+      "passed": true
+    },
+    {
+      "label": "mobile light available action Cancel request to Kai Chen",
+      "passed": true
+    },
+    {
+      "label": "mobile light cancel removes outgoing request from pending list",
+      "passed": true
+    },
+    {
+      "label": "mobile light available action Accept request from Jules Park",
+      "passed": true
+    },
+    {
+      "label": "mobile light accept removes incoming request and updates counts",
+      "passed": true
+    },
+    {
+      "label": "mobile light tab All Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light accepted friend appears once and unavailable DM is clearly disabled",
+      "passed": true
+    },
+    {
+      "label": "mobile light friends filter searches username without changing data",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "mobile light More Actions focuses first menuitem",
+      "passed": true
+    },
+    {
+      "label": "mobile light menu ArrowDown reaches Block user",
+      "passed": true
+    },
+    {
+      "label": "mobile light menu Escape returns focus to trigger",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "mobile light confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "mobile light remove confirmation no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "elements": [
+          {
+            "selector": "dialog[open].friends-confirm-dialog",
+            "x": 8,
+            "right": 382,
+            "top": 291.40625,
+            "bottom": 552.578125,
+            "width": 374,
+            "scrollWidth": 374,
+            "clientWidth": 374
+          },
+          {
+            "selector": ".friends-confirm-dialog .ui-dialog-panel",
+            "x": 8,
+            "right": 382,
+            "top": 291.40625,
+            "bottom": 552.578125,
+            "width": 374,
+            "scrollWidth": 372,
+            "clientWidth": 372
+          }
+        ]
+      }
+    },
+    {
+      "label": "Available action Cancel",
+      "passed": true
+    },
+    {
+      "label": "mobile light canceled removal keeps friendship and restores menu trigger focus",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "mobile light confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "mobile light confirmed removal updates list and leaves stable keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "mobile light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light ava.morgan relationship none",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "mobile light confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "mobile light block dialog discloses local-only enforcement",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "mobile light ava.morgan relationship blocked",
+      "passed": true
+    },
+    {
+      "label": "mobile light main navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "mobile light blocked chat reflects relationship, disables local controls and preserves history",
+      "passed": true
+    },
+    {
+      "label": "Available action Browse chats",
+      "passed": true
+    },
+    {
+      "label": "Available control .conversation-list-item[aria-label^=\"SecureBot, Bot\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile light blocked local chat does not trap mobile navigation",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Back to conversations\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control .conversation-list-item[aria-label^=\"Ava Morgan, Direct\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile light returning to blocked DM preserves history and draft",
+      "passed": true
+    },
+    {
+      "label": "mobile light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light tab Blocked Users",
+      "passed": true
+    },
+    {
+      "label": "mobile light blocked list updates and hides request/message actions",
+      "passed": true
+    },
+    {
+      "label": "mobile light available action Unblock Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "mobile light unblock removes entry without restoring friendship",
+      "passed": true
+    },
+    {
+      "label": "mobile light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light ava.morgan relationship none",
+      "passed": true
+    },
+    {
+      "label": "mobile light main navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "mobile light relationship changes preserve existing chat history and draft",
+      "passed": true
+    },
+    {
+      "label": "mobile light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light appearance persists while demo relationships reset",
+      "passed": true
+    },
+    {
+      "label": "mobile light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light tab Pending Requests",
+      "passed": true
+    },
+    {
+      "label": "mobile light available action Decline request from Jules Park",
+      "passed": true
+    },
+    {
+      "label": "mobile light declined request is removed and cannot be accepted again",
+      "passed": true
+    },
+    {
+      "label": "mobile light tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile light jules.park relationship none",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "laptop dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark fictional data, local blocking and reset disclosures are visible",
+      "passed": true
+    },
+    {
+      "label": "laptop dark presence remains explicitly unknown for demo users",
+      "passed": true
+    },
+    {
+      "label": "laptop dark Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "bodyWidth": 1024,
+        "elements": [
+          {
+            "selector": "#friends",
+            "x": 21.46875,
+            "right": 1002.53125,
+            "top": 124.859375,
+            "bottom": 778.53125,
+            "width": 981.0625,
+            "scrollWidth": 981,
+            "clientWidth": 981
+          },
+          {
+            "selector": ".friends-page",
+            "x": 21.46875,
+            "right": 1002.53125,
+            "top": 124.859375,
+            "bottom": 712.890625,
+            "width": 981.0625,
+            "scrollWidth": 981,
+            "clientWidth": 981
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 52.1875,
+            "right": 971.8125,
+            "top": 363.03125,
+            "bottom": 420.21875,
+            "width": 919.625,
+            "scrollWidth": 918,
+            "clientWidth": 918
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 52.1875,
+            "right": 971.8125,
+            "top": 420.21875,
+            "bottom": 682.171875,
+            "width": 919.625,
+            "scrollWidth": 920,
+            "clientWidth": 920
+          },
+          {
+            "selector": ".friends-row",
+            "x": 52.1875,
+            "right": 971.8125,
+            "top": 583.484375,
+            "bottom": 682.171875,
+            "width": 919.625,
+            "scrollWidth": 918,
+            "clientWidth": 918
+          }
+        ]
+      }
+    },
+    {
+      "label": "laptop dark Friends heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 7
+        }
+      ]
+    },
+    {
+      "label": "laptop dark friend name actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    },
+    {
+      "label": "laptop dark ArrowRight selects pending tab and moves focus",
+      "passed": true
+    },
+    {
+      "label": "laptop dark End selects blocked tab",
+      "passed": true
+    },
+    {
+      "label": "laptop dark Home returns to All Friends with one tab stop",
+      "passed": true
+    },
+    {
+      "label": "laptop dark selected tab has visible focus outline",
+      "passed": true
+    },
+    {
+      "label": "laptop dark available action Message Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "laptop dark opening DM returns keyboard focus to chat heading",
+      "passed": true
+    },
+    {
+      "label": "laptop dark Friends Message selects existing Ava conversation id",
+      "passed": true
+    },
+    {
+      "label": "Available action Send",
+      "passed": true
+    },
+    {
+      "label": "laptop dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark available action Message Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "laptop dark repeated Message preserves draft/history and does not duplicate DM",
+      "passed": true
+    },
+    {
+      "label": "laptop dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark demo-explorer relationship self",
+      "passed": true
+    },
+    {
+      "label": "laptop dark self discovery prevents adding own account",
+      "passed": true
+    },
+    {
+      "label": "laptop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark unknown username produces no invented users",
+      "passed": true
+    },
+    {
+      "label": "laptop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark ava.morgan relationship friend",
+      "passed": true
+    },
+    {
+      "label": "laptop dark jules.park relationship incoming",
+      "passed": true
+    },
+    {
+      "label": "laptop dark kai.chen relationship outgoing",
+      "passed": true
+    },
+    {
+      "label": "laptop dark rowan.blake relationship blocked",
+      "passed": true
+    },
+    {
+      "label": "laptop dark mina.patel relationship none",
+      "passed": true
+    },
+    {
+      "label": "laptop dark blocked result hides Message and Add actions",
+      "passed": true
+    },
+    {
+      "label": "laptop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark available action View profile for Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "laptop dark public profile exposes public identity only and unknown presence",
+      "passed": true
+    },
+    {
+      "label": "laptop dark available action Add Mina Patel as a friend",
+      "passed": true
+    },
+    {
+      "label": "laptop dark sent request immediately synchronizes open profile and prevents duplicate Add",
+      "passed": true
+    },
+    {
+      "label": "laptop dark available action Cancel request to Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "laptop dark confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "laptop dark nested confirmation keeps public profile synchronized and focus inside active modal",
+      "passed": true
+    },
+    {
+      "label": "laptop dark available action Unblock Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "laptop dark Escape restores focus to public-profile opener",
+      "passed": true
+    },
+    {
+      "label": "laptop dark mina.patel relationship none",
+      "passed": true
+    },
+    {
+      "label": "laptop dark tab Pending Requests",
+      "passed": true
+    },
+    {
+      "label": "laptop dark available action Cancel request to Kai Chen",
+      "passed": true
+    },
+    {
+      "label": "laptop dark cancel removes outgoing request from pending list",
+      "passed": true
+    },
+    {
+      "label": "laptop dark available action Accept request from Jules Park",
+      "passed": true
+    },
+    {
+      "label": "laptop dark accept removes incoming request and updates counts",
+      "passed": true
+    },
+    {
+      "label": "laptop dark tab All Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark accepted friend appears once and unavailable DM is clearly disabled",
+      "passed": true
+    },
+    {
+      "label": "laptop dark friends filter searches username without changing data",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "laptop dark More Actions focuses first menuitem",
+      "passed": true
+    },
+    {
+      "label": "laptop dark menu ArrowDown reaches Block user",
+      "passed": true
+    },
+    {
+      "label": "laptop dark menu Escape returns focus to trigger",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "laptop dark confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "laptop dark remove confirmation no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1024,
+        "height": 800,
+        "documentWidth": 1024,
+        "bodyWidth": 1024,
+        "elements": [
+          {
+            "selector": "dialog[open].friends-confirm-dialog",
+            "x": 256,
+            "right": 768,
+            "top": 266.515625,
+            "bottom": 533.484375,
+            "width": 512,
+            "scrollWidth": 512,
+            "clientWidth": 512
+          },
+          {
+            "selector": ".friends-confirm-dialog .ui-dialog-panel",
+            "x": 256,
+            "right": 768,
+            "top": 266.515625,
+            "bottom": 533.484375,
+            "width": 512,
+            "scrollWidth": 510,
+            "clientWidth": 510
+          }
+        ]
+      }
+    },
+    {
+      "label": "Available action Cancel",
+      "passed": true
+    },
+    {
+      "label": "laptop dark canceled removal keeps friendship and restores menu trigger focus",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "laptop dark confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "laptop dark confirmed removal updates list and leaves stable keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "laptop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark ava.morgan relationship none",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "laptop dark confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "laptop dark block dialog discloses local-only enforcement",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "laptop dark ava.morgan relationship blocked",
+      "passed": true
+    },
+    {
+      "label": "laptop dark main navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "laptop dark blocked chat reflects relationship, disables local controls and preserves history",
+      "passed": true
+    },
+    {
+      "label": "laptop dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark tab Blocked Users",
+      "passed": true
+    },
+    {
+      "label": "laptop dark blocked list updates and hides request/message actions",
+      "passed": true
+    },
+    {
+      "label": "laptop dark available action Unblock Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "laptop dark unblock removes entry without restoring friendship",
+      "passed": true
+    },
+    {
+      "label": "laptop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark ava.morgan relationship none",
+      "passed": true
+    },
+    {
+      "label": "laptop dark main navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "laptop dark relationship changes preserve existing chat history and draft",
+      "passed": true
+    },
+    {
+      "label": "laptop dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark appearance persists while demo relationships reset",
+      "passed": true
+    },
+    {
+      "label": "laptop dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark tab Pending Requests",
+      "passed": true
+    },
+    {
+      "label": "laptop dark available action Decline request from Jules Park",
+      "passed": true
+    },
+    {
+      "label": "laptop dark declined request is removed and cannot be accepted again",
+      "passed": true
+    },
+    {
+      "label": "laptop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "laptop dark jules.park relationship none",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "desktop dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark fictional data, local blocking and reset disclosures are visible",
+      "passed": true
+    },
+    {
+      "label": "desktop dark presence remains explicitly unknown for demo users",
+      "passed": true
+    },
+    {
+      "label": "desktop dark Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "bodyWidth": 1440,
+        "elements": [
+          {
+            "selector": "#friends",
+            "x": 29,
+            "right": 1411,
+            "top": 132.390625,
+            "bottom": 971,
+            "width": 1382,
+            "scrollWidth": 1382,
+            "clientWidth": 1382
+          },
+          {
+            "selector": ".friends-page",
+            "x": 144,
+            "right": 1296,
+            "top": 132.390625,
+            "bottom": 738.984375,
+            "width": 1152,
+            "scrollWidth": 1152,
+            "clientWidth": 1152
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 184,
+            "right": 1256,
+            "top": 379.84375,
+            "bottom": 437.03125,
+            "width": 1072,
+            "scrollWidth": 1070,
+            "clientWidth": 1070
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 184,
+            "right": 1256,
+            "top": 437.03125,
+            "bottom": 698.984375,
+            "width": 1072,
+            "scrollWidth": 1072,
+            "clientWidth": 1072
+          },
+          {
+            "selector": ".friends-row",
+            "x": 184,
+            "right": 1256,
+            "top": 600.296875,
+            "bottom": 698.984375,
+            "width": 1072,
+            "scrollWidth": 1070,
+            "clientWidth": 1070
+          }
+        ]
+      }
+    },
+    {
+      "label": "desktop dark Friends heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 7
+        }
+      ]
+    },
+    {
+      "label": "desktop dark friend name actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    },
+    {
+      "label": "desktop dark ArrowRight selects pending tab and moves focus",
+      "passed": true
+    },
+    {
+      "label": "desktop dark End selects blocked tab",
+      "passed": true
+    },
+    {
+      "label": "desktop dark Home returns to All Friends with one tab stop",
+      "passed": true
+    },
+    {
+      "label": "desktop dark selected tab has visible focus outline",
+      "passed": true
+    },
+    {
+      "label": "desktop dark available action Message Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "desktop dark opening DM returns keyboard focus to chat heading",
+      "passed": true
+    },
+    {
+      "label": "desktop dark Friends Message selects existing Ava conversation id",
+      "passed": true
+    },
+    {
+      "label": "Available action Send",
+      "passed": true
+    },
+    {
+      "label": "desktop dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark available action Message Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "desktop dark repeated Message preserves draft/history and does not duplicate DM",
+      "passed": true
+    },
+    {
+      "label": "desktop dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark demo-explorer relationship self",
+      "passed": true
+    },
+    {
+      "label": "desktop dark self discovery prevents adding own account",
+      "passed": true
+    },
+    {
+      "label": "desktop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark unknown username produces no invented users",
+      "passed": true
+    },
+    {
+      "label": "desktop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark ava.morgan relationship friend",
+      "passed": true
+    },
+    {
+      "label": "desktop dark jules.park relationship incoming",
+      "passed": true
+    },
+    {
+      "label": "desktop dark kai.chen relationship outgoing",
+      "passed": true
+    },
+    {
+      "label": "desktop dark rowan.blake relationship blocked",
+      "passed": true
+    },
+    {
+      "label": "desktop dark mina.patel relationship none",
+      "passed": true
+    },
+    {
+      "label": "desktop dark blocked result hides Message and Add actions",
+      "passed": true
+    },
+    {
+      "label": "desktop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark available action View profile for Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "desktop dark public profile exposes public identity only and unknown presence",
+      "passed": true
+    },
+    {
+      "label": "desktop dark available action Add Mina Patel as a friend",
+      "passed": true
+    },
+    {
+      "label": "desktop dark sent request immediately synchronizes open profile and prevents duplicate Add",
+      "passed": true
+    },
+    {
+      "label": "desktop dark available action Cancel request to Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "desktop dark confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "desktop dark nested confirmation keeps public profile synchronized and focus inside active modal",
+      "passed": true
+    },
+    {
+      "label": "desktop dark available action Unblock Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "desktop dark Escape restores focus to public-profile opener",
+      "passed": true
+    },
+    {
+      "label": "desktop dark mina.patel relationship none",
+      "passed": true
+    },
+    {
+      "label": "desktop dark tab Pending Requests",
+      "passed": true
+    },
+    {
+      "label": "desktop dark available action Cancel request to Kai Chen",
+      "passed": true
+    },
+    {
+      "label": "desktop dark cancel removes outgoing request from pending list",
+      "passed": true
+    },
+    {
+      "label": "desktop dark available action Accept request from Jules Park",
+      "passed": true
+    },
+    {
+      "label": "desktop dark accept removes incoming request and updates counts",
+      "passed": true
+    },
+    {
+      "label": "desktop dark tab All Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark accepted friend appears once and unavailable DM is clearly disabled",
+      "passed": true
+    },
+    {
+      "label": "desktop dark friends filter searches username without changing data",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "desktop dark More Actions focuses first menuitem",
+      "passed": true
+    },
+    {
+      "label": "desktop dark menu ArrowDown reaches Block user",
+      "passed": true
+    },
+    {
+      "label": "desktop dark menu Escape returns focus to trigger",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "desktop dark confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "desktop dark remove confirmation no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "bodyWidth": 1440,
+        "elements": [
+          {
+            "selector": "dialog[open].friends-confirm-dialog",
+            "x": 464,
+            "right": 976,
+            "top": 366.515625,
+            "bottom": 633.484375,
+            "width": 512,
+            "scrollWidth": 512,
+            "clientWidth": 512
+          },
+          {
+            "selector": ".friends-confirm-dialog .ui-dialog-panel",
+            "x": 464,
+            "right": 976,
+            "top": 366.515625,
+            "bottom": 633.484375,
+            "width": 512,
+            "scrollWidth": 510,
+            "clientWidth": 510
+          }
+        ]
+      }
+    },
+    {
+      "label": "Available action Cancel",
+      "passed": true
+    },
+    {
+      "label": "desktop dark canceled removal keeps friendship and restores menu trigger focus",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "desktop dark confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "desktop dark confirmed removal updates list and leaves stable keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "desktop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark ava.morgan relationship none",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "desktop dark confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "desktop dark block dialog discloses local-only enforcement",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "desktop dark ava.morgan relationship blocked",
+      "passed": true
+    },
+    {
+      "label": "desktop dark main navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "desktop dark blocked chat reflects relationship, disables local controls and preserves history",
+      "passed": true
+    },
+    {
+      "label": "desktop dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark tab Blocked Users",
+      "passed": true
+    },
+    {
+      "label": "desktop dark blocked list updates and hides request/message actions",
+      "passed": true
+    },
+    {
+      "label": "desktop dark available action Unblock Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "desktop dark unblock removes entry without restoring friendship",
+      "passed": true
+    },
+    {
+      "label": "desktop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark ava.morgan relationship none",
+      "passed": true
+    },
+    {
+      "label": "desktop dark main navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "desktop dark relationship changes preserve existing chat history and draft",
+      "passed": true
+    },
+    {
+      "label": "desktop dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark appearance persists while demo relationships reset",
+      "passed": true
+    },
+    {
+      "label": "desktop dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark tab Pending Requests",
+      "passed": true
+    },
+    {
+      "label": "desktop dark available action Decline request from Jules Park",
+      "passed": true
+    },
+    {
+      "label": "desktop dark declined request is removed and cannot be accepted again",
+      "passed": true
+    },
+    {
+      "label": "desktop dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "desktop dark jules.park relationship none",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "mobile dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark fictional data, local blocking and reset disclosures are visible",
+      "passed": true
+    },
+    {
+      "label": "mobile dark presence remains explicitly unknown for demo users",
+      "passed": true
+    },
+    {
+      "label": "mobile dark Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "elements": [
+          {
+            "selector": "#friends",
+            "x": 0,
+            "right": 390,
+            "top": 86.59375,
+            "bottom": 844,
+            "width": 390,
+            "scrollWidth": 390,
+            "clientWidth": 390
+          },
+          {
+            "selector": ".friends-page",
+            "x": 0,
+            "right": 390,
+            "top": 86.59375,
+            "bottom": 807.84375,
+            "width": 390,
+            "scrollWidth": 390,
+            "clientWidth": 390
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 16,
+            "right": 374,
+            "top": 362.625,
+            "bottom": 467.8125,
+            "width": 358,
+            "scrollWidth": 356,
+            "clientWidth": 356
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 16,
+            "right": 374,
+            "top": 467.8125,
+            "bottom": 775.84375,
+            "width": 358,
+            "scrollWidth": 358,
+            "clientWidth": 358
+          },
+          {
+            "selector": ".friends-row",
+            "x": 16,
+            "right": 374,
+            "top": 624.375,
+            "bottom": 775.84375,
+            "width": 358,
+            "scrollWidth": 356,
+            "clientWidth": 356
+          }
+        ]
+      }
+    },
+    {
+      "label": "mobile dark Friends heading actually renders Bungee",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 7
+        }
+      ]
+    },
+    {
+      "label": "mobile dark friend name actually renders Space Grotesk",
+      "passed": true,
+      "detail": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    },
+    {
+      "label": "mobile dark ArrowRight selects pending tab and moves focus",
+      "passed": true
+    },
+    {
+      "label": "mobile dark End selects blocked tab",
+      "passed": true
+    },
+    {
+      "label": "mobile dark Home returns to All Friends with one tab stop",
+      "passed": true
+    },
+    {
+      "label": "mobile dark selected tab has visible focus outline",
+      "passed": true
+    },
+    {
+      "label": "mobile dark available action Message Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "mobile dark opening DM returns keyboard focus to chat heading",
+      "passed": true
+    },
+    {
+      "label": "mobile dark Friends Message selects existing Ava conversation id",
+      "passed": true
+    },
+    {
+      "label": "Available action Send",
+      "passed": true
+    },
+    {
+      "label": "mobile dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark available action Message Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "mobile dark repeated Message preserves draft/history and does not duplicate DM",
+      "passed": true
+    },
+    {
+      "label": "mobile dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark demo-explorer relationship self",
+      "passed": true
+    },
+    {
+      "label": "mobile dark self discovery prevents adding own account",
+      "passed": true
+    },
+    {
+      "label": "mobile dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark unknown username produces no invented users",
+      "passed": true
+    },
+    {
+      "label": "mobile dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark ava.morgan relationship friend",
+      "passed": true
+    },
+    {
+      "label": "mobile dark jules.park relationship incoming",
+      "passed": true
+    },
+    {
+      "label": "mobile dark kai.chen relationship outgoing",
+      "passed": true
+    },
+    {
+      "label": "mobile dark rowan.blake relationship blocked",
+      "passed": true
+    },
+    {
+      "label": "mobile dark mina.patel relationship none",
+      "passed": true
+    },
+    {
+      "label": "mobile dark blocked result hides Message and Add actions",
+      "passed": true
+    },
+    {
+      "label": "mobile dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark available action View profile for Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "mobile dark public profile exposes public identity only and unknown presence",
+      "passed": true
+    },
+    {
+      "label": "mobile dark available action Add Mina Patel as a friend",
+      "passed": true
+    },
+    {
+      "label": "mobile dark sent request immediately synchronizes open profile and prevents duplicate Add",
+      "passed": true
+    },
+    {
+      "label": "mobile dark available action Cancel request to Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "mobile dark confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "mobile dark nested confirmation keeps public profile synchronized and focus inside active modal",
+      "passed": true
+    },
+    {
+      "label": "mobile dark available action Unblock Mina Patel",
+      "passed": true
+    },
+    {
+      "label": "mobile dark Escape restores focus to public-profile opener",
+      "passed": true
+    },
+    {
+      "label": "mobile dark mina.patel relationship none",
+      "passed": true
+    },
+    {
+      "label": "mobile dark tab Pending Requests",
+      "passed": true
+    },
+    {
+      "label": "mobile dark available action Cancel request to Kai Chen",
+      "passed": true
+    },
+    {
+      "label": "mobile dark cancel removes outgoing request from pending list",
+      "passed": true
+    },
+    {
+      "label": "mobile dark available action Accept request from Jules Park",
+      "passed": true
+    },
+    {
+      "label": "mobile dark accept removes incoming request and updates counts",
+      "passed": true
+    },
+    {
+      "label": "mobile dark tab All Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark accepted friend appears once and unavailable DM is clearly disabled",
+      "passed": true
+    },
+    {
+      "label": "mobile dark friends filter searches username without changing data",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "mobile dark More Actions focuses first menuitem",
+      "passed": true
+    },
+    {
+      "label": "mobile dark menu ArrowDown reaches Block user",
+      "passed": true
+    },
+    {
+      "label": "mobile dark menu Escape returns focus to trigger",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "mobile dark confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "mobile dark remove confirmation no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "elements": [
+          {
+            "selector": "dialog[open].friends-confirm-dialog",
+            "x": 8,
+            "right": 382,
+            "top": 291.40625,
+            "bottom": 552.578125,
+            "width": 374,
+            "scrollWidth": 374,
+            "clientWidth": 374
+          },
+          {
+            "selector": ".friends-confirm-dialog .ui-dialog-panel",
+            "x": 8,
+            "right": 382,
+            "top": 291.40625,
+            "bottom": 552.578125,
+            "width": 374,
+            "scrollWidth": 372,
+            "clientWidth": 372
+          }
+        ]
+      }
+    },
+    {
+      "label": "Available action Cancel",
+      "passed": true
+    },
+    {
+      "label": "mobile dark canceled removal keeps friendship and restores menu trigger focus",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "mobile dark confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "Available action Remove friend",
+      "passed": true
+    },
+    {
+      "label": "mobile dark confirmed removal updates list and leaves stable keyboard focus",
+      "passed": true
+    },
+    {
+      "label": "mobile dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark ava.morgan relationship none",
+      "passed": true
+    },
+    {
+      "label": "Available action More actions for Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "mobile dark confirmation is native modal and labelled",
+      "passed": true
+    },
+    {
+      "label": "mobile dark block dialog discloses local-only enforcement",
+      "passed": true
+    },
+    {
+      "label": "Available action Block user",
+      "passed": true
+    },
+    {
+      "label": "mobile dark ava.morgan relationship blocked",
+      "passed": true
+    },
+    {
+      "label": "mobile dark main navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "mobile dark blocked chat reflects relationship, disables local controls and preserves history",
+      "passed": true
+    },
+    {
+      "label": "Available action Browse chats",
+      "passed": true
+    },
+    {
+      "label": "Available control .conversation-list-item[aria-label^=\"SecureBot, Bot\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile dark blocked local chat does not trap mobile navigation",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label=\"Back to conversations\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control .conversation-list-item[aria-label^=\"Ava Morgan, Direct\"]",
+      "passed": true
+    },
+    {
+      "label": "mobile dark returning to blocked DM preserves history and draft",
+      "passed": true
+    },
+    {
+      "label": "mobile dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark tab Blocked Users",
+      "passed": true
+    },
+    {
+      "label": "mobile dark blocked list updates and hides request/message actions",
+      "passed": true
+    },
+    {
+      "label": "mobile dark available action Unblock Ava Morgan",
+      "passed": true
+    },
+    {
+      "label": "mobile dark unblock removes entry without restoring friendship",
+      "passed": true
+    },
+    {
+      "label": "mobile dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark ava.morgan relationship none",
+      "passed": true
+    },
+    {
+      "label": "mobile dark main navigation Chats",
+      "passed": true
+    },
+    {
+      "label": "mobile dark relationship changes preserve existing chat history and draft",
+      "passed": true
+    },
+    {
+      "label": "mobile dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark appearance persists while demo relationships reset",
+      "passed": true
+    },
+    {
+      "label": "mobile dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark tab Pending Requests",
+      "passed": true
+    },
+    {
+      "label": "mobile dark available action Decline request from Jules Park",
+      "passed": true
+    },
+    {
+      "label": "mobile dark declined request is removed and cannot be accepted again",
+      "passed": true
+    },
+    {
+      "label": "mobile dark tab Find Friends",
+      "passed": true
+    },
+    {
+      "label": "mobile dark jules.park relationship none",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "edge 720 light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "edge 720 light responsive navigation and Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 720,
+        "height": 900,
+        "documentWidth": 720,
+        "bodyWidth": 720,
+        "elements": [
+          {
+            "selector": ".messenger-navigation",
+            "x": 15.390625,
+            "right": 704.609375,
+            "top": 44.1875,
+            "bottom": 150.53125,
+            "width": 689.21875,
+            "scrollWidth": 689,
+            "clientWidth": 689
+          },
+          {
+            "selector": ".messenger-window-chrome",
+            "x": 15.390625,
+            "right": 704.609375,
+            "top": 15.390625,
+            "bottom": 44.1875,
+            "width": 689.21875,
+            "scrollWidth": 689,
+            "clientWidth": 689
+          },
+          {
+            "selector": "#friends",
+            "x": 15.390625,
+            "right": 704.609375,
+            "top": 150.53125,
+            "bottom": 884.609375,
+            "width": 689.21875,
+            "scrollWidth": 689,
+            "clientWidth": 689
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 36.984375,
+            "right": 683.015625,
+            "top": 379.578125,
+            "bottom": 436.765625,
+            "width": 646.03125,
+            "scrollWidth": 644,
+            "clientWidth": 644
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 36.984375,
+            "right": 683.015625,
+            "top": 436.765625,
+            "bottom": 698.71875,
+            "width": 646.03125,
+            "scrollWidth": 646,
+            "clientWidth": 646
+          }
+        ]
+      }
+    },
+    {
+      "label": "edge 720 light primary heading remains clear and unclipped",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "edge 681 light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "edge 681 light responsive navigation and Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 681,
+        "height": 900,
+        "documentWidth": 681,
+        "bodyWidth": 681,
+        "elements": [
+          {
+            "selector": ".messenger-navigation",
+            "x": 14.609375,
+            "right": 666.390625,
+            "top": 43.40625,
+            "bottom": 149.75,
+            "width": 651.78125,
+            "scrollWidth": 652,
+            "clientWidth": 652
+          },
+          {
+            "selector": ".messenger-window-chrome",
+            "x": 14.609375,
+            "right": 666.390625,
+            "top": 14.609375,
+            "bottom": 43.40625,
+            "width": 651.78125,
+            "scrollWidth": 652,
+            "clientWidth": 652
+          },
+          {
+            "selector": "#friends",
+            "x": 14.609375,
+            "right": 666.390625,
+            "top": 149.75,
+            "bottom": 885.390625,
+            "width": 651.78125,
+            "scrollWidth": 652,
+            "clientWidth": 652
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 35.03125,
+            "right": 645.96875,
+            "top": 377.625,
+            "bottom": 434.8125,
+            "width": 610.9375,
+            "scrollWidth": 609,
+            "clientWidth": 609
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 35.03125,
+            "right": 645.96875,
+            "top": 434.8125,
+            "bottom": 753.5625,
+            "width": 610.9375,
+            "scrollWidth": 611,
+            "clientWidth": 611
+          }
+        ]
+      }
+    },
+    {
+      "label": "edge 681 light primary heading remains clear and unclipped",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "edge 680 light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "edge 680 light responsive navigation and Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 680,
+        "height": 900,
+        "documentWidth": 680,
+        "bodyWidth": 680,
+        "elements": [
+          {
+            "selector": ".messenger-navigation",
+            "x": 0,
+            "right": 680,
+            "top": 24,
+            "bottom": 86.59375,
+            "width": 680,
+            "scrollWidth": 680,
+            "clientWidth": 680
+          },
+          {
+            "selector": ".messenger-window-chrome",
+            "x": 0,
+            "right": 680,
+            "top": 0,
+            "bottom": 24,
+            "width": 680,
+            "scrollWidth": 680,
+            "clientWidth": 680
+          },
+          {
+            "selector": "#friends",
+            "x": 0,
+            "right": 680,
+            "top": 86.59375,
+            "bottom": 900,
+            "width": 680,
+            "scrollWidth": 680,
+            "clientWidth": 680
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 16,
+            "right": 664,
+            "top": 285.84375,
+            "bottom": 391.03125,
+            "width": 648,
+            "scrollWidth": 646,
+            "clientWidth": 646
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 16,
+            "right": 664,
+            "top": 391.03125,
+            "bottom": 699.0625,
+            "width": 648,
+            "scrollWidth": 648,
+            "clientWidth": 648
+          }
+        ]
+      }
+    },
+    {
+      "label": "edge 680 light primary heading remains clear and unclipped",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "edge 320 light main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "edge 320 light responsive navigation and Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 320,
+        "height": 900,
+        "documentWidth": 320,
+        "bodyWidth": 320,
+        "elements": [
+          {
+            "selector": ".messenger-navigation",
+            "x": 0,
+            "right": 320,
+            "top": 24,
+            "bottom": 115.5625,
+            "width": 320,
+            "scrollWidth": 320,
+            "clientWidth": 320
+          },
+          {
+            "selector": ".messenger-window-chrome",
+            "x": 0,
+            "right": 320,
+            "top": 0,
+            "bottom": 24,
+            "width": 320,
+            "scrollWidth": 320,
+            "clientWidth": 320
+          },
+          {
+            "selector": "#friends",
+            "x": 0,
+            "right": 320,
+            "top": 115.5625,
+            "bottom": 900,
+            "width": 320,
+            "scrollWidth": 305,
+            "clientWidth": 305
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 16,
+            "right": 289,
+            "top": 452.46875,
+            "bottom": 570.84375,
+            "width": 273,
+            "scrollWidth": 271,
+            "clientWidth": 271
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 16,
+            "right": 289,
+            "top": 570.84375,
+            "bottom": 916.46875,
+            "width": 273,
+            "scrollWidth": 273,
+            "clientWidth": 273
+          }
+        ]
+      }
+    },
+    {
+      "label": "edge 320 light primary heading remains clear and unclipped",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "edge 720 dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "edge 720 dark responsive navigation and Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 720,
+        "height": 900,
+        "documentWidth": 720,
+        "bodyWidth": 720,
+        "elements": [
+          {
+            "selector": ".messenger-navigation",
+            "x": 15.390625,
+            "right": 704.609375,
+            "top": 44.1875,
+            "bottom": 150.53125,
+            "width": 689.21875,
+            "scrollWidth": 689,
+            "clientWidth": 689
+          },
+          {
+            "selector": ".messenger-window-chrome",
+            "x": 15.390625,
+            "right": 704.609375,
+            "top": 15.390625,
+            "bottom": 44.1875,
+            "width": 689.21875,
+            "scrollWidth": 689,
+            "clientWidth": 689
+          },
+          {
+            "selector": "#friends",
+            "x": 15.390625,
+            "right": 704.609375,
+            "top": 150.53125,
+            "bottom": 884.609375,
+            "width": 689.21875,
+            "scrollWidth": 689,
+            "clientWidth": 689
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 36.984375,
+            "right": 683.015625,
+            "top": 379.578125,
+            "bottom": 436.765625,
+            "width": 646.03125,
+            "scrollWidth": 644,
+            "clientWidth": 644
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 36.984375,
+            "right": 683.015625,
+            "top": 436.765625,
+            "bottom": 698.71875,
+            "width": 646.03125,
+            "scrollWidth": 646,
+            "clientWidth": 646
+          }
+        ]
+      }
+    },
+    {
+      "label": "edge 720 dark primary heading remains clear and unclipped",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "edge 681 dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "edge 681 dark responsive navigation and Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 681,
+        "height": 900,
+        "documentWidth": 681,
+        "bodyWidth": 681,
+        "elements": [
+          {
+            "selector": ".messenger-navigation",
+            "x": 14.609375,
+            "right": 666.390625,
+            "top": 43.40625,
+            "bottom": 149.75,
+            "width": 651.78125,
+            "scrollWidth": 652,
+            "clientWidth": 652
+          },
+          {
+            "selector": ".messenger-window-chrome",
+            "x": 14.609375,
+            "right": 666.390625,
+            "top": 14.609375,
+            "bottom": 43.40625,
+            "width": 651.78125,
+            "scrollWidth": 652,
+            "clientWidth": 652
+          },
+          {
+            "selector": "#friends",
+            "x": 14.609375,
+            "right": 666.390625,
+            "top": 149.75,
+            "bottom": 885.390625,
+            "width": 651.78125,
+            "scrollWidth": 652,
+            "clientWidth": 652
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 35.03125,
+            "right": 645.96875,
+            "top": 377.625,
+            "bottom": 434.8125,
+            "width": 610.9375,
+            "scrollWidth": 609,
+            "clientWidth": 609
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 35.03125,
+            "right": 645.96875,
+            "top": 434.8125,
+            "bottom": 753.5625,
+            "width": 610.9375,
+            "scrollWidth": 611,
+            "clientWidth": 611
+          }
+        ]
+      }
+    },
+    {
+      "label": "edge 681 dark primary heading remains clear and unclipped",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "edge 680 dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "edge 680 dark responsive navigation and Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 680,
+        "height": 900,
+        "documentWidth": 680,
+        "bodyWidth": 680,
+        "elements": [
+          {
+            "selector": ".messenger-navigation",
+            "x": 0,
+            "right": 680,
+            "top": 24,
+            "bottom": 86.59375,
+            "width": 680,
+            "scrollWidth": 680,
+            "clientWidth": 680
+          },
+          {
+            "selector": ".messenger-window-chrome",
+            "x": 0,
+            "right": 680,
+            "top": 0,
+            "bottom": 24,
+            "width": 680,
+            "scrollWidth": 680,
+            "clientWidth": 680
+          },
+          {
+            "selector": "#friends",
+            "x": 0,
+            "right": 680,
+            "top": 86.59375,
+            "bottom": 900,
+            "width": 680,
+            "scrollWidth": 680,
+            "clientWidth": 680
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 16,
+            "right": 664,
+            "top": 285.84375,
+            "bottom": 391.03125,
+            "width": 648,
+            "scrollWidth": 646,
+            "clientWidth": 646
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 16,
+            "right": 664,
+            "top": 391.03125,
+            "bottom": 699.0625,
+            "width": 648,
+            "scrollWidth": 648,
+            "clientWidth": 648
+          }
+        ]
+      }
+    },
+    {
+      "label": "edge 680 dark primary heading remains clear and unclipped",
+      "passed": true
+    },
+    {
+      "label": "Available control button[aria-label^=\"Open profile\"]",
+      "passed": true
+    },
+    {
+      "label": "Available control dialog[open] input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "edge 320 dark main navigation Friends",
+      "passed": true
+    },
+    {
+      "label": "edge 320 dark responsive navigation and Friends no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 320,
+        "height": 900,
+        "documentWidth": 320,
+        "bodyWidth": 320,
+        "elements": [
+          {
+            "selector": ".messenger-navigation",
+            "x": 0,
+            "right": 320,
+            "top": 24,
+            "bottom": 115.5625,
+            "width": 320,
+            "scrollWidth": 320,
+            "clientWidth": 320
+          },
+          {
+            "selector": ".messenger-window-chrome",
+            "x": 0,
+            "right": 320,
+            "top": 0,
+            "bottom": 24,
+            "width": 320,
+            "scrollWidth": 320,
+            "clientWidth": 320
+          },
+          {
+            "selector": "#friends",
+            "x": 0,
+            "right": 320,
+            "top": 115.5625,
+            "bottom": 900,
+            "width": 320,
+            "scrollWidth": 305,
+            "clientWidth": 305
+          },
+          {
+            "selector": ".friends-tabs",
+            "x": 16,
+            "right": 289,
+            "top": 452.46875,
+            "bottom": 570.84375,
+            "width": 273,
+            "scrollWidth": 271,
+            "clientWidth": 271
+          },
+          {
+            "selector": ".friends-panel:not([hidden])",
+            "x": 16,
+            "right": 289,
+            "top": 570.84375,
+            "bottom": 916.46875,
+            "width": 273,
+            "scrollWidth": 273,
+            "clientWidth": 273
+          }
+        ]
+      }
+    },
+    {
+      "label": "edge 320 dark primary heading remains clear and unclipped",
+      "passed": true
+    },
+    {
+      "label": "No uncaught exceptions or hydration/console errors",
+      "passed": true,
+      "detail": {
+        "runtime": [],
+        "console": []
+      }
+    },
+    {
+      "label": "Application source remained unchanged throughout production browser verification",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "artifacts/phase6/laptop-light-friends.png",
+    "artifacts/phase6/desktop-light-friends.png",
+    "artifacts/phase6/desktop-light-request-profile.png",
+    "artifacts/phase6/mobile-light-friends.png",
+    "artifacts/phase6/laptop-dark-friends.png",
+    "artifacts/phase6/desktop-dark-friends.png",
+    "artifacts/phase6/desktop-dark-blocked-chat.png",
+    "artifacts/phase6/mobile-dark-friends.png",
+    "artifacts/phase6/mobile-dark-remove-confirmation.png",
+    "artifacts/phase6/edge-681-light-friends.png",
+    "artifacts/phase6/edge-320-dark-friends.png"
+  ],
+  "runtimeErrors": [],
+  "consoleErrors": [],
+  "fonts": [
+    {
+      "label": "laptop light Friends heading",
+      "selector": "#friends-page-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 7
+        }
+      ]
+    },
+    {
+      "label": "laptop light friend name",
+      "selector": "#friends .friends-name",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    },
+    {
+      "label": "desktop light Friends heading",
+      "selector": "#friends-page-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 7
+        }
+      ]
+    },
+    {
+      "label": "desktop light friend name",
+      "selector": "#friends .friends-name",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    },
+    {
+      "label": "mobile light Friends heading",
+      "selector": "#friends-page-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 7
+        }
+      ]
+    },
+    {
+      "label": "mobile light friend name",
+      "selector": "#friends .friends-name",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    },
+    {
+      "label": "laptop dark Friends heading",
+      "selector": "#friends-page-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 7
+        }
+      ]
+    },
+    {
+      "label": "laptop dark friend name",
+      "selector": "#friends .friends-name",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    },
+    {
+      "label": "desktop dark Friends heading",
+      "selector": "#friends-page-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 7
+        }
+      ]
+    },
+    {
+      "label": "desktop dark friend name",
+      "selector": "#friends .friends-name",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    },
+    {
+      "label": "mobile dark Friends heading",
+      "selector": "#friends-page-title",
+      "expected": "Bungee",
+      "fonts": [
+        {
+          "familyName": "Bungee",
+          "postScriptName": "Bungee-Regular",
+          "isCustomFont": true,
+          "glyphCount": 7
+        }
+      ]
+    },
+    {
+      "label": "mobile dark friend name",
+      "selector": "#friends .friends-name",
+      "expected": "Space Grotesk",
+      "fonts": [
+        {
+          "familyName": "Space Grotesk Light",
+          "postScriptName": "Space-Grotesk-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    }
+  ],
+  "geometry": [
+    {
+      "label": "laptop light Friends",
+      "width": 1024,
+      "height": 800,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "elements": [
+        {
+          "selector": "#friends",
+          "x": 21.46875,
+          "right": 1002.53125,
+          "top": 124.859375,
+          "bottom": 778.53125,
+          "width": 981.0625,
+          "scrollWidth": 981,
+          "clientWidth": 981
+        },
+        {
+          "selector": ".friends-page",
+          "x": 21.46875,
+          "right": 1002.53125,
+          "top": 124.859375,
+          "bottom": 712.890625,
+          "width": 981.0625,
+          "scrollWidth": 981,
+          "clientWidth": 981
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 52.1875,
+          "right": 971.8125,
+          "top": 363.03125,
+          "bottom": 420.21875,
+          "width": 919.625,
+          "scrollWidth": 918,
+          "clientWidth": 918
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 52.1875,
+          "right": 971.8125,
+          "top": 420.21875,
+          "bottom": 682.171875,
+          "width": 919.625,
+          "scrollWidth": 920,
+          "clientWidth": 920
+        },
+        {
+          "selector": ".friends-row",
+          "x": 52.1875,
+          "right": 971.8125,
+          "top": 583.484375,
+          "bottom": 682.171875,
+          "width": 919.625,
+          "scrollWidth": 918,
+          "clientWidth": 918
+        }
+      ]
+    },
+    {
+      "label": "laptop light remove confirmation",
+      "width": 1024,
+      "height": 800,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "elements": [
+        {
+          "selector": "dialog[open].friends-confirm-dialog",
+          "x": 256,
+          "right": 768,
+          "top": 266.515625,
+          "bottom": 533.484375,
+          "width": 512,
+          "scrollWidth": 512,
+          "clientWidth": 512
+        },
+        {
+          "selector": ".friends-confirm-dialog .ui-dialog-panel",
+          "x": 256,
+          "right": 768,
+          "top": 266.515625,
+          "bottom": 533.484375,
+          "width": 512,
+          "scrollWidth": 510,
+          "clientWidth": 510
+        }
+      ]
+    },
+    {
+      "label": "desktop light Friends",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "elements": [
+        {
+          "selector": "#friends",
+          "x": 29,
+          "right": 1411,
+          "top": 132.390625,
+          "bottom": 971,
+          "width": 1382,
+          "scrollWidth": 1382,
+          "clientWidth": 1382
+        },
+        {
+          "selector": ".friends-page",
+          "x": 144,
+          "right": 1296,
+          "top": 132.390625,
+          "bottom": 738.984375,
+          "width": 1152,
+          "scrollWidth": 1152,
+          "clientWidth": 1152
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 184,
+          "right": 1256,
+          "top": 379.84375,
+          "bottom": 437.03125,
+          "width": 1072,
+          "scrollWidth": 1070,
+          "clientWidth": 1070
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 184,
+          "right": 1256,
+          "top": 437.03125,
+          "bottom": 698.984375,
+          "width": 1072,
+          "scrollWidth": 1072,
+          "clientWidth": 1072
+        },
+        {
+          "selector": ".friends-row",
+          "x": 184,
+          "right": 1256,
+          "top": 600.296875,
+          "bottom": 698.984375,
+          "width": 1072,
+          "scrollWidth": 1070,
+          "clientWidth": 1070
+        }
+      ]
+    },
+    {
+      "label": "desktop light remove confirmation",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "elements": [
+        {
+          "selector": "dialog[open].friends-confirm-dialog",
+          "x": 464,
+          "right": 976,
+          "top": 366.515625,
+          "bottom": 633.484375,
+          "width": 512,
+          "scrollWidth": 512,
+          "clientWidth": 512
+        },
+        {
+          "selector": ".friends-confirm-dialog .ui-dialog-panel",
+          "x": 464,
+          "right": 976,
+          "top": 366.515625,
+          "bottom": 633.484375,
+          "width": 512,
+          "scrollWidth": 510,
+          "clientWidth": 510
+        }
+      ]
+    },
+    {
+      "label": "mobile light Friends",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "elements": [
+        {
+          "selector": "#friends",
+          "x": 0,
+          "right": 390,
+          "top": 86.59375,
+          "bottom": 844,
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        },
+        {
+          "selector": ".friends-page",
+          "x": 0,
+          "right": 390,
+          "top": 86.59375,
+          "bottom": 807.84375,
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 16,
+          "right": 374,
+          "top": 362.625,
+          "bottom": 467.8125,
+          "width": 358,
+          "scrollWidth": 356,
+          "clientWidth": 356
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 16,
+          "right": 374,
+          "top": 467.8125,
+          "bottom": 775.84375,
+          "width": 358,
+          "scrollWidth": 358,
+          "clientWidth": 358
+        },
+        {
+          "selector": ".friends-row",
+          "x": 16,
+          "right": 374,
+          "top": 624.375,
+          "bottom": 775.84375,
+          "width": 358,
+          "scrollWidth": 356,
+          "clientWidth": 356
+        }
+      ]
+    },
+    {
+      "label": "mobile light remove confirmation",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "elements": [
+        {
+          "selector": "dialog[open].friends-confirm-dialog",
+          "x": 8,
+          "right": 382,
+          "top": 291.40625,
+          "bottom": 552.578125,
+          "width": 374,
+          "scrollWidth": 374,
+          "clientWidth": 374
+        },
+        {
+          "selector": ".friends-confirm-dialog .ui-dialog-panel",
+          "x": 8,
+          "right": 382,
+          "top": 291.40625,
+          "bottom": 552.578125,
+          "width": 374,
+          "scrollWidth": 372,
+          "clientWidth": 372
+        }
+      ]
+    },
+    {
+      "label": "laptop dark Friends",
+      "width": 1024,
+      "height": 800,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "elements": [
+        {
+          "selector": "#friends",
+          "x": 21.46875,
+          "right": 1002.53125,
+          "top": 124.859375,
+          "bottom": 778.53125,
+          "width": 981.0625,
+          "scrollWidth": 981,
+          "clientWidth": 981
+        },
+        {
+          "selector": ".friends-page",
+          "x": 21.46875,
+          "right": 1002.53125,
+          "top": 124.859375,
+          "bottom": 712.890625,
+          "width": 981.0625,
+          "scrollWidth": 981,
+          "clientWidth": 981
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 52.1875,
+          "right": 971.8125,
+          "top": 363.03125,
+          "bottom": 420.21875,
+          "width": 919.625,
+          "scrollWidth": 918,
+          "clientWidth": 918
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 52.1875,
+          "right": 971.8125,
+          "top": 420.21875,
+          "bottom": 682.171875,
+          "width": 919.625,
+          "scrollWidth": 920,
+          "clientWidth": 920
+        },
+        {
+          "selector": ".friends-row",
+          "x": 52.1875,
+          "right": 971.8125,
+          "top": 583.484375,
+          "bottom": 682.171875,
+          "width": 919.625,
+          "scrollWidth": 918,
+          "clientWidth": 918
+        }
+      ]
+    },
+    {
+      "label": "laptop dark remove confirmation",
+      "width": 1024,
+      "height": 800,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "elements": [
+        {
+          "selector": "dialog[open].friends-confirm-dialog",
+          "x": 256,
+          "right": 768,
+          "top": 266.515625,
+          "bottom": 533.484375,
+          "width": 512,
+          "scrollWidth": 512,
+          "clientWidth": 512
+        },
+        {
+          "selector": ".friends-confirm-dialog .ui-dialog-panel",
+          "x": 256,
+          "right": 768,
+          "top": 266.515625,
+          "bottom": 533.484375,
+          "width": 512,
+          "scrollWidth": 510,
+          "clientWidth": 510
+        }
+      ]
+    },
+    {
+      "label": "desktop dark Friends",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "elements": [
+        {
+          "selector": "#friends",
+          "x": 29,
+          "right": 1411,
+          "top": 132.390625,
+          "bottom": 971,
+          "width": 1382,
+          "scrollWidth": 1382,
+          "clientWidth": 1382
+        },
+        {
+          "selector": ".friends-page",
+          "x": 144,
+          "right": 1296,
+          "top": 132.390625,
+          "bottom": 738.984375,
+          "width": 1152,
+          "scrollWidth": 1152,
+          "clientWidth": 1152
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 184,
+          "right": 1256,
+          "top": 379.84375,
+          "bottom": 437.03125,
+          "width": 1072,
+          "scrollWidth": 1070,
+          "clientWidth": 1070
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 184,
+          "right": 1256,
+          "top": 437.03125,
+          "bottom": 698.984375,
+          "width": 1072,
+          "scrollWidth": 1072,
+          "clientWidth": 1072
+        },
+        {
+          "selector": ".friends-row",
+          "x": 184,
+          "right": 1256,
+          "top": 600.296875,
+          "bottom": 698.984375,
+          "width": 1072,
+          "scrollWidth": 1070,
+          "clientWidth": 1070
+        }
+      ]
+    },
+    {
+      "label": "desktop dark remove confirmation",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "elements": [
+        {
+          "selector": "dialog[open].friends-confirm-dialog",
+          "x": 464,
+          "right": 976,
+          "top": 366.515625,
+          "bottom": 633.484375,
+          "width": 512,
+          "scrollWidth": 512,
+          "clientWidth": 512
+        },
+        {
+          "selector": ".friends-confirm-dialog .ui-dialog-panel",
+          "x": 464,
+          "right": 976,
+          "top": 366.515625,
+          "bottom": 633.484375,
+          "width": 512,
+          "scrollWidth": 510,
+          "clientWidth": 510
+        }
+      ]
+    },
+    {
+      "label": "mobile dark Friends",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "elements": [
+        {
+          "selector": "#friends",
+          "x": 0,
+          "right": 390,
+          "top": 86.59375,
+          "bottom": 844,
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        },
+        {
+          "selector": ".friends-page",
+          "x": 0,
+          "right": 390,
+          "top": 86.59375,
+          "bottom": 807.84375,
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 16,
+          "right": 374,
+          "top": 362.625,
+          "bottom": 467.8125,
+          "width": 358,
+          "scrollWidth": 356,
+          "clientWidth": 356
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 16,
+          "right": 374,
+          "top": 467.8125,
+          "bottom": 775.84375,
+          "width": 358,
+          "scrollWidth": 358,
+          "clientWidth": 358
+        },
+        {
+          "selector": ".friends-row",
+          "x": 16,
+          "right": 374,
+          "top": 624.375,
+          "bottom": 775.84375,
+          "width": 358,
+          "scrollWidth": 356,
+          "clientWidth": 356
+        }
+      ]
+    },
+    {
+      "label": "mobile dark remove confirmation",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "elements": [
+        {
+          "selector": "dialog[open].friends-confirm-dialog",
+          "x": 8,
+          "right": 382,
+          "top": 291.40625,
+          "bottom": 552.578125,
+          "width": 374,
+          "scrollWidth": 374,
+          "clientWidth": 374
+        },
+        {
+          "selector": ".friends-confirm-dialog .ui-dialog-panel",
+          "x": 8,
+          "right": 382,
+          "top": 291.40625,
+          "bottom": 552.578125,
+          "width": 374,
+          "scrollWidth": 372,
+          "clientWidth": 372
+        }
+      ]
+    },
+    {
+      "label": "edge 720 light responsive navigation and Friends",
+      "width": 720,
+      "height": 900,
+      "documentWidth": 720,
+      "bodyWidth": 720,
+      "elements": [
+        {
+          "selector": ".messenger-navigation",
+          "x": 15.390625,
+          "right": 704.609375,
+          "top": 44.1875,
+          "bottom": 150.53125,
+          "width": 689.21875,
+          "scrollWidth": 689,
+          "clientWidth": 689
+        },
+        {
+          "selector": ".messenger-window-chrome",
+          "x": 15.390625,
+          "right": 704.609375,
+          "top": 15.390625,
+          "bottom": 44.1875,
+          "width": 689.21875,
+          "scrollWidth": 689,
+          "clientWidth": 689
+        },
+        {
+          "selector": "#friends",
+          "x": 15.390625,
+          "right": 704.609375,
+          "top": 150.53125,
+          "bottom": 884.609375,
+          "width": 689.21875,
+          "scrollWidth": 689,
+          "clientWidth": 689
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 36.984375,
+          "right": 683.015625,
+          "top": 379.578125,
+          "bottom": 436.765625,
+          "width": 646.03125,
+          "scrollWidth": 644,
+          "clientWidth": 644
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 36.984375,
+          "right": 683.015625,
+          "top": 436.765625,
+          "bottom": 698.71875,
+          "width": 646.03125,
+          "scrollWidth": 646,
+          "clientWidth": 646
+        }
+      ]
+    },
+    {
+      "label": "edge 681 light responsive navigation and Friends",
+      "width": 681,
+      "height": 900,
+      "documentWidth": 681,
+      "bodyWidth": 681,
+      "elements": [
+        {
+          "selector": ".messenger-navigation",
+          "x": 14.609375,
+          "right": 666.390625,
+          "top": 43.40625,
+          "bottom": 149.75,
+          "width": 651.78125,
+          "scrollWidth": 652,
+          "clientWidth": 652
+        },
+        {
+          "selector": ".messenger-window-chrome",
+          "x": 14.609375,
+          "right": 666.390625,
+          "top": 14.609375,
+          "bottom": 43.40625,
+          "width": 651.78125,
+          "scrollWidth": 652,
+          "clientWidth": 652
+        },
+        {
+          "selector": "#friends",
+          "x": 14.609375,
+          "right": 666.390625,
+          "top": 149.75,
+          "bottom": 885.390625,
+          "width": 651.78125,
+          "scrollWidth": 652,
+          "clientWidth": 652
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 35.03125,
+          "right": 645.96875,
+          "top": 377.625,
+          "bottom": 434.8125,
+          "width": 610.9375,
+          "scrollWidth": 609,
+          "clientWidth": 609
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 35.03125,
+          "right": 645.96875,
+          "top": 434.8125,
+          "bottom": 753.5625,
+          "width": 610.9375,
+          "scrollWidth": 611,
+          "clientWidth": 611
+        }
+      ]
+    },
+    {
+      "label": "edge 680 light responsive navigation and Friends",
+      "width": 680,
+      "height": 900,
+      "documentWidth": 680,
+      "bodyWidth": 680,
+      "elements": [
+        {
+          "selector": ".messenger-navigation",
+          "x": 0,
+          "right": 680,
+          "top": 24,
+          "bottom": 86.59375,
+          "width": 680,
+          "scrollWidth": 680,
+          "clientWidth": 680
+        },
+        {
+          "selector": ".messenger-window-chrome",
+          "x": 0,
+          "right": 680,
+          "top": 0,
+          "bottom": 24,
+          "width": 680,
+          "scrollWidth": 680,
+          "clientWidth": 680
+        },
+        {
+          "selector": "#friends",
+          "x": 0,
+          "right": 680,
+          "top": 86.59375,
+          "bottom": 900,
+          "width": 680,
+          "scrollWidth": 680,
+          "clientWidth": 680
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 16,
+          "right": 664,
+          "top": 285.84375,
+          "bottom": 391.03125,
+          "width": 648,
+          "scrollWidth": 646,
+          "clientWidth": 646
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 16,
+          "right": 664,
+          "top": 391.03125,
+          "bottom": 699.0625,
+          "width": 648,
+          "scrollWidth": 648,
+          "clientWidth": 648
+        }
+      ]
+    },
+    {
+      "label": "edge 320 light responsive navigation and Friends",
+      "width": 320,
+      "height": 900,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "elements": [
+        {
+          "selector": ".messenger-navigation",
+          "x": 0,
+          "right": 320,
+          "top": 24,
+          "bottom": 115.5625,
+          "width": 320,
+          "scrollWidth": 320,
+          "clientWidth": 320
+        },
+        {
+          "selector": ".messenger-window-chrome",
+          "x": 0,
+          "right": 320,
+          "top": 0,
+          "bottom": 24,
+          "width": 320,
+          "scrollWidth": 320,
+          "clientWidth": 320
+        },
+        {
+          "selector": "#friends",
+          "x": 0,
+          "right": 320,
+          "top": 115.5625,
+          "bottom": 900,
+          "width": 320,
+          "scrollWidth": 305,
+          "clientWidth": 305
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 16,
+          "right": 289,
+          "top": 452.46875,
+          "bottom": 570.84375,
+          "width": 273,
+          "scrollWidth": 271,
+          "clientWidth": 271
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 16,
+          "right": 289,
+          "top": 570.84375,
+          "bottom": 916.46875,
+          "width": 273,
+          "scrollWidth": 273,
+          "clientWidth": 273
+        }
+      ]
+    },
+    {
+      "label": "edge 720 dark responsive navigation and Friends",
+      "width": 720,
+      "height": 900,
+      "documentWidth": 720,
+      "bodyWidth": 720,
+      "elements": [
+        {
+          "selector": ".messenger-navigation",
+          "x": 15.390625,
+          "right": 704.609375,
+          "top": 44.1875,
+          "bottom": 150.53125,
+          "width": 689.21875,
+          "scrollWidth": 689,
+          "clientWidth": 689
+        },
+        {
+          "selector": ".messenger-window-chrome",
+          "x": 15.390625,
+          "right": 704.609375,
+          "top": 15.390625,
+          "bottom": 44.1875,
+          "width": 689.21875,
+          "scrollWidth": 689,
+          "clientWidth": 689
+        },
+        {
+          "selector": "#friends",
+          "x": 15.390625,
+          "right": 704.609375,
+          "top": 150.53125,
+          "bottom": 884.609375,
+          "width": 689.21875,
+          "scrollWidth": 689,
+          "clientWidth": 689
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 36.984375,
+          "right": 683.015625,
+          "top": 379.578125,
+          "bottom": 436.765625,
+          "width": 646.03125,
+          "scrollWidth": 644,
+          "clientWidth": 644
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 36.984375,
+          "right": 683.015625,
+          "top": 436.765625,
+          "bottom": 698.71875,
+          "width": 646.03125,
+          "scrollWidth": 646,
+          "clientWidth": 646
+        }
+      ]
+    },
+    {
+      "label": "edge 681 dark responsive navigation and Friends",
+      "width": 681,
+      "height": 900,
+      "documentWidth": 681,
+      "bodyWidth": 681,
+      "elements": [
+        {
+          "selector": ".messenger-navigation",
+          "x": 14.609375,
+          "right": 666.390625,
+          "top": 43.40625,
+          "bottom": 149.75,
+          "width": 651.78125,
+          "scrollWidth": 652,
+          "clientWidth": 652
+        },
+        {
+          "selector": ".messenger-window-chrome",
+          "x": 14.609375,
+          "right": 666.390625,
+          "top": 14.609375,
+          "bottom": 43.40625,
+          "width": 651.78125,
+          "scrollWidth": 652,
+          "clientWidth": 652
+        },
+        {
+          "selector": "#friends",
+          "x": 14.609375,
+          "right": 666.390625,
+          "top": 149.75,
+          "bottom": 885.390625,
+          "width": 651.78125,
+          "scrollWidth": 652,
+          "clientWidth": 652
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 35.03125,
+          "right": 645.96875,
+          "top": 377.625,
+          "bottom": 434.8125,
+          "width": 610.9375,
+          "scrollWidth": 609,
+          "clientWidth": 609
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 35.03125,
+          "right": 645.96875,
+          "top": 434.8125,
+          "bottom": 753.5625,
+          "width": 610.9375,
+          "scrollWidth": 611,
+          "clientWidth": 611
+        }
+      ]
+    },
+    {
+      "label": "edge 680 dark responsive navigation and Friends",
+      "width": 680,
+      "height": 900,
+      "documentWidth": 680,
+      "bodyWidth": 680,
+      "elements": [
+        {
+          "selector": ".messenger-navigation",
+          "x": 0,
+          "right": 680,
+          "top": 24,
+          "bottom": 86.59375,
+          "width": 680,
+          "scrollWidth": 680,
+          "clientWidth": 680
+        },
+        {
+          "selector": ".messenger-window-chrome",
+          "x": 0,
+          "right": 680,
+          "top": 0,
+          "bottom": 24,
+          "width": 680,
+          "scrollWidth": 680,
+          "clientWidth": 680
+        },
+        {
+          "selector": "#friends",
+          "x": 0,
+          "right": 680,
+          "top": 86.59375,
+          "bottom": 900,
+          "width": 680,
+          "scrollWidth": 680,
+          "clientWidth": 680
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 16,
+          "right": 664,
+          "top": 285.84375,
+          "bottom": 391.03125,
+          "width": 648,
+          "scrollWidth": 646,
+          "clientWidth": 646
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 16,
+          "right": 664,
+          "top": 391.03125,
+          "bottom": 699.0625,
+          "width": 648,
+          "scrollWidth": 648,
+          "clientWidth": 648
+        }
+      ]
+    },
+    {
+      "label": "edge 320 dark responsive navigation and Friends",
+      "width": 320,
+      "height": 900,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "elements": [
+        {
+          "selector": ".messenger-navigation",
+          "x": 0,
+          "right": 320,
+          "top": 24,
+          "bottom": 115.5625,
+          "width": 320,
+          "scrollWidth": 320,
+          "clientWidth": 320
+        },
+        {
+          "selector": ".messenger-window-chrome",
+          "x": 0,
+          "right": 320,
+          "top": 0,
+          "bottom": 24,
+          "width": 320,
+          "scrollWidth": 320,
+          "clientWidth": 320
+        },
+        {
+          "selector": "#friends",
+          "x": 0,
+          "right": 320,
+          "top": 115.5625,
+          "bottom": 900,
+          "width": 320,
+          "scrollWidth": 305,
+          "clientWidth": 305
+        },
+        {
+          "selector": ".friends-tabs",
+          "x": 16,
+          "right": 289,
+          "top": 452.46875,
+          "bottom": 570.84375,
+          "width": 273,
+          "scrollWidth": 271,
+          "clientWidth": 271
+        },
+        {
+          "selector": ".friends-panel:not([hidden])",
+          "x": 16,
+          "right": 289,
+          "top": 570.84375,
+          "bottom": 916.46875,
+          "width": 273,
+          "scrollWidth": 273,
+          "clientWidth": 273
+        }
+      ]
+    }
+  ],
+  "buildId": "jx4vQHFlQrhXOVZ9uL6P1",
+  "sourceFingerprint": {
+    "fileCount": 82,
+    "sha256": "c665df76520f97f840bc00cf8bb7163f8cdd4778d6d90973bbb5d136cd976c87"
+  },
+  "browserVersion": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/156.0.8078.81",
+    "revision": "@060bedfb508f73250e93aeb9ca8149b3958995d8",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+    "jsVersion": "15.6.75.27"
+  },
+  "currentCase": {
+    "label": "mobile dark",
+    "width": 390,
+    "height": 844,
+    "mode": "dark"
+  },
+  "finalSourceFingerprint": {
+    "fileCount": 82,
+    "sha256": "c665df76520f97f840bc00cf8bb7163f8cdd4778d6d90973bbb5d136cd976c87"
+  },
+  "limitations": [
+    "No authenticated friends API or real presence is connected; browser flows exercise the explicitly labeled memory-only demo.",
+    "Existing Ava DM reused; new DM creation and group member selection are unavailable in the current checkout and were not fabricated.",
+    "Unauthorized/stale/remote API failure handling is covered in focused unit/hook tests rather than a real backend browser environment."
+  ],
+  "completedAt": "2026-11-09T02:52:48.468Z",
+  "passed": true,
+  "cleanup": {
+    "requestedOwnedProcessCleanup": true,
+    "serverPid": 33416,
+    "browserPid": 34316
+  }
+}

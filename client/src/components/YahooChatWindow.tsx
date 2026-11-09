@@ -9,6 +9,7 @@ import type { PresenceStatus } from '@/messaging/messageModel';
 import type { MessagingTransport } from '@/messaging/transport';
 import type { ConversationMessageActivity, ConversationType } from '@/conversations/conversationModel';
 import type { ConversationSecurityStatus } from '@/security/keyManagement';
+import type { ConversationCryptoService } from '@/security/conversationCryptoService';
 
 export interface YahooChatWindowProps {
   conversationId?: string;
@@ -22,6 +23,7 @@ export interface YahooChatWindowProps {
   presentationActive?: boolean;
   avatarUrl?: string;
   transport?: MessagingTransport;
+  cryptoService?: ConversationCryptoService;
   onBuzz?: () => void | Promise<void>;
   /** Called after the configured transport accepts the encrypted message payload. */
   onSendMessage?: () => void;
@@ -54,6 +56,7 @@ export function YahooChatWindow({
   showPresence = false,
   presenceStatus = 'offline',
   transport,
+  cryptoService,
 }: YahooChatWindowProps) {
   const [buzzBusy, setBuzzBusy] = useState(false);
   const chatHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -75,6 +78,7 @@ export function YahooChatWindow({
     currentUserName,
     initialPresence: presenceStatus,
     ...(transport ? { transport } : {}),
+    ...(cryptoService ? { cryptoService } : {}),
     ...(conversationIds ? { conversationIds } : {}),
     ...(onMessageActivity ? { onMessageActivity } : {}),
   });

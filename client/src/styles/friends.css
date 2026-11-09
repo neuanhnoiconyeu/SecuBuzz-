@@ -1,0 +1,107 @@
+/* Friends reuses the shell's semantic colors, type roles, and shared controls. */
+.messenger-friends-section { grid-column: 1 / -1; grid-row: 3; min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; background: var(--color-chat); }
+.messenger-friends-section[hidden], .friends-panel[hidden] { display: none; }
+.friends-page { width: min(100%, 72rem); margin-inline: auto; padding: clamp(1.25rem, 3vw, 2.5rem); }
+.friends-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+.friends-heading-copy { min-width: 0; }
+.friends-heading h1 { margin: 0.25rem 0 0.45rem; }
+.friends-eyebrow { margin: 0; color: var(--color-brand-hover); font-size: var(--type-caption-size); font-weight: 700; letter-spacing: 0.1em; }
+.friends-summary { margin: 0; color: var(--color-text-muted); font-size: var(--type-body-size); }
+.friends-demo-note { padding: 0.85rem 1rem; border: 1px solid var(--color-brand-border); border-radius: var(--radius-panel); background: var(--color-brand-soft); color: var(--color-demo-text); font-size: var(--type-label-size); line-height: var(--type-body-line); }
+.friends-tabs { display: flex; flex-wrap: wrap; gap: 0.35rem; padding: 0.35rem; margin: 1.5rem 0 0; border: 1px solid var(--color-border-strong); border-radius: var(--radius-panel); background: var(--color-surface-muted); }
+.friends-tab { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: 2.75rem; padding: 0.6rem 0.8rem; color: var(--color-text-muted); background: transparent; border: 1px solid transparent; border-radius: var(--radius-control); font-size: var(--type-label-size); font-weight: 600; cursor: pointer; }
+.friends-tab:hover { background: var(--color-brand-soft); color: var(--color-brand-hover); }
+.friends-tab.is-active { color: var(--color-brand-hover); background: var(--color-surface); border-color: var(--color-brand-border); box-shadow: var(--shadow-panel); }
+.friends-tab-count { display: inline-grid; place-items: center; min-width: 1.4rem; height: 1.4rem; padding-inline: 0.3rem; color: var(--color-brand-hover); background: var(--color-brand-soft); border-radius: var(--radius-pill); font-size: var(--type-caption-size); }
+.friends-navigation-count { position: absolute; top: 0.05rem; right: 0.15rem; display: grid; place-items: center; min-width: 1rem; height: 1rem; padding-inline: 0.2rem; color: var(--color-on-brand); background: var(--color-brand); border-radius: var(--radius-pill); font-size: 0.625rem; line-height: 1; }
+.friends-panel { min-width: 0; padding-top: 1.5rem; }
+.friends-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.friends-panel-heading h2, .friends-request-group h3 { margin: 0; }
+.friends-count { flex-shrink: 0; color: var(--color-text-muted); font-size: var(--type-label-size); }
+.friends-search { max-width: 30rem; margin-bottom: 1.25rem; }
+.friends-search .ui-input { min-height: 2.75rem; }
+.friends-list { display: flex; flex-direction: column; gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.friends-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.8rem 1.25rem; min-width: 0; padding: 1rem 1.1rem; background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-panel); box-shadow: var(--shadow-bubble); }
+.friends-person { display: flex; align-items: center; gap: 0.8rem; min-width: 0; flex: 1 1 20rem; }
+.friends-person > .ui-avatar { flex-shrink: 0; }
+.friends-identity { min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.friends-name { color: var(--color-text); font-size: var(--type-list-size); font-weight: 600; overflow-wrap: anywhere; }
+.friends-username { margin: 0; color: var(--color-text-muted); font-size: var(--type-label-size); overflow-wrap: anywhere; }
+.friends-presence { color: var(--color-text-muted); font-size: var(--type-caption-size); }
+.friends-relationship { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0.25rem 0.55rem; color: var(--color-brand-hover); background: var(--color-brand-soft); border: 1px solid var(--color-brand-border); border-radius: var(--radius-pill); font-size: var(--type-caption-size); line-height: 1.5; }
+.friends-person > .friends-relationship { margin-inline-start: auto; }
+.friends-relationship[data-relationship='blocked'] { color: var(--color-error); background: var(--color-error-soft); border-color: var(--color-error); }
+.friends-relationship[data-relationship='none'], .friends-relationship[data-relationship='self'] { color: var(--color-text-muted); background: var(--color-surface-muted); border-color: var(--color-border-strong); }
+.friends-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.friends-actions .ui-button, .friends-dialog-actions .ui-button { min-height: 2.75rem; }
+.friends-more-menu .ui-dropdown-trigger { min-width: 2.75rem; min-height: 2.75rem; padding: 0.65rem; }
+.friends-more-menu .ui-dropdown-trigger > span { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.friends-more-menu .ui-dropdown-menu { min-width: 11rem; }
+.friends-row-note, .friends-message-note { margin: 0; color: var(--color-text-muted); font-size: var(--type-label-size); line-height: var(--type-body-line); overflow-wrap: anywhere; }
+.friends-row > .friends-row-note { flex-basis: 100%; }
+.friends-request-groups { display: flex; flex-direction: column; gap: 2rem; }
+.friends-request-group > h3 { margin-bottom: 1rem; }
+.friends-empty { display: flex; align-items: center; flex-direction: column; justify-content: center; min-height: 14rem; gap: 0.8rem; padding: 2rem 1rem; text-align: center; background: var(--color-surface-muted); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-panel); }
+.friends-empty-icon { display: inline-grid; place-items: center; width: 3rem; height: 3rem; color: var(--color-brand-hover); background: var(--color-brand-soft); border-radius: var(--radius-panel); }
+.friends-empty-heading { margin: 0; }
+.friends-empty-copy { max-width: 30rem; margin: 0; color: var(--color-text-muted); font-size: var(--type-body-size); }
+.friends-feedback { color: var(--color-success); font-size: var(--type-label-size); line-height: var(--type-body-line); overflow-wrap: anywhere; }
+.friends-feedback:not(:empty) { margin-top: 1rem; }
+.friends-feedback--error { padding: 0.8rem 1rem; color: var(--color-error); background: var(--color-error-soft); border: 1px solid var(--color-error); border-radius: var(--radius-control); }
+.friends-feedback--error p { margin: 0 0 0.6rem; }
+.friends-discovery-hint { margin-block: 0 1rem; color: var(--color-text-muted); font-size: var(--type-label-size); }
+.friends-profile { display: flex; flex-direction: column; gap: 1.25rem; }
+.friends-profile-identity { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+.friends-profile-identity > div { min-width: 0; }
+.friends-profile-identity h3 { margin: 0 0 0.4rem; }
+.friends-profile-details { margin: 0; display: flex; flex-direction: column; gap: 1rem; }
+.friends-profile-details > div { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; }
+.friends-profile-details dt { color: var(--color-text-muted); font-size: var(--type-label-size); }
+.friends-profile-details dd { margin: 0; }
+.friends-dialog-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 0.6rem; }
+.friends-confirm-note { margin: 0 0 1rem; color: var(--color-text); line-height: var(--type-body-line); overflow-wrap: anywhere; }
+.messenger-main-column.has-friend-context { grid-template-rows: auto minmax(0, 1fr) auto; }
+.friends-chat-scope { display: contents; }
+.friends-chat-notice { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.4rem 1rem; border-bottom: 1px solid var(--color-brand-border); background: var(--color-brand-soft); }
+.friends-chat-notice p { margin: 0; color: var(--color-demo-text); font-size: var(--type-caption-size); }
+.friends-chat-notice .ui-button { flex-shrink: 0; }
+.friends-chat-actions { display: flex; flex-shrink: 0; gap: 0.4rem; }
+.friends-chat-browse { display: none; }
+.friends-chat-scope:disabled .composer-dock { opacity: 0.65; }
+
+@media (max-width: 1100px) and (min-width: 681px) {
+  .messenger-navigation { gap: 0.75rem; }
+  .messenger-navigation-tabs { margin-left: 0; }
+  .messenger-navigation-item { padding-inline: 0.75rem; }
+}
+@media (max-width: 680px) {
+  .messenger-friends-section { grid-column: 1; }
+  .friends-page { padding: 1.25rem 1rem 2rem; }
+  .friends-heading { gap: 0.85rem; margin-bottom: 1rem; }
+  .friends-heading > .ui-button { min-height: 2.75rem; }
+  .friends-demo-note { padding: 0.75rem; font-size: var(--type-caption-size); }
+  .friends-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.25rem; margin-top: 1rem; }
+  .friends-tab { min-width: 0; gap: 0.35rem; padding-inline: 0.25rem; font-size: var(--type-caption-size); }
+  .friends-panel { padding-top: 1.25rem; }
+  .friends-panel-heading { gap: 0.65rem; }
+  .friends-row { gap: 0.85rem; padding: 0.85rem; }
+  .friends-person { flex-basis: 100%; gap: 0.6rem; }
+  .friends-person > .ui-avatar { width: 2.5rem; height: 2.5rem; }
+  .friends-person > .friends-relationship { max-width: 7rem; text-align: center; }
+  .friends-actions { width: 100%; }
+  .friends-actions > .ui-button { flex: 1; min-width: 0; }
+  .friends-more-menu .ui-dropdown-menu { right: 0; left: auto; }
+  .friends-empty { min-height: 12rem; }
+  .friends-chat-notice { padding-inline: 0.75rem; }
+  .friends-chat-notice:has(.friends-chat-browse) { flex-wrap: wrap; }
+  .friends-chat-browse { display: inline-flex; }
+  .friends-chat-scope:disabled .mobile-chat-back { display: none; }
+  .messenger-navigation { gap: 0.5rem; }
+  .navigation-profile-copy { max-width: 7rem; }
+}
+@media (max-width: 360px) {
+  .navigation-profile-copy { max-width: 4.75rem; }
+  .navigation-profile-name { font-size: 0.6875rem; }
+  .friends-person { flex-wrap: wrap; }
+  .friends-person > .friends-relationship { margin-inline-start: 3.1rem; }
+}

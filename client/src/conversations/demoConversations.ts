@@ -3,14 +3,17 @@ import type { Conversation } from './conversationModel';
 export const SECUREBOT_CONVERSATION_ID = 'securebot-demo';
 
 /** Data is local UI scaffolding; none of these entries represents a connected user. */
-export function createDemoConversations(now = Date.now()): Conversation[] {
+export function createDemoConversations(
+  now = Date.now(),
+  actor: { id: string; displayName: string } = { id: 'local-user', displayName: 'You' },
+): Conversation[] {
   return [
     {
       id: SECUREBOT_CONVERSATION_ID,
       displayName: 'SecureBot',
       type: 'bot',
       participants: [
-        { id: 'local-user', displayName: 'You', kind: 'person' },
+        { id: actor.id, displayName: actor.displayName, kind: 'person' },
         { id: 'securebot-demo', displayName: 'SecureBot', kind: 'bot' },
       ],
       lastMessagePreview: 'Start a local demo conversation.',
@@ -24,7 +27,7 @@ export function createDemoConversations(now = Date.now()): Conversation[] {
       displayName: 'Ava Morgan',
       type: 'direct',
       participants: [
-        { id: 'local-user', displayName: 'You', kind: 'person' },
+        { id: actor.id, displayName: actor.displayName, kind: 'person' },
         { id: 'demo-ava', displayName: 'Ava Morgan', kind: 'person' },
       ],
       lastMessagePreview: 'Direct message UI preview only.',
@@ -38,7 +41,7 @@ export function createDemoConversations(now = Date.now()): Conversation[] {
       displayName: 'Security Study Group',
       type: 'group',
       participants: [
-        { id: 'local-user', displayName: 'You', kind: 'person' },
+        { id: actor.id, displayName: actor.displayName, kind: 'person' },
         { id: 'demo-ava', displayName: 'Ava Morgan', kind: 'person' },
         { id: 'demo-jules', displayName: 'Jules Park', kind: 'person' },
       ],
