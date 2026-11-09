@@ -37,7 +37,7 @@ export function updateMessageDeliveryStatus(
 
   // Ignore stale acknowledgements; retries are the only transition back to sending.
   if (deliveryStatus === 'sending' && current.deliveryStatus !== 'failed') return messagesByConversation;
-  if (current.deliveryStatus === 'delivered') return messagesByConversation;
+  if (current.deliveryStatus === 'delivered' && deliveryStatus !== 'read') return messagesByConversation;
   if (deliveryStatus === 'sent' && current.deliveryStatus === 'failed') return messagesByConversation;
   if (deliveryStatus === 'failed' && current.deliveryStatus !== 'sending') return messagesByConversation;
 
@@ -48,3 +48,98 @@ export function updateMessageDeliveryStatus(
     ),
   };
 }
+
+export function editMessageContent(
+  messagesByConversation: ConversationMessages,
+  conversationId: string,
+  messageId: string,
+  newContent: string
+): ConversationMessages {
+  const messages = messagesByConversation[conversationId];
+  const trimmed = newContent.trim();
+  if (!messages || !trimmed) return messagesByConversation;
+
+  return {
+    ...messagesByConversation,
+    [conversationId]: messages.map((message) =>
+      message.id === messageId && !message.isDeleted
+        ? { ...message, content: trimmed, isEdited: true, editedAt: new Date().toISOString() }
+        : message
+    ),
+  };
+}
+
+export function deleteMessageById(
+  messagesByConversation: ConversationMessages,
+  conversationId: string,
+  messageId: string
+): ConversationMessages {
+  const messages = messagesByConversation[conversationId];
+  if (!messages) return messagesByConversation;
+
+  return {
+    ...messagesByConversation,
+    [conversationId]: messages.map((message) =>
+      message.id === messageId
+        ? { ...message, content: 'This message was deleted.', isDeleted: true, reactions: [], attachments: [] }
+        : message
+    ),
+  };
+}
+
+export function toggleMessagePin(
+  messagesByConversation: ConversationMessages,
+  conversationId: string,
+  messageId: string
+): ConversationMessages {
+  const messages = messagesByConversation[conversationId];
+  if (!messages) return messagesByConversation;
+
+  return {
+    ...messagesByConversation,
+    [conversationId]: messages.map((message) =>
+      message.id === messageId
+        ? { ...message, isPinned: !message.isPinned }
+        : message
+    ),
+  };
+}
+
+export function toggleMessageReaction(
+  messagesByConversation: ConversationMessages,
+  conversationId: string,
+  messageId: string,
+  emoji: string,
+  userId: string
+): ConversationMessages {
+  const messages = messagesByConversation[conversationId];
+  if (!messages) return messagesByConversation;
+
+  return {
+    ...messagesByConversation,
+    [conversationId]: messages.map((message) => {
+      if (message.id !== messageId || message.isDeleted) return message;
+
+      const existingReactions = message.reactions ?? [];
+      const targetReaction = existingReactions.find((r) => r.emoji === emoji);
+
+      let updatedReactions;
+
+      if (!targetReaction) {
+        updatedReactions = [...existingReactions, { emoji, userIds: [userId] }];
+      } else {
+        const hasReacted = targetReaction.userIds.includes(userId);
+        const nextUserIds = hasReacted
+          ? targetReaction.userIds.filter((id) => id !== userId)
+          : [...targetReaction.userIds, userId];
+
+        updatedReactions = existingReactions
+          .map((r) => (r.emoji === emoji ? { ...r, userIds: nextUserIds } : r))
+          .filter((r) => r.userIds.length > 0);
+      }
+
+      return { ...message, reactions: updatedReactions };
+    }),
+  };
+}
+

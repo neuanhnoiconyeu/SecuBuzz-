@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, ArrowDown, LockKeyhole } from 'lucide-react';
+import { AlertTriangle, ArrowDown, Check, Edit2, FileText, LockKeyhole, Mic, Pin, Reply, Trash2, X } from 'lucide-react';
 import { BrandLogo } from '@/components/branding';
 import { Badge, Button, Surface } from '@/components/ui';
 import type { ChatMessage, TransportMode } from '@/messaging/messageModel';
@@ -14,6 +14,11 @@ export interface MessageListProps {
   active?: boolean;
   transportMode?: TransportMode;
   onRetryMessage(messageId: string): void;
+  onReplyMessage?: (message: ChatMessage) => void;
+  onEditMessage?: (messageId: string, newContent: string) => void;
+  onDeleteMessage?: (messageId: string) => void;
+  onTogglePin?: (messageId: string) => void;
+  onToggleReaction?: (messageId: string, emoji: string) => void;
 }
 
 function formatTime(timestamp: string): string {
@@ -34,9 +39,12 @@ function deliveryLabel(status: ChatMessage['deliveryStatus'], transportMode: Tra
     case 'sending': return 'Sending';
     case 'sent': return transportMode === 'local-demo' ? 'Accepted by local demo' : 'Sent';
     case 'delivered': return 'Delivered';
+    case 'read': return 'Read';
     case 'failed': return 'Not sent';
   }
 }
+
+const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢'];
 
 export function MessageList({
   messages,
@@ -44,6 +52,11 @@ export function MessageList({
   currentUserName = 'You',
   active = true,
   onRetryMessage,
+  onReplyMessage,
+  onEditMessage,
+  onDeleteMessage,
+  onTogglePin,
+  onToggleReaction,
   transportMode = 'local-demo',
 }: MessageListProps) {
   const historyRef = useRef<HTMLDivElement>(null);
@@ -52,6 +65,9 @@ export function MessageList({
   const initialScrollHandled = useRef(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const { enteringIds, finishEntry } = useMessageEntryMotion(messages, active);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
+  const pinnedMessages = messages.filter((m) => m.isPinned && !m.isDeleted);
 
   useEffect(() => {
     const history = historyRef.current;
@@ -93,6 +109,20 @@ export function MessageList({
 
   return (
     <div className="chat-history-wrap">
+    {pinnedMessages.length > 0 && (
+        <div className="pinned-messages-bar" style={{ padding: '6px 12px', background: 'rgba(139, 92, 246, 0.12)', borderBottom: '1px solid rgba(139, 92, 246, 0.25)', fontSize: '0.82rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+            <Pin size={14} aria-hidden="true" />
+            <strong>Pinned ({pinnedMessages.length}):</strong>
+            <span>{pinnedMessages[pinnedMessages.length - 1]?.content}</span>
+          </div>
+          {onTogglePin && (
+            <Button size="sm" variant="outline" onClick={() => onTogglePin(pinnedMessages[pinnedMessages.length - 1]!.id)}>
+              Unpin
+            </Button>
+          )}
+        </div>
+      )}
       <Surface
         ref={historyRef}
         variant="default"
@@ -157,20 +187,149 @@ export function MessageList({
                     if (event.target === event.currentTarget) finishEntry(message.id);
                   }}
                 >
-                  <div className="message-meta">
+<div className="message-meta">
                     {!grouped && <strong>{isOutgoing ? currentUserName === 'You' ? 'You' : `${currentUserName} (You)` : message.senderName}</strong>}
                     <time dateTime={message.timestamp} title={new Date(message.timestamp).toLocaleString()}>
                       {formatTime(message.timestamp)}
                     </time>
+                    {message.isEdited && !message.isDeleted && <span style={{ fontSize: '0.72rem', opacity: 0.7 }}>(edited)</span>}
+                    {message.isPinned && !message.isDeleted && <Pin size={12} aria-label="Pinned message" />}
                   </div>
+
+                  {message.replyTo && !message.isDeleted && (
+                    <div className="message-reply-quote" style={{ fontSize: '0.78rem', padding: '4px 8px', marginBottom: '4px', borderLeft: '3px solid #8b5cf6', background: 'rgba(255,255,255,0.04)', borderRadius: '4px', opacity: 0.85 }}>
+                      <strong>Replying to {message.replyTo.senderName}: </strong>
+                      <span>{message.replyTo.contentSnippet}</span>
+                    </div>
+                  )}
+
                   <div className="message-content-row">
-                    <div className="message-bubble">{message.content}</div>
+                    {editingId === message.id ? (
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%' }}>
+                        <input
+                          type="text"
+                          value={editDraft}
+                          onChange={(e) => setEditDraft(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && editDraft.trim()) {
+                              onEditMessage?.(message.id, editDraft);
+                              setEditingId(null);
+                            } else if (e.key === 'Escape') {
+                              setEditingId(null);
+                            }
+                          }}
+                          style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(139,92,246,0.5)', background: 'rgba(0,0,0,0.25)', color: 'inherit' }}
+                          autoFocus
+                        />
+                        <Button size="sm" variant="primary" onClick={() => { onEditMessage?.(message.id, editDraft); setEditingId(null); }}>
+                          <Check size={14} />
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
+                          <X size={14} />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="message-bubble" style={message.isDeleted ? { fontStyle: 'italic', opacity: 0.6 } : undefined}>
+                        {message.content}
+
+                        {!message.isDeleted && message.attachments && message.attachments.length > 0 && (
+                          <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {message.attachments.map((att) =>
+                              att.type === 'image' ? (
+                                <img key={att.id} src={att.url} alt={att.name} style={{ maxWidth: '220px', borderRadius: '6px', marginTop: '4px' }} />
+                              ) : (
+                                <a key={att.id} href={att.url} download={att.name} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', textDecoration: 'underline' }}>
+                                  <FileText size={14} /> {att.name} ({Math.round(att.sizeBytes / 1024)} KB)
+                                </a>
+                              )
+                            )}
+                          </div>
+                        )}
+
+                        {!message.isDeleted && message.voice && (
+                          <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Mic size={14} />
+                            <audio controls src={message.voice.audioUrl} style={{ height: '28px', maxWidth: '200px' }} />
+                            <span style={{ fontSize: '0.75rem' }}>{message.voice.durationSeconds}s</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {isOutgoing && message.deliveryStatus === 'failed' && (
                       <Button size="sm" variant="outline" onClick={() => onRetryMessage(message.id)}>
                         Retry
                       </Button>
                     )}
                   </div>
+
+                  {!message.isDeleted && message.reactions && message.reactions.length > 0 && (
+                    <div className="message-reactions-list" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
+                      {message.reactions.map((reaction) => {
+                        const reactedByMe = reaction.userIds.includes(currentUserId);
+                        return (
+                          <button
+                            key={reaction.emoji}
+                            type="button"
+                            onClick={() => onToggleReaction?.(message.id, reaction.emoji)}
+                            style={{
+                              padding: '2px 6px',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              border: reactedByMe ? '1px solid #8b5cf6' : '1px solid rgba(255,255,255,0.15)',
+                              background: reactedByMe ? 'rgba(139, 92, 246, 0.25)' : 'rgba(255,255,255,0.05)',
+                              color: 'inherit',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {reaction.emoji} {reaction.userIds.length}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {!message.isDeleted && editingId !== message.id && (
+                    <div className="message-actions-bar" style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '4px', opacity: 0.75, fontSize: '0.75rem', flexWrap: 'wrap' }}>
+                      {onToggleReaction && QUICK_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => onToggleReaction(message.id, emoji)}
+                          style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 4px', fontSize: '0.85rem' }}
+                          title={`React ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                      {onReplyMessage && (
+                        <button type="button" onClick={() => onReplyMessage(message)} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px', padding: '2px 4px' }} title="Reply">
+                          <Reply size={12} /> Reply
+                        </button>
+                      )}
+                      {onTogglePin && (
+                        <button type="button" onClick={() => onTogglePin(message.id)} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px', padding: '2px 4px' }} title="Pin/Unpin">
+                          <Pin size={12} /> {message.isPinned ? 'Unpin' : 'Pin'}
+                        </button>
+                      )}
+                      {isOutgoing && onEditMessage && (
+                        <button
+                          type="button"
+                          onClick={() => { setEditingId(message.id); setEditDraft(message.content); }}
+                          style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px', padding: '2px 4px' }}
+                          title="Edit"
+                        >
+                          <Edit2 size={12} /> Edit
+                        </button>
+                      )}
+                      {isOutgoing && onDeleteMessage && (
+                        <button type="button" onClick={() => onDeleteMessage(message.id)} style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px', padding: '2px 4px' }} title="Delete">
+                          <Trash2 size={12} /> Delete
+                        </button>
+                      )}
+                    </div>
+                  )}
+
                   {(message.encryption || message.demoOnly || isOutgoing) && (
                     <div className="message-status-line">
                       {message.encryption && (
