@@ -6,6 +6,8 @@ import { BrandIcon, BrandLogo } from '@/components/branding';
 import YahooChatWindow from '@/components/YahooChatWindow';
 import { ConversationSidebar } from '@/components/messenger/ConversationSidebar';
 import { MainNavigation } from '@/components/messenger/MainNavigation';
+import { RealtimeStatus } from '@/components/messenger/RealtimeStatus';
+import { RealtimeDemoControls } from '@/components/messenger/RealtimeDemoControls';
 import { ProfileDialog } from '@/components/profile/ProfileDialog';
 import { FriendsPage } from '@/components/friends/FriendsPage';
 import type { MessengerSection } from '@/components/messenger/MainNavigation';
@@ -13,6 +15,7 @@ import { Button, Surface } from '@/components/ui';
 import { useMessengerConversations } from '@/hooks/useMessengerConversations';
 import { useCurrentProfile } from '@/hooks/useCurrentProfile';
 import { useFriends } from '@/hooks/useFriends';
+import { useSessionRealtime } from '@/hooks/useSessionRealtime';
 import { relationshipForUser, type FriendUser } from '@/friends/friendsModel';
 import { existingDirectConversationAdapter } from '@/friends/conversationAdapter';
 import type { DemoMessengerSession } from '@/auth/messengerSession';
@@ -46,9 +49,35 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
     drafts,
     isEmpty,
     recordMessageActivity,
+    updateConversationMetadata,
     selectConversation,
     setDraft,
   } = useMessengerConversations(session.conversations);
+  const realtimeState = useSessionRealtime(session.realtime, friends.snapshot.friends.map((friend) => friend.id), updateConversationMetadata);
+  const presentedFriends = {
+    ...friends,
+    snapshot: {
+      ...friends.snapshot,
+      friends: friends.snapshot.friends.map((friend) => {
+        const result = { ...friend };
+        delete result.presence;
+        const sample = realtimeState.presence.get(friend.id);
+        if (sample) result.presence = sample.status;
+        return result;
+      }),
+    },
+  };
+  const presentedConversations = conversations.map((conversation) => {
+    const result = { ...conversation };
+    delete result.presence;
+    if (conversation.type === 'direct') {
+      const peer = conversation.participants.find((participant) => participant.id !== session.user.id);
+      const sample = peer ? realtimeState.presence.get(peer.id) : undefined;
+      if (sample) result.presence = sample.status;
+    }
+    return result;
+  });
+  const activePresence = presentedConversations.find((conversation) => conversation.id === activeConversationId)?.presence;
   const [activeSection, setActiveSection] = useState<MessengerSection>('chats');
   useEffect(() => {
     const syncSection = () => {
@@ -62,6 +91,9 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
   }, []);
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const previousMobileListOpen = useRef(false);
+  useEffect(() => {
+    if (activeSection === 'chats' && !mobileListOpen && activeConversationId) selectConversation(activeConversationId);
+  }, [activeConversationId, activeSection, mobileListOpen, selectConversation]);
   const friendChatFocusPending = useRef(false);
   const [securityStatus, setSecurityStatus] = useState<ConversationSecurityStatus | null>(null);
   const [lastBuzz, setLastBuzz] = useState<string>('');
@@ -131,8 +163,8 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
   }, []);
 
   const handleActivity = useCallback((activity: ConversationMessageActivity) => {
-    recordMessageActivity(activity);
-  }, [recordMessageActivity]);
+    recordMessageActivity({ ...activity, isViewed: activity.isViewed !== false && activeSection === 'chats' && !mobileListOpen });
+  }, [activeSection, mobileListOpen, recordMessageActivity]);
 
   const handleSecurityStatusChange = useCallback((status: ConversationSecurityStatus | null) => {
     setSecurityStatus(status);
@@ -166,7 +198,7 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
 
         <section id="chats" className="messenger-chat-section" hidden={activeSection !== 'chats'} aria-label="Chats">
           <ConversationSidebar
-            conversations={conversations}
+            conversations={presentedConversations}
             activeConversationId={activeConversationId}
             mobileListOpen={mobileListOpen}
             onSelect={handleSelectConversation}
@@ -202,8 +234,8 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
                   transport={session.transport}
                   presentationActive={activeSection === 'chats' && !mobileListOpen}
                   {...(activeConversation.avatarUrl ? { avatarUrl: activeConversation.avatarUrl } : {})}
-                  {...(activeConversation.presence ? { presenceStatus: activeConversation.presence } : {})}
-                  showPresence={Boolean(activeConversation.presence)}
+                  {...(activePresence ? { presenceStatus: activePresence } : {})}
+                  showPresence={Boolean(activePresence)}
                   conversationIds={conversationIds}
                   draftValue={drafts[activeConversation.id] ?? ''}
                   onDraftChange={(draft) => setDraft(activeConversation.id, draft)}
@@ -219,7 +251,7 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
                   <summary className="debug-summary">
                     <Terminal size={15} aria-hidden="true" />
                     <span>System log</span>
-                    <span className="debug-mode">Local demo</span>
+                    <RealtimeStatus status={realtimeState.status} demo />
                     <ChevronDown size={14} className="debug-chevron" aria-hidden="true" />
                   </summary>
                   <div className="debug-log" role="region" aria-label="System log" aria-live="polite">
@@ -228,6 +260,7 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
                     {messageLog.slice(-3).map((log, index) => (
                       <div key={`${log}-${index}`} className="debug-entry">&gt; {log}</div>
                     ))}
+                    <RealtimeDemoControls client={session.realtime} conversations={conversations} activeConversationId={activeConversationId} status={realtimeState.status} />
                   </div>
                 </details>
               </>
@@ -242,7 +275,7 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
         </section>
 
         <section id="friends" className="messenger-friends-section" hidden={activeSection !== 'friends'} aria-labelledby="friends-page-title">
-          <FriendsPage controller={friends} currentUser={friendIdentity}
+          <FriendsPage controller={presentedFriends} currentUser={friendIdentity}
             onMessage={openFriendConversation} canMessage={directAdapter.canOpenDirectConversation} />
         </section>
 

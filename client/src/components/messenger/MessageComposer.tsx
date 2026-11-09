@@ -22,6 +22,8 @@ export interface MessageComposerProps {
   demoNotice?: string;
   onSend(content: string): Promise<boolean>;
   onBuzz(): void;
+  onTypingActivity?(): void;
+  onTypingStop?(): void;
 }
 
 export function MessageComposer({
@@ -36,6 +38,8 @@ export function MessageComposer({
   onDraftChange,
   demoNotice = 'Local demo only. Messages are not delivered to other users.',
   setupError,
+  onTypingActivity,
+  onTypingStop,
 }: MessageComposerProps) {
   const [internalValue, setInternalValue] = useState('');
   const value = draftValue ?? internalValue;
@@ -44,6 +48,8 @@ export function MessageComposer({
   const [sendFeedback, setSendFeedback] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const submitLock = useRef(false);
+  const latestValue = useRef(value);
+  latestValue.current = value;
   const canSend = Boolean(value.trim()) && !disabled && !isSending;
 
   useEffect(() => {
@@ -62,10 +68,11 @@ export function MessageComposer({
     submitLock.current = true;
     setSendError('');
     setSendFeedback(false);
+    onTypingStop?.();
     try {
       const accepted = await onSend(content);
       if (accepted) {
-        setValue('');
+        if (latestValue.current === value) setValue('');
         setSendFeedback(true);
       } else setSendError('The message was not accepted. Your draft is still here.');
     } catch {
@@ -116,10 +123,13 @@ export function MessageComposer({
           value={value}
           onChange={(event) => {
             setValue(event.target.value);
+            if (event.target.value.trim()) onTypingActivity?.();
+            else onTypingStop?.();
             setSendFeedback(false);
             if (sendError) setSendError('');
           }}
           onKeyDown={handleKeyDown}
+          onBlur={onTypingStop}
           placeholder={`Message ${conversationName}…`}
           rows={1}
           disabled={disabled || isSending}

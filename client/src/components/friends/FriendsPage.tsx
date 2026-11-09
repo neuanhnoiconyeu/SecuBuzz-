@@ -192,7 +192,7 @@ export function FriendsPage({ canMessage, controller, currentUser, onMessage }: 
       <div className="friends-identity">
         <span className="friends-name">{user.displayName}</span>
         <span className="friends-username">@{user.username}</span>
-        <span className="friends-presence">{user.presence ? presenceLabels[user.presence] : 'Presence unknown'}</span>
+        <span className="friends-presence">{user.presence ? `${presenceLabels[user.presence]}${mode === 'local-demo' ? ' · simulated' : ''}` : 'Presence unknown'}</span>
       </div>
       {relationshipBadge(status)}
     </div>
@@ -377,7 +377,7 @@ export function FriendsPage({ canMessage, controller, currentUser, onMessage }: 
             </div>
             <dl className="friends-profile-details">
               <div><dt>Relationship</dt><dd>{relationshipBadge(relationship(profile.id).relationship)}</dd></div>
-              <div><dt>Presence</dt><dd>{profile.presence ? presenceLabels[profile.presence] : 'Unknown'}</dd></div>
+              <div><dt>Presence</dt><dd>{profile.presence ? `${presenceLabels[profile.presence]}${mode === 'local-demo' ? ' · simulated' : ''}` : 'Unknown'}</dd></div>
             </dl>
             {mode === 'local-demo' && <p className="friends-row-note">Fictional local demo profile. No private account information is shown.</p>}
             {relationship(profile.id).relationship === 'friend' && !canMessage(profile.id) && <p className="friends-message-note">No direct chat is connected for this user. Creating a conversation is not available yet.</p>}

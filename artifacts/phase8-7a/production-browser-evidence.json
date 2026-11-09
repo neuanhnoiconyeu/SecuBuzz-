@@ -1,0 +1,89 @@
+{
+  "startedAt": "2026-11-09T22:50:10.672Z",
+  "browser": "Chrome headless via CDP",
+  "mode": "production",
+  "checks": [
+    {
+      "label": "Production / exposes neither demo auth nor realtime fallback",
+      "passed": true
+    },
+    {
+      "label": "Production /login exposes neither demo auth nor realtime fallback",
+      "passed": true
+    },
+    {
+      "label": "Production /signup exposes neither demo auth nor realtime fallback",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Demo/production runs never connect to a real Socket.IO service",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "Realtime browser flows have no uncaught runtime/hydration errors",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "Application source unchanged during browser verification",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "artifacts/phase8-7a/production-unconfigured-signup.png"
+  ],
+  "runtimeErrors": [],
+  "consoleErrors": [],
+  "fonts": [],
+  "geometry": [],
+  "buildId": "xJylRKU69tg23AoPA70Rq",
+  "sourceFingerprint": {
+    "scope": "Application TS/TSX/CSS excluding test files",
+    "fileCount": 83,
+    "sha256": "59c3108df60a56f20f3259b8363290d7147761f28d30ca4455eef5c56262518a"
+  },
+  "browserVersion": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/156.0.8078.81",
+    "revision": "@060bedfb508f73250e93aeb9ca8149b3958995d8",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+    "jsVersion": "15.6.75.27"
+  },
+  "receiptObservations": [],
+  "selectionConnectionObservations": [],
+  "realtimeRequests": [],
+  "finalSourceFingerprint": {
+    "scope": "Application TS/TSX/CSS excluding test files",
+    "fileCount": 83,
+    "sha256": "59c3108df60a56f20f3259b8363290d7147761f28d30ca4455eef5c56262518a"
+  },
+  "limitations": [
+    "Only isolated mock realtime was exercised. No server authentication, room authorization, persistence, real recipient key exchange or real-user delivery was connected.",
+    "Existing group previews accept simulated group-compatible events; no group creation/invitation/membership contract was fabricated.",
+    "Socket adapter rejection, malformed/stale/duplicate event handling and real-send encryption gating require focused unit coverage; no live server behavior is claimed."
+  ],
+  "completedAt": "2026-11-09T22:50:13.012Z",
+  "passed": true,
+  "cleanup": {
+    "requestedOwnedProcessCleanup": true,
+    "serverPid": 17164,
+    "browserPid": 12896,
+    "ports": {
+      "3110": true,
+      "9230": true
+    }
+  }
+}

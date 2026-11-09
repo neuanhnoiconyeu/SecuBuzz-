@@ -345,3 +345,11 @@ The current service is explicitly a **local demo**: fictional people, page-memor
 Start `npm run dev` in `client`, then open `/login`. Use **Continue as Demo User** or **Try Nova Demo User** for temporary synthetic sessions. Login/Sign Up reuse existing branding and themes; Profile includes Sign Out. The protected Messenger mounts only after identity resolves, with separate profile/friends/messages/drafts/key-manager/transport instances for every session. Refresh ends the demo session. No passwords or auth tokens are persisted.
 
 Production disables demo authentication and shows an honest unavailable-service state until an approved cookie/CSRF API is configured. API failures never activate demo data, and real accounts do not receive fictional Messenger fixtures. See the [authentication integration and database-team handoff](client/src/auth/INTEGRATION.md) for endpoints, payloads, response shapes, policy decisions, configuration, and limitations. Screenshots and browser evidence are in `artifacts/phase8-5/`.
+
+## Phase 8.7A: Realtime client integration
+
+Development demo sessions now use one session-owned realtime client through the existing message hook. Open **System Log → Realtime demo controls** to simulate DM/group incoming messages, typing, Ava's presence, failed sends, going offline, and reconnecting. Connected/typing/presence/delivery/read indicators explicitly describe simulated activity. Message history, unread counts, previews, drafts, and Phase 7 local actions keep using the existing application state. Refresh ends the demo session.
+
+The separate Socket.IO client adapter uses an API-authenticated identity and a proposed cookie-session contract. It stays disabled until `NEXT_PUBLIC_REALTIME_CONTRACT_READY=true` and an approved HTTPS URL are configured alongside real authentication. No matching Socket.IO server or recipient key exchange is present in this repository. **Real message sending remains disabled**; local AES-GCM keys do not establish multi-user E2EE. Real accounts receive no demo conversations. Connection failure never selects a mock.
+
+See the [Realtime/Kiro handoff contract](docs/realtime-client-contract.md) for event schemas, acknowledgement and retry rules, authorization, lifecycle, configuration, and missing backend/group dependencies. Validation and browser evidence are recorded in `artifacts/phase8-7a/`.

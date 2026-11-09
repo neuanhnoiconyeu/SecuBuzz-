@@ -1,6 +1,7 @@
 import type { ChatMessage, DeliveryStatus } from './messageModel';
 
 export type ConversationMessages = Record<string, ChatMessage[]>;
+export const MAX_MESSAGES_PER_CONVERSATION = 1_000;
 
 let fallbackIdSequence = 0;
 
@@ -19,7 +20,9 @@ export function appendMessage(
 
   return {
     ...messagesByConversation,
-    [message.conversationId]: [...messages, message],
+    [message.conversationId]: [...messages, message]
+      .sort((left, right) => Date.parse(left.timestamp) - Date.parse(right.timestamp))
+      .slice(-MAX_MESSAGES_PER_CONVERSATION),
   };
 }
 
@@ -36,6 +39,7 @@ export function updateMessageDeliveryStatus(
   }
 
   // Ignore stale acknowledgements; retries are the only transition back to sending.
+  if (current.deliveryStatus === 'read') return messagesByConversation;
   if (deliveryStatus === 'sending' && current.deliveryStatus !== 'failed') return messagesByConversation;
   if (current.deliveryStatus === 'delivered' && deliveryStatus !== 'read') return messagesByConversation;
   if (deliveryStatus === 'sent' && current.deliveryStatus === 'failed') return messagesByConversation;
