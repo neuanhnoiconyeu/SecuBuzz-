@@ -44,9 +44,9 @@ export interface UseConversationMessagesResult {
   isSending: boolean;
   sendMessage(
     content: string,
-    option?: {
+    options?: {
       replyTo?: MessageReplyReference;
-      attachements?: MessageAttachment[];
+      attachments?: MessageAttachment[];
       voice?: VoiceMessageMetadata;
     }
   ): Promise<boolean>;
@@ -404,7 +404,9 @@ export function useConversationMessages({
       voice?: VoiceMessageMetadata;
     }
   ) => {
-    const trimmedContent = content.trim();
+    const hasAttachments = Boolean(options?.attachments && options.attachments.length > 0);
+    const hasVoice = Boolean(options?.voice);
+    const trimmedContent = content.trim() || (hasVoice ? '🎤 Voice message' : hasAttachments ? `📎 ${options!.attachments![0].name}` : '');
     if (!trimmedContent || sendLocks.current.has(conversationId) || transport.canSendMessages === false) return false;
     sendLocks.current.add(conversationId);
     setPendingCounts((counts) => ({ ...counts, [conversationId]: (counts[conversationId] ?? 0) + 1 }));
@@ -417,7 +419,7 @@ export function useConversationMessages({
         senderName: currentUserName,
         content: trimmedContent,
         timestamp: new Date().toISOString(),
-        type: 'text',
+        type: hasVoice ? 'voice' : 'text',
         deliveryStatus: 'sending',
         replyTo: options?.replyTo,
         attachments: options?.attachments,
