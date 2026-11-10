@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import {
   AlertTriangle, ArrowDown, Check, Edit2, FileText, LockKeyhole, Mic, MoreHorizontal,
   Pin, Plus, Reply, SmilePlus, Trash2, X,
@@ -85,31 +86,100 @@ export function MessageList({
   const [pickerOpenId, setPickerOpenId] = useState<string | null>(null);
   const [pickerExpanded, setPickerExpanded] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const popoverTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const restorePopoverFocus = useRef(false);
+  const popoverId = useId();
 
   const pinnedMessages = messages.filter((m) => m.isPinned && !m.isDeleted);
 
-  const closePopovers = useCallback(() => {
+  const closePopovers = useCallback((restoreFocus = false) => {
+    restorePopoverFocus.current = restoreFocus;
     setPickerOpenId(null);
     setPickerExpanded(false);
     setMenuOpenId(null);
   }, []);
 
-  // Close popovers on outside click or Escape.
+  // Keep the teammate's popovers inside the visible message scroller, including
+  // the first/last message and narrow screens. They stay in the disabled fieldset.
+  useEffect(() => {
+    if (!pickerOpenId && !menuOpenId) {
+      if (restorePopoverFocus.current) {
+        restorePopoverFocus.current = false;
+        (popoverTriggerRef.current?.isConnected ? popoverTriggerRef.current : historyRef.current)?.focus({ preventScroll: true });
+      }
+      return;
+    }
+    if (!active) { closePopovers(); return; }
+    const panel = popoverRef.current;
+    const trigger = popoverTriggerRef.current;
+    const history = historyRef.current;
+    if (!panel || !trigger || !history) return;
+    const bounds = history.getBoundingClientRect();
+    const anchor = trigger.getBoundingClientRect();
+    const origin = panel.offsetParent?.getBoundingClientRect();
+    if (origin && bounds.width && bounds.height) {
+      panel.style.maxWidth = `${Math.max(1, bounds.width - 16)}px`;
+      panel.style.maxHeight = `${Math.max(1, bounds.height - 16)}px`;
+      const width = Math.min(panel.offsetWidth, bounds.width - 16);
+      const height = Math.min(panel.offsetHeight, bounds.height - 16);
+      const left = Math.max(bounds.left + 8, Math.min(anchor.left, bounds.right - width - 8));
+      const preferredTop = anchor.top - height - 8 >= bounds.top + 8 ? anchor.top - height - 8 : anchor.bottom + 8;
+      const top = Math.max(bounds.top + 8, Math.min(preferredTop, bounds.bottom - height - 8));
+      Object.assign(panel.style, { left: `${left - origin.left}px`, top: `${top - origin.top}px`, right: 'auto', bottom: 'auto',
+        maxWidth: `${Math.max(1, bounds.width - 16)}px`, maxHeight: `${Math.max(1, bounds.height - 16)}px`, overflowY: 'auto' });
+    }
+    panel.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus({ preventScroll: true });
+  }, [active, pickerOpenId, menuOpenId, pickerExpanded, closePopovers]);
+
+  useEffect(() => {
+    const id = pickerOpenId ?? menuOpenId;
+    if (id && !messages.some((message) => message.id === id && !message.isDeleted)) closePopovers(true);
+  }, [messages, pickerOpenId, menuOpenId, closePopovers]);
+
+  // Pointer events cover mouse, touch and pen. Menus never outlive navigation.
   useEffect(() => {
     if (!pickerOpenId && !menuOpenId) return;
-    const onPointerDown = (e: MouseEvent) => {
-      if (!(e.target as HTMLElement).closest('[data-popover]')) closePopovers();
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.target instanceof Node && !popoverRef.current?.contains(e.target) && !popoverTriggerRef.current?.contains(e.target)) closePopovers();
     };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closePopovers();
+    const onKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); closePopovers(true); }
     };
-    document.addEventListener('mousedown', onPointerDown);
+    const onResize = () => closePopovers();
+    window.addEventListener('resize', onResize);
+    document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
     return () => {
-      document.removeEventListener('mousedown', onPointerDown);
+      window.removeEventListener('resize', onResize);
+      document.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [pickerOpenId, menuOpenId, closePopovers]);
+
+  const handlePopoverKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const panel = event.currentTarget;
+    if (event.key === 'Tab') {
+      event.preventDefault();
+      const trigger = popoverTriggerRef.current;
+      const controls = Array.from(document.querySelectorAll<HTMLElement>('button, a[href], input, textarea, select, [tabindex]'))
+        .filter((element) => element.tabIndex >= 0 && !element.matches(':disabled') && !element.closest('[hidden], [inert]') &&
+          !panel.contains(element) && element.getClientRects().length > 0);
+      const next = controls[controls.indexOf(trigger!) + (event.shiftKey ? -1 : 1)];
+      closePopovers();
+      (next ?? trigger ?? historyRef.current)?.focus({ preventScroll: true });
+      return;
+    }
+    const items = Array.from(panel.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
+    const index = items.indexOf(document.activeElement as HTMLButtonElement);
+    const step = pickerExpanded && (event.key === 'ArrowDown' || event.key === 'ArrowUp') ? 6 : 1;
+    let next: number | undefined;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') next = (index + step) % items.length;
+    if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') next = (index - step + items.length) % items.length;
+    if (event.key === 'Home') next = 0;
+    if (event.key === 'End') next = items.length - 1;
+    if (next !== undefined && items.length) { event.preventDefault(); items[next]?.focus({ preventScroll: true }); }
+  };
 
   useEffect(() => {
     const history = historyRef.current;
@@ -136,6 +206,7 @@ export function MessageList({
   }, [messages.length]);
 
   const updateViewportPosition = () => {
+    closePopovers();
     const history = historyRef.current;
     if (!history) return;
     isNearBottom.current = history.scrollHeight - history.scrollTop - history.clientHeight <= 72;
@@ -151,7 +222,7 @@ export function MessageList({
 
   const react = (messageId: string, emoji: string) => {
     onToggleReaction?.(messageId, emoji);
-    closePopovers();
+    closePopovers(true);
   };
 
   return (
@@ -262,6 +333,7 @@ export function MessageList({
                     {editingId === message.id ? (
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%' }}>
                         <input
+                          aria-label="Edit message"
                           type="text"
                           value={editDraft}
                           onChange={(e) => setEditDraft(e.target.value)}
@@ -276,10 +348,10 @@ export function MessageList({
                           style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(139,92,246,0.5)', background: 'rgba(0,0,0,0.25)', color: 'inherit' }}
                           autoFocus
                         />
-                        <Button size="sm" variant="primary" onClick={() => { onEditMessage?.(message.id, editDraft); setEditingId(null); }}>
+                        <Button size="sm" variant="primary" aria-label="Save edit" onClick={() => { onEditMessage?.(message.id, editDraft); setEditingId(null); }}>
                           <Check size={14} />
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
+                        <Button size="sm" variant="outline" aria-label="Cancel edit" onClick={() => setEditingId(null)}>
                           <X size={14} />
                         </Button>
                       </div>
@@ -322,6 +394,7 @@ export function MessageList({
                                   className="rx-pill"
                                   aria-pressed={reactedByMe}
                                   aria-label={`${reaction.emoji} ${reaction.userIds.length}`}
+                                  disabled={!onToggleReaction}
                                   onClick={() => onToggleReaction?.(message.id, reaction.emoji)}
                                 >
                                   <span>{reaction.emoji}</span>
@@ -343,9 +416,11 @@ export function MessageList({
                                   className="msg-icon-btn"
                                   title="React"
                                   aria-label="React to message"
-                                  aria-haspopup="true"
+                                  aria-haspopup="menu"
                                   aria-expanded={isPickerOpen}
-                                  onClick={() => {
+                                  aria-controls={isPickerOpen ? `${popoverId}-${message.id}-reactions` : undefined}
+                                  onClick={(event) => {
+                                    popoverTriggerRef.current = event.currentTarget;
                                     setMenuOpenId(null);
                                     setPickerExpanded(false);
                                     setPickerOpenId(isPickerOpen ? null : message.id);
@@ -355,7 +430,7 @@ export function MessageList({
                                 </button>
 
                                 {isPickerOpen && (
-                                  <div className={`rx-popover ${pickerExpanded ? 'rx-grid-panel' : 'rx-bar'}`} role="menu" aria-label="Choose a reaction">
+                                  <div id={`${popoverId}-${message.id}-reactions`} ref={popoverRef} onKeyDown={handlePopoverKeyDown} className={`rx-popover ${pickerExpanded ? 'rx-grid-panel' : 'rx-bar'}`} role="menu" aria-label="Choose a reaction">
                                     {pickerExpanded ? (
                                       <div className="rx-grid">
                                         {[...QUICK_EMOJIS, ...MORE_EMOJIS].map((emoji) => (
@@ -363,7 +438,9 @@ export function MessageList({
                                             key={emoji}
                                             type="button"
                                             className="rx-emoji-btn"
-                                            aria-pressed={myReactions.has(emoji)}
+                                            role="menuitemcheckbox"
+                                            aria-checked={myReactions.has(emoji)}
+                                            aria-label={`React ${emoji}`}
                                             onClick={() => react(message.id, emoji)}
                                             title={`React ${emoji}`}
                                           >
@@ -378,7 +455,9 @@ export function MessageList({
                                             key={emoji}
                                             type="button"
                                             className="rx-emoji-btn"
-                                            aria-pressed={myReactions.has(emoji)}
+                                            role="menuitemcheckbox"
+                                            aria-checked={myReactions.has(emoji)}
+                                            aria-label={`React ${emoji}`}
                                             onClick={() => react(message.id, emoji)}
                                             title={`React ${emoji}`}
                                           >
@@ -388,6 +467,7 @@ export function MessageList({
                                         <button
                                           type="button"
                                           className="rx-more-btn"
+                                          role="menuitem"
                                           title="More reactions"
                                           aria-label="More reactions"
                                           onClick={() => setPickerExpanded(true)}
@@ -416,7 +496,9 @@ export function MessageList({
                                   aria-label="More actions"
                                   aria-haspopup="menu"
                                   aria-expanded={isMenuOpen}
-                                  onClick={() => {
+                                  aria-controls={isMenuOpen ? `${popoverId}-${message.id}-actions` : undefined}
+                                  onClick={(event) => {
+                                    popoverTriggerRef.current = event.currentTarget;
                                     setPickerOpenId(null);
                                     setPickerExpanded(false);
                                     setMenuOpenId(isMenuOpen ? null : message.id);
@@ -426,9 +508,9 @@ export function MessageList({
                                 </button>
 
                                 {isMenuOpen && (
-                                  <div className="rx-popover msg-menu" role="menu">
+                                  <div id={`${popoverId}-${message.id}-actions`} ref={popoverRef} onKeyDown={handlePopoverKeyDown} className="rx-popover msg-menu" role="menu" aria-label="Message actions">
                                     {onTogglePin && (
-                                      <button type="button" role="menuitem" className="msg-menu-item" onClick={() => { onTogglePin(message.id); closePopovers(); }}>
+                                      <button type="button" role="menuitem" className="msg-menu-item" onClick={() => { onTogglePin(message.id); closePopovers(true); }}>
                                         <Pin size={14} aria-hidden="true" /> {message.isPinned ? 'Unpin' : 'Pin'}
                                       </button>
                                     )}
@@ -443,7 +525,7 @@ export function MessageList({
                                       </button>
                                     )}
                                     {isOutgoing && onDeleteMessage && (
-                                      <button type="button" role="menuitem" className="msg-menu-item msg-menu-item--danger" onClick={() => { onDeleteMessage(message.id); closePopovers(); }}>
+                                      <button type="button" role="menuitem" className="msg-menu-item msg-menu-item--danger" onClick={() => { onDeleteMessage(message.id); closePopovers(true); }}>
                                         <Trash2 size={14} aria-hidden="true" /> Delete
                                       </button>
                                     )}

@@ -365,6 +365,7 @@ export function MessageComposer({
           variant="ghost"
           disabled={disabled || isSending}
           onClick={() => fileInputRef.current?.click()}
+          className="composer-attach"
           aria-label="Attach files or images"
           title="Attach image or file"
           leadingIcon={<Paperclip size={16} aria-hidden="true" />}
@@ -377,6 +378,7 @@ export function MessageComposer({
           variant="ghost"
           disabled={disabled || isSending}
           onClick={isRecording ? stopRecording : () => void startRecording()}
+          className="composer-voice"
           aria-label={isRecording ? 'Stop voice recording' : 'Record voice message'}
           title={isRecording ? 'Stop recording' : 'Record voice message'}
           leadingIcon={isRecording ? <Square size={16} aria-hidden="true" /> : <Mic size={16} aria-hidden="true" />}
@@ -404,10 +406,10 @@ export function MessageComposer({
           aria-invalid={Boolean(setupError || sendError)}
           aria-describedby={`message-input-hint message-input-demo${setupError || sendError ? ' message-input-error' : ''}`}
         />
-        <Button 
-          className="composer-send" 
-          type="submit" 
-          disabled={!canSend} 
+        <Button
+          className="composer-send"
+          type="submit"
+          disabled={!canSend}
           loading={isSending}
           leadingIcon={sendFeedback
             ? <Check size={16} className="composer-submit-mark" aria-hidden="true" />
