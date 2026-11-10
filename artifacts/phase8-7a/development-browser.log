@@ -1,0 +1,515 @@
+node tmp/phase8-7a-browser/verify.cjs development
+PASS Available control .auth-appearance > summary
+PASS Available control .auth-appearance input[type=radio][value=light]
+PASS Available control .auth-appearance > summary
+PASS Available action Continue as Demo User
+PASS desktop light connected feedback is explicitly demo
+PASS desktop light connected workspace no horizontal page or component overflow
+PASS desktop light heading actually renders Bungee
+PASS desktop light everyday text actually renders Space Grotesk
+SCREENSHOT desktop-light-connected.png
+PASS Available action Send
+PASS desktop light receipt labels remain explicitly simulated
+PASS desktop light pending, accepted, delivered and read are distinct states
+PASS desktop light send/receive stays local and does not echo outbound plaintext
+PASS Available control .debug-summary
+PASS Available control .realtime-demo-controls > summary
+PASS desktop light demo action Simulate incoming
+PASS desktop light demo action Simulate incoming
+PASS desktop light inactive preview/unread update without displaying another conversation
+PASS Available control .debug-summary
+PASS Available control .conversation-list-item[aria-label^="Ava Morgan,"]
+PASS desktop light opening existing DM clears unread and shows each received message once
+PASS Available control .debug-summary
+PASS desktop light demo action Simulate typing
+PASS desktop light typing is simulated and excludes current user
+PASS Available control .debug-summary
+SCREENSHOT desktop-light-direct-typing.png
+PASS Available control .debug-summary
+PASS desktop light demo action Simulate typing
+PASS Available control .conversation-list-item[aria-label^="Security Study Group,"]
+PASS desktop light switching conversations clears previous typing
+PASS desktop light demo action Simulate typing
+PASS desktop light group-compatible typing uses existing participants only
+PASS desktop light demo action Simulate incoming
+PASS Available control .debug-summary
+PASS Available action Send
+PASS Available control .conversation-list-item[aria-label^="SecureBot,"]
+PASS desktop light conversation draft survives realtime activity elsewhere
+PASS Available control .conversation-list-item[aria-label^="Ava Morgan,"]
+PASS desktop light conversation selection does not disconnect the session
+PASS Available control .debug-summary
+PASS desktop light demo action Simulate presence
+PASS desktop light sidebar avatar receives validated simulated presence
+PASS desktop light navigate Friends
+PASS desktop light Friends presence comes from explicit demo event
+PASS desktop light navigate Chats
+PASS desktop light demo action Fail next send
+PASS Available control .debug-summary
+PASS Available action Send
+PASS desktop light confirmed failure remains failed until manual retry
+PASS desktop light manual retry available
+PASS desktop light retry reconciles same message id without duplicate rendering
+PASS Available control .debug-summary
+PASS desktop light demo action Simulate typing
+PASS desktop light demo action Go offline
+PASS desktop light disconnect clears typing and chat presence
+PASS desktop light sidebar drops stale presence while offline
+PASS Available control .debug-summary
+PASS Available action Send
+PASS desktop light offline send is failed and retry is unavailable until reconnection
+PASS desktop light navigate Friends
+PASS desktop light moving to Friends does not reconnect or retain stale presence
+PASS desktop light navigate Chats
+PASS desktop light returning to Chats remains offline until explicit reconnect
+PASS Available control .debug-summary
+PASS desktop light demo action Reconnect
+PASS desktop light manual retry available
+PASS desktop light reconnect and manual retry preserve one offline message
+PASS Available control .debug-summary
+PASS Available control .debug-summary
+PASS desktop light demo action Fail next send
+PASS Available control .debug-summary
+PASS Available action Send
+PASS Available control .debug-summary
+PASS desktop light demo action Fail next send
+PASS Available control .debug-summary
+PASS desktop light manual retry available
+PASS Available control .debug-summary
+PASS desktop light demo action Fail next send
+PASS Available control .debug-summary
+PASS desktop light manual retry available
+PASS Retry limit disables further attempts without duplicating failed message
+PASS Available control .conversation-list-item[aria-label^="SecureBot,"]
+PASS Available action Send
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS desktop light logout removes realtime controls and messages
+PASS Available action Try Nova Demo User
+PASS desktop light new identity has no previous messages, drafts or late scheduled events
+PASS desktop light navigate Friends
+PASS desktop light previous presence state is not reused by next identity
+PASS desktop light navigate Chats
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS Available control .auth-appearance > summary
+PASS Available control .auth-appearance input[type=radio][value=light]
+PASS Available control .auth-appearance > summary
+PASS Available action Continue as Demo User
+PASS laptop light connected feedback is explicitly demo
+PASS laptop light connected workspace no horizontal page or component overflow
+PASS laptop light heading actually renders Bungee
+PASS laptop light everyday text actually renders Space Grotesk
+SCREENSHOT laptop-light-connected.png
+PASS Available action Send
+PASS laptop light receipt labels remain explicitly simulated
+PASS laptop light pending, accepted, delivered and read are distinct states
+PASS laptop light send/receive stays local and does not echo outbound plaintext
+PASS Available control .debug-summary
+PASS Available control .realtime-demo-controls > summary
+PASS laptop light demo action Simulate incoming
+PASS laptop light demo action Simulate incoming
+PASS laptop light inactive preview/unread update without displaying another conversation
+PASS Available control .debug-summary
+PASS Available control .conversation-list-item[aria-label^="Ava Morgan,"]
+PASS laptop light opening existing DM clears unread and shows each received message once
+PASS Available control .debug-summary
+PASS laptop light demo action Simulate typing
+PASS laptop light typing is simulated and excludes current user
+PASS Available control .debug-summary
+PASS Available control .debug-summary
+PASS laptop light demo action Simulate typing
+PASS Available control .conversation-list-item[aria-label^="Security Study Group,"]
+PASS laptop light switching conversations clears previous typing
+PASS laptop light demo action Simulate typing
+PASS laptop light group-compatible typing uses existing participants only
+PASS laptop light demo action Simulate incoming
+PASS Available control .debug-summary
+PASS Available action Send
+PASS Available control .conversation-list-item[aria-label^="SecureBot,"]
+PASS laptop light conversation draft survives realtime activity elsewhere
+PASS Available control .conversation-list-item[aria-label^="Ava Morgan,"]
+PASS laptop light conversation selection does not disconnect the session
+PASS Available control .debug-summary
+PASS laptop light demo action Simulate presence
+PASS laptop light sidebar avatar receives validated simulated presence
+PASS laptop light navigate Friends
+PASS laptop light Friends presence comes from explicit demo event
+PASS laptop light navigate Chats
+PASS laptop light demo action Fail next send
+PASS Available control .debug-summary
+PASS Available action Send
+PASS laptop light confirmed failure remains failed until manual retry
+PASS laptop light manual retry available
+PASS laptop light retry reconciles same message id without duplicate rendering
+PASS Available control .debug-summary
+PASS laptop light demo action Simulate typing
+PASS laptop light demo action Go offline
+PASS laptop light disconnect clears typing and chat presence
+PASS laptop light sidebar drops stale presence while offline
+PASS Available control .debug-summary
+PASS Available action Send
+PASS laptop light offline send is failed and retry is unavailable until reconnection
+PASS laptop light navigate Friends
+PASS laptop light moving to Friends does not reconnect or retain stale presence
+PASS laptop light navigate Chats
+PASS laptop light returning to Chats remains offline until explicit reconnect
+PASS Available control .debug-summary
+PASS laptop light demo action Reconnect
+PASS laptop light manual retry available
+PASS laptop light reconnect and manual retry preserve one offline message
+PASS Available control .debug-summary
+PASS Available control .conversation-list-item[aria-label^="SecureBot,"]
+PASS Available action Send
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS laptop light logout removes realtime controls and messages
+PASS Available action Try Nova Demo User
+PASS laptop light new identity has no previous messages, drafts or late scheduled events
+PASS laptop light navigate Friends
+PASS laptop light previous presence state is not reused by next identity
+PASS laptop light navigate Chats
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS Available control .auth-appearance > summary
+PASS Available control .auth-appearance input[type=radio][value=light]
+PASS Available control .auth-appearance > summary
+PASS Available action Continue as Demo User
+PASS mobile light connected feedback is explicitly demo
+PASS mobile light connected workspace no horizontal page or component overflow
+PASS mobile light heading actually renders Bungee
+PASS mobile light everyday text actually renders Space Grotesk
+SCREENSHOT mobile-light-connected.png
+PASS Available action Send
+PASS mobile light receipt labels remain explicitly simulated
+PASS mobile light pending, accepted, delivered and read are distinct states
+PASS mobile light send/receive stays local and does not echo outbound plaintext
+PASS Available control .debug-summary
+PASS Available control .realtime-demo-controls > summary
+PASS mobile light demo action Simulate incoming
+PASS mobile light demo action Simulate incoming
+PASS mobile light inactive preview/unread update without displaying another conversation
+PASS Available control .debug-summary
+PASS Available control button[aria-label="Back to conversations"]
+PASS Available control .conversation-list-item[aria-label^="Ava Morgan,"]
+PASS mobile light opening existing DM clears unread and shows each received message once
+PASS Available control .debug-summary
+PASS mobile light demo action Simulate typing
+PASS mobile light typing is simulated and excludes current user
+PASS Available control .debug-summary
+PASS Available control .debug-summary
+PASS mobile light demo action Simulate typing
+PASS Available control button[aria-label="Back to conversations"]
+PASS Available control .conversation-list-item[aria-label^="Security Study Group,"]
+PASS mobile light switching conversations clears previous typing
+PASS mobile light demo action Simulate typing
+PASS mobile light group-compatible typing uses existing participants only
+PASS mobile light demo action Simulate incoming
+PASS Available control .debug-summary
+PASS Available action Send
+PASS Available control button[aria-label="Back to conversations"]
+PASS Available control .conversation-list-item[aria-label^="SecureBot,"]
+PASS mobile light conversation draft survives realtime activity elsewhere
+PASS Available control button[aria-label="Back to conversations"]
+PASS Available control .conversation-list-item[aria-label^="Ava Morgan,"]
+PASS mobile light conversation selection does not disconnect the session
+PASS Available control .debug-summary
+PASS mobile light demo action Simulate presence
+PASS mobile light sidebar avatar receives validated simulated presence
+PASS mobile light navigate Friends
+PASS mobile light Friends presence comes from explicit demo event
+PASS mobile light navigate Chats
+PASS mobile light demo action Fail next send
+PASS Available control .debug-summary
+PASS Available action Send
+PASS mobile light confirmed failure remains failed until manual retry
+PASS mobile light manual retry available
+PASS mobile light retry reconciles same message id without duplicate rendering
+PASS Available control .debug-summary
+PASS mobile light demo action Simulate typing
+PASS mobile light demo action Go offline
+PASS mobile light disconnect clears typing and chat presence
+PASS mobile light sidebar drops stale presence while offline
+PASS Available control .debug-summary
+PASS Available action Send
+PASS mobile light offline send is failed and retry is unavailable until reconnection
+PASS mobile light navigate Friends
+PASS mobile light moving to Friends does not reconnect or retain stale presence
+PASS mobile light navigate Chats
+PASS mobile light returning to Chats remains offline until explicit reconnect
+PASS Available control .debug-summary
+PASS mobile light demo action Reconnect
+PASS mobile light manual retry available
+PASS mobile light reconnect and manual retry preserve one offline message
+PASS Available control .debug-summary
+PASS Available control button[aria-label="Back to conversations"]
+PASS Available control .conversation-list-item[aria-label^="SecureBot,"]
+PASS Available action Send
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS mobile light logout removes realtime controls and messages
+PASS Available action Try Nova Demo User
+PASS mobile light new identity has no previous messages, drafts or late scheduled events
+PASS mobile light navigate Friends
+PASS mobile light previous presence state is not reused by next identity
+PASS mobile light navigate Chats
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS Available control .auth-appearance > summary
+PASS Available control .auth-appearance input[type=radio][value=dark]
+PASS Available control .auth-appearance > summary
+PASS Available action Continue as Demo User
+PASS desktop dark connected feedback is explicitly demo
+PASS desktop dark connected workspace no horizontal page or component overflow
+PASS desktop dark heading actually renders Bungee
+PASS desktop dark everyday text actually renders Space Grotesk
+SCREENSHOT desktop-dark-connected.png
+PASS Available action Send
+PASS desktop dark receipt labels remain explicitly simulated
+PASS desktop dark pending, accepted, delivered and read are distinct states
+PASS desktop dark send/receive stays local and does not echo outbound plaintext
+PASS Available control .debug-summary
+PASS Available control .realtime-demo-controls > summary
+PASS desktop dark demo action Simulate incoming
+PASS desktop dark demo action Simulate incoming
+PASS desktop dark inactive preview/unread update without displaying another conversation
+PASS Available control .debug-summary
+PASS Available control .conversation-list-item[aria-label^="Ava Morgan,"]
+PASS desktop dark opening existing DM clears unread and shows each received message once
+PASS Available control .debug-summary
+PASS desktop dark demo action Simulate typing
+PASS desktop dark typing is simulated and excludes current user
+PASS Available control .debug-summary
+PASS Available control .debug-summary
+PASS desktop dark demo action Simulate typing
+PASS Available control .conversation-list-item[aria-label^="Security Study Group,"]
+PASS desktop dark switching conversations clears previous typing
+PASS desktop dark demo action Simulate typing
+PASS desktop dark group-compatible typing uses existing participants only
+PASS desktop dark demo action Simulate incoming
+PASS Available control .debug-summary
+PASS Available action Send
+PASS Available control .conversation-list-item[aria-label^="SecureBot,"]
+PASS desktop dark conversation draft survives realtime activity elsewhere
+PASS Available control .conversation-list-item[aria-label^="Ava Morgan,"]
+PASS desktop dark conversation selection does not disconnect the session
+PASS Available control .debug-summary
+PASS desktop dark demo action Simulate presence
+PASS desktop dark sidebar avatar receives validated simulated presence
+PASS desktop dark navigate Friends
+PASS desktop dark Friends presence comes from explicit demo event
+PASS desktop dark navigate Chats
+PASS desktop dark demo action Fail next send
+PASS Available control .debug-summary
+PASS Available action Send
+PASS desktop dark confirmed failure remains failed until manual retry
+PASS desktop dark manual retry available
+PASS desktop dark retry reconciles same message id without duplicate rendering
+PASS Available control .debug-summary
+PASS desktop dark demo action Simulate typing
+PASS desktop dark demo action Go offline
+PASS desktop dark disconnect clears typing and chat presence
+PASS desktop dark sidebar drops stale presence while offline
+PASS Available control .debug-summary
+PASS Available action Send
+PASS desktop dark offline send is failed and retry is unavailable until reconnection
+PASS desktop dark navigate Friends
+PASS desktop dark moving to Friends does not reconnect or retain stale presence
+PASS desktop dark navigate Chats
+PASS desktop dark returning to Chats remains offline until explicit reconnect
+PASS Available control .debug-summary
+PASS desktop dark demo action Reconnect
+PASS desktop dark manual retry available
+PASS desktop dark reconnect and manual retry preserve one offline message
+PASS Available control .debug-summary
+PASS Available control .conversation-list-item[aria-label^="SecureBot,"]
+PASS Available action Send
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS desktop dark logout removes realtime controls and messages
+PASS Available action Try Nova Demo User
+PASS desktop dark new identity has no previous messages, drafts or late scheduled events
+PASS desktop dark navigate Friends
+PASS desktop dark previous presence state is not reused by next identity
+PASS desktop dark navigate Chats
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS Available control .auth-appearance > summary
+PASS Available control .auth-appearance input[type=radio][value=dark]
+PASS Available control .auth-appearance > summary
+PASS Available action Continue as Demo User
+PASS laptop dark connected feedback is explicitly demo
+PASS laptop dark connected workspace no horizontal page or component overflow
+PASS laptop dark heading actually renders Bungee
+PASS laptop dark everyday text actually renders Space Grotesk
+SCREENSHOT laptop-dark-connected.png
+PASS Available action Send
+PASS laptop dark receipt labels remain explicitly simulated
+PASS laptop dark pending, accepted, delivered and read are distinct states
+PASS laptop dark send/receive stays local and does not echo outbound plaintext
+PASS Available control .debug-summary
+PASS Available control .realtime-demo-controls > summary
+PASS laptop dark demo action Simulate incoming
+PASS laptop dark demo action Simulate incoming
+PASS laptop dark inactive preview/unread update without displaying another conversation
+PASS Available control .debug-summary
+PASS Available control .conversation-list-item[aria-label^="Ava Morgan,"]
+PASS laptop dark opening existing DM clears unread and shows each received message once
+PASS Available control .debug-summary
+PASS laptop dark demo action Simulate typing
+PASS laptop dark typing is simulated and excludes current user
+PASS Available control .debug-summary
+PASS Available control .debug-summary
+PASS laptop dark demo action Simulate typing
+PASS Available control .conversation-list-item[aria-label^="Security Study Group,"]
+PASS laptop dark switching conversations clears previous typing
+PASS laptop dark demo action Simulate typing
+PASS laptop dark group-compatible typing uses existing participants only
+PASS laptop dark demo action Simulate incoming
+PASS Available control .debug-summary
+SCREENSHOT laptop-dark-group-typing.png
+PASS Available action Send
+PASS Available control .conversation-list-item[aria-label^="SecureBot,"]
+PASS laptop dark conversation draft survives realtime activity elsewhere
+PASS Available control .conversation-list-item[aria-label^="Ava Morgan,"]
+PASS laptop dark conversation selection does not disconnect the session
+PASS Available control .debug-summary
+PASS laptop dark demo action Simulate presence
+PASS laptop dark sidebar avatar receives validated simulated presence
+PASS laptop dark navigate Friends
+PASS laptop dark Friends presence comes from explicit demo event
+PASS laptop dark navigate Chats
+PASS laptop dark demo action Fail next send
+PASS Available control .debug-summary
+PASS Available action Send
+PASS laptop dark confirmed failure remains failed until manual retry
+PASS laptop dark manual retry available
+PASS laptop dark retry reconciles same message id without duplicate rendering
+PASS Available control .debug-summary
+PASS laptop dark demo action Simulate typing
+PASS laptop dark demo action Go offline
+PASS laptop dark disconnect clears typing and chat presence
+PASS laptop dark sidebar drops stale presence while offline
+PASS Available control .debug-summary
+PASS Available action Send
+PASS laptop dark offline send is failed and retry is unavailable until reconnection
+PASS laptop dark navigate Friends
+PASS laptop dark moving to Friends does not reconnect or retain stale presence
+PASS laptop dark navigate Chats
+PASS laptop dark returning to Chats remains offline until explicit reconnect
+PASS Available control .debug-summary
+PASS laptop dark demo action Reconnect
+PASS laptop dark manual retry available
+PASS laptop dark reconnect and manual retry preserve one offline message
+PASS Available control .debug-summary
+PASS Available control .conversation-list-item[aria-label^="SecureBot,"]
+PASS Available action Send
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS laptop dark logout removes realtime controls and messages
+PASS Available action Try Nova Demo User
+PASS laptop dark new identity has no previous messages, drafts or late scheduled events
+PASS laptop dark navigate Friends
+PASS laptop dark previous presence state is not reused by next identity
+PASS laptop dark navigate Chats
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS Available control .auth-appearance > summary
+PASS Available control .auth-appearance input[type=radio][value=dark]
+PASS Available control .auth-appearance > summary
+PASS Available action Continue as Demo User
+PASS mobile dark connected feedback is explicitly demo
+PASS mobile dark connected workspace no horizontal page or component overflow
+PASS mobile dark heading actually renders Bungee
+PASS mobile dark everyday text actually renders Space Grotesk
+SCREENSHOT mobile-dark-connected.png
+PASS Available action Send
+PASS mobile dark receipt labels remain explicitly simulated
+PASS mobile dark pending, accepted, delivered and read are distinct states
+PASS mobile dark send/receive stays local and does not echo outbound plaintext
+PASS Available control .debug-summary
+PASS Available control .realtime-demo-controls > summary
+PASS mobile dark demo action Simulate incoming
+PASS mobile dark demo action Simulate incoming
+PASS mobile dark inactive preview/unread update without displaying another conversation
+PASS Available control .debug-summary
+PASS Available control button[aria-label="Back to conversations"]
+PASS Available control .conversation-list-item[aria-label^="Ava Morgan,"]
+PASS mobile dark opening existing DM clears unread and shows each received message once
+PASS Available control .debug-summary
+PASS mobile dark demo action Simulate typing
+PASS mobile dark typing is simulated and excludes current user
+PASS Available control .debug-summary
+PASS Available control .debug-summary
+PASS mobile dark demo action Simulate typing
+PASS Available control button[aria-label="Back to conversations"]
+PASS Available control .conversation-list-item[aria-label^="Security Study Group,"]
+PASS mobile dark switching conversations clears previous typing
+PASS mobile dark demo action Simulate typing
+PASS mobile dark group-compatible typing uses existing participants only
+PASS mobile dark demo action Simulate incoming
+PASS Available control .debug-summary
+PASS Available action Send
+PASS Available control button[aria-label="Back to conversations"]
+PASS Available control .conversation-list-item[aria-label^="SecureBot,"]
+PASS mobile dark conversation draft survives realtime activity elsewhere
+PASS Available control button[aria-label="Back to conversations"]
+PASS Available control .conversation-list-item[aria-label^="Ava Morgan,"]
+PASS mobile dark conversation selection does not disconnect the session
+PASS Available control .debug-summary
+PASS mobile dark demo action Simulate presence
+PASS mobile dark sidebar avatar receives validated simulated presence
+PASS mobile dark navigate Friends
+PASS mobile dark Friends presence comes from explicit demo event
+PASS mobile dark navigate Chats
+PASS mobile dark demo action Fail next send
+PASS Available control .debug-summary
+PASS Available action Send
+PASS mobile dark confirmed failure remains failed until manual retry
+SCREENSHOT mobile-dark-failed-send.png
+PASS mobile dark manual retry available
+PASS mobile dark retry reconciles same message id without duplicate rendering
+PASS Available control .debug-summary
+PASS mobile dark demo action Simulate typing
+PASS mobile dark demo action Go offline
+PASS mobile dark disconnect clears typing and chat presence
+PASS mobile dark sidebar drops stale presence while offline
+PASS Available control .debug-summary
+PASS Available action Send
+PASS mobile dark offline send is failed and retry is unavailable until reconnection
+PASS mobile dark navigate Friends
+PASS mobile dark moving to Friends does not reconnect or retain stale presence
+PASS mobile dark navigate Chats
+PASS mobile dark returning to Chats remains offline until explicit reconnect
+PASS Available control .debug-summary
+PASS mobile dark demo action Reconnect
+PASS mobile dark manual retry available
+PASS mobile dark reconnect and manual retry preserve one offline message
+PASS Available control .debug-summary
+PASS Available control button[aria-label="Back to conversations"]
+PASS Available control .conversation-list-item[aria-label^="SecureBot,"]
+PASS Available action Send
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS mobile dark logout removes realtime controls and messages
+PASS Available action Try Nova Demo User
+PASS mobile dark new identity has no previous messages, drafts or late scheduled events
+PASS mobile dark navigate Friends
+PASS mobile dark previous presence state is not reused by next identity
+PASS mobile dark navigate Chats
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS Available action Continue as Demo User
+PASS Available action Send
+PASS Available control button[aria-label^="Open profile"]
+PASS Available control dialog[open] input[type=radio][value=light]
+PASS Available control dialog[open] input[type=radio][value=system]
+PASS System dark preserves realtime message state
+PASS System light preserves realtime message state
+SCREENSHOT mobile-system-connected.png
+PASS Available control button[aria-label^="Open profile"]
+PASS Available action Sign Out
+PASS Demo/production runs never connect to a real Socket.IO service
+PASS Realtime browser flows have no uncaught runtime/hydration errors
+PASS Application source unchanged during browser verification
+503/503 assertions passed

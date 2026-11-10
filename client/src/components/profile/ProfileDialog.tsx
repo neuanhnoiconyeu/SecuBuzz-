@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, LogOut } from 'lucide-react';
 import { AppearanceSelector } from '@/components/appearance/AppearanceSelector';
 import { Badge, Button, Dialog, TextInput } from '@/components/ui';
 import { ProfileAvatar } from './ProfileAvatar';
@@ -29,6 +29,9 @@ export interface ProfileDialogProps {
   fieldErrors?: ProfileFieldErrors;
   onRetry(): void;
   onSave(updates: ProfileUpdates): Promise<boolean>;
+  onLogout?: () => Promise<boolean>;
+  isLoggingOut?: boolean;
+  logoutError?: string | null;
 }
 
 const emptyDraft: EditableProfileFields = {
@@ -54,6 +57,9 @@ export function ProfileDialog({
   onSave,
   open,
   profile,
+  onLogout,
+  isLoggingOut = false,
+  logoutError = null,
 }: ProfileDialogProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<EditableProfileFields>(emptyDraft);
@@ -68,7 +74,7 @@ export function ProfileDialog({
   const presenceRef = useRef<HTMLSelectElement>(null);
   const editButtonRef = useRef<HTMLButtonElement>(null);
   const wasEditing = useRef(false);
-  const busy = isSaving || submitting;
+  const busy = isSaving || submitting || isLoggingOut;
 
   useEffect(() => {
     if (!open) {
@@ -168,13 +174,17 @@ export function ProfileDialog({
               <Button type="submit" form="profile-settings-form" loading={busy}>Save changes</Button>
             </>
           ) : (
-            <Button ref={editButtonRef} onClick={() => {
+            <>
+            {onLogout && <Button variant="outline" disabled={busy} loading={isLoggingOut}
+              leadingIcon={<LogOut size={16} aria-hidden="true" />} onClick={() => void onLogout()}>Sign Out</Button>}
+            <Button ref={editButtonRef} disabled={busy} onClick={() => {
               setDraft(profileFields(profile));
               setErrors({});
               setSaveError('');
               saveAttempted.current = false;
               setEditing(true);
             }}>Edit profile</Button>
+            </>
           )}
         </div>
       ) : null}
@@ -274,6 +284,7 @@ export function ProfileDialog({
         </form>
       ) : (
         <div className="profile-view">
+          {logoutError && <p className="profile-save-error" role="alert">{logoutError}</p>}
           <div className="profile-summary">
             <ProfileAvatar displayName={profile.displayName} avatar={profile.avatar} size="lg" />
             <div className="profile-summary-identity">

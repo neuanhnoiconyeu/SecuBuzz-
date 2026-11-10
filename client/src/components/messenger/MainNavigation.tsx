@@ -1,10 +1,10 @@
-import { MessageCircle, ShieldCheck, UserRound } from 'lucide-react';
+import { MessageCircle, ShieldCheck, UserRound, UsersRound } from 'lucide-react';
 import { BrandLogo } from '@/components/branding';
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { PRESENCE_OPTIONS } from '@/profiles/profileModel';
 import type { UserProfile } from '@/profiles/profileModel';
 
-export type MessengerSection = 'chats' | 'security';
+export type MessengerSection = 'chats' | 'friends' | 'security';
 
 export interface MainNavigationProps {
   activeSection: MessengerSection;
@@ -12,9 +12,10 @@ export interface MainNavigationProps {
   profile?: UserProfile | null;
   profileLoading?: boolean;
   onOpenProfile?: () => void;
+  pendingRequestCount?: number;
 }
 
-export function MainNavigation({ activeSection, onSelect, profile, profileLoading = false, onOpenProfile }: MainNavigationProps) {
+export function MainNavigation({ activeSection, onSelect, profile, profileLoading = false, onOpenProfile, pendingRequestCount = 0 }: MainNavigationProps) {
   const presenceLabel = PRESENCE_OPTIONS.find((option) => option.value === profile?.presencePreference)?.label;
   return (
     <nav className="messenger-navigation" aria-label="Main navigation">
@@ -30,6 +31,17 @@ export function MainNavigation({ activeSection, onSelect, profile, profileLoadin
         >
           <MessageCircle size={19} aria-hidden="true" />
           <span>Chats</span>
+        </button>
+        <button
+          type="button"
+          className={`messenger-navigation-item ${activeSection === 'friends' ? 'is-active' : ''}`}
+          aria-current={activeSection === 'friends' ? 'page' : undefined}
+          aria-label={pendingRequestCount > 0 ? `Friends, ${pendingRequestCount} incoming request${pendingRequestCount === 1 ? '' : 's'}` : 'Friends'}
+          onClick={() => onSelect('friends')}
+        >
+          <UsersRound size={19} aria-hidden="true" />
+          <span>Friends</span>
+          {pendingRequestCount > 0 && <sup className="friends-navigation-count" aria-hidden="true">{pendingRequestCount}</sup>}
         </button>
         <button
           type="button"

@@ -13,12 +13,20 @@ export interface DeliveryStatusUpdate {
   status: DeliveryStatus;
 }
 
+export interface TypingUpdate {
+  userId: string;
+  displayName: string;
+  isTyping: boolean;
+  timestamp: string;
+}
+
 export interface MessagingTransportHandlers {
   onMessage(message: IncomingMessage): void;
   onDeliveryStatus(update: DeliveryStatusUpdate): void;
-  onPresenceUpdate(status: PresenceStatus): void;
+  onPresenceUpdate(status: PresenceStatus | undefined): void;
   onSecurityAlert(message: ChatMessage): void;
   onConnectionChange(status: ConnectionStatus): void;
+  onTypingUpdate?(update: TypingUpdate): void;
 }
 
 /**
@@ -27,6 +35,8 @@ export interface MessagingTransportHandlers {
  */
 export interface MessagingTransport {
   readonly mode: TransportMode;
+  readonly canSendMessages?: boolean;
+  getConnectionStatus?(): ConnectionStatus;
   connect(conversationId: string): Promise<void>;
   sendMessage(message: OutboundMessage): Promise<void>;
   subscribeToConversation(
@@ -34,4 +44,7 @@ export interface MessagingTransport {
     handlers: MessagingTransportHandlers
   ): () => void;
   disconnect(conversationId: string): Promise<void>;
+  sendTyping?(conversationId: string, isTyping: boolean): void;
+  markRead?(conversationId: string, messageId: string): Promise<void>;
+  canRetryMessage?(conversationId: string, messageId: string): boolean;
 }

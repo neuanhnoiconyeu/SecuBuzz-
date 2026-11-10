@@ -1,0 +1,1183 @@
+{
+  "startedAt": "2026-11-09T22:54:50.965Z",
+  "browser": "Chrome headless via CDP",
+  "mode": "development",
+  "checks": [
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[value=dark]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "Available control .conversation-list-item[aria-label^=\"Security Study Group,\"]",
+      "passed": true
+    },
+    {
+      "label": "Group heading has no horizontal scroll or clipped text at1024",
+      "passed": true,
+      "detail": {
+        "text": "Chat with Security Study Group",
+        "rect": {
+          "x": 381.453125,
+          "right": 645.78125,
+          "width": 264.328125,
+          "height": 26
+        },
+        "textRect": {
+          "x": 380.453125,
+          "right": 645.78125,
+          "width": 265.328125,
+          "height": 27
+        },
+        "clientWidth": 264,
+        "scrollWidth": 264,
+        "scrollLeft": 0,
+        "overflow": "visible",
+        "whiteSpace": "normal",
+        "lineHeight": "26px",
+        "contactCopy": {
+          "x": 381.453125,
+          "y": 140.859375,
+          "width": 264.328125,
+          "height": 67.578125,
+          "top": 140.859375,
+          "right": 645.78125,
+          "bottom": 208.4375,
+          "left": 381.453125
+        }
+      }
+    },
+    {
+      "label": "Available control .debug-summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .realtime-demo-controls > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .debug-summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[value=light]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "Available control .debug-summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .realtime-demo-controls > summary",
+      "passed": true
+    },
+    {
+      "label": "1440 light open demo controls no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440,
+        "bodyWidth": 1440,
+        "elements": [
+          {
+            "selector": ".messenger-app",
+            "x": 28,
+            "right": 1412,
+            "top": 28,
+            "bottom": 972,
+            "width": 1384,
+            "scrollWidth": 1382,
+            "clientWidth": 1382
+          },
+          {
+            "selector": ".debug-console",
+            "x": 341,
+            "right": 1411,
+            "top": 827.21875,
+            "bottom": 971,
+            "width": 1070,
+            "scrollWidth": 1070,
+            "clientWidth": 1070
+          },
+          {
+            "selector": ".realtime-demo-panel",
+            "x": 361,
+            "right": 1376,
+            "top": 937.375,
+            "bottom": 1176.328125,
+            "width": 1015,
+            "scrollWidth": 1013,
+            "clientWidth": 1013
+          }
+        ]
+      }
+    },
+    {
+      "label": "1440 controls clearly label local simulation",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[value=dark]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available action Continue as Demo User",
+      "passed": true
+    },
+    {
+      "label": "Available control .debug-summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .realtime-demo-controls > summary",
+      "passed": true
+    },
+    {
+      "label": "390 dark open demo controls no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "elements": [
+          {
+            "selector": ".messenger-app",
+            "x": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 844,
+            "width": 390,
+            "scrollWidth": 390,
+            "clientWidth": 390
+          },
+          {
+            "selector": ".debug-console",
+            "x": 0,
+            "right": 390,
+            "top": 700.21875,
+            "bottom": 844,
+            "width": 390,
+            "scrollWidth": 390,
+            "clientWidth": 390
+          },
+          {
+            "selector": ".realtime-demo-panel",
+            "x": 20,
+            "right": 355,
+            "top": 810.375,
+            "bottom": 1164.515625,
+            "width": 335,
+            "scrollWidth": 333,
+            "clientWidth": 333
+          }
+        ]
+      }
+    },
+    {
+      "label": "390 controls clearly label local simulation",
+      "passed": true
+    },
+    {
+      "label": "Application source unchanged during extra screenshots",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "artifacts/phase8-7a/laptop-dark-group-heading.png",
+    "artifacts/phase8-7a/laptop-dark-group-activity-immediate.png",
+    "artifacts/phase8-7a/laptop-dark-group-activity-settled.png",
+    "artifacts/phase8-7a/desktop-light-demo-controls.png",
+    "artifacts/phase8-7a/mobile-dark-demo-controls.png"
+  ],
+  "runtimeErrors": [],
+  "consoleErrors": [
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority",
+    "Image with src \"/branding/yahoo-security-logo-source.png\" was detected as the Largest Contentful Paint (LCP). Please add the \"priority\" property if this image is above the fold.\nRead more: https://nextjs.org/docs/api-reference/next/image#priority"
+  ],
+  "fonts": [],
+  "geometry": [
+    {
+      "label": "1440 light open demo controls",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "elements": [
+        {
+          "selector": ".messenger-app",
+          "x": 28,
+          "right": 1412,
+          "top": 28,
+          "bottom": 972,
+          "width": 1384,
+          "scrollWidth": 1382,
+          "clientWidth": 1382
+        },
+        {
+          "selector": ".debug-console",
+          "x": 341,
+          "right": 1411,
+          "top": 827.21875,
+          "bottom": 971,
+          "width": 1070,
+          "scrollWidth": 1070,
+          "clientWidth": 1070
+        },
+        {
+          "selector": ".realtime-demo-panel",
+          "x": 361,
+          "right": 1376,
+          "top": 937.375,
+          "bottom": 1176.328125,
+          "width": 1015,
+          "scrollWidth": 1013,
+          "clientWidth": 1013
+        }
+      ]
+    },
+    {
+      "label": "390 dark open demo controls",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "elements": [
+        {
+          "selector": ".messenger-app",
+          "x": 0,
+          "right": 390,
+          "top": 0,
+          "bottom": 844,
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        },
+        {
+          "selector": ".debug-console",
+          "x": 0,
+          "right": 390,
+          "top": 700.21875,
+          "bottom": 844,
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        },
+        {
+          "selector": ".realtime-demo-panel",
+          "x": 20,
+          "right": 355,
+          "top": 810.375,
+          "bottom": 1164.515625,
+          "width": 335,
+          "scrollWidth": 333,
+          "clientWidth": 333
+        }
+      ]
+    }
+  ],
+  "artifactName": "demo-controls-browser-evidence.json",
+  "buildId": "development",
+  "sourceFingerprint": {
+    "scope": "Application TS/TSX/CSS excluding test files",
+    "fileCount": 83,
+    "sha256": "59c3108df60a56f20f3259b8363290d7147761f28d30ca4455eef5c56262518a"
+  },
+  "browserVersion": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/156.0.8078.81",
+    "revision": "@060bedfb508f73250e93aeb9ca8149b3958995d8",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+    "jsVersion": "15.6.75.27"
+  },
+  "groupHeadingGeometry": {
+    "text": "Chat with Security Study Group",
+    "rect": {
+      "x": 381.453125,
+      "right": 645.78125,
+      "width": 264.328125,
+      "height": 26
+    },
+    "textRect": {
+      "x": 380.453125,
+      "right": 645.78125,
+      "width": 265.328125,
+      "height": 27
+    },
+    "clientWidth": 264,
+    "scrollWidth": 264,
+    "scrollLeft": 0,
+    "overflow": "visible",
+    "whiteSpace": "normal",
+    "lineHeight": "26px",
+    "contactCopy": {
+      "x": 381.453125,
+      "y": 140.859375,
+      "width": 264.328125,
+      "height": 67.578125,
+      "top": 140.859375,
+      "right": 645.78125,
+      "bottom": 208.4375,
+      "left": 381.453125
+    }
+  },
+  "groupActivityGeometry": [
+    {
+      "label": "Simulate typing",
+      "nodes": [
+        {
+          "node": "H1.chat-title-heading contact-name display-heading display-heading--conversation",
+          "rect": {
+            "x": 381.453125,
+            "y": 160.453125,
+            "right": 645.78125,
+            "width": 264.328125,
+            "height": 26
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 264,
+          "clientWidth": 264,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.contact-copy",
+          "rect": {
+            "x": 381.453125,
+            "y": 140.859375,
+            "right": 645.78125,
+            "width": 264.328125,
+            "height": 67.578125
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 264,
+          "clientWidth": 264,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.contact-presence",
+          "rect": {
+            "x": 321.46875,
+            "y": 140.859375,
+            "right": 678.53125,
+            "width": 357.0625,
+            "height": 67.578125
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 357,
+          "clientWidth": 357,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.chat-toolbar",
+          "rect": {
+            "x": 301.46875,
+            "y": 124.859375,
+            "right": 1002.53125,
+            "width": 701.0625,
+            "height": 113.78125
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 701,
+          "clientWidth": 701,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "SECTION.chat-window",
+          "rect": {
+            "x": 301.46875,
+            "y": 124.859375,
+            "right": 1002.53125,
+            "width": 701.0625,
+            "height": 609.890625
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 701,
+          "clientWidth": 701,
+          "overflowX": "hidden",
+          "transform": "none"
+        },
+        {
+          "node": "FIELDSET.friends-chat-scope",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 0,
+            "width": 0,
+            "height": 0
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 0,
+          "clientWidth": 0,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.messenger-main-column ",
+          "rect": {
+            "x": 301.46875,
+            "y": 124.859375,
+            "right": 1002.53125,
+            "width": 701.0625,
+            "height": 753.671875
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 701,
+          "clientWidth": 701,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "SECTION.messenger-chat-section",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 0,
+            "width": 0,
+            "height": 0
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 0,
+          "clientWidth": 0,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.messenger-app",
+          "rect": {
+            "x": 20.46875,
+            "y": 20.46875,
+            "right": 1003.53125,
+            "width": 983.0625,
+            "height": 859.0625
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 981,
+          "clientWidth": 981,
+          "overflowX": "hidden",
+          "transform": "none"
+        },
+        {
+          "node": "MAIN.app-shell",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 1024,
+            "width": 1024,
+            "height": 900
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 1290,
+          "clientWidth": 1024,
+          "overflowX": "hidden",
+          "transform": "none"
+        },
+        {
+          "node": "BODY.",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 1024,
+            "width": 1024,
+            "height": 900
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 1024,
+          "clientWidth": 1024,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "HTML.__variable_7600f0 __variable_be0dd0",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 1024,
+            "width": 1024,
+            "height": 900
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 1024,
+          "clientWidth": 1024,
+          "overflowX": "visible",
+          "transform": "none"
+        }
+      ],
+      "active": "<button type=\"button\" class=\"ui-button ui-button--outline ui-button--sm\"><span>Simulate typing</span></button>",
+      "viewport": {
+        "width": 1024,
+        "documentWidth": 1024
+      }
+    },
+    {
+      "label": "Simulate incoming",
+      "nodes": [
+        {
+          "node": "H1.chat-title-heading contact-name display-heading display-heading--conversation",
+          "rect": {
+            "x": 381.453125,
+            "y": 160.453125,
+            "right": 645.78125,
+            "width": 264.328125,
+            "height": 26
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 264,
+          "clientWidth": 264,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.contact-copy",
+          "rect": {
+            "x": 381.453125,
+            "y": 140.859375,
+            "right": 645.78125,
+            "width": 264.328125,
+            "height": 67.578125
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 264,
+          "clientWidth": 264,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.contact-presence",
+          "rect": {
+            "x": 321.46875,
+            "y": 140.859375,
+            "right": 678.53125,
+            "width": 357.0625,
+            "height": 67.578125
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 357,
+          "clientWidth": 357,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.chat-toolbar",
+          "rect": {
+            "x": 301.46875,
+            "y": 124.859375,
+            "right": 1002.53125,
+            "width": 701.0625,
+            "height": 113.78125
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 701,
+          "clientWidth": 701,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "SECTION.chat-window",
+          "rect": {
+            "x": 301.46875,
+            "y": 124.859375,
+            "right": 1002.53125,
+            "width": 701.0625,
+            "height": 609.890625
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 701,
+          "clientWidth": 701,
+          "overflowX": "hidden",
+          "transform": "none"
+        },
+        {
+          "node": "FIELDSET.friends-chat-scope",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 0,
+            "width": 0,
+            "height": 0
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 0,
+          "clientWidth": 0,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.messenger-main-column ",
+          "rect": {
+            "x": 301.46875,
+            "y": 124.859375,
+            "right": 1002.53125,
+            "width": 701.0625,
+            "height": 753.671875
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 701,
+          "clientWidth": 701,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "SECTION.messenger-chat-section",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 0,
+            "width": 0,
+            "height": 0
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 0,
+          "clientWidth": 0,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.messenger-app",
+          "rect": {
+            "x": 20.46875,
+            "y": 20.46875,
+            "right": 1003.53125,
+            "width": 983.0625,
+            "height": 859.0625
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 981,
+          "clientWidth": 981,
+          "overflowX": "hidden",
+          "transform": "none"
+        },
+        {
+          "node": "MAIN.app-shell",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 1024,
+            "width": 1024,
+            "height": 900
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 1290,
+          "clientWidth": 1024,
+          "overflowX": "hidden",
+          "transform": "none"
+        },
+        {
+          "node": "BODY.",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 1024,
+            "width": 1024,
+            "height": 900
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 1024,
+          "clientWidth": 1024,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "HTML.__variable_7600f0 __variable_be0dd0",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 1024,
+            "width": 1024,
+            "height": 900
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 1024,
+          "clientWidth": 1024,
+          "overflowX": "visible",
+          "transform": "none"
+        }
+      ],
+      "active": "<button type=\"button\" class=\"ui-button ui-button--outline ui-button--sm\"><span>Simulate incoming</span></button>",
+      "viewport": {
+        "width": 1024,
+        "documentWidth": 1024
+      }
+    },
+    {
+      "label": "immediately after closing controls",
+      "nodes": [
+        {
+          "node": "H1.chat-title-heading contact-name display-heading display-heading--conversation",
+          "rect": {
+            "x": 381.453125,
+            "y": 160.453125,
+            "right": 645.78125,
+            "width": 264.328125,
+            "height": 26
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 264,
+          "clientWidth": 264,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.contact-copy",
+          "rect": {
+            "x": 381.453125,
+            "y": 140.859375,
+            "right": 645.78125,
+            "width": 264.328125,
+            "height": 67.578125
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 264,
+          "clientWidth": 264,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.contact-presence",
+          "rect": {
+            "x": 321.46875,
+            "y": 140.859375,
+            "right": 678.53125,
+            "width": 357.0625,
+            "height": 67.578125
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 357,
+          "clientWidth": 357,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.chat-toolbar",
+          "rect": {
+            "x": 301.46875,
+            "y": 124.859375,
+            "right": 1002.53125,
+            "width": 701.0625,
+            "height": 113.78125
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 701,
+          "clientWidth": 701,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "SECTION.chat-window",
+          "rect": {
+            "x": 301.46875,
+            "y": 124.859375,
+            "right": 1002.53125,
+            "width": 701.0625,
+            "height": 721.890625
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 701,
+          "clientWidth": 701,
+          "overflowX": "hidden",
+          "transform": "none"
+        },
+        {
+          "node": "FIELDSET.friends-chat-scope",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 0,
+            "width": 0,
+            "height": 0
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 0,
+          "clientWidth": 0,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.messenger-main-column ",
+          "rect": {
+            "x": 301.46875,
+            "y": 124.859375,
+            "right": 1002.53125,
+            "width": 701.0625,
+            "height": 753.671875
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 701,
+          "clientWidth": 701,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "SECTION.messenger-chat-section",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 0,
+            "width": 0,
+            "height": 0
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 0,
+          "clientWidth": 0,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.messenger-app",
+          "rect": {
+            "x": 20.46875,
+            "y": 20.46875,
+            "right": 1003.53125,
+            "width": 983.0625,
+            "height": 859.0625
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 981,
+          "clientWidth": 981,
+          "overflowX": "hidden",
+          "transform": "none"
+        },
+        {
+          "node": "MAIN.app-shell",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 1024,
+            "width": 1024,
+            "height": 900
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 1290,
+          "clientWidth": 1024,
+          "overflowX": "hidden",
+          "transform": "none"
+        },
+        {
+          "node": "BODY.",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 1024,
+            "width": 1024,
+            "height": 900
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 1024,
+          "clientWidth": 1024,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "HTML.__variable_7600f0 __variable_be0dd0",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 1024,
+            "width": 1024,
+            "height": 900
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 1024,
+          "clientWidth": 1024,
+          "overflowX": "visible",
+          "transform": "none"
+        }
+      ],
+      "active": "<button type=\"button\" class=\"ui-button ui-button--outline ui-button--sm\"><span>Simulate incoming</span></button>",
+      "viewport": {
+        "width": 1024,
+        "documentWidth": 1024
+      }
+    },
+    {
+      "label": "250ms after closing controls",
+      "nodes": [
+        {
+          "node": "H1.chat-title-heading contact-name display-heading display-heading--conversation",
+          "rect": {
+            "x": 381.453125,
+            "y": 160.453125,
+            "right": 645.78125,
+            "width": 264.328125,
+            "height": 26
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 264,
+          "clientWidth": 264,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.contact-copy",
+          "rect": {
+            "x": 381.453125,
+            "y": 140.859375,
+            "right": 645.78125,
+            "width": 264.328125,
+            "height": 67.578125
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 264,
+          "clientWidth": 264,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.contact-presence",
+          "rect": {
+            "x": 321.46875,
+            "y": 140.859375,
+            "right": 678.53125,
+            "width": 357.0625,
+            "height": 67.578125
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 357,
+          "clientWidth": 357,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.chat-toolbar",
+          "rect": {
+            "x": 301.46875,
+            "y": 124.859375,
+            "right": 1002.53125,
+            "width": 701.0625,
+            "height": 113.78125
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 701,
+          "clientWidth": 701,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "SECTION.chat-window",
+          "rect": {
+            "x": 301.46875,
+            "y": 124.859375,
+            "right": 1002.53125,
+            "width": 701.0625,
+            "height": 721.890625
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 701,
+          "clientWidth": 701,
+          "overflowX": "hidden",
+          "transform": "none"
+        },
+        {
+          "node": "FIELDSET.friends-chat-scope",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 0,
+            "width": 0,
+            "height": 0
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 0,
+          "clientWidth": 0,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.messenger-main-column ",
+          "rect": {
+            "x": 301.46875,
+            "y": 124.859375,
+            "right": 1002.53125,
+            "width": 701.0625,
+            "height": 753.671875
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 701,
+          "clientWidth": 701,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "SECTION.messenger-chat-section",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 0,
+            "width": 0,
+            "height": 0
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 0,
+          "clientWidth": 0,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "DIV.messenger-app",
+          "rect": {
+            "x": 20.46875,
+            "y": 20.46875,
+            "right": 1003.53125,
+            "width": 983.0625,
+            "height": 859.0625
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 981,
+          "clientWidth": 981,
+          "overflowX": "hidden",
+          "transform": "none"
+        },
+        {
+          "node": "MAIN.app-shell",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 1024,
+            "width": 1024,
+            "height": 900
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 1290,
+          "clientWidth": 1024,
+          "overflowX": "hidden",
+          "transform": "none"
+        },
+        {
+          "node": "BODY.",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 1024,
+            "width": 1024,
+            "height": 900
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 1024,
+          "clientWidth": 1024,
+          "overflowX": "visible",
+          "transform": "none"
+        },
+        {
+          "node": "HTML.__variable_7600f0 __variable_be0dd0",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "right": 1024,
+            "width": 1024,
+            "height": 900
+          },
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "scrollWidth": 1024,
+          "clientWidth": 1024,
+          "overflowX": "visible",
+          "transform": "none"
+        }
+      ],
+      "active": "<body><script src=\"/_next/static/chunks/webpack.js?v=1794264896387\" async=\"\"></script><script>(self.__next_f=self.__next_f||[]).push([0]);self.__next_f.push([2,null])</script><script>self.__next_f.push([1,\"1:HL[\\\"/_next/static/css/app/layout.css?v=1794264896387\\\",\\\"style\\\"]\\n0:D{\\\"name\\\":\\\"r5\\\",\\\"env\\\":\\\"Server\\\"}\\n\"])</script><script>self.__next_f.push([1,\"2:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/app-router.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-inte",
+      "viewport": {
+        "width": 1024,
+        "documentWidth": 1024
+      }
+    }
+  ],
+  "finalSourceFingerprint": {
+    "scope": "Application TS/TSX/CSS excluding test files",
+    "fileCount": 83,
+    "sha256": "59c3108df60a56f20f3259b8363290d7147761f28d30ca4455eef5c56262518a"
+  },
+  "completedAt": "2026-11-09T22:55:00.905Z",
+  "passed": true,
+  "cleanup": {
+    "requestedOwnedProcessCleanup": true,
+    "serverPid": 11556,
+    "browserPid": 19848,
+    "ports": {
+      "3110": true,
+      "9230": true
+    }
+  }
+}

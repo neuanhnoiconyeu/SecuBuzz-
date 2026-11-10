@@ -1,0 +1,12 @@
+node tmp/phase8-7a-browser/verify.cjs production
+PASS Production / exposes neither demo auth nor realtime fallback
+PASS Production /login exposes neither demo auth nor realtime fallback
+PASS Production /signup exposes neither demo auth nor realtime fallback
+PASS Available control .auth-appearance > summary
+PASS Available control .auth-appearance input[type=radio][value=dark]
+PASS Available control .auth-appearance > summary
+SCREENSHOT production-unconfigured-signup.png
+PASS Demo/production runs never connect to a real Socket.IO service
+PASS Realtime browser flows have no uncaught runtime/hydration errors
+PASS Application source unchanged during browser verification
+9/9 assertions passed

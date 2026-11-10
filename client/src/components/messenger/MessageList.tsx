@@ -18,6 +18,7 @@ export interface MessageListProps {
   active?: boolean;
   transportMode?: TransportMode;
   onRetryMessage(messageId: string): void;
+  canRetryMessage?(messageId: string): boolean;
   onReplyMessage?: (message: ChatMessage) => void;
   onEditMessage?: (messageId: string, newContent: string) => void;
   onDeleteMessage?: (messageId: string) => void;
@@ -42,8 +43,8 @@ function deliveryLabel(status: ChatMessage['deliveryStatus'], transportMode: Tra
   switch (status) {
     case 'sending': return 'Sending';
     case 'sent': return transportMode === 'local-demo' ? 'Accepted by local demo' : 'Sent';
-    case 'delivered': return 'Delivered';
-    case 'read': return 'Read';
+    case 'delivered': return transportMode === 'local-demo' ? 'Delivered · simulated' : 'Delivered';
+    case 'read': return transportMode === 'local-demo' ? 'Read · simulated' : 'Read';
     case 'failed': return 'Not sent';
   }
 }
@@ -63,6 +64,7 @@ export function MessageList({
   currentUserName = 'You',
   active = true,
   onRetryMessage,
+  canRetryMessage,
   onReplyMessage,
   onEditMessage,
   onDeleteMessage,
@@ -455,8 +457,8 @@ export function MessageList({
                     )}
 
                     {isOutgoing && message.deliveryStatus === 'failed' && (
-                      <Button size="sm" variant="outline" onClick={() => onRetryMessage(message.id)}>
-                        Retry
+                      <Button size="sm" variant="outline" disabled={canRetryMessage ? !canRetryMessage(message.id) : false} onClick={() => onRetryMessage(message.id)}>
+                        {canRetryMessage && !canRetryMessage(message.id) ? 'Retry unavailable' : 'Retry'}
                       </Button>
                     )}
                   </div>

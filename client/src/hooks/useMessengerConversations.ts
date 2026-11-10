@@ -11,6 +11,7 @@ export interface UseMessengerConversationsResult {
   selectConversation(conversationId: string | null): boolean;
   setDraft(conversationId: string, draft: string): void;
   recordMessageActivity(activity: ConversationMessageActivity): void;
+  updateConversationMetadata(update: { conversationId: string; displayName?: string; updatedAt: string }): void;
 }
 
 export function useMessengerConversations(
@@ -58,18 +59,29 @@ export function useMessengerConversations(
     const activityId = JSON.stringify([activity.conversationId, activity.messageId]);
     const isDuplicateIncoming = activity.direction === 'incoming' && seenIncomingIds.current.has(activityId);
     if (activity.direction === 'incoming') seenIncomingIds.current.add(activityId);
+    while (seenIncomingIds.current.size > 2_000) seenIncomingIds.current.delete(seenIncomingIds.current.values().next().value!);
     const preview = activity.preview.replace(/\s+/g, ' ').trim().slice(0, 100) || 'Message';
     setConversations((current) => current.map((conversation) => {
       if (conversation.id !== activity.conversationId) return conversation;
       const isNewer = Date.parse(activity.timestamp) >= Date.parse(conversation.lastActivityAt);
       const shouldCountUnread = activity.direction === 'incoming' &&
-        activeIdRef.current !== activity.conversationId && !isDuplicateIncoming;
+        (activeIdRef.current !== activity.conversationId || activity.isViewed === false) && !isDuplicateIncoming;
       return {
         ...conversation,
         ...(isNewer ? { lastMessagePreview: preview, lastActivityAt: activity.timestamp } : {}),
         ...(shouldCountUnread ? { unreadCount: conversation.unreadCount + 1 } : {}),
       };
     }));
+  }, []);
+
+  const metadataTimestamps = useRef(new Map<string, number>());
+  const updateConversationMetadata = useCallback((update: { conversationId: string; displayName?: string; updatedAt: string }) => {
+    const timestamp = Date.parse(update.updatedAt);
+    if (!conversationIdsRef.current.has(update.conversationId) || !Number.isFinite(timestamp) ||
+      timestamp <= (metadataTimestamps.current.get(update.conversationId) ?? -Infinity)) return;
+    metadataTimestamps.current.set(update.conversationId, timestamp);
+    setConversations((current) => current.map((conversation) => conversation.id === update.conversationId
+      ? { ...conversation, ...(update.displayName ? { displayName: update.displayName } : {}) } : conversation));
   }, []);
 
   return {
@@ -81,5 +93,6 @@ export function useMessengerConversations(
     selectConversation,
     setDraft,
     recordMessageActivity,
+    updateConversationMetadata,
   };
 }

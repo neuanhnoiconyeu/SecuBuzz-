@@ -7,7 +7,7 @@ export type DeliveryStatus = 'sending' | 'sent' | 'delivered' | 'failed' | 'read
 
 export type PresenceStatus = 'online' | 'offline' | 'busy' | 'away';
 
-export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'failed';
+export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting' | 'error' | 'failed';
 
 export type TransportMode = 'local-demo' | 'realtime';
 

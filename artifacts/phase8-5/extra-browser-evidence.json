@@ -1,0 +1,1238 @@
+{
+  "startedAt": "2026-11-09T03:43:00.668Z",
+  "browser": "Chrome headless via CDP",
+  "mode": "development",
+  "checks": [
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=system]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Auth System appearance follows dark OS",
+      "passed": true
+    },
+    {
+      "label": "Auth System appearance follows live OS changes",
+      "passed": true
+    },
+    {
+      "label": "System preference is stored independently of authentication",
+      "passed": true
+    },
+    {
+      "label": "Reduced motion disables authentication entrance and background animation",
+      "passed": true,
+      "detail": {
+        "cardAnimation": "none",
+        "cardTransition": "0s",
+        "backgroundAnimation": "none"
+      }
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "320 light login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 320,
+        "height": 844,
+        "documentWidth": 305,
+        "bodyWidth": 305,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 0,
+            "right": 305,
+            "top": 0,
+            "bottom": 972.59375,
+            "width": 305,
+            "scrollWidth": 305,
+            "clientWidth": 305
+          },
+          {
+            "selector": ".auth-header",
+            "x": 0,
+            "right": 305,
+            "top": 27.875,
+            "bottom": 100.0625,
+            "width": 305,
+            "scrollWidth": 305,
+            "clientWidth": 305
+          },
+          {
+            "selector": ".auth-card",
+            "x": 20,
+            "right": 285,
+            "top": 163.25,
+            "bottom": 879.421875,
+            "width": 265,
+            "scrollWidth": 265,
+            "clientWidth": 265
+          },
+          {
+            "selector": ".auth-form",
+            "x": 20,
+            "right": 285,
+            "top": 441.90625,
+            "bottom": 669.0625,
+            "width": 265,
+            "scrollWidth": 265,
+            "clientWidth": 265
+          }
+        ]
+      }
+    },
+    {
+      "label": "320 light signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 320,
+        "height": 844,
+        "documentWidth": 305,
+        "bodyWidth": 305,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 0,
+            "right": 305,
+            "top": 0,
+            "bottom": 1212.875,
+            "width": 305,
+            "scrollWidth": 305,
+            "clientWidth": 305
+          },
+          {
+            "selector": ".auth-header",
+            "x": 0,
+            "right": 305,
+            "top": 27.875,
+            "bottom": 100.0625,
+            "width": 305,
+            "scrollWidth": 305,
+            "clientWidth": 305
+          },
+          {
+            "selector": ".auth-card",
+            "x": 20,
+            "right": 285,
+            "top": 163.25,
+            "bottom": 1119.703125,
+            "width": 265,
+            "scrollWidth": 265,
+            "clientWidth": 265
+          },
+          {
+            "selector": ".auth-form",
+            "x": 20,
+            "right": 285,
+            "top": 466.65625,
+            "bottom": 909.34375,
+            "width": 265,
+            "scrollWidth": 265,
+            "clientWidth": 265
+          }
+        ]
+      }
+    },
+    {
+      "label": "320 light signup submit can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 492.34375,
+        "bottom": 540.34375,
+        "left": 20,
+        "right": 285,
+        "height": 48,
+        "viewportHeight": 844,
+        "viewportWidth": 320
+      }
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "320 dark login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 320,
+        "height": 844,
+        "documentWidth": 305,
+        "bodyWidth": 305,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 0,
+            "right": 305,
+            "top": 0,
+            "bottom": 972.59375,
+            "width": 305,
+            "scrollWidth": 305,
+            "clientWidth": 305
+          },
+          {
+            "selector": ".auth-header",
+            "x": 0,
+            "right": 305,
+            "top": 27.875,
+            "bottom": 100.0625,
+            "width": 305,
+            "scrollWidth": 305,
+            "clientWidth": 305
+          },
+          {
+            "selector": ".auth-card",
+            "x": 20,
+            "right": 285,
+            "top": 163.25,
+            "bottom": 879.421875,
+            "width": 265,
+            "scrollWidth": 265,
+            "clientWidth": 265
+          },
+          {
+            "selector": ".auth-form",
+            "x": 20,
+            "right": 285,
+            "top": 441.90625,
+            "bottom": 669.0625,
+            "width": 265,
+            "scrollWidth": 265,
+            "clientWidth": 265
+          }
+        ]
+      }
+    },
+    {
+      "label": "320 dark signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 320,
+        "height": 844,
+        "documentWidth": 305,
+        "bodyWidth": 305,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 0,
+            "right": 305,
+            "top": 0,
+            "bottom": 1212.875,
+            "width": 305,
+            "scrollWidth": 305,
+            "clientWidth": 305
+          },
+          {
+            "selector": ".auth-header",
+            "x": 0,
+            "right": 305,
+            "top": 27.875,
+            "bottom": 100.0625,
+            "width": 305,
+            "scrollWidth": 305,
+            "clientWidth": 305
+          },
+          {
+            "selector": ".auth-card",
+            "x": 20,
+            "right": 285,
+            "top": 163.25,
+            "bottom": 1119.703125,
+            "width": 265,
+            "scrollWidth": 265,
+            "clientWidth": 265
+          },
+          {
+            "selector": ".auth-form",
+            "x": 20,
+            "right": 285,
+            "top": 466.65625,
+            "bottom": 909.34375,
+            "width": 265,
+            "scrollWidth": 265,
+            "clientWidth": 265
+          }
+        ]
+      }
+    },
+    {
+      "label": "320 dark signup submit can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 492.34375,
+        "bottom": 540.34375,
+        "left": 20,
+        "right": 285,
+        "height": 48,
+        "viewportHeight": 844,
+        "viewportWidth": 320
+      }
+    },
+    {
+      "label": "Native browser zoom settings API is available",
+      "passed": true
+    },
+    {
+      "label": "Genuine native 200% zoom halves CSS viewport, doubles DPR and leaves pinch scale at one",
+      "passed": true,
+      "detail": {
+        "baseline": {
+          "innerWidth": 1422,
+          "innerHeight": 904,
+          "outerWidth": 1440,
+          "outerHeight": 1000,
+          "dpr": 1,
+          "visualScale": 1,
+          "documentWidth": 1407
+        },
+        "zoomed": {
+          "innerWidth": 711,
+          "innerHeight": 452,
+          "outerWidth": 1440,
+          "outerHeight": 1000,
+          "dpr": 2,
+          "visualScale": 1,
+          "documentWidth": 703
+        }
+      }
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=light]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Native200 light login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 711,
+        "height": 452,
+        "documentWidth": 703,
+        "bodyWidth": 704,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 16,
+            "right": 687.5,
+            "top": 16,
+            "bottom": 956.4296875,
+            "width": 671.5,
+            "scrollWidth": 670,
+            "clientWidth": 670
+          },
+          {
+            "selector": ".auth-header",
+            "x": 17,
+            "right": 686.5,
+            "top": 46.390625,
+            "bottom": 128.1875,
+            "width": 669.5,
+            "scrollWidth": 670,
+            "clientWidth": 670
+          },
+          {
+            "selector": ".auth-card",
+            "x": 103.75,
+            "right": 599.75,
+            "top": 196.1875,
+            "bottom": 878.7421875,
+            "width": 496,
+            "scrollWidth": 496,
+            "clientWidth": 496
+          },
+          {
+            "selector": ".auth-form",
+            "x": 103.75,
+            "right": 599.75,
+            "top": 441.1953125,
+            "bottom": 668.3671875,
+            "width": 496,
+            "scrollWidth": 496,
+            "clientWidth": 496
+          }
+        ]
+      }
+    },
+    {
+      "label": "Native200 light identifier can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 202.8828125,
+        "bottom": 249.28125,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 46.3984375,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 light password can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 290.46875,
+        "bottom": 336.8671875,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 46.3984375,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 light sign in can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 356.8671875,
+        "bottom": 404.8671875,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 48,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 light signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 711,
+        "height": 452,
+        "documentWidth": 703,
+        "bodyWidth": 704,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 16,
+            "right": 687.5,
+            "top": 16,
+            "bottom": 1154.59375,
+            "width": 671.5,
+            "scrollWidth": 670,
+            "clientWidth": 670
+          },
+          {
+            "selector": ".auth-header",
+            "x": 17,
+            "right": 686.5,
+            "top": 46.390625,
+            "bottom": 128.1875,
+            "width": 669.5,
+            "scrollWidth": 670,
+            "clientWidth": 670
+          },
+          {
+            "selector": ".auth-card",
+            "x": 103.75,
+            "right": 599.75,
+            "top": 196.1875,
+            "bottom": 1076.90625,
+            "width": 496,
+            "scrollWidth": 496,
+            "clientWidth": 496
+          },
+          {
+            "selector": ".auth-form",
+            "x": 103.75,
+            "right": 599.75,
+            "top": 441.1953125,
+            "bottom": 866.53125,
+            "width": 496,
+            "scrollWidth": 496,
+            "clientWidth": 496
+          }
+        ]
+      }
+    },
+    {
+      "label": "Native200 light username can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 202.8828125,
+        "bottom": 249.28125,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 46.3984375,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 light email can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 313.4609375,
+        "bottom": 359.859375,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 46.3984375,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 light new password can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 401.046875,
+        "bottom": 447.4453125,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 46.3984375,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 light confirmation can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 202.6328125,
+        "bottom": 249.03125,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 46.3984375,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 light create account can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 269.03125,
+        "bottom": 317.03125,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 48,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance input[type=radio][value=dark]",
+      "passed": true
+    },
+    {
+      "label": "Available control .auth-appearance > summary",
+      "passed": true
+    },
+    {
+      "label": "Native200 dark login no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 711,
+        "height": 452,
+        "documentWidth": 703,
+        "bodyWidth": 704,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 16,
+            "right": 687.5,
+            "top": 16,
+            "bottom": 956.4296875,
+            "width": 671.5,
+            "scrollWidth": 670,
+            "clientWidth": 670
+          },
+          {
+            "selector": ".auth-header",
+            "x": 17,
+            "right": 686.5,
+            "top": 46.390625,
+            "bottom": 128.1875,
+            "width": 669.5,
+            "scrollWidth": 670,
+            "clientWidth": 670
+          },
+          {
+            "selector": ".auth-card",
+            "x": 103.75,
+            "right": 599.75,
+            "top": 196.1875,
+            "bottom": 878.7421875,
+            "width": 496,
+            "scrollWidth": 496,
+            "clientWidth": 496
+          },
+          {
+            "selector": ".auth-form",
+            "x": 103.75,
+            "right": 599.75,
+            "top": 441.1953125,
+            "bottom": 668.3671875,
+            "width": 496,
+            "scrollWidth": 496,
+            "clientWidth": 496
+          }
+        ]
+      }
+    },
+    {
+      "label": "Native200 dark identifier can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 202.8828125,
+        "bottom": 249.28125,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 46.3984375,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 dark password can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 290.46875,
+        "bottom": 336.8671875,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 46.3984375,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 dark sign in can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 356.8671875,
+        "bottom": 404.8671875,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 48,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 dark signup no horizontal page or component overflow",
+      "passed": true,
+      "detail": {
+        "width": 711,
+        "height": 452,
+        "documentWidth": 703,
+        "bodyWidth": 704,
+        "elements": [
+          {
+            "selector": ".auth-window",
+            "x": 16,
+            "right": 687.5,
+            "top": 16,
+            "bottom": 1154.59375,
+            "width": 671.5,
+            "scrollWidth": 670,
+            "clientWidth": 670
+          },
+          {
+            "selector": ".auth-header",
+            "x": 17,
+            "right": 686.5,
+            "top": 46.390625,
+            "bottom": 128.1875,
+            "width": 669.5,
+            "scrollWidth": 670,
+            "clientWidth": 670
+          },
+          {
+            "selector": ".auth-card",
+            "x": 103.75,
+            "right": 599.75,
+            "top": 196.1875,
+            "bottom": 1076.90625,
+            "width": 496,
+            "scrollWidth": 496,
+            "clientWidth": 496
+          },
+          {
+            "selector": ".auth-form",
+            "x": 103.75,
+            "right": 599.75,
+            "top": 441.1953125,
+            "bottom": 866.53125,
+            "width": 496,
+            "scrollWidth": 496,
+            "clientWidth": 496
+          }
+        ]
+      }
+    },
+    {
+      "label": "Native200 dark username can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 202.8828125,
+        "bottom": 249.28125,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 46.3984375,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 dark email can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 313.4609375,
+        "bottom": 359.859375,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 46.3984375,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 dark new password can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 401.046875,
+        "bottom": 447.4453125,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 46.3984375,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 dark confirmation can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 202.6328125,
+        "bottom": 249.03125,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 46.3984375,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Native200 dark create account can focus and scroll into view",
+      "passed": true,
+      "detail": {
+        "top": 269.03125,
+        "bottom": 317.03125,
+        "left": 103.75,
+        "right": 599.75,
+        "height": 48,
+        "viewportHeight": 452,
+        "viewportWidth": 711
+      }
+    },
+    {
+      "label": "Extra browser checks have no uncaught runtime errors",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "label": "Source unchanged during extra browser checks",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "artifacts/phase8-5/development-mobile-dark-login-full.png",
+    "artifacts/phase8-5/development-mobile-dark-signup-full.png",
+    "artifacts/phase8-5/native200-light-login-full.png",
+    "artifacts/phase8-5/native200-light-signup-full.png",
+    "artifacts/phase8-5/native200-dark-login-full.png",
+    "artifacts/phase8-5/native200-dark-signup-full.png"
+  ],
+  "runtimeErrors": [],
+  "consoleErrors": [],
+  "fonts": [],
+  "geometry": [
+    {
+      "label": "320 light login",
+      "width": 320,
+      "height": 844,
+      "documentWidth": 305,
+      "bodyWidth": 305,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 0,
+          "right": 305,
+          "top": 0,
+          "bottom": 972.59375,
+          "width": 305,
+          "scrollWidth": 305,
+          "clientWidth": 305
+        },
+        {
+          "selector": ".auth-header",
+          "x": 0,
+          "right": 305,
+          "top": 27.875,
+          "bottom": 100.0625,
+          "width": 305,
+          "scrollWidth": 305,
+          "clientWidth": 305
+        },
+        {
+          "selector": ".auth-card",
+          "x": 20,
+          "right": 285,
+          "top": 163.25,
+          "bottom": 879.421875,
+          "width": 265,
+          "scrollWidth": 265,
+          "clientWidth": 265
+        },
+        {
+          "selector": ".auth-form",
+          "x": 20,
+          "right": 285,
+          "top": 441.90625,
+          "bottom": 669.0625,
+          "width": 265,
+          "scrollWidth": 265,
+          "clientWidth": 265
+        }
+      ]
+    },
+    {
+      "label": "320 light signup",
+      "width": 320,
+      "height": 844,
+      "documentWidth": 305,
+      "bodyWidth": 305,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 0,
+          "right": 305,
+          "top": 0,
+          "bottom": 1212.875,
+          "width": 305,
+          "scrollWidth": 305,
+          "clientWidth": 305
+        },
+        {
+          "selector": ".auth-header",
+          "x": 0,
+          "right": 305,
+          "top": 27.875,
+          "bottom": 100.0625,
+          "width": 305,
+          "scrollWidth": 305,
+          "clientWidth": 305
+        },
+        {
+          "selector": ".auth-card",
+          "x": 20,
+          "right": 285,
+          "top": 163.25,
+          "bottom": 1119.703125,
+          "width": 265,
+          "scrollWidth": 265,
+          "clientWidth": 265
+        },
+        {
+          "selector": ".auth-form",
+          "x": 20,
+          "right": 285,
+          "top": 466.65625,
+          "bottom": 909.34375,
+          "width": 265,
+          "scrollWidth": 265,
+          "clientWidth": 265
+        }
+      ]
+    },
+    {
+      "label": "320 dark login",
+      "width": 320,
+      "height": 844,
+      "documentWidth": 305,
+      "bodyWidth": 305,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 0,
+          "right": 305,
+          "top": 0,
+          "bottom": 972.59375,
+          "width": 305,
+          "scrollWidth": 305,
+          "clientWidth": 305
+        },
+        {
+          "selector": ".auth-header",
+          "x": 0,
+          "right": 305,
+          "top": 27.875,
+          "bottom": 100.0625,
+          "width": 305,
+          "scrollWidth": 305,
+          "clientWidth": 305
+        },
+        {
+          "selector": ".auth-card",
+          "x": 20,
+          "right": 285,
+          "top": 163.25,
+          "bottom": 879.421875,
+          "width": 265,
+          "scrollWidth": 265,
+          "clientWidth": 265
+        },
+        {
+          "selector": ".auth-form",
+          "x": 20,
+          "right": 285,
+          "top": 441.90625,
+          "bottom": 669.0625,
+          "width": 265,
+          "scrollWidth": 265,
+          "clientWidth": 265
+        }
+      ]
+    },
+    {
+      "label": "320 dark signup",
+      "width": 320,
+      "height": 844,
+      "documentWidth": 305,
+      "bodyWidth": 305,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 0,
+          "right": 305,
+          "top": 0,
+          "bottom": 1212.875,
+          "width": 305,
+          "scrollWidth": 305,
+          "clientWidth": 305
+        },
+        {
+          "selector": ".auth-header",
+          "x": 0,
+          "right": 305,
+          "top": 27.875,
+          "bottom": 100.0625,
+          "width": 305,
+          "scrollWidth": 305,
+          "clientWidth": 305
+        },
+        {
+          "selector": ".auth-card",
+          "x": 20,
+          "right": 285,
+          "top": 163.25,
+          "bottom": 1119.703125,
+          "width": 265,
+          "scrollWidth": 265,
+          "clientWidth": 265
+        },
+        {
+          "selector": ".auth-form",
+          "x": 20,
+          "right": 285,
+          "top": 466.65625,
+          "bottom": 909.34375,
+          "width": 265,
+          "scrollWidth": 265,
+          "clientWidth": 265
+        }
+      ]
+    },
+    {
+      "label": "Native200 light login",
+      "width": 711,
+      "height": 452,
+      "documentWidth": 703,
+      "bodyWidth": 704,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 16,
+          "right": 687.5,
+          "top": 16,
+          "bottom": 956.4296875,
+          "width": 671.5,
+          "scrollWidth": 670,
+          "clientWidth": 670
+        },
+        {
+          "selector": ".auth-header",
+          "x": 17,
+          "right": 686.5,
+          "top": 46.390625,
+          "bottom": 128.1875,
+          "width": 669.5,
+          "scrollWidth": 670,
+          "clientWidth": 670
+        },
+        {
+          "selector": ".auth-card",
+          "x": 103.75,
+          "right": 599.75,
+          "top": 196.1875,
+          "bottom": 878.7421875,
+          "width": 496,
+          "scrollWidth": 496,
+          "clientWidth": 496
+        },
+        {
+          "selector": ".auth-form",
+          "x": 103.75,
+          "right": 599.75,
+          "top": 441.1953125,
+          "bottom": 668.3671875,
+          "width": 496,
+          "scrollWidth": 496,
+          "clientWidth": 496
+        }
+      ]
+    },
+    {
+      "label": "Native200 light signup",
+      "width": 711,
+      "height": 452,
+      "documentWidth": 703,
+      "bodyWidth": 704,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 16,
+          "right": 687.5,
+          "top": 16,
+          "bottom": 1154.59375,
+          "width": 671.5,
+          "scrollWidth": 670,
+          "clientWidth": 670
+        },
+        {
+          "selector": ".auth-header",
+          "x": 17,
+          "right": 686.5,
+          "top": 46.390625,
+          "bottom": 128.1875,
+          "width": 669.5,
+          "scrollWidth": 670,
+          "clientWidth": 670
+        },
+        {
+          "selector": ".auth-card",
+          "x": 103.75,
+          "right": 599.75,
+          "top": 196.1875,
+          "bottom": 1076.90625,
+          "width": 496,
+          "scrollWidth": 496,
+          "clientWidth": 496
+        },
+        {
+          "selector": ".auth-form",
+          "x": 103.75,
+          "right": 599.75,
+          "top": 441.1953125,
+          "bottom": 866.53125,
+          "width": 496,
+          "scrollWidth": 496,
+          "clientWidth": 496
+        }
+      ]
+    },
+    {
+      "label": "Native200 dark login",
+      "width": 711,
+      "height": 452,
+      "documentWidth": 703,
+      "bodyWidth": 704,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 16,
+          "right": 687.5,
+          "top": 16,
+          "bottom": 956.4296875,
+          "width": 671.5,
+          "scrollWidth": 670,
+          "clientWidth": 670
+        },
+        {
+          "selector": ".auth-header",
+          "x": 17,
+          "right": 686.5,
+          "top": 46.390625,
+          "bottom": 128.1875,
+          "width": 669.5,
+          "scrollWidth": 670,
+          "clientWidth": 670
+        },
+        {
+          "selector": ".auth-card",
+          "x": 103.75,
+          "right": 599.75,
+          "top": 196.1875,
+          "bottom": 878.7421875,
+          "width": 496,
+          "scrollWidth": 496,
+          "clientWidth": 496
+        },
+        {
+          "selector": ".auth-form",
+          "x": 103.75,
+          "right": 599.75,
+          "top": 441.1953125,
+          "bottom": 668.3671875,
+          "width": 496,
+          "scrollWidth": 496,
+          "clientWidth": 496
+        }
+      ]
+    },
+    {
+      "label": "Native200 dark signup",
+      "width": 711,
+      "height": 452,
+      "documentWidth": 703,
+      "bodyWidth": 704,
+      "elements": [
+        {
+          "selector": ".auth-window",
+          "x": 16,
+          "right": 687.5,
+          "top": 16,
+          "bottom": 1154.59375,
+          "width": 671.5,
+          "scrollWidth": 670,
+          "clientWidth": 670
+        },
+        {
+          "selector": ".auth-header",
+          "x": 17,
+          "right": 686.5,
+          "top": 46.390625,
+          "bottom": 128.1875,
+          "width": 669.5,
+          "scrollWidth": 670,
+          "clientWidth": 670
+        },
+        {
+          "selector": ".auth-card",
+          "x": 103.75,
+          "right": 599.75,
+          "top": 196.1875,
+          "bottom": 1076.90625,
+          "width": 496,
+          "scrollWidth": 496,
+          "clientWidth": 496
+        },
+        {
+          "selector": ".auth-form",
+          "x": 103.75,
+          "right": 599.75,
+          "top": 441.1953125,
+          "bottom": 866.53125,
+          "width": 496,
+          "scrollWidth": 496,
+          "clientWidth": 496
+        }
+      ]
+    }
+  ],
+  "artifactName": "extra-browser-evidence.json",
+  "zoom": [
+    {
+      "baseline": {
+        "innerWidth": 1422,
+        "innerHeight": 904,
+        "outerWidth": 1440,
+        "outerHeight": 1000,
+        "dpr": 1,
+        "visualScale": 1,
+        "documentWidth": 1407
+      },
+      "zoomed": {
+        "innerWidth": 711,
+        "innerHeight": 452,
+        "outerWidth": 1440,
+        "outerHeight": 1000,
+        "dpr": 2,
+        "visualScale": 1,
+        "documentWidth": 703
+      }
+    }
+  ],
+  "buildId": "development",
+  "sourceFingerprint": {
+    "fileCount": 109,
+    "sha256": "0215a0414efefb98226228b9984dbeffb525c6905b22377b2170b4f0e6ce3b1e"
+  },
+  "browserVersion": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/156.0.8078.81",
+    "revision": "@060bedfb508f73250e93aeb9ca8149b3958995d8",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+    "jsVersion": "15.6.75.27"
+  },
+  "finalSourceFingerprint": {
+    "fileCount": 109,
+    "sha256": "0215a0414efefb98226228b9984dbeffb525c6905b22377b2170b4f0e6ce3b1e"
+  },
+  "completedAt": "2026-11-09T03:43:15.195Z",
+  "passed": true,
+  "cleanup": {
+    "requestedOwnedProcessCleanup": true,
+    "serverPid": 9268,
+    "browserPid": 15276
+  }
+}

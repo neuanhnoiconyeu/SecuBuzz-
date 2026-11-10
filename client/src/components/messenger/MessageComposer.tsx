@@ -57,6 +57,8 @@ export interface MessageComposerProps {
   demoNotice?: string;
   onSend(content: string, extras?: MessageComposerSendExtras): Promise<boolean>;
   onBuzz(): void;
+  onTypingActivity?(): void;
+  onTypingStop?(): void;
 }
 
 export function MessageComposer({
@@ -71,6 +73,8 @@ export function MessageComposer({
   onDraftChange,
   demoNotice = 'Local demo only. Messages are not delivered to other users.',
   setupError,
+  onTypingActivity,
+  onTypingStop,
 }: MessageComposerProps) {
   const [internalValue, setInternalValue] = useState('');
   const value = draftValue ?? internalValue;
@@ -88,6 +92,8 @@ export function MessageComposer({
   const recordingTimerRef = useRef<number | null>(null);
   const recordingStartRef = useRef<number>(0);
   const submitLock = useRef(false);
+  const latestValue = useRef(value);
+  latestValue.current = value;
   const hasContent = Boolean(value.trim()) || attachments.length > 0 || Boolean(voiceDraft);
   const canSend = hasContent && !disabled && !isSending && !isRecording;
 
@@ -191,10 +197,11 @@ export function MessageComposer({
     submitLock.current = true;
     setSendError('');
     setSendFeedback(false);
+    onTypingStop?.();
     try {
       const accepted = await onSend(content);
       if (accepted) {
-        setValue('');
+        if (latestValue.current === value) setValue('');
         setSendFeedback(true);
       } else setSendError('The message was not accepted. Your draft is still here.');
     } catch {
@@ -384,10 +391,13 @@ export function MessageComposer({
           value={value}
           onChange={(event) => {
             setValue(event.target.value);
+            if (event.target.value.trim()) onTypingActivity?.();
+            else onTypingStop?.();
             setSendFeedback(false);
             if (sendError) setSendError('');
           }}
           onKeyDown={handleKeyDown}
+          onBlur={onTypingStop}
           placeholder={`Message ${conversationName}…`}
           rows={1}
           disabled={disabled || isSending}

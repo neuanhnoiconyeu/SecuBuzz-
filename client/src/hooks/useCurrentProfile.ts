@@ -20,7 +20,7 @@ export interface UseCurrentProfileResult {
 }
 
 export function useCurrentProfile(providedService?: ProfileService): UseCurrentProfileResult {
-  const [localService] = useState(() => new LocalDemoProfileService());
+  const [localService] = useState(() => providedService ?? new LocalDemoProfileService());
   const service = providedService ?? localService;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);

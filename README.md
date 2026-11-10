@@ -333,3 +333,23 @@ The subsequent branding typography pass is limited to text styling and title-bar
 - `prefers-reduced-motion: reduce` removes animations and transitions, including dialog backdrops and decorative effects. Check marks, status text, focus indicators, loading/disabled states, and the BUZZ color cue remain available. Hover movement is limited to fine-pointer devices with normal-motion preferences.
 
 Current before/after captures, natural-time ambient recordings, interaction recordings, and browser evidence are in `artifacts/master-motion/`. Earlier motion evidence remains in `artifacts/motion/`. No animation library, continuous JavaScript animation loop, animated blur filter, or blanket `will-change` promotion was added to the application.
+
+## Phase 6: Friends System
+
+Friends adds searchable lists, public username discovery, incoming/sent requests, accept/decline/cancel, removal confirmations, block/unblock, and public profile dialogs. The existing shell, Bungee headings, Space Grotesk controls, themes, animations, and chat behavior are reused. Ava's Message action opens the existing DM without replacing its history or draft.
+
+The current service is explicitly a **local demo**: fictional people, page-memory relationships, unknown presence, and local-only blocking. Changes reset on refresh. No real friend request is sent, and API failure never falls back to fixtures. Authenticated social endpoints, new-DM creation and group-member selection are not available in the inspected repository/teammate branch. See [service contracts and integration audit](client/src/friends/INTEGRATION.md) for the exact boundaries and remaining owner work. Browser verification evidence is stored in `artifacts/phase6/`.
+
+## Phase 8.5: Authentication UI and sessions
+
+Start `npm run dev` in `client`, then open `/login`. Use **Continue as Demo User** or **Try Nova Demo User** for temporary synthetic sessions. Login/Sign Up reuse existing branding and themes; Profile includes Sign Out. The protected Messenger mounts only after identity resolves, with separate profile/friends/messages/drafts/key-manager/transport instances for every session. Refresh ends the demo session. No passwords or auth tokens are persisted.
+
+Production disables demo authentication and shows an honest unavailable-service state until an approved cookie/CSRF API is configured. API failures never activate demo data, and real accounts do not receive fictional Messenger fixtures. See the [authentication integration and database-team handoff](client/src/auth/INTEGRATION.md) for endpoints, payloads, response shapes, policy decisions, configuration, and limitations. Screenshots and browser evidence are in `artifacts/phase8-5/`.
+
+## Phase 8.7A: Realtime client integration
+
+Development demo sessions now use one session-owned realtime client through the existing message hook. Open **System Log → Realtime demo controls** to simulate DM/group incoming messages, typing, Ava's presence, failed sends, going offline, and reconnecting. Connected/typing/presence/delivery/read indicators explicitly describe simulated activity. Message history, unread counts, previews, drafts, and Phase 7 local actions keep using the existing application state. Refresh ends the demo session.
+
+The separate Socket.IO client adapter uses an API-authenticated identity and a proposed cookie-session contract. It stays disabled until `NEXT_PUBLIC_REALTIME_CONTRACT_READY=true` and an approved HTTPS URL are configured alongside real authentication. No matching Socket.IO server or recipient key exchange is present in this repository. **Real message sending remains disabled**; local AES-GCM keys do not establish multi-user E2EE. Real accounts receive no demo conversations. Connection failure never selects a mock.
+
+See the [Realtime/Kiro handoff contract](docs/realtime-client-contract.md) for event schemas, acknowledgement and retry rules, authorization, lifecycle, configuration, and missing backend/group dependencies. Validation and browser evidence are recorded in `artifacts/phase8-7a/`.

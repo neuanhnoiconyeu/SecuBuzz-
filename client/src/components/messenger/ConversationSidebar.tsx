@@ -140,7 +140,8 @@ export function ConversationSidebar({
                   onClick={() => onSelect(conversation.id)}
                 >
                   <span className="conversation-list-avatar">
-                    <Avatar name={conversation.displayName} {...(conversation.avatarUrl ? { src: conversation.avatarUrl } : {})} size="md" />
+                    <Avatar name={conversation.displayName} {...(conversation.avatarUrl ? { src: conversation.avatarUrl } : {})}
+                      {...(conversation.presence ? { status: conversation.presence } : {})} size="md" />
                     <span className={`conversation-avatar-type conversation-avatar-type--${conversation.type}`} title={typeLabel}>
                       <ConversationTypeIcon type={conversation.type} />
                     </span>

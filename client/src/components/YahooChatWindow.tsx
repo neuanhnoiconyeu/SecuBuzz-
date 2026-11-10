@@ -9,6 +9,7 @@ import type { ChatMessage, MessageAttachment, PresenceStatus, VoiceMessageMetada
 import type { MessagingTransport } from '@/messaging/transport';
 import type { ConversationMessageActivity, ConversationType } from '@/conversations/conversationModel';
 import type { ConversationSecurityStatus } from '@/security/keyManagement';
+import type { ConversationCryptoService } from '@/security/conversationCryptoService';
 
 export interface YahooChatWindowProps {
   conversationId?: string;
@@ -22,6 +23,7 @@ export interface YahooChatWindowProps {
   presentationActive?: boolean;
   avatarUrl?: string;
   transport?: MessagingTransport;
+  cryptoService?: ConversationCryptoService;
   onBuzz?: () => void | Promise<void>;
   /** Called after the configured transport accepts the encrypted message payload. */
   onSendMessage?: () => void;
@@ -54,6 +56,7 @@ export function YahooChatWindow({
   showPresence = false,
   presenceStatus = 'offline',
   transport,
+  cryptoService,
 }: YahooChatWindowProps) {
   const [buzzBusy, setBuzzBusy] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
@@ -74,14 +77,20 @@ export function YahooChatWindow({
     togglePin,
     toggleReaction,
     transportMode,
+    typingUsers,
+    notifyTypingActivity,
+    stopTyping,
+    canRetryMessage,
   } = useConversationMessages({
     conversationId,
     currentUserId,
     currentUserName,
     initialPresence: presenceStatus,
     ...(transport ? { transport } : {}),
+    ...(cryptoService ? { cryptoService } : {}),
     ...(conversationIds ? { conversationIds } : {}),
     ...(onMessageActivity ? { onMessageActivity } : {}),
+    presentationActive,
   });
 
   useEffect(() => () => {
@@ -186,7 +195,7 @@ const handleSendMessage = useCallback(async (
         {...(onBackToConversations ? { onBackToConversations } : {})}
         {...(avatarUrl ? { avatarUrl } : {})}
         type={conversationType}
-        {...(showPresence ? { presence } : {})}
+        {...(showPresence && presence ? { presence } : {})}
         securityStatus={securityStatus}
         connectionStatus={connectionStatus}
         transportMode={transportMode}
@@ -200,6 +209,7 @@ const handleSendMessage = useCallback(async (
         active={presentationActive}
         transportMode={transportMode}
         onRetryMessage={(messageId) => void retryMessage(messageId)}
+        canRetryMessage={canRetryMessage}
         onReplyMessage={(message) => setReplyingTo(message)}
         onEditMessage={editMessage}
         onDeleteMessage={deleteMessage}
@@ -207,6 +217,9 @@ const handleSendMessage = useCallback(async (
         onToggleReaction={toggleReaction}
       />
 
+      <p className="chat-typing-status" role="status" aria-live="polite" aria-atomic="true">
+        {typingUsers.length > 0 && `${typingUsers.map((user) => user.displayName).slice(0, 3).join(', ')}${typingUsers.length > 3 ? ' and others' : ''} ${typingUsers.length === 1 ? 'is' : 'are'} typing…${transportMode === 'local-demo' ? ' · simulated' : ''}`}
+      </p>
       {replyingTo && (
         <div
           className="reply-preview-banner"
@@ -246,7 +259,7 @@ const handleSendMessage = useCallback(async (
         key={`composer:${conversationId}`}
         conversationName={contactName}
         messageCount={messages.length}
-        disabled={!identityReady || !securityStatus?.localEncryptionAvailable}
+        disabled={!identityReady || !securityStatus?.localEncryptionAvailable || transport?.canSendMessages === false}
         isSending={isSending}
         buzzBusy={buzzBusy}
         {...(draftValue !== undefined ? { draftValue } : {})}
@@ -257,6 +270,8 @@ const handleSendMessage = useCallback(async (
         {...(setupError ? { setupError } : {})}
         onSend={handleSendMessage}
         onBuzz={() => void handleBuzz()}
+        onTypingActivity={notifyTypingActivity}
+        onTypingStop={stopTyping}
       />
     </section>
   );
