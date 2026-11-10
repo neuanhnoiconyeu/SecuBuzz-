@@ -11,35 +11,6 @@ function sizeToDraft(input: HTMLTextAreaElement | null) {
   input.style.overflowY = input.scrollHeight > 112 ? 'auto' : 'hidden';
 }
 
-function createFallbackVoiceWavUrl(durationSeconds = 2): string {
-  const sampleRate = 8000;
-  const numSamples = sampleRate * durationSeconds;
-  const buffer = new ArrayBuffer(44 + numSamples * 2);
-  const view = new DataView(buffer);
-  const writeString = (offset: number, str: string) => {
-    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
-  };
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + numSamples * 2, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeString(36, 'data');
-  view.setUint32(40, numSamples * 2, true);
-  for (let i = 0; i < numSamples; i++) {
-    const t = i / sampleRate;
-    const sample = Math.sin(2 * Math.PI * 440 * t) * Math.exp(-t * 1.5) * 0.25;
-    view.setInt16(44 + i * 2, sample * 32767, true);
-  }
-  return URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
-}
-
 export interface MessageComposerSendExtras {
   attachments?: MessageAttachment[];
   voice?: VoiceMessageMetadata;
@@ -140,38 +111,42 @@ export function MessageComposer({
     if (disabled || isSending) return;
     setSendError('');
     setVoiceDraft(null);
-    setRecordingSeconds(0);
-    recordingStartRef.current = Date.now();
 
-    recordingTimerRef.current = window.setInterval(() => {
-      setRecordingSeconds(Math.max(1, Math.round((Date.now() - recordingStartRef.current) / 1000)));
-    }, 500);
-
-    try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const recorder = new MediaRecorder(stream);
-        audioChunksRef.current = [];
-        recorder.ondataavailable = (e) => {
-          if (e.data.size > 0) audioChunksRef.current.push(e.data);
-        };
-        recorder.onstop = () => {
-          stream.getTracks().forEach((track) => track.stop());
-          const duration = Math.max(1, Math.round((Date.now() - recordingStartRef.current) / 1000));
-          const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          const audioUrl = blob.size > 0 ? URL.createObjectURL(blob) : createFallbackVoiceWavUrl(duration);
-          setVoiceDraft({ audioUrl, durationSeconds: duration });
-        };
-        mediaRecorderRef.current = recorder;
-        recorder.start();
-        setIsRecording(true);
-        return;
-      }
-    } catch {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setSendError('This browser cannot record audio. Open the app in Chrome or Edge.');
+      return;
     }
 
-    mediaRecorderRef.current = null;
-    setIsRecording(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+        .find((type) => MediaRecorder.isTypeSupported(type));
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        const duration = Math.max(1, Math.round((Date.now() - recordingStartRef.current) / 1000));
+        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+        if (blob.size === 0) {
+          setSendError('No audio was captured. Check your microphone.');
+          return;
+        }
+        setVoiceDraft({ audioUrl: URL.createObjectURL(blob), durationSeconds: duration });
+      };
+      mediaRecorderRef.current = recorder;
+      recordingStartRef.current = Date.now();
+      setRecordingSeconds(0);
+      recordingTimerRef.current = window.setInterval(() => {
+        setRecordingSeconds(Math.max(1, Math.round((Date.now() - recordingStartRef.current) / 1000)));
+      }, 500);
+      recorder.start();
+      setIsRecording(true);
+    } catch {
+      setSendError('Microphone access was blocked. Allow the microphone and try again.');
+    }
   };
 
   const stopRecording = () => {
@@ -179,29 +154,30 @@ export function MessageComposer({
       window.clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
-    const duration = Math.max(1, Math.round((Date.now() - recordingStartRef.current) / 1000));
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
-    } else {
-      setVoiceDraft({
-        audioUrl: createFallbackVoiceWavUrl(Math.min(duration, 5)),
-        durationSeconds: duration,
-      });
     }
     setIsRecording(false);
   };
 
   const submit = async () => {
     const content = value.trim();
-    if (!content || disabled || isSending || submitLock.current) return;
+    const hasExtras = attachments.length > 0 || Boolean(voiceDraft);
+    if ((!content && !hasExtras) || disabled || isSending || isRecording || submitLock.current) return;
     submitLock.current = true;
     setSendError('');
     setSendFeedback(false);
     onTypingStop?.();
     try {
-      const accepted = await onSend(content);
+      const extras: MessageComposerSendExtras = {
+        ...(attachments.length > 0 ? { attachments } : {}),
+        ...(voiceDraft ? { voice: voiceDraft } : {}),
+      };
+      const accepted = await onSend(content, hasExtras ? extras : undefined);
       if (accepted) {
         if (latestValue.current === value) setValue('');
+        setAttachments([]);
+        setVoiceDraft(null);
         setSendFeedback(true);
       } else setSendError('The message was not accepted. Your draft is still here.');
     } catch {
@@ -321,7 +297,12 @@ export function MessageComposer({
               }}
             >
               <span>🎤 Voice ({voiceDraft.durationSeconds}s)</span>
-              <audio src={voiceDraft.audioUrl} controls style={{ height: '28px', maxWidth: '180px' }} />
+              <audio
+                src={voiceDraft.audioUrl}
+                controls
+                style={{ height: '28px', maxWidth: '180px' }}
+                onError={(e) => setSendError(`Audio failed to load (error code ${e.currentTarget.error?.code ?? 'unknown'}).`)}
+              />
               <button
                 type="button"
                 onClick={() => setVoiceDraft(null)}
