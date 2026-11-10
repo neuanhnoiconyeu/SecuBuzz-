@@ -5,6 +5,7 @@ import { AuthShell, AuthLoading } from '@/components/auth/AuthShell';
 import { MessengerApp } from '@/components/messenger/MessengerApp';
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { Button } from '@/components/ui';
+import { ApiRealtimeConnection } from '@/components/messenger/ApiRealtimeConnection';
 import { useAuth } from './AuthProvider';
 import { createDemoMessengerSession, type DemoMessengerSession } from './messengerSession';
 import type { AuthUser } from './authModel';
@@ -29,6 +30,7 @@ export function AuthenticatedWorkspace() {
   if (auth.mode === 'demo' && auth.user.isDemo) return <DemoWorkspace key={auth.sessionVersion} user={auth.user} />;
   // A real account must never be silently connected to fictional users or conversations.
   return <AuthShell><section className="auth-card" aria-labelledby="connected-workspace-title">
+    <ApiRealtimeConnection key={auth.sessionVersion} user={auth.user} />
     <ProfileAvatar displayName={auth.user.displayName} avatar={auth.user.avatar} size="lg" />
     <h1 id="connected-workspace-title" className="auth-heading display-heading">You&apos;re signed in.</h1>
     <p className="auth-description">{auth.user.displayName} · @{auth.user.username}</p>

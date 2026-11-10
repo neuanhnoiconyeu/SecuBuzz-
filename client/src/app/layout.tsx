@@ -11,6 +11,7 @@ import '@/styles/themes.css';
 import './globals.css';
 import '@/styles/friends.css';
 import '@/styles/auth.css';
+import '@/styles/realtime.css';
 import '@/styles/typography.css';
 
 export const metadata: Metadata = {

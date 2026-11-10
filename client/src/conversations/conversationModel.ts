@@ -30,6 +30,8 @@ export interface ConversationMessageActivity {
   direction: 'incoming' | 'outgoing';
   preview: string;
   timestamp: string;
+  /** Presentation only: an active conversation can be hidden behind Friends or Security. */
+  isViewed?: boolean;
 }
 
 /** Frontend contract for a future database or API backed conversation provider. */

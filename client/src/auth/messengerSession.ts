@@ -2,7 +2,8 @@ import type { AuthUser } from './authModel';
 import type { Conversation } from '@/conversations/conversationModel';
 import { createDemoConversations } from '@/conversations/demoConversations';
 import { LocalDemoFriendsService } from '@/friends/friendsService';
-import { createLocalDemoTransport } from '@/messaging/localDemoTransport';
+import { MockRealtimeClient } from '@/realtime/MockRealtimeClient';
+import { RealtimeMessagingTransport } from '@/realtime/RealtimeMessagingTransport';
 import type { MessagingTransport } from '@/messaging/transport';
 import { createDemoProfile } from '@/profiles/profileModel';
 import { LocalDemoProfileService, type ProfileService } from '@/profiles/profileService';
@@ -19,6 +20,7 @@ export interface DemoMessengerSession {
   conversations: Conversation[];
   cryptoService: ConversationCryptoService;
   transport: MessagingTransport;
+  realtime: MockRealtimeClient;
   dispose(): void;
 }
 
@@ -44,7 +46,8 @@ export function createDemoMessengerSession(user: AuthUser): DemoMessengerSession
   const profileService = new LocalDemoProfileService({ ...createDemoProfile(), ...identity });
   const friendsService = new LocalDemoFriendsService(identity);
   const conversations = createDemoConversations(Date.now(), identity);
-  const transport = createLocalDemoTransport();
+  const realtime = new MockRealtimeClient({ user: identity, conversations });
+  const transport = new RealtimeMessagingTransport(realtime, conversations);
   let delegate: ConversationCryptoService | null =
     new BrowserConversationCryptoService(new InMemoryDemoKeyManager());
 
@@ -74,11 +77,13 @@ export function createDemoMessengerSession(user: AuthUser): DemoMessengerSession
     conversations,
     cryptoService,
     transport,
+    realtime,
     dispose() {
       // Release this bundle's only long-lived key-manager reference. Pending
       // Web Crypto promises finish privately and fail the guard above.
       delegate = null;
       transport.dispose();
+      realtime.dispose();
     },
   };
 }

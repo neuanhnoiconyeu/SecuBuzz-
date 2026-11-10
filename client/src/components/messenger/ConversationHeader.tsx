@@ -56,15 +56,13 @@ export function ConversationHeader({
     : securityStatus.localEncryptionAvailable
       ? 'Local encryption only'
       : 'Encryption unavailable';
-  const transportLabel = transportMode === 'local-demo'
-    ? 'Local demo'
-    : connectionStatus === 'connected'
+  const transportLabel = connectionStatus === 'connected'
       ? 'Connected'
       : connectionStatus === 'connecting'
         ? 'Connecting'
-        : connectionStatus === 'failed'
-          ? 'Connection failed'
-          : 'Disconnected';
+        : connectionStatus === 'reconnecting'
+          ? 'Reconnecting…'
+          : 'Offline';
 
   return (
     <div className="chat-toolbar">
@@ -81,7 +79,9 @@ export function ConversationHeader({
           <div className="contact-details">
             {presence && <Badge status={presence}>{presenceLabel[presence]}</Badge>}
             <span className={`conversation-connection ${connectionStatus === 'connected' ? 'is-connected' : ''}`}>
-              <span className="conversation-connection-dot" aria-hidden="true" />{transportLabel}
+              <span className="conversation-connection-dot" aria-hidden="true" />
+              {transportMode === 'local-demo' && <><span>Local demo</span><span aria-hidden="true"> · </span></>}
+              <span>{transportLabel}</span>
             </span>
           </div>
         </div>

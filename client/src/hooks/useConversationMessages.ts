@@ -3,6 +3,7 @@ import { appendMessage, createClientMessageId, deleteMessageById, editMessageCon
 import type {
   ChatMessage,
   ConnectionStatus,
+  EncryptedIncomingMessage,
   IncomingMessage,
   MessageAttachment,
   MessageReplyReference,
@@ -18,6 +19,10 @@ import type { ConversationCryptoService } from '@/security/conversationCryptoSer
 import { localDemoTransport } from '@/messaging/localDemoTransport';
 import type { MessagingTransport } from '@/messaging/transport';
 
+export const MAX_CONCURRENT_DECRYPTS = 64;
+export const MAX_QUEUED_DECRYPTS = 256;
+export const MAX_QUEUED_DECRYPT_BYTES = 16 * 1024 * 1024;
+
 export interface UseConversationMessagesOptions {
   conversationId: string;
   currentUserId: string;
@@ -27,11 +32,12 @@ export interface UseConversationMessagesOptions {
   cryptoService?: ConversationCryptoService;
   conversationIds?: string[];
   onMessageActivity?: (activity: ConversationMessageActivity) => void;
+  presentationActive?: boolean;
 }
 
 export interface UseConversationMessagesResult {
   messages: ChatMessage[];
-  presence: PresenceStatus;
+  presence: PresenceStatus | undefined;
   connectionStatus: ConnectionStatus;
   transportMode: TransportMode;
   securityStatus: ConversationSecurityStatus | null;
@@ -49,6 +55,10 @@ export interface UseConversationMessagesResult {
   deleteMessage(messageId: string): void;
   togglePin(messageId: string): void;
   toggleReaction(messageId: string, emoji: string): void;
+  typingUsers: Array<{ userId: string; displayName: string }>;
+  notifyTypingActivity(): void;
+  stopTyping(): void;
+  canRetryMessage(messageId: string): boolean;
 }
 
 function cryptoContext(message: Pick<ChatMessage, 'conversationId' | 'id' | 'senderId' | 'senderName' | 'timestamp'>) {
@@ -71,7 +81,7 @@ function isIncomingMessage(value: unknown): value is IncomingMessage {
     typeof message.senderName === 'string' && message.senderName.length > 0 &&
     typeof message.timestamp === 'string' && Number.isFinite(Date.parse(message.timestamp)) &&
     message.type === 'text' &&
-    ['sending', 'sent', 'delivered', 'failed'].includes(String(message.deliveryStatus));
+    ['sending', 'sent', 'delivered', 'failed', 'read'].includes(String(message.deliveryStatus));
   if (!commonFieldsAreValid) return false;
   if (message.demoOnly === true) return typeof message.content === 'string';
   if ('demoOnly' in message) return false;
@@ -87,15 +97,28 @@ export function useConversationMessages({
   cryptoService = demoConversationCryptoService,
   conversationIds = [conversationId],
   onMessageActivity,
+  presentationActive = true,
 }: UseConversationMessagesOptions): UseConversationMessagesResult {
   const [messagesByConversation, setMessagesByConversation] = useState<Record<string, ChatMessage[]>>({});
-  const [presence, setPresence] = useState<PresenceStatus>(initialPresence);
+  const [presence, setPresence] = useState<PresenceStatus | undefined>(initialPresence);
+  const initialPresenceRef = useRef(initialPresence);
+  initialPresenceRef.current = initialPresence;
+  useEffect(() => { setPresence(initialPresence); }, [initialPresence]);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+  const connectionStatuses = useRef(new Map<string, ConnectionStatus>());
   const [securityStatus, setSecurityStatus] = useState<ConversationSecurityStatus | null>(null);
   const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({});
   const sendLocks = useRef(new Set<string>());
-  const messages = messagesByConversation[conversationId] ?? [];
-  const trackedConversationIdsKey = JSON.stringify(Array.from(new Set([conversationId, ...conversationIds])));
+  const [typingUsers, setTypingUsers] = useState<Array<{ userId: string; displayName: string }>>([]);
+  const incomingTypers = useRef(new Map<string, { displayName: string; timestamp: number; expiresAt: number; isTyping: boolean }>());
+  const outgoingTyping = useRef({ active: false, sentAt: 0, timer: null as ReturnType<typeof setTimeout> | null });
+  const readRequested = useRef(new Set<string>());
+  const seenIncoming = useRef(new Set<string>());
+  const [pageVisible, setPageVisible] = useState(() => typeof document === 'undefined' || document.visibilityState !== 'hidden');
+  const presentation = useRef({ conversationId, presentationActive, pageVisible, onMessageActivity });
+  presentation.current = { conversationId, presentationActive, pageVisible, onMessageActivity };
+  const messages = useMemo(() => messagesByConversation[conversationId] ?? [], [conversationId, messagesByConversation]);
+  const trackedConversationIdsKey = JSON.stringify(Array.from(new Set([conversationId, ...conversationIds])).sort());
   const trackedConversationIds = useMemo<string[]>(
     () => JSON.parse(trackedConversationIdsKey) as string[],
     [trackedConversationIdsKey]
@@ -110,21 +133,73 @@ export function useConversationMessages({
     const id = JSON.stringify([message.conversationId, message.id]);
     if (observedActivityIds.current.has(id)) return;
     observedActivityIds.current.add(id);
-    onMessageActivity?.({
+    while (observedActivityIds.current.size > 2_000) observedActivityIds.current.delete(observedActivityIds.current.values().next().value!);
+    const current = presentation.current;
+    current.onMessageActivity?.({
       conversationId: message.conversationId,
       messageId: message.id,
       direction,
       preview: message.content,
       timestamp: message.timestamp,
+      isViewed: current.presentationActive && current.pageVisible && message.conversationId === current.conversationId,
     });
-  }, [onMessageActivity]);
+  }, []);
+
+  const stopTyping = useCallback(() => {
+    if (outgoingTyping.current.timer !== null) clearTimeout(outgoingTyping.current.timer);
+    outgoingTyping.current.timer = null;
+    if (!outgoingTyping.current.active) return;
+    outgoingTyping.current.active = false;
+    try { transport.sendTyping?.(conversationId, false); } catch { /* Ephemeral signals have no retry queue. */ }
+  }, [conversationId, transport]);
+  const stopTypingRef = useRef(stopTyping);
+  stopTypingRef.current = stopTyping;
+
+  const notifyTypingActivity = useCallback(() => {
+    if (!presentationActive || !pageVisible || connectionStatus !== 'connected' || !transport.sendTyping) return;
+    const now = Date.now();
+    if (!outgoingTyping.current.active || now - outgoingTyping.current.sentAt >= 2_000) {
+      try { transport.sendTyping(conversationId, true); } catch { return; }
+      outgoingTyping.current.active = true;
+      outgoingTyping.current.sentAt = now;
+    }
+    if (outgoingTyping.current.timer !== null) clearTimeout(outgoingTyping.current.timer);
+    outgoingTyping.current.timer = setTimeout(stopTyping, 1_500);
+  }, [connectionStatus, conversationId, pageVisible, presentationActive, stopTyping, transport]);
+
+  useEffect(() => {
+    const update = () => setPageVisible(document.visibilityState !== 'hidden');
+    document.addEventListener('visibilitychange', update);
+    return () => document.removeEventListener('visibilitychange', update);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      let changed = false;
+      for (const [id, value] of incomingTypers.current) {
+        if (value.expiresAt <= Date.now()) { incomingTypers.current.delete(id); changed = true; }
+      }
+      if (changed) setTypingUsers(Array.from(incomingTypers.current).filter(([, value]) => value.isTyping)
+        .map(([userId, value]) => ({ userId, displayName: value.displayName })));
+    }, 500);
+    return () => { window.clearInterval(timer); stopTyping(); };
+  }, [stopTyping]);
+
+  useEffect(() => {
+    incomingTypers.current.clear();
+    setTypingUsers([]);
+    if (!presentationActive || !pageVisible) stopTyping();
+    return stopTyping;
+  }, [conversationId, pageVisible, presentationActive, stopTyping]);
+
+  useEffect(() => {
+    setPresence(initialPresenceRef.current);
+    setConnectionStatus(transport.getConnectionStatus?.() ?? connectionStatuses.current.get(conversationId) ?? 'connecting');
+  }, [conversationId, transport]);
 
   useEffect(() => {
     let active = true;
-    setPresence(initialPresence);
-    setConnectionStatus('connecting');
     setSecurityStatus(null);
-
     void cryptoService.prepareConversation(keyContext).then(
       (status) => { if (active) setSecurityStatus(status); },
       () => { if (active) setSecurityStatus({
@@ -134,6 +209,67 @@ export function useConversationMessages({
         authenticatedKeyExchangeEstablished: false,
       }); }
     );
+    return () => { active = false; };
+  }, [cryptoService, keyContext]);
+
+  useEffect(() => {
+    let active = true;
+    let decrypting = 0;
+    let queuedBytes = 0;
+    let overflowReported = false;
+    type DecryptWork = { message: EncryptedIncomingMessage; keyContext: ConversationKeyContext; bytes: number };
+    const decryptQueue: DecryptWork[] = [];
+
+    const reportOverflow = (id: string) => {
+      if (!active || overflowReported) return;
+      overflowReported = true;
+      const alert: ChatMessage = {
+        id: `security-processing-limit-${createClientMessageId()}`, conversationId: id, senderId: 'security', senderName: 'Security notice',
+        content: 'Some encrypted messages exceeded the local processing limit and were discarded. No unverified message content was displayed.',
+        timestamp: new Date().toISOString(), type: 'security_alert', deliveryStatus: 'delivered',
+      };
+      setMessagesByConversation((state) => appendMessage(state, alert));
+      notifyActivity(alert, 'incoming');
+    };
+
+    function drainDecryptQueue() {
+      while (active && decrypting < MAX_CONCURRENT_DECRYPTS && decryptQueue.length) {
+        const work = decryptQueue.shift()!;
+        queuedBytes -= work.bytes;
+        decrypt(work);
+      }
+    }
+
+    function decrypt(work: DecryptWork) {
+      if (!active) return;
+      decrypting += 1;
+      const incoming = work.message;
+      let operation: Promise<string>;
+      try { operation = cryptoService.decrypt(work.keyContext, incoming.encryption, cryptoContext(incoming)); }
+      catch { operation = Promise.reject(new Error('Authentication unavailable')); }
+      void operation.then(
+        (content) => {
+          if (!active) return;
+          const message: ChatMessage = {
+            id: incoming.id, conversationId: incoming.conversationId, senderId: incoming.senderId, senderName: incoming.senderName,
+            content, timestamp: incoming.timestamp, type: 'text', deliveryStatus: incoming.deliveryStatus,
+            encryption: { ...incoming.encryption, scope: 'browser-demo' },
+          };
+          setMessagesByConversation((state) => appendMessage(state, message));
+          notifyActivity(message, 'incoming');
+        },
+        () => {
+          if (!active) return;
+          const alert: ChatMessage = {
+            id: `security-auth-failed-${incoming.id}`, conversationId: incoming.conversationId, senderId: 'security', senderName: 'Security notice',
+            content: 'An encrypted message failed authentication and was discarded.', timestamp: new Date().toISOString(),
+            type: 'security_alert', deliveryStatus: 'delivered',
+          };
+          setMessagesByConversation((state) => appendMessage(state, alert));
+          notifyActivity(alert, 'incoming');
+        },
+      ).finally(() => { decrypting -= 1; drainDecryptQueue(); });
+    }
 
     const cleanups: Array<() => void> = [];
     for (const subscribedConversationId of trackedConversationIds) {
@@ -141,53 +277,45 @@ export function useConversationMessages({
       const unsubscribe = transport.subscribeToConversation(subscribedConversationId, {
         onMessage: (incoming) => {
           if (!active || !isIncomingMessage(incoming) || incoming.conversationId !== subscribedConversationId) return;
+          const incomingId = JSON.stringify([incoming.conversationId, incoming.id]);
+          if (seenIncoming.current.has(incomingId)) return;
           if ('demoOnly' in incoming) {
             if (transport.mode !== 'local-demo') return;
+            seenIncoming.current.add(incomingId);
+            while (seenIncoming.current.size > 2_000) seenIncoming.current.delete(seenIncoming.current.values().next().value!);
             setMessagesByConversation((state) => appendMessage(state, incoming));
             notifyActivity(incoming, 'incoming');
             return;
           }
 
-          const context = {
-            conversationId: incoming.conversationId,
-            messageId: incoming.id,
-            senderId: incoming.senderId,
-            senderName: incoming.senderName,
-            timestamp: incoming.timestamp,
+          // Retain only ciphertext and authenticated routing metadata while a
+          // native crypto slot is busy. No unverified plaintext enters a store.
+          const source = incoming.encryption as unknown;
+          const payload = source && typeof source === 'object' ? source as Record<string, unknown> : {};
+          const copiedPayload = {
+            version: typeof payload.version === 'number' ? payload.version : 0,
+            algorithm: typeof payload.algorithm === 'string' ? payload.algorithm : '',
+            encoding: typeof payload.encoding === 'string' ? payload.encoding : '',
+            iv: typeof payload.iv === 'string' ? payload.iv : '',
+            ciphertext: typeof payload.ciphertext === 'string' ? payload.ciphertext : '',
+          } as EncryptedIncomingMessage['encryption'];
+          const message: EncryptedIncomingMessage = {
+            id: incoming.id, conversationId: incoming.conversationId, senderId: incoming.senderId, senderName: incoming.senderName,
+            timestamp: incoming.timestamp, type: 'text', deliveryStatus: incoming.deliveryStatus, encryption: copiedPayload,
           };
-          void cryptoService.decrypt(subscribedKeyContext, incoming.encryption, context).then(
-            (content) => {
-              if (!active) return;
-              const message: ChatMessage = {
-                id: incoming.id,
-                conversationId: incoming.conversationId,
-                senderId: incoming.senderId,
-                senderName: incoming.senderName,
-                content,
-                timestamp: incoming.timestamp,
-                type: 'text',
-                deliveryStatus: incoming.deliveryStatus,
-                encryption: { ...incoming.encryption, scope: 'browser-demo' },
-              };
-              setMessagesByConversation((state) => appendMessage(state, message));
-              notifyActivity(message, 'incoming');
-            },
-            () => {
-              if (!active) return;
-              const alert: ChatMessage = {
-                id: `security-auth-failed-${incoming.id}`,
-                conversationId: subscribedConversationId,
-                senderId: 'security',
-                senderName: 'Security notice',
-                content: 'An encrypted message failed authentication and was discarded.',
-                timestamp: new Date().toISOString(),
-                type: 'security_alert',
-                deliveryStatus: 'delivered',
-              };
-              setMessagesByConversation((state) => appendMessage(state, alert));
-              notifyActivity(alert, 'incoming');
-            }
-          );
+          const bytes = 256 + 2 * (message.id.length + message.conversationId.length + message.senderId.length +
+            message.senderName.length + message.timestamp.length + copiedPayload.algorithm.length + copiedPayload.encoding.length +
+            copiedPayload.iv.length + copiedPayload.ciphertext.length);
+          if (bytes > MAX_QUEUED_DECRYPT_BYTES || (decrypting >= MAX_CONCURRENT_DECRYPTS &&
+            (decryptQueue.length >= MAX_QUEUED_DECRYPTS || queuedBytes + bytes > MAX_QUEUED_DECRYPT_BYTES))) {
+            reportOverflow(subscribedConversationId);
+            return;
+          }
+          seenIncoming.current.add(incomingId);
+          while (seenIncoming.current.size > 2_000) seenIncoming.current.delete(seenIncoming.current.values().next().value!);
+          const work = { message, keyContext: subscribedKeyContext, bytes };
+          if (decrypting < MAX_CONCURRENT_DECRYPTS) decrypt(work);
+          else { decryptQueue.push(work); queuedBytes += bytes; }
         },
         onDeliveryStatus: ({ messageId, status }) => {
           if (active) {
@@ -197,7 +325,7 @@ export function useConversationMessages({
           }
         },
         onPresenceUpdate: (status) => {
-          if (active && subscribedConversationId === conversationId) setPresence(status);
+          if (active && subscribedConversationId === presentation.current.conversationId) setPresence(status);
         },
         onSecurityAlert: (message) => {
           if (active && message.conversationId === subscribedConversationId && message.type === 'security_alert') {
@@ -206,7 +334,29 @@ export function useConversationMessages({
           }
         },
         onConnectionChange: (status) => {
-          if (active && subscribedConversationId === conversationId) setConnectionStatus(status);
+          connectionStatuses.current.set(subscribedConversationId, status);
+          if (active && subscribedConversationId === presentation.current.conversationId) {
+            setConnectionStatus(status);
+            if (status !== 'connected') {
+              incomingTypers.current.clear();
+              setTypingUsers([]);
+              stopTypingRef.current();
+              setPresence(undefined);
+            }
+          }
+        },
+        onTypingUpdate: (update) => {
+          const current = presentation.current;
+          if (!active || !current.presentationActive || !current.pageVisible || subscribedConversationId !== current.conversationId || update.userId === currentUserId) return;
+          const timestamp = Date.parse(update.timestamp);
+          if (!Number.isFinite(timestamp) || timestamp > Date.now() + 60_000 || timestamp < Date.now() - 5_000) return;
+          const previous = incomingTypers.current.get(update.userId);
+          if (previous && (timestamp < previous.timestamp || (timestamp === previous.timestamp && (!previous.isTyping || update.isTyping)))) return;
+          incomingTypers.current.set(update.userId, { displayName: update.displayName, timestamp,
+            expiresAt: Math.min(Date.now(), timestamp) + 5_000, isTyping: update.isTyping });
+          while (incomingTypers.current.size > 40) incomingTypers.current.delete(incomingTypers.current.keys().next().value!);
+          setTypingUsers(Array.from(incomingTypers.current).filter(([, value]) => value.isTyping)
+            .map(([userId, value]) => ({ userId, displayName: value.displayName })));
         },
       });
       cleanups.push(() => {
@@ -216,19 +366,35 @@ export function useConversationMessages({
 
       void transport.connect(subscribedConversationId).then(
         () => {
-          if (active && subscribedConversationId === conversationId) setConnectionStatus('connected');
+          connectionStatuses.current.set(subscribedConversationId, transport.getConnectionStatus?.() ?? 'connected');
+          if (active && subscribedConversationId === presentation.current.conversationId) setConnectionStatus(transport.getConnectionStatus?.() ?? 'connected');
         },
         () => {
-          if (active && subscribedConversationId === conversationId) setConnectionStatus('failed');
+          connectionStatuses.current.set(subscribedConversationId, transport.getConnectionStatus?.() ?? 'failed');
+          if (active && subscribedConversationId === presentation.current.conversationId) setConnectionStatus(transport.getConnectionStatus?.() ?? 'failed');
         }
       );
     }
 
     return () => {
       active = false;
+      decryptQueue.length = 0;
+      queuedBytes = 0;
+      stopTypingRef.current();
       cleanups.forEach((cleanup) => cleanup());
     };
-  }, [conversationId, currentUserId, cryptoService, initialPresence, keyContext, notifyActivity, trackedConversationIds, transport]);
+  }, [currentUserId, cryptoService, notifyActivity, trackedConversationIds, transport]);
+
+  useEffect(() => {
+    if (!presentationActive || !pageVisible || connectionStatus !== 'connected' || !transport.markRead) return;
+    const latest = [...messages].reverse().find((message) => message.senderId !== currentUserId && message.type === 'text');
+    if (!latest) return;
+    const id = JSON.stringify([conversationId, latest.id]);
+    if (readRequested.current.has(id)) return;
+    readRequested.current.add(id);
+    while (readRequested.current.size > 2_000) readRequested.current.delete(readRequested.current.values().next().value!);
+    void transport.markRead(conversationId, latest.id).catch(() => { /* No speculative read claim or automatic retry. */ });
+  }, [connectionStatus, conversationId, currentUserId, messages, pageVisible, presentationActive, transport]);
 
   const sendMessage = useCallback(async (
     content: string,
@@ -239,7 +405,7 @@ export function useConversationMessages({
     }
   ) => {
     const trimmedContent = content.trim();
-    if (!trimmedContent || sendLocks.current.has(conversationId)) return false;
+    if (!trimmedContent || sendLocks.current.has(conversationId) || transport.canSendMessages === false) return false;
     sendLocks.current.add(conversationId);
     setPendingCounts((counts) => ({ ...counts, [conversationId]: (counts[conversationId] ?? 0) + 1 }));
 
@@ -298,7 +464,8 @@ export function useConversationMessages({
 
   const retryMessage = useCallback(async (messageId: string) => {
     const message = (messagesByConversation[conversationId] ?? []).find((candidate) => candidate.id === messageId);
-    if (!message?.encryption || message.deliveryStatus !== 'failed' || sendLocks.current.has(conversationId)) return false;
+    if (!message?.encryption || message.deliveryStatus !== 'failed' || sendLocks.current.has(conversationId) ||
+      transport.canSendMessages === false || (transport.canRetryMessage && !transport.canRetryMessage(conversationId, messageId))) return false;
 
     sendLocks.current.add(conversationId);
     setPendingCounts((counts) => ({ ...counts, [conversationId]: (counts[conversationId] ?? 0) + 1 }));
@@ -361,5 +528,9 @@ export function useConversationMessages({
     deleteMessage,
     togglePin,
     toggleReaction,
+    typingUsers,
+    notifyTypingActivity,
+    stopTyping,
+    canRetryMessage: (messageId: string) => transport.canRetryMessage?.(conversationId, messageId) ?? true,
   };
 }
