@@ -37,5 +37,6 @@ test('an explicitly configured real API identity obtains a disconnected Socket a
   const client = createSessionRealtimeClient(real, 'api', []);
   expect(client).toBeInstanceOf(SocketIoRealtimeClient);
   expect(client.getStatus()).toBe('disconnected'); expect(client.canSendMessages).toBe(false);
+  expect(client.canConfirmDelivery).toBe(false);
   client.dispose();
 });

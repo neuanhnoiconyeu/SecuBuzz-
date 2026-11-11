@@ -4,7 +4,7 @@ import {
   SocketIoRealtimeClient, PROPOSED_EVENT_NAMES,
   type SocketIoRealtimeClientOptions, type SocketPort, type SocketManagerPort,
 } from '../SocketIoRealtimeClient';
-import type { RealtimeEvent } from '../realtimeModel';
+import { SERVER_ACK_ERROR_CODES, type RealtimeEvent } from '../realtimeModel';
 import { RealtimeMessagingTransport } from '../RealtimeMessagingTransport';
 import { createDemoConversations } from '@/conversations/demoConversations';
 import type { MessagingTransportHandlers } from '@/messaging/transport';
@@ -81,6 +81,203 @@ function acknowledgement(socket: FakeSocket) {
 function readAcknowledgement(messageId = 'message-1') {
   return { conversationId: 'conversation-1', messageId, status: 'read', timestamp };
 }
+
+describe('Phase 8.7C server rejection compatibility', () => {
+  test.each(SERVER_ACK_ERROR_CODES)('preserves the exact %s callback code without retrying', async (code) => {
+    const { client, socket } = await connected();
+    const read = client.markRead('conversation-1', 'message-1');
+    const rejected = expect(read).rejects.toMatchObject({ code, serverCode: code, retryable: false });
+    acknowledgement(socket)({ status: 'error', code });
+    await rejected;
+    expect(socket.emit.mock.calls.filter((args) => args[0] === PROPOSED_EVENT_NAMES.messageRead)).toHaveLength(1);
+    expect(client.getStatus()).toBe('connected');
+  });
+
+  test.each([
+    { status: 'error', code: 'future_code' }, { status: 'error', code: 'SESSION_EXPIRED' },
+    { status: 'error', code: 'unavailable', detail: 'secret' }, { status: 'error' }, null,
+  ])('fails closed for malformed/unknown error acknowledgement %#', async (payload) => {
+    const { client, socket } = await connected();
+    const read = client.markRead('conversation-1', 'message-1');
+    const rejected = expect(read).rejects.toMatchObject({ code: 'invalid_payload', serverCode: undefined });
+    acknowledgement(socket)(payload);
+    await rejected;
+  });
+
+  test.each([
+    ['AUTH_REQUIRED', 'authentication_rejected'], ['UNAUTHORIZED', 'authentication_rejected'],
+    ['SESSION_EXPIRED', 'authentication_rejected'], ['REALTIME_UNAVAILABLE', 'unavailable'],
+    ['CONNECTION_LIMIT', 'connection_limit'], ['ORIGIN_NOT_ALLOWED', 'origin_not_allowed'], ['POLICY_DENIED', 'policy_denied'],
+  ])('preserves handshake %s separately from callback rejections', async (serverCode, code) => {
+    const { client, socket } = setup();
+    const listener = jest.fn(); client.subscribe(listener);
+    const connecting = client.connect();
+    const rejected = expect(connecting).rejects.toMatchObject({ code, serverCode, retryable: false });
+    socket.active = false;
+    socket.signal('connect_error', { data: { code: serverCode }, message: 'private password and backend stack' });
+    await rejected;
+    expect(listener).toHaveBeenCalledWith({ type: 'error', code, serverCode });
+    expect(JSON.stringify(listener.mock.calls)).not.toContain('private');
+    if (code !== 'authentication_rejected') {
+      const retry = client.connect(); socket.accepted(); await retry;
+    } else await expect(client.connect()).rejects.toMatchObject({ serverCode });
+  });
+});
+
+describe('Phase 8.7C recipient delivery callbacks', () => {
+  async function recipient(verifier: SocketIoRealtimeClientOptions['deliveryConfirmationVerifier'] = () => true) {
+    const entry = await connected({ ...(verifier ? { deliveryConfirmationVerifier: verifier } : {}) });
+    entry.client.watchConversationParticipants([{ conversationId: 'conversation-1', participantIds: [actor.id, 'user-b'] }]);
+    return entry;
+  }
+
+  test('stays disabled without trusted key attestation, even with valid envelopes and participants', async () => {
+    const { client, socket } = await connected();
+    client.watchConversationParticipants([{ conversationId: 'conversation-1', participantIds: [actor.id, 'user-b'] }]);
+    const ack = jest.fn(); socket.signal(PROPOSED_EVENT_NAMES.messageNew, incoming(), ack);
+    expect(client.canConfirmDelivery).toBe(false);
+    await expect(client.confirmDelivery(incoming() as never)).rejects.toMatchObject({ code: 'recipient_keys_unavailable' });
+    expect(ack).not.toHaveBeenCalled();
+    expect(client.canSendMessages).toBe(false);
+  });
+
+  test('submits the exact callback once after an explicit verified request; never emits read or a fake receipt', async () => {
+    const verify = jest.fn(() => true);
+    const { client, socket } = await recipient(verify);
+    const events = jest.fn(); client.subscribe(events);
+    const ack = jest.fn(), duplicate = jest.fn();
+    const message = incoming();
+    socket.signal(PROPOSED_EVENT_NAMES.messageNew, message, ack);
+    socket.signal(PROPOSED_EVENT_NAMES.messageNew, message, duplicate);
+    expect(ack).not.toHaveBeenCalled();
+    const first = client.confirmDelivery(message as never);
+    const second = client.confirmDelivery(message as never);
+    expect(first).toBe(second);
+    await first;
+    await client.confirmDelivery(message as never);
+    expect(ack.mock.calls).toEqual([[{ conversationId: 'conversation-1', messageId: 'message-1', status: 'delivered' }]]);
+    expect(verify).toHaveBeenCalledTimes(1);
+    expect(duplicate).not.toHaveBeenCalled();
+    expect(events.mock.calls.filter(([event]) => event.type === 'receipt')).toEqual([]);
+    expect(socket.emit.mock.calls.filter((args) => args[0] === PROPOSED_EVENT_NAMES.messageRead)).toHaveLength(0);
+  });
+
+  test.each([
+    { conversationId: 'unknown' }, { senderId: 'stranger' }, { senderId: actor.id },
+    { encryption: { ...encrypted, iv: 'bad' } }, { demoOnly: true, content: 'plaintext' },
+  ])('never confirms rejected, unknown, demo or self-sent envelopes %#', async (overrides) => {
+    const { client, socket } = await recipient();
+    const ack = jest.fn(); const message = { ...incoming(), ...overrides };
+    socket.signal(PROPOSED_EVENT_NAMES.messageNew, message, ack);
+    await expect(client.confirmDelivery(message as never)).rejects.toBeDefined();
+    expect(ack).not.toHaveBeenCalled();
+  });
+
+  test('requires a captured callback and rejects changed ciphertext or authenticated metadata for the same ID', async () => {
+    const { client, socket } = await recipient();
+    const ack = jest.fn(); socket.signal(PROPOSED_EVENT_NAMES.messageNew, incoming(), ack);
+    for (const message of [incoming('unknown'), { ...incoming(), senderName: 'Changed' },
+      { ...incoming(), encryption: { ...encrypted, ciphertext: Buffer.alloc(24, 1).toString('base64') } }]) {
+      await expect(client.confirmDelivery(message as never)).rejects.toMatchObject({ code: 'invalid_payload' });
+    }
+    expect(ack).not.toHaveBeenCalled();
+  });
+
+  test.each(['disconnect', 'dispose', 'scope', 'participant'] as const)('cancels pending verification on %s; late results cannot cross sessions', async (reason) => {
+    let release!: (verified: boolean) => void;
+    const { client, socket } = await recipient(() => new Promise<boolean>((resolve) => { release = resolve; }));
+    const ack = jest.fn(); socket.signal(PROPOSED_EVENT_NAMES.messageNew, incoming(), ack);
+    const confirmation = client.confirmDelivery(incoming() as never);
+    const rejected = expect(confirmation).rejects.toBeDefined();
+    await Promise.resolve();
+    if (reason === 'disconnect') socket.lost();
+    if (reason === 'dispose') client.dispose();
+    if (reason === 'scope') client.watchConversations([]);
+    if (reason === 'participant') client.watchConversationParticipants([]);
+    await rejected;
+    release(true); await Promise.resolve(); await Promise.resolve();
+    expect(ack).not.toHaveBeenCalled();
+    if (reason === 'disconnect') {
+      socket.accepted();
+      await expect(client.confirmDelivery(incoming() as never)).rejects.toMatchObject({ code: 'invalid_payload' });
+    }
+    const replacement = await recipient();
+    await expect(replacement.client.confirmDelivery(incoming() as never)).rejects.toMatchObject({ code: 'invalid_payload' });
+  });
+
+  test('disposal before verification starts prevents even the prerequisite work from starting', async () => {
+    const verify = jest.fn(() => true);
+    const { client, socket } = await recipient(verify);
+    const ack = jest.fn(); socket.signal(PROPOSED_EVENT_NAMES.messageNew, incoming(), ack);
+    const confirmation = client.confirmDelivery(incoming() as never);
+    const rejected = expect(confirmation).rejects.toMatchObject({ code: 'session_ended' });
+    client.dispose(); await rejected;
+    expect(verify).not.toHaveBeenCalled(); expect(ack).not.toHaveBeenCalled();
+  });
+
+  test.each([false, 'throw', 'reject'] as const)('does not confirm when recipient prerequisite fails: %s', async (result) => {
+    const { client, socket } = await recipient(() => {
+      if (result === 'throw') throw new Error('sensitive');
+      if (result === 'reject') return Promise.reject(new Error('sensitive'));
+      return false;
+    });
+    const ack = jest.fn(); socket.signal(PROPOSED_EVENT_NAMES.messageNew, incoming(), ack);
+    await expect(client.confirmDelivery(incoming() as never)).rejects.toMatchObject({ code: 'recipient_keys_unavailable', retryable: false });
+    expect(ack).not.toHaveBeenCalled();
+  });
+
+  test('expires pending verification without offline buffering or accepting a late result', async () => {
+    jest.useFakeTimers();
+    let release!: (verified: boolean) => void;
+    const { client, socket } = await recipient(() => new Promise<boolean>((resolve) => { release = resolve; }));
+    const ack = jest.fn(); socket.signal(PROPOSED_EVENT_NAMES.messageNew, incoming(), ack);
+    const confirmation = client.confirmDelivery(incoming() as never);
+    const rejected = expect(confirmation).rejects.toMatchObject({ code: 'ack_timeout' });
+    await Promise.resolve(); jest.advanceTimersByTime(5_000); await rejected;
+    release(true); await Promise.resolve(); await Promise.resolve();
+    expect(ack).not.toHaveBeenCalled();
+  });
+
+  test('bounds pending callbacks and expires unrequested handles', async () => {
+    jest.useFakeTimers();
+    const { client, socket } = await recipient();
+    const ack = jest.fn();
+    for (let i = 0; i < 101; i += 1) socket.signal(PROPOSED_EVENT_NAMES.messageNew, incoming(`m-${i}`), ack);
+    await expect(client.confirmDelivery(incoming('m-100') as never)).rejects.toMatchObject({ code: 'invalid_payload' });
+    jest.advanceTimersByTime(5_000);
+    await expect(client.confirmDelivery(incoming('m-0') as never)).rejects.toMatchObject({ code: 'invalid_payload' });
+    expect(ack).not.toHaveBeenCalled();
+  });
+
+  test('bounds retained ciphertext bytes independently of the callback count', async () => {
+    const { client, socket } = await recipient();
+    const ack = jest.fn();
+    const message = (id: string) => ({ ...incoming(id), encryption: { ...encrypted,
+      ciphertext: Buffer.alloc(750_000).toString('base64') } });
+    for (let i = 0; i < 5; i += 1) socket.signal(PROPOSED_EVENT_NAMES.messageNew, message(`large-${i}`), ack);
+    await expect(client.confirmDelivery(message('large-4') as never)).rejects.toMatchObject({ code: 'invalid_payload' });
+    expect(ack).not.toHaveBeenCalled();
+  });
+
+  test('never captures envelopes arriving while disconnected or without a callback', async () => {
+    const { client, socket } = await recipient();
+    socket.signal(PROPOSED_EVENT_NAMES.messageNew, incoming('no-callback'));
+    await expect(client.confirmDelivery(incoming('no-callback') as never)).rejects.toMatchObject({ code: 'invalid_payload' });
+    socket.lost(); const ack = jest.fn(); socket.signal(PROPOSED_EVENT_NAMES.messageNew, incoming('offline'), ack);
+    await expect(client.confirmDelivery(incoming('offline') as never)).rejects.toMatchObject({ code: 'disconnected' });
+    socket.accepted();
+    await expect(client.confirmDelivery(incoming('offline') as never)).rejects.toMatchObject({ code: 'invalid_payload' });
+    expect(ack).not.toHaveBeenCalled();
+  });
+
+  test('contains a failed callback submission without fabricating confirmation success', async () => {
+    const { client, socket } = await recipient();
+    const ack = jest.fn(() => { throw new Error('private socket detail'); });
+    socket.signal(PROPOSED_EVENT_NAMES.messageNew, incoming(), ack);
+    await expect(client.confirmDelivery(incoming() as never)).rejects.toMatchObject({ code: 'send_failed', retryable: false });
+    expect(ack).toHaveBeenCalledTimes(1);
+  });
+});
 
 afterEach(() => {
   clients.splice(0).forEach((client) => client.dispose());

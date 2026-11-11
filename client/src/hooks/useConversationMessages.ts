@@ -257,6 +257,12 @@ export function useConversationMessages({
           };
           setMessagesByConversation((state) => appendMessage(state, message));
           notifyActivity(message, 'incoming');
+          // Conservative delivery policy: authenticate first, then require a trusted
+          // recipient-key attestation in the real adapter. This never means "read".
+          if (transport.mode === 'realtime' && transport.canConfirmDelivery && transport.confirmDelivery) {
+            try { void transport.confirmDelivery(incoming).catch(() => undefined); }
+            catch { /* No speculative receipt, retry queue or plaintext fallback. */ }
+          }
         },
         () => {
           if (!active) return;

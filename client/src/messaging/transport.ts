@@ -2,6 +2,7 @@ import type {
   ChatMessage,
   ConnectionStatus,
   DeliveryStatus,
+  EncryptedIncomingMessage,
   IncomingMessage,
   OutboundMessage,
   PresenceStatus,
@@ -36,6 +37,8 @@ export interface MessagingTransportHandlers {
 export interface MessagingTransport {
   readonly mode: TransportMode;
   readonly canSendMessages?: boolean;
+  readonly canConfirmDelivery?: boolean;
+  confirmDelivery?(message: EncryptedIncomingMessage): Promise<void>;
   getConnectionStatus?(): ConnectionStatus;
   connect(conversationId: string): Promise<void>;
   sendMessage(message: OutboundMessage): Promise<void>;
