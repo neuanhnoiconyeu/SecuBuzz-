@@ -1,0 +1,16 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const { logs } = require('../database/database');
+
+const report = {
+  generated_at: new Date().toISOString(),
+  total: logs.list({ limit: 500 }).length,
+  critical: logs.list({ severity: 'critical', limit: 500 }).length,
+  high: logs.list({ severity: 'high', limit: 500 }).length,
+  findings: logs.list({ limit: 500 })
+};
+const outputDir = path.resolve(process.cwd(), 'reports');
+fs.mkdirSync(outputDir, { recursive: true });
+const outputFile = path.join(outputDir, `security-audit-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
+fs.writeFileSync(outputFile, JSON.stringify(report, null, 2));
+console.log(`Security audit report written to ${outputFile}`);
