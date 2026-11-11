@@ -1,12 +1,13 @@
 import type { DemoIncomingMessage, EncryptedIncomingMessage, OutboundMessage, TransportMode } from '@/messaging/messageModel';
 import type { EncryptedMessagePayload } from '@/utils/crypto';
-import { DEMO_REALTIME_MESSAGE_TEXT, type RealtimeErrorCode, type RealtimeEvent, type SendAcknowledgement } from './realtimeModel';
+import { DEMO_REALTIME_MESSAGE_TEXT, RealtimeOperationError, SERVER_ACK_ERROR_CODES, SERVER_CONNECT_ERROR_CODES,
+  type RealtimeErrorCode, type RealtimeEvent, type SendAcknowledgement, type ServerErrorCode } from './realtimeModel';
 
 const delivery = new Set(['sent', 'delivered', 'read']);
 const connection = new Set(['disconnected', 'connecting', 'connected', 'reconnecting', 'error']);
 const presence = new Set(['online', 'offline', 'busy', 'away', 'unknown']);
 const errorCodes = new Set<RealtimeErrorCode>(['unavailable', 'disconnected', 'authentication_rejected', 'ack_timeout',
-  'invalid_payload', 'unauthorized_conversation', 'recipient_keys_unavailable', 'session_ended', 'send_failed']);
+  ...SERVER_ACK_ERROR_CODES, 'connection_limit', 'origin_not_allowed', 'session_ended', 'send_failed']);
 const fixtureMessages = new Set<string>(Object.values(DEMO_REALTIME_MESSAGE_TEXT));
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -126,11 +127,39 @@ export function parseRealtimeEvent(kind: RealtimeEvent['type'], input: unknown, 
         ? { type: 'conversation', conversationId: input.conversationId, updatedAt: input.updatedAt,
           ...(typeof input.displayName === 'string' ? { displayName: input.displayName } : {}) } : null;
     case 'error':
-      return onlyKeys(input, ['type', 'code', 'conversationId']) && errorCodes.has(input.code as RealtimeErrorCode) &&
+      return onlyKeys(input, ['type', 'code', 'serverCode', 'conversationId']) && errorCodes.has(input.code as RealtimeErrorCode) &&
+        (!('serverCode' in input) || serverError(input.serverCode)?.code === input.code) &&
         (!('conversationId' in input) || isIdentifier(input.conversationId))
         ? { type: 'error', code: input.code as RealtimeErrorCode,
+          ...(typeof input.serverCode === 'string' ? { serverCode: input.serverCode as ServerErrorCode } : {}),
           ...(typeof input.conversationId === 'string' ? { conversationId: input.conversationId } : {}) } : null;
   }
+}
+
+/** Only allowlisted codes survive; backend messages, details and stacks never enter UI state. */
+function serverError(code: unknown): RealtimeOperationError | null {
+  if (SERVER_ACK_ERROR_CODES.some((known) => known === code)) {
+    return new RealtimeOperationError(code as typeof SERVER_ACK_ERROR_CODES[number], false, code as ServerErrorCode);
+  }
+  const normalized: Record<typeof SERVER_CONNECT_ERROR_CODES[number], RealtimeErrorCode> = {
+    AUTH_REQUIRED: 'authentication_rejected', UNAUTHORIZED: 'authentication_rejected', SESSION_EXPIRED: 'authentication_rejected',
+    REALTIME_UNAVAILABLE: 'unavailable', CONNECTION_LIMIT: 'connection_limit', ORIGIN_NOT_ALLOWED: 'origin_not_allowed',
+    POLICY_DENIED: 'policy_denied',
+  };
+  return SERVER_CONNECT_ERROR_CODES.some((known) => known === code)
+    ? new RealtimeOperationError(normalized[code as typeof SERVER_CONNECT_ERROR_CODES[number]], false, code as ServerErrorCode) : null;
+}
+
+export function parseErrorAcknowledgement(input: unknown): RealtimeOperationError | null {
+  return record(input) && onlyKeys(input, ['status', 'code']) && input.status === 'error' &&
+    SERVER_ACK_ERROR_CODES.some((code) => code === input.code) ? serverError(input.code) : null;
+}
+
+export function parseConnectionError(input: unknown): RealtimeOperationError {
+  // Socket.IO supplies an Error instance, with an ordinary data object from the server.
+  const data = input && typeof input === 'object' ? (input as { data?: unknown }).data : undefined;
+  return record(data) && onlyKeys(data, ['code']) && SERVER_CONNECT_ERROR_CODES.some((code) => code === data.code)
+    ? serverError(data.code)! : new RealtimeOperationError('unavailable');
 }
 
 export function parseSendAcknowledgement(input: unknown): SendAcknowledgement | null {

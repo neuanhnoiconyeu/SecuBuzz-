@@ -1,12 +1,13 @@
 import { io } from 'socket.io-client';
 import type { AuthUser } from '@/auth/authModel';
-import type { OutboundMessage } from '@/messaging/messageModel';
+import type { EncryptedIncomingMessage, OutboundMessage } from '@/messaging/messageModel';
 import {
   PROPOSED_EVENT_NAMES, RealtimeOperationError,
   type RealtimeClient, type RealtimeConnectionStatus, type RealtimeEvent, type RealtimeErrorCode,
-  type SendAcknowledgement,
+  type SendAcknowledgement, type ConversationParticipantScope,
 } from './realtimeModel';
-import { isIdentifier, parseReadAcknowledgement, parseRealtimeEvent } from './realtimeValidation';
+import { isIdentifier, parseConnectionError, parseErrorAcknowledgement, parseReadAcknowledgement, parseRealtimeEvent } from './realtimeValidation';
+import { DeliveryConfirmations, type DeliveryConfirmationVerifier } from './deliveryConfirmations';
 
 export { PROPOSED_EVENT_NAMES } from './realtimeModel';
 
@@ -55,6 +56,8 @@ export interface SocketIoRealtimeClientOptions {
   path?: string;
   eventNames?: Partial<RealtimeEventNameMapping>;
   socketFactory?: SocketFactory;
+  /** Omitted by the production factory until authenticated recipient key distribution exists. */
+  deliveryConfirmationVerifier?: DeliveryConfirmationVerifier;
 }
 
 const MAX_WATCHED = 1_000;
@@ -91,13 +94,6 @@ function validateOptions(options: SocketIoRealtimeClientOptions): { url: string;
   return { url: url.href, path, names };
 }
 
-function authRejected(value: unknown): boolean {
-  if (!value || typeof value !== 'object') return false;
-  const data: unknown = (value as { data?: unknown }).data;
-  const code: unknown = data && typeof data === 'object' ? (data as { code?: unknown }).code : null;
-  return typeof code === 'string' && ['UNAUTHORIZED', 'SESSION_EXPIRED', 'AUTH_REQUIRED'].includes(code);
-}
-
 function watched(ids: readonly string[]): Set<string> {
   if (!Array.isArray(ids) || ids.length > MAX_WATCHED || !ids.every(isIdentifier)) throw new RealtimeOperationError('invalid_payload');
   return new Set(ids);
@@ -121,8 +117,8 @@ interface PendingRead {
 }
 
 /**
- * Proposed cookie-session transport. Server event names, authorization, CORS and
- * session verification must be approved before contractReady is enabled.
+ * Cookie-session transport compatible with Phase 8.7B. Production adapters,
+ * authorization, CORS and session integration remain prerequisites for readiness.
  * No recipient-authenticated envelope exists yet, so real message sending stays disabled.
  */
 export class SocketIoRealtimeClient implements RealtimeClient {
@@ -146,12 +142,21 @@ export class SocketIoRealtimeClient implements RealtimeClient {
   private readonly metadataTimes = new Map<string, number>();
   private readonly typingSent = new Map<string, { isTyping: boolean; at: number }>();
   private malformedReported = false;
+  private readonly delivery: DeliveryConfirmations;
+  private participants = new Map<string, Set<string>>();
+  private rejection: RealtimeOperationError | null = null;
 
   constructor(options: SocketIoRealtimeClientOptions) {
     this.configuration = validateOptions(options);
     this.actorId = options.user.id;
     this.socketFactory = options.socketFactory ?? defaultSocketFactory;
+    this.delivery = new DeliveryConfirmations(this.actorId, options.deliveryConfirmationVerifier, (message) =>
+      !this.disposed && !this.rejected && this.status === 'connected' && this.socket?.connected === true &&
+      this.conversations.has(message.conversationId) && message.senderId !== this.actorId &&
+      this.participants.get(message.conversationId)?.has(message.senderId) === true);
   }
+
+  get canConfirmDelivery() { return this.delivery.enabled; }
 
   getStatus(): RealtimeConnectionStatus { return this.status; }
 
@@ -208,33 +213,36 @@ export class SocketIoRealtimeClient implements RealtimeClient {
     });
     bind(socket, 'disconnect', (reason) => {
       this.cancelReads('disconnected');
+      this.delivery.clear('disconnected');
       this.typingSent.clear();
       const terminal = reason === 'io server disconnect' || socket.active === false;
       this.setStatus(terminal ? 'disconnected' : 'reconnecting');
       if (terminal) this.settleConnect(new RealtimeOperationError('disconnected'));
     });
     bind(socket, 'connect_error', (failure) => {
-      if (authRejected(failure)) {
+      const error = parseConnectionError(failure);
+      if (error.code === 'authentication_rejected') {
         this.rejected = true;
-        this.stop('authentication_rejected', 'error');
-        this.error('authentication_rejected');
+        this.rejection = error;
+        this.stop(error.code, 'error', error);
       } else {
         this.setStatus(socket.active === false ? 'error' : 'reconnecting');
-        this.error('unavailable');
-        if (socket.active === false) this.settleConnect(new RealtimeOperationError('unavailable'));
+        if (socket.active === false) this.settleConnect(error);
       }
+      this.publish({ type: 'error', code: error.code, ...(error.serverCode ? { serverCode: error.serverCode } : {}) });
     });
     bind(socket.io, 'reconnect_attempt', () => this.setStatus('reconnecting'));
     bind(socket.io, 'reconnect_error', () => this.setStatus('reconnecting'));
     bind(socket.io, 'reconnect_failed', () => {
       socket.io.reconnection(false);
       this.cancelReads('disconnected');
+      this.delivery.clear('disconnected');
       this.setStatus('error');
       this.settleConnect(new RealtimeOperationError('unavailable'));
       this.error('unavailable');
     });
     const names = this.configuration.names;
-    bind(socket, names.messageNew, (payload) => this.receive('message', payload));
+    bind(socket, names.messageNew, (payload, acknowledge) => this.receive('message', payload, undefined, acknowledge));
     // No outgoing IDs can be acknowledged while message sending is disabled.
     bind(socket, names.messageAck, () => undefined);
     bind(socket, names.messageDelivered, (payload) => this.receive('receipt', payload, 'delivered'));
@@ -244,7 +252,7 @@ export class SocketIoRealtimeClient implements RealtimeClient {
     bind(socket, names.conversationUpdated, (payload) => this.receive('conversation', payload));
   }
 
-  private receive(kind: RealtimeEvent['type'], payload: unknown, expectedReceipt?: 'delivered' | 'read') {
+  private receive(kind: RealtimeEvent['type'], payload: unknown, expectedReceipt?: 'delivered' | 'read', acknowledge?: unknown) {
     if (this.status !== 'connected' || !this.socket?.connected) return;
     let event: RealtimeEvent | null;
     try { event = parseRealtimeEvent(kind, payload, 'realtime'); } catch { event = null; }
@@ -274,12 +282,13 @@ export class SocketIoRealtimeClient implements RealtimeClient {
     const key = event.type === 'message' ? JSON.stringify(['message', event.message.conversationId, event.message.id]) : JSON.stringify(event);
     if (this.seen.has(key)) return;
     boundedSet(this.seen, key, true);
+    if (event.type === 'message' && 'encryption' in event.message) this.delivery.capture(event.message, acknowledge);
     this.publish(event);
   }
 
   connect(): Promise<void> {
     if (this.disposed) return Promise.reject(new RealtimeOperationError('session_ended'));
-    if (this.rejected) return Promise.reject(new RealtimeOperationError('authentication_rejected'));
+    if (this.rejected) return Promise.reject(this.rejection ?? new RealtimeOperationError('authentication_rejected'));
     if (this.status === 'connected' && this.socket?.connected) return Promise.resolve();
     if (this.pendingConnect) return this.pendingConnect.promise;
     try {
@@ -305,11 +314,12 @@ export class SocketIoRealtimeClient implements RealtimeClient {
     return promise;
   }
 
-  private stop(code: RealtimeErrorCode, status: RealtimeConnectionStatus) {
+  private stop(code: RealtimeErrorCode, status: RealtimeConnectionStatus, error = new RealtimeOperationError(code)) {
     this.generation += 1;
     for (const { port, event, listener } of this.bindings.splice(0)) port.off(event, listener);
-    this.settleConnect(new RealtimeOperationError(code));
+    this.settleConnect(error);
     this.cancelReads(code);
+    this.delivery.clear(code);
     this.typingSent.clear();
     this.metadataTimes.clear();
     this.seen.clear();
@@ -326,6 +336,7 @@ export class SocketIoRealtimeClient implements RealtimeClient {
     this.stop('session_ended', 'disconnected');
     this.conversations.clear();
     this.publicUsers.clear();
+    this.participants.clear();
     this.listeners.clear();
   }
 
@@ -336,11 +347,40 @@ export class SocketIoRealtimeClient implements RealtimeClient {
   watchConversations(ids: readonly string[]): void {
     if (this.disposed) return;
     this.conversations = watched(ids);
+    for (const id of this.participants.keys()) if (!this.conversations.has(id)) this.participants.delete(id);
+    this.delivery.prune();
     for (const id of this.typingSent.keys()) if (!this.conversations.has(id)) this.typingSent.delete(id);
     // An access-scope change must not leave pending metadata writes for removed conversations.
     for (const [key, request] of Array.from(this.pendingReads.entries())) {
       if (!this.conversations.has(JSON.parse(key)[0] as string)) request.cancel(new RealtimeOperationError('unauthorized_conversation'));
     }
+  }
+
+  watchConversationParticipants(scopes: readonly ConversationParticipantScope[]): void {
+    if (this.disposed) return;
+    if (!Array.isArray(scopes) || scopes.length > MAX_WATCHED) throw new RealtimeOperationError('invalid_payload');
+    const next = new Map<string, Set<string>>();
+    let count = 0;
+    for (const scope of scopes) {
+      if (!scope || !isIdentifier(scope.conversationId) || !this.conversations.has(scope.conversationId) || next.has(scope.conversationId)) {
+        throw new RealtimeOperationError('invalid_payload');
+      }
+      const peers = watched(scope.participantIds);
+      count += peers.size;
+      if (count > 10_000) throw new RealtimeOperationError('invalid_payload');
+      next.set(scope.conversationId, peers);
+    }
+    this.participants = next;
+    this.delivery.prune();
+  }
+
+  confirmDelivery(untrusted: EncryptedIncomingMessage): Promise<void> {
+    if (this.disposed) return Promise.reject(new RealtimeOperationError('session_ended'));
+    if (this.rejected) return Promise.reject(this.rejection ?? new RealtimeOperationError('authentication_rejected'));
+    if (this.status !== 'connected' || !this.socket?.connected) return Promise.reject(new RealtimeOperationError('disconnected'));
+    const event = parseRealtimeEvent('message', untrusted, 'realtime');
+    if (event?.type !== 'message' || !('encryption' in event.message)) return Promise.reject(new RealtimeOperationError('invalid_payload'));
+    return this.delivery.confirm(event.message);
   }
 
   watchPresence(userIds: readonly string[]): void {
@@ -369,7 +409,7 @@ export class SocketIoRealtimeClient implements RealtimeClient {
 
   markRead(conversationId: string, messageId: string): Promise<void> {
     if (this.disposed) return Promise.reject(new RealtimeOperationError('session_ended'));
-    if (this.rejected) return Promise.reject(new RealtimeOperationError('authentication_rejected'));
+    if (this.rejected) return Promise.reject(this.rejection ?? new RealtimeOperationError('authentication_rejected'));
     if (!isIdentifier(conversationId) || !isIdentifier(messageId)) return Promise.reject(new RealtimeOperationError('invalid_payload'));
     if (!this.conversations.has(conversationId)) return Promise.reject(new RealtimeOperationError('unauthorized_conversation'));
     if (this.status !== 'connected' || !this.socket?.connected) return Promise.reject(new RealtimeOperationError('disconnected'));
@@ -397,6 +437,8 @@ export class SocketIoRealtimeClient implements RealtimeClient {
         if (settled || this.disposed || generation !== this.generation) return;
         let valid = false;
         try {
+          const error = parseErrorAcknowledgement(payload);
+          if (error) { finish(error); return; }
           valid = parseReadAcknowledgement(payload, conversationId, messageId) &&
             (!payload || typeof payload !== 'object' || !('userId' in payload) || payload.userId === this.actorId);
         } catch { /* Reject unknown acknowledgements. */ }

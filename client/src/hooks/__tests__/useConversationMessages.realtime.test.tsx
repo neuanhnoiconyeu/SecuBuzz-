@@ -14,6 +14,8 @@ const payload: EncryptedMessagePayload = {
 class RealtimeTestTransport implements MessagingTransport {
   constructor(readonly mode: TransportMode = 'realtime') {}
   canSendMessages = true;
+  canConfirmDelivery = false;
+  readonly confirmDelivery = jest.fn(async (_message: EncryptedIncomingMessage) => undefined);
   private status: ConnectionStatus = 'connected';
   private readonly subscriptions = new Map<string, Set<MessagingTransportHandlers>>();
   readonly connect = jest.fn(async (_conversationId: string) => undefined);
@@ -90,6 +92,69 @@ afterEach(() => {
 function visibility(next: DocumentVisibilityState) {
   act(() => { pageVisibility = next; document.dispatchEvent(new Event('visibilitychange')); });
 }
+
+describe('gated, authenticated delivery is separate from read', () => {
+  test('confirms only after decryption, including hidden conversations; visibility controls reads separately', async () => {
+    const transport = new RealtimeTestTransport(); transport.canConfirmDelivery = true;
+    const cryptoService = cryptoFixture();
+    let release!: (text: string) => void;
+    cryptoService.decrypt.mockImplementationOnce(() => new Promise((resolve) => { release = resolve; }));
+    const { rerender } = await mount({ visible: false, transport, cryptoService });
+    const incoming = encrypted('verified');
+    act(() => transport.message(incoming));
+    expect(transport.confirmDelivery).not.toHaveBeenCalled();
+    await act(async () => { release('Authenticated reply'); });
+    expect(transport.confirmDelivery).toHaveBeenCalledTimes(1);
+    expect(transport.confirmDelivery).toHaveBeenCalledWith(incoming);
+    expect(JSON.stringify(transport.confirmDelivery.mock.calls)).not.toContain('Authenticated reply');
+    expect(transport.markRead).not.toHaveBeenCalled();
+    await act(async () => { transport.message(incoming); rerender({ conversationId: 'conversation-a', presentationActive: true }); });
+    expect(transport.confirmDelivery).toHaveBeenCalledTimes(1);
+    expect(transport.markRead).toHaveBeenCalledWith('conversation-a', 'verified');
+  });
+
+  test('failed authentication displays only a safe notice, without delivery or read confirmation', async () => {
+    const transport = new RealtimeTestTransport(); transport.canConfirmDelivery = true;
+    const cryptoService = cryptoFixture(); cryptoService.decrypt.mockRejectedValueOnce(new Error('unverified sensitive content'));
+    const { result } = await mount({ transport, cryptoService });
+    await act(async () => { transport.message(encrypted('tampered')); });
+    expect(transport.confirmDelivery).not.toHaveBeenCalled();
+    expect(transport.markRead).not.toHaveBeenCalled();
+    expect(result.current.messages.every((message) => message.type === 'security_alert')).toBe(true);
+    expect(JSON.stringify(result.current.messages)).not.toContain('sensitive');
+  });
+
+  test('confirmation failure does not erase authenticated text, produce a receipt, or retry', async () => {
+    const transport = new RealtimeTestTransport(); transport.canConfirmDelivery = true;
+    transport.confirmDelivery.mockRejectedValueOnce(new Error('unavailable'));
+    const { result } = await mount({ visible: false, transport });
+    await act(async () => { transport.message(encrypted('failure')); });
+    expect(result.current.messages.find((message) => message.id === 'failure')?.content).toBe('Authenticated reply');
+    expect(transport.confirmDelivery).toHaveBeenCalledTimes(1);
+    expect(transport.markRead).not.toHaveBeenCalled();
+    await act(async () => { jest.advanceTimersByTime(10_000); });
+    expect(transport.confirmDelivery).toHaveBeenCalledTimes(1);
+  });
+
+  test('unmount/session replacement discards late decryption and does not confirm it', async () => {
+    const transport = new RealtimeTestTransport(); transport.canConfirmDelivery = true;
+    const cryptoService = cryptoFixture();
+    let release!: (text: string) => void;
+    cryptoService.decrypt.mockImplementationOnce(() => new Promise((resolve) => { release = resolve; }));
+    const { unmount } = await mount({ transport, cryptoService });
+    act(() => transport.message(encrypted('stale'))); unmount();
+    await act(async () => { release('old identity text'); });
+    expect(transport.confirmDelivery).not.toHaveBeenCalled();
+  });
+
+  test.each(['realtime', 'local-demo'] as const)('does not confirm through the default or demo transport: %s', async (mode) => {
+    const transport = new RealtimeTestTransport(mode);
+    if (mode === 'local-demo') transport.canConfirmDelivery = true;
+    await mount({ transport });
+    await act(async () => { transport.message(encrypted('not-enabled')); });
+    expect(transport.confirmDelivery).not.toHaveBeenCalled();
+  });
+});
 
 describe('outgoing ephemeral typing', () => {
   test('starts once, throttles bursts, refreshes a sustained session, and stops after inactivity', async () => {
