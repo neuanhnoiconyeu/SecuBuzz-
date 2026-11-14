@@ -7,10 +7,12 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./ai": "./src/ai/index.ts"
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/main.ts",
+    "ai:check-config": "node --env-file-if-exists=.env src/ai/checkConfig.ts",
     "type-check": "tsc --noEmit -p tsconfig.json",
     "test": "node --test --test-concurrency=1 --test-timeout=60000 \"test/**/*.test.ts\""
   },

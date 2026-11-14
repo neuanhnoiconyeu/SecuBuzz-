@@ -4,11 +4,12 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import {
   AlertTriangle, ArrowDown, Check, Edit2, FileText, Forward, LockKeyhole, Mic, MoreHorizontal,
-  Pin, Plus, Reply, Undo2, SmilePlus, Trash2, X,
+  Pin, Plus, Reply, Undo2, SmilePlus, Sparkles, Trash2, X,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/branding';
 import { Badge, Button, Surface } from '@/components/ui';
 import type { ChatMessage, TransportMode } from '@/messaging/messageModel';
+import { AI_MAX_INPUT, type AIMessageAction } from '@/ai/aiModel';
 import { useMessageEntryMotion } from './useMessageEntryMotion';
 import './message-reactions.css';
 
@@ -29,6 +30,7 @@ export interface MessageListProps {
   onUnsendMessage?: (messageId: string) => void;
   onTogglePin?: (messageId: string) => void;
   onToggleReaction?: (messageId: string, emoji: string) => void;
+  onAIMessage?: (task: AIMessageAction, messageId: string) => void;
   onForwardMessage?: (message: ChatMessage) => void;
 }
 
@@ -70,6 +72,7 @@ export function MessageList({
   onUnsendMessage,
   onTogglePin,
   onToggleReaction,
+  onAIMessage,
   onForwardMessage,
   transportMode = 'local-demo',
 }: MessageListProps) {
@@ -315,7 +318,8 @@ export function MessageList({
               const myReactions = new Set(
                 (message.reactions ?? []).filter((r) => r.userIds.includes(currentUserId)).map((r) => r.emoji),
               );
-              const canShowMenu = !!(onForwardMessage || onTogglePin || (isOutgoing && ((onEditMessage && canEditMessage) || onDeleteMessage)));
+              const canShareWithAI = Boolean(onAIMessage && message.type === 'text' && !message.isDeleted && message.content.trim() && message.content.length <= AI_MAX_INPUT);
+              const canShowMenu = !!(canShareWithAI || onForwardMessage || onTogglePin || (isOutgoing && ((onEditMessage && canEditMessage) || onDeleteMessage)));
 
               return (
                 <article
@@ -543,6 +547,11 @@ export function MessageList({
 
                                 {isMenuOpen && (
                                   <div id={`${popoverId}-${message.id}-actions`} ref={popoverRef} onKeyDown={handlePopoverKeyDown} className="rx-popover msg-menu" role="menu" aria-label="Message actions">
+                                    {canShareWithAI && (['chat', 'summarize', 'translate', 'explain'] as const).map(task => (
+                                      <button key={task} type="button" role="menuitem" className="msg-menu-item" onClick={() => { onAIMessage?.(task, message.id); closePopovers(); }}>
+                                        <Sparkles size={14} aria-hidden="true" />{task === 'chat' ? 'Ask @Secu' : `${task === 'summarize' ? 'Summarize' : task === 'translate' ? 'Translate' : 'Explain'} selected message`}
+                                      </button>
+                                    ))}
                                     {onForwardMessage && (
                                       <button type="button" role="menuitem" className="msg-menu-item" onClick={() => { onForwardMessage(message); closePopovers(true); }}>
                                         <Forward size={14} aria-hidden="true" /> Forward

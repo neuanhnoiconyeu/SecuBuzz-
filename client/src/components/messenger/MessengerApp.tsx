@@ -11,7 +11,11 @@ import { RealtimeDemoControls } from '@/components/messenger/RealtimeDemoControl
 import { ProfileDialog } from '@/components/profile/ProfileDialog';
 import { FriendsPage } from '@/components/friends/FriendsPage';
 import type { MessengerSection } from '@/components/messenger/MainNavigation';
-import { Button, Surface } from '@/components/ui';
+import { Button, Dialog, Surface } from '@/components/ui';
+import { AIHub } from '@/components/ai/AIHub';
+import { createAIProvider } from '@/ai/demoAIProvider';
+import { AI_MAX_OUTPUT, validAIInput, type AIEntry, type AISelection } from '@/ai/aiModel';
+import type { AIResult } from '@/ai/useAIWorkspace';
 import { useMessengerConversations } from '@/hooks/useMessengerConversations';
 import { useCurrentProfile } from '@/hooks/useCurrentProfile';
 import { useFriends } from '@/hooks/useFriends';
@@ -34,6 +38,10 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
   const { profile, isLoading: profileLoading, isSaving: profileSaving, error: profileError, fieldErrors,
     loadProfile, updateProfile } = useCurrentProfile(session.profileService);
   const [profileOpen, setProfileOpen] = useState(false);
+  const aiProvider = useMemo(() => createAIProvider(session.user.isDemo), [session]);
+  const [aiEntry, setAIEntry] = useState<AIEntry | null>(null);
+  const aiEntrySequence = useRef(0);
+  const [draftReview, setDraftReview] = useState<AIResult | null>(null);
   const friendsService = session.friendsService;
   const friends = useFriends(friendsService);
   const friendIdentity = useMemo<FriendUser | null>(() => profile ? {
@@ -84,6 +92,7 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
       if (window.location.hash === '#friends') setActiveSection('friends');
       else if (window.location.hash === '#security') setActiveSection('security');
       else if (window.location.hash === '#chats') setActiveSection('chats');
+      else if (window.location.hash === '#ai-hub') setActiveSection('ai');
     };
     syncSection();
     window.addEventListener('hashchange', syncSection);
@@ -105,6 +114,23 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
   const directRelationship = directContact ? relationshipForUser(friends.snapshot, directContact.id, session.user.id).relationship : null;
   const directBlocked = directRelationship === 'blocked';
   const directControlsDisabled = Boolean(directContact) && (directBlocked || friends.isStale || friends.isLoading);
+  useEffect(() => { setAIEntry(null); setDraftReview(null); }, [activeConversationId]);
+
+  const requestAI = (selection: AISelection) => {
+    if (activeSection !== 'chats' || mobileListOpen || directControlsDisabled || !profile ||
+      selection.conversationId !== activeConversationId || !validAIInput(selection.input)) return;
+    // Only selected text/opaque context crosses this boundary; never the message store or keys.
+    setAIEntry({ ...selection, id: ++aiEntrySequence.current });
+    setDraftReview(null); setActiveSection('ai');
+  };
+  const reviewDraft = (result: AIResult) => {
+    if (result.selection?.kind !== 'draft' || result.selection.conversationId !== activeConversationId ||
+      result.request.task !== 'rewrite' || result.response.kind === 'limitation' ||
+      result.request.input !== result.selection.input || !result.response.output.trim() || result.response.output.length > AI_MAX_OUTPUT) return;
+    setDraftReview(result);
+  };
+  const reviewMatchesDraft = Boolean(draftReview?.selection && draftReview.selection.conversationId === activeConversationId &&
+    drafts[activeConversationId] === draftReview.selection.input && !directControlsDisabled);
 
   const openFriendConversation = async (user: FriendUser) => {
     if (friends.isStale || friends.isPending || relationshipForUser(friends.snapshot, user.id, session.user.id).relationship !== 'friend') {
@@ -247,6 +273,7 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
                   onBackToConversations={showConversationsOnMobile}
                   onBuzz={handleBuzz}
                   onSendMessage={handleSendMessage}
+                  {...(aiProvider.acceptsMessengerContent === false ? {} : { onRequestAI: requestAI })}
                 />
                 </fieldset>
 
@@ -277,6 +304,9 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
           </div>
         </section>
 
+        <AIHub key={activeConversationId} active={activeSection === 'ai'} provider={aiProvider}
+          conversationId={activeConversationId ?? ''} entry={aiEntry} onReviewDraft={reviewDraft} />
+
         <section id="friends" className="messenger-friends-section" hidden={activeSection !== 'friends'} aria-labelledby="friends-page-title">
           <FriendsPage controller={presentedFriends} currentUser={friendIdentity}
             onMessage={openFriendConversation} canMessage={directAdapter.canOpenDirectConversation} />
@@ -303,6 +333,21 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
           </Surface>
         </section>
       </div>
+      {draftReview && <Dialog open={Boolean(draftReview.selection?.conversationId === activeConversationId && activeSection === 'ai')}
+        onOpenChange={open => { if (!open) setDraftReview(null); }} title="Review your draft"
+        description="Review the proposed text. Replacing a draft never sends a message." className="ai-draft-review"
+        footer={<><Button variant="outline" onClick={() => setDraftReview(null)}>Keep original</Button><Button disabled={!reviewMatchesDraft}
+          onClick={() => {
+            if (!reviewMatchesDraft || !draftReview?.selection || draftReview.selection.conversationId !== activeConversationId ||
+              drafts[activeConversationId] !== draftReview.selection.input) return;
+            setDraft(activeConversationId, draftReview.response.output); setDraftReview(null); setActiveSection('chats');
+            window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('#message-input')?.focus());
+          }}>Replace draft</Button></>}>
+        <p className="ai-mini-label">{draftReview?.response.provider === 'demo' ? 'Prepared demo example · not generated by an AI model' : 'Review AI output carefully'}</p>
+        <h3>Current draft</h3><p className="ai-review-text">{activeConversationId ? drafts[activeConversationId] ?? '' : ''}</p>
+        <h3>Proposed replacement</h3><p className="ai-review-text">{draftReview?.response.output}</p>
+        {!reviewMatchesDraft && <p className="ai-error" role="alert">Your draft or conversation has changed. Nothing will be replaced. Return to Chats and choose your draft again.</p>}
+      </Dialog>}
       <ProfileDialog
         open={profileOpen}
         onOpenChange={setProfileOpen}
