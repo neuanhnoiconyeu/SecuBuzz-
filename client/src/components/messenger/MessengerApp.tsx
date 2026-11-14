@@ -237,6 +237,9 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
                   {...(activePresence ? { presenceStatus: activePresence } : {})}
                   showPresence={Boolean(activePresence)}
                   conversationIds={conversationIds}
+                  forwardTargets={presentedConversations
+                    .filter((conversation) => conversation.id !== activeConversation.id)
+                    .map((conversation) => ({ id: conversation.id, displayName: conversation.displayName }))}
                   draftValue={drafts[activeConversation.id] ?? ''}
                   onDraftChange={(draft) => setDraft(activeConversation.id, draft)}
                   onMessageActivity={handleActivity}

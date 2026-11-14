@@ -69,6 +69,20 @@ export function createLocalDemoTransport(): LocalDemoMessagingTransport {
     async disconnect() {
       // There is no remote connection to close in the local demo.
     },
+    async deleteMessage() {
+      assertActive();
+    },
+    async editMessage(conversationId, messageId, encryption, editedAt) {
+      assertActive();
+      const listeners = conversationListeners.get(conversationId);
+      if (!listeners?.size) return;
+      for (const handlers of Array.from(listeners)) {
+        if (disposed) break;
+        if (listeners.has(handlers)) {
+          handlers.onMessageEdited?.({ messageId, senderId: 'local-user', encryption, editedAt });
+        }
+      }
+    },
     dispose() {
       disposed = true;
       conversationListeners.clear();

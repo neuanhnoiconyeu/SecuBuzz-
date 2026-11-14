@@ -5,13 +5,16 @@ import { ConversationHeader } from '@/components/messenger/ConversationHeader';
 import { MessageComposer } from '@/components/messenger/MessageComposer';
 import { MessageList } from '@/components/messenger/MessageList';
 import { useConversationMessages } from '@/hooks/useConversationMessages';
+import { ForwardDialog } from '@/components/messenger/ForwardDialog';
 import type { ChatMessage, MessageAttachment, PresenceStatus, VoiceMessageMetadata } from '@/messaging/messageModel';
 import type { MessagingTransport } from '@/messaging/transport';
 import type { ConversationMessageActivity, ConversationType } from '@/conversations/conversationModel';
 import type { ConversationSecurityStatus } from '@/security/keyManagement';
 import type { ConversationCryptoService } from '@/security/conversationCryptoService';
+import type { ForwardTarget } from '@/components/messenger/ForwardDialog';
 
 export interface YahooChatWindowProps {
+  forwardTargets?: ForwardTarget[];
   conversationId?: string;
   contactName?: string;
   conversationType?: ConversationType;
@@ -37,6 +40,7 @@ export interface YahooChatWindowProps {
 }
 
 export function YahooChatWindow({
+  forwardTargets,
   avatarUrl,
   contactName = 'SecureBot',
   conversationId = 'securebot-demo',
@@ -60,13 +64,17 @@ export function YahooChatWindow({
 }: YahooChatWindowProps) {
   const [buzzBusy, setBuzzBusy] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+  const [forwardingMessage, setForwardingMessage] = useState<ChatMessage | null>(null);
   const chatHeadingRef = useRef<HTMLHeadingElement>(null);
   const previousConversationId = useRef(conversationId);
   const buzzLock = useRef(false);
   const buzzTimeout = useRef<number | null>(null);
   const {
-    connectionStatus,
-    deleteMessage, 
+    connectionStatus, 
+    removeMessage,
+    unsendMessage,
+    canUnsend,
+    forwardMessage,
     editMessage,
     isSending,
     messages,
@@ -81,6 +89,7 @@ export function YahooChatWindow({
     notifyTypingActivity,
     stopTyping,
     canRetryMessage,
+    canEdit,
   } = useConversationMessages({
     conversationId,
     currentUserId,
@@ -107,6 +116,7 @@ export function YahooChatWindow({
     }
     previousConversationId.current = conversationId;
     setReplyingTo(null);
+    setForwardingMessage(null);
   }, [conversationId]);
 
 const handleSendMessage = useCallback(async (
@@ -182,6 +192,14 @@ const handleSendMessage = useCallback(async (
     }
   }, [onBuzz, playBuzzSound]);
 
+  const handleForwardConfirm = useCallback(
+  (targetIds: string[], note: string) =>
+    forwardingMessage
+      ? forwardMessage(forwardingMessage, targetIds, note)
+      : Promise.resolve({ succeeded: [] as string[], failed: targetIds }),
+  [forwardMessage, forwardingMessage],
+  );
+
   const setupError = securityStatus && !securityStatus.localEncryptionAvailable
     ? 'Browser encryption could not be initialized. Messaging is unavailable in this demo.'
     : undefined;
@@ -212,9 +230,12 @@ const handleSendMessage = useCallback(async (
         canRetryMessage={canRetryMessage}
         onReplyMessage={(message) => setReplyingTo(message)}
         onEditMessage={editMessage}
-        onDeleteMessage={deleteMessage}
+        canEditMessage={canEdit}
+        onDeleteMessage={removeMessage}
+        {...(canUnsend ? { onUnsendMessage: (messageId: string) => void unsendMessage(messageId) } : {})}
         onTogglePin={togglePin}
         onToggleReaction={toggleReaction}
+        {...((forwardTargets?.length ?? 0) > 0 ? { onForwardMessage: setForwardingMessage } : {})}
       />
 
       <p className="chat-typing-status" role="status" aria-live="polite" aria-atomic="true">
@@ -272,6 +293,12 @@ const handleSendMessage = useCallback(async (
         onBuzz={() => void handleBuzz()}
         onTypingActivity={notifyTypingActivity}
         onTypingStop={stopTyping}
+      />
+      <ForwardDialog
+        message={forwardingMessage}
+        conversations={forwardTargets ?? []}
+        onClose={() => setForwardingMessage(null)}
+        onConfirm={handleForwardConfirm}
       />
     </section>
   );

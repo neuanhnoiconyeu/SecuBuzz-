@@ -1,5 +1,5 @@
 import type { Conversation } from '@/conversations/conversationModel';
-import type { OutboundMessage } from '@/messaging/messageModel';
+import type { MessageEncryptionMetadata, OutboundMessage } from '@/messaging/messageModel';
 import type { MessagingTransport, MessagingTransportHandlers } from '@/messaging/transport';
 import { DemoTransportDisposedError } from '@/messaging/localDemoTransport';
 import { RealtimeOperationError, type RealtimeClient, type RealtimeEvent } from './realtimeModel';
@@ -128,6 +128,37 @@ export class RealtimeMessagingTransport implements MessagingTransport {
   async markRead(conversationId: string, messageId: string) {
     this.assertConversation(conversationId);
     await this.client.markRead(conversationId, messageId);
+  }
+
+  async deleteMessage(conversationId: string, messageId: string) {
+    this.assertConversation(conversationId);
+    if (!messageId) throw new RealtimeOperationError('invalid_payload');
+    if (!this.client.canSendMessages) throw new RealtimeOperationError('recipient_keys_unavailable');
+  }
+
+  async editMessage(
+    conversationId: string,
+    messageId: string,
+    encryption: MessageEncryptionMetadata,
+    editedAt: string
+  ) {
+    this.assertConversation(conversationId);
+    if (!messageId || !encryption || !editedAt) throw new RealtimeOperationError('invalid_payload');
+    // Real transport: cần server hỗ trợ message:edit nên hiện vẫn bị chặn như deleteMessage.
+    if (this.mode !== 'local-demo' && !this.client.canSendMessages) {
+      throw new RealtimeOperationError('recipient_keys_unavailable');
+    }
+    // Local demo: không có người nhận thật, phát lại cho các view đang subscribe.
+    if (this.mode === 'local-demo') {
+      this.notify(conversationId, (handlers) =>
+        handlers.onMessageEdited?.({
+          messageId,
+          senderId: this.client.actorId,
+          encryption,
+          editedAt,
+        })
+      );
+    }
   }
 
   private notify(conversationId: string, operation: (handlers: MessagingTransportHandlers) => void) {

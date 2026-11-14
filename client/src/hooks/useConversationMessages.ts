@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { appendMessage, createClientMessageId, deleteMessageById, editMessageContent, toggleMessagePin, toggleMessageReaction, updateMessageDeliveryStatus, } from '@/messaging/messageState';
+import { appendMessage, createClientMessageId, deleteMessageById, deleteMessageBySender, editMessageBySender, removeMessageById, toggleMessagePin, toggleMessageReaction, updateMessageDeliveryStatus } from '@/messaging/messageState';
 import type {
   ChatMessage,
   ConnectionStatus,
@@ -51,8 +51,17 @@ export interface UseConversationMessagesResult {
     }
   ): Promise<boolean>;
   retryMessage(messageId: string): Promise<boolean>;
-  editMessage(messageId: string, newConten: string): void;
+  forwardMessage(
+  source: ChatMessage,
+  targetConversationIds: string[],
+  note?: string
+  ): Promise<{ succeeded: string[]; failed: string[] }>;
+  editMessage(messageId: string, newContent: string): Promise<boolean>;
+  canEdit: boolean;
   deleteMessage(messageId: string): void;
+  removeMessage(messageId: string): void;
+  unsendMessage(messageId: string): Promise<boolean>;
+  canUnsend: boolean;
   togglePin(messageId: string): void;
   toggleReaction(messageId: string, emoji: string): void;
   typingUsers: Array<{ userId: string; displayName: string }>;
@@ -100,6 +109,8 @@ export function useConversationMessages({
   presentationActive = true,
 }: UseConversationMessagesOptions): UseConversationMessagesResult {
   const [messagesByConversation, setMessagesByConversation] = useState<Record<string, ChatMessage[]>>({});
+  const messagesStateRef = useRef(messagesByConversation);
+  messagesStateRef.current = messagesByConversation;
   const [presence, setPresence] = useState<PresenceStatus | undefined>(initialPresence);
   const initialPresenceRef = useRef(initialPresence);
   initialPresenceRef.current = initialPresence;
@@ -358,6 +369,27 @@ export function useConversationMessages({
           setTypingUsers(Array.from(incomingTypers.current).filter(([, value]) => value.isTyping)
             .map(([userId, value]) => ({ userId, displayName: value.displayName })));
         },
+        onMessageDeleted: ({ messageId, senderId }) => {
+          if (!active) return;
+          setMessagesByConversation((state) =>
+            deleteMessageBySender(state, subscribedConversationId, messageId, senderId)
+          );
+        },
+        onMessageEdited: ({ messageId, senderId, encryption, editedAt }) => {
+          if (!active) return;
+          const existing = messagesStateRef.current[subscribedConversationId]?.find((m) => m.id === messageId);
+          if (!existing || existing.senderId !== senderId || existing.isDeleted) return;
+          const meta: MessageEncryptionMetadata = { ...encryption, scope: 'browser-demo' };
+          void cryptoService.decrypt(subscribedKeyContext, encryption, cryptoContext(existing)).then(
+            (content) => {
+              if (!active) return;
+              setMessagesByConversation((state) =>
+                editMessageBySender(state, subscribedConversationId, messageId, senderId, content, meta, editedAt)
+              );
+            },
+            () => { /* giải mã lỗi: bỏ qua */ },
+          );
+        },
       });
       cleanups.push(() => {
         unsubscribe();
@@ -493,11 +525,131 @@ export function useConversationMessages({
     }
   }, [conversationId, messagesByConversation, transport]);
 
-    const editMessage = useCallback((messageId: string, newContent: string) => {
-      setMessagesByConversation((state) =>
-        editMessageContent(state, conversationId, messageId, newContent)
-      );
+    const forwardMessage = useCallback(async (
+      source: ChatMessage,
+      targetConversationIds: string[],
+      note = ''
+    ) => {
+      const succeeded: string[] = [];
+      const failed: string[] = [];
+      const forwardedFrom = source.forwardedFrom ?? source.senderName;
+
+      const deliver = async (
+        targetId: string,
+        targetKeyContext: ConversationKeyContext,
+        content: string,
+        extra: Partial<Pick<ChatMessage, 'forwardedFrom' | 'attachments' | 'voice'>>
+      ): Promise<boolean> => {
+        const message: ChatMessage = {
+          id: createClientMessageId(),
+          conversationId: targetId,
+          senderId: currentUserId,
+          senderName: currentUserName,
+          content,
+          timestamp: new Date().toISOString(),
+          type: extra.voice ? 'voice' : 'text',
+          deliveryStatus: 'sending',
+          ...extra,
+        };
+        let encryption: MessageEncryptionMetadata;
+        try {
+          const encrypted = await cryptoService.encrypt(targetKeyContext, content, cryptoContext(message));
+          encryption = { ...encrypted, scope: 'browser-demo' };
+        } catch {
+          return false;
+        }
+        const localMessage = { ...message, encryption };
+        setMessagesByConversation((state) => appendMessage(state, localMessage));
+        notifyActivity(localMessage, 'outgoing');
+        try {
+          await transport.sendMessage({
+            id: message.id,
+            conversationId: targetId,
+            senderId: currentUserId,
+            senderName: currentUserName,
+            timestamp: message.timestamp,
+            type: 'text',
+            encryption,
+          });
+          setMessagesByConversation((state) => updateMessageDeliveryStatus(state, targetId, message.id, 'sent'));
+          return true;
+        } catch {
+          setMessagesByConversation((state) => updateMessageDeliveryStatus(state, targetId, message.id, 'failed'));
+          return false;
+        }
+      };
+
+      for (const targetId of targetConversationIds) {
+        if (transport.canSendMessages === false || sendLocks.current.has(targetId)) {
+          failed.push(targetId);
+          continue;
+        }
+        sendLocks.current.add(targetId);
+        try {
+          const targetKeyContext: ConversationKeyContext = { conversationId: targetId, localUserId: currentUserId };
+          const status = await cryptoService.prepareConversation(targetKeyContext);
+          if (!status.localEncryptionAvailable) {
+            failed.push(targetId);
+            continue;
+          }
+          const ok = await deliver(targetId, targetKeyContext, source.content, {
+            forwardedFrom,
+            ...(source.attachments ? { attachments: source.attachments } : {}),
+            ...(source.voice ? { voice: source.voice } : {}),
+          });
+          if (ok && note.trim()) await deliver(targetId, targetKeyContext, note.trim(), {});
+          (ok ? succeeded : failed).push(targetId);
+        } catch {
+          failed.push(targetId);
+        } finally {
+          sendLocks.current.delete(targetId);
+        }
+      }
+      return { succeeded, failed };
+    }, [cryptoService, currentUserId, currentUserName, notifyActivity, transport]);
+
+    const removeMessage = useCallback((messageId: string) => {
+      setMessagesByConversation((state) => removeMessageById(state, conversationId, messageId));
     }, [conversationId]);
+
+    const unsendMessage = useCallback(async (messageId: string) => {
+      const message = (messagesByConversation[conversationId] ?? []).find((candidate) => candidate.id === messageId);
+      if (!message || message.senderId !== currentUserId || message.isDeleted) return false;
+      if (message.deliveryStatus === 'failed') {
+        setMessagesByConversation((state) => removeMessageById(state, conversationId, messageId));
+        return true;
+      }
+      if (message.deliveryStatus === 'sending' || !transport.deleteMessage || transport.canSendMessages === false) return false;
+      try {
+        await transport.deleteMessage(conversationId, messageId);
+      } catch {
+        return false;
+      }
+      setMessagesByConversation((state) => deleteMessageBySender(state, conversationId, messageId, currentUserId));
+      return true;
+    }, [conversationId, currentUserId, messagesByConversation, transport]);
+
+    const editMessage = useCallback(async (messageId: string, newContent: string): Promise<boolean> => {
+      const content = newContent.trim();
+      const message = (messagesStateRef.current[conversationId] ?? []).find((m) => m.id === messageId);
+      if (!content || !message || message.senderId !== currentUserId || message.isDeleted) return false;
+      if (message.deliveryStatus === 'sending' || message.deliveryStatus === 'failed') return false;
+      if (content === message.content) return true;
+      if (!transport.editMessage || transport.canSendMessages === false) return false;
+
+      try {
+        const encrypted = await cryptoService.encrypt(keyContext, content, cryptoContext(message));
+        const encryption: MessageEncryptionMetadata = { ...encrypted, scope: 'browser-demo' };
+        const editedAt = new Date().toISOString();
+        await transport.editMessage(conversationId, messageId, encryption, editedAt);
+        setMessagesByConversation((state) =>
+          editMessageBySender(state, conversationId, messageId, currentUserId, content, encryption, editedAt)
+        );
+        return true;
+      } catch {
+        return false;
+      }
+    }, [conversationId, cryptoService, currentUserId, keyContext, transport]);
 
     const deleteMessage = useCallback((messageId: string) => {
       setMessagesByConversation((state) =>
@@ -526,13 +678,18 @@ export function useConversationMessages({
     isSending: (pendingCounts[conversationId] ?? 0) > 0,
     sendMessage,
     retryMessage,
+    forwardMessage,
     editMessage,
     deleteMessage,
+    removeMessage,
+    unsendMessage,
+    canUnsend: Boolean(transport.deleteMessage) && transport.canSendMessages !== false,
     togglePin,
     toggleReaction,
     typingUsers,
     notifyTypingActivity,
     stopTyping,
     canRetryMessage: (messageId: string) => transport.canRetryMessage?.(conversationId, messageId) ?? true,
+    canEdit: Boolean(transport.editMessage) && transport.canSendMessages !== false,
   };
 }
