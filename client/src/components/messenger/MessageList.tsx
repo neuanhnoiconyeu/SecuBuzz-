@@ -1,8 +1,10 @@
+import { UnsendDialog } from './UnsendDialog';
+import { EMOJI_CATEGORIES, QUICK_EMOJIS } from './emojiData';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import {
-  AlertTriangle, ArrowDown, Check, Edit2, FileText, LockKeyhole, Mic, MoreHorizontal,
-  Pin, Plus, Reply, SmilePlus, Trash2, X,
+  AlertTriangle, ArrowDown, Check, Edit2, FileText, Forward, LockKeyhole, Mic, MoreHorizontal,
+  Pin, Plus, Reply, Undo2, SmilePlus, Trash2, X,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/branding';
 import { Badge, Button, Surface } from '@/components/ui';
@@ -21,10 +23,13 @@ export interface MessageListProps {
   onRetryMessage(messageId: string): void;
   canRetryMessage?(messageId: string): boolean;
   onReplyMessage?: (message: ChatMessage) => void;
-  onEditMessage?: (messageId: string, newContent: string) => void;
+  onEditMessage?: (messageId: string, newContent: string) => Promise<boolean> | boolean | void;
+  canEditMessage?: boolean;
   onDeleteMessage?: (messageId: string) => void;
+  onUnsendMessage?: (messageId: string) => void;
   onTogglePin?: (messageId: string) => void;
   onToggleReaction?: (messageId: string, emoji: string) => void;
+  onForwardMessage?: (message: ChatMessage) => void;
 }
 
 function formatTime(timestamp: string): string {
@@ -50,27 +55,22 @@ function deliveryLabel(status: ChatMessage['deliveryStatus'], transportMode: Tra
   }
 }
 
-/** Same 6 quick reactions as Messenger. */
-const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '😡'];
-const MORE_EMOJIS = [
-  '🔥', '🎉', '👏', '💯', '🙏', '👀',
-  '🤔', '🥰', '😎', '🥳', '😭', '🤯',
-  '🫡', '🤝', '🚀', '💜', '✨', '⚡',
-  '💀', '🤡', '👻', '🎃', '🍀', '☕',
-];
 
 export function MessageList({
   messages,
   currentUserId,
   currentUserName = 'You',
   active = true,
+  canEditMessage = true,
   onRetryMessage,
   canRetryMessage,
   onReplyMessage,
   onEditMessage,
   onDeleteMessage,
+  onUnsendMessage,
   onTogglePin,
   onToggleReaction,
+  onForwardMessage,
   transportMode = 'local-demo',
 }: MessageListProps) {
   const historyRef = useRef<HTMLDivElement>(null);
@@ -81,10 +81,24 @@ export function MessageList({
   const { enteringIds, finishEntry } = useMessageEntryMotion(messages, active);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState('');
+  const [editError, setEditError] = useState('');
+  const saveEdit = async (messageId: string) => {
+    const text = editDraft.trim();
+    if (!text) return;
+    const ok = await onEditMessage?.(messageId, text);
+    if (ok === false) {
+      setEditError('Could not edit this message. Your original message is unchanged.');
+      return;
+    }
+    setEditError('');
+    setEditingId(null);
+  };
+  const [unsendingMessage, setUnsendingMessage] = useState<ChatMessage | null>(null);
 
   // Reaction picker (quick bar -> expanded grid) and "more" menu: only one open at a time.
   const [pickerOpenId, setPickerOpenId] = useState<string | null>(null);
   const [pickerExpanded, setPickerExpanded] = useState(false);
+  const [pickerCategory, setPickerCategory] = useState(0);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const popoverTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -301,7 +315,7 @@ export function MessageList({
               const myReactions = new Set(
                 (message.reactions ?? []).filter((r) => r.userIds.includes(currentUserId)).map((r) => r.emoji),
               );
-              const canShowMenu = !!(onTogglePin || (isOutgoing && (onEditMessage || onDeleteMessage)));
+              const canShowMenu = !!(onForwardMessage || onTogglePin || (isOutgoing && ((onEditMessage && canEditMessage) || onDeleteMessage)));
 
               return (
                 <article
@@ -338,26 +352,28 @@ export function MessageList({
                           value={editDraft}
                           onChange={(e) => setEditDraft(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter' && editDraft.trim()) {
-                              onEditMessage?.(message.id, editDraft);
-                              setEditingId(null);
-                            } else if (e.key === 'Escape') {
-                              setEditingId(null);
-                            }
+                            if (e.key === 'Enter' && editDraft.trim()) void saveEdit(message.id);
+                            else if (e.key === 'Escape') { setEditingId(null); setEditError(''); }
                           }}
                           style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(139,92,246,0.5)', background: 'rgba(0,0,0,0.25)', color: 'inherit' }}
                           autoFocus
                         />
-                        <Button size="sm" variant="primary" aria-label="Save edit" onClick={() => { onEditMessage?.(message.id, editDraft); setEditingId(null); }}>
+                        <Button size="sm" variant="primary" aria-label="Save edit" onClick={() => void saveEdit(message.id)}>
                           <Check size={14} />
                         </Button>
-                        <Button size="sm" variant="outline" aria-label="Cancel edit" onClick={() => setEditingId(null)}>
+                        <Button size="sm" variant="outline" aria-label="Cancel edit" onClick={() => { setEditingId(null); setEditError(''); }}>
                           <X size={14} />
                         </Button>
+                        {editError && <span role="alert" style={{ color: 'var(--color-error)', fontSize: '0.75rem' }}>{editError}</span>}
                       </div>
                     ) : (
                       <div className={`msg-bubble-wrap ${hasReactions ? 'msg-bubble-wrap--has-reactions' : ''}`}>
                         <div className="message-bubble" style={message.isDeleted ? { fontStyle: 'italic', opacity: 0.6 } : undefined}>
+                          {message.forwardedFrom && (
+                            <span className="message-forwarded-label">
+                              <Forward size={12} aria-hidden="true" /> Forwarded from {message.forwardedFrom}
+                            </span>
+                          )}
                           {message.content}
 
                           {!message.isDeleted && message.attachments && message.attachments.length > 0 && (
@@ -432,22 +448,40 @@ export function MessageList({
                                 {isPickerOpen && (
                                   <div id={`${popoverId}-${message.id}-reactions`} ref={popoverRef} onKeyDown={handlePopoverKeyDown} className={`rx-popover ${pickerExpanded ? 'rx-grid-panel' : 'rx-bar'}`} role="menu" aria-label="Choose a reaction">
                                     {pickerExpanded ? (
-                                      <div className="rx-grid">
-                                        {[...QUICK_EMOJIS, ...MORE_EMOJIS].map((emoji) => (
-                                          <button
-                                            key={emoji}
-                                            type="button"
-                                            className="rx-emoji-btn"
-                                            role="menuitemcheckbox"
-                                            aria-checked={myReactions.has(emoji)}
-                                            aria-label={`React ${emoji}`}
-                                            onClick={() => react(message.id, emoji)}
-                                            title={`React ${emoji}`}
-                                          >
-                                            {emoji}
-                                          </button>
-                                        ))}
-                                      </div>
+                                <>
+                                  <div className="rx-tabs" role="tablist" aria-label="Emoji categories">
+                                    {EMOJI_CATEGORIES.map((category, index) => (
+                                      <button
+                                        key={category.id}
+                                        type="button"
+                                        role="tab"
+                                        className="rx-tab"
+                                        aria-selected={index === pickerCategory}
+                                        aria-label={category.label}
+                                        title={category.label}
+                                        onClick={() => setPickerCategory(index)}
+                                      >
+                                        {category.icon}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <div className="rx-grid">
+                                    {EMOJI_CATEGORIES[pickerCategory]!.emojis.map((emoji) => (
+                                      <button
+                                        key={emoji}
+                                        type="button"
+                                        className="rx-emoji-btn"
+                                        role="menuitemcheckbox"
+                                        aria-checked={myReactions.has(emoji)}
+                                        aria-label={`React ${emoji}`}
+                                        onClick={() => react(message.id, emoji)}
+                                        title={`React ${emoji}`}
+                                      >
+                                        {emoji}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </>
                                     ) : (
                                       <>
                                         {QUICK_EMOJIS.map((emoji) => (
@@ -509,12 +543,17 @@ export function MessageList({
 
                                 {isMenuOpen && (
                                   <div id={`${popoverId}-${message.id}-actions`} ref={popoverRef} onKeyDown={handlePopoverKeyDown} className="rx-popover msg-menu" role="menu" aria-label="Message actions">
+                                    {onForwardMessage && (
+                                      <button type="button" role="menuitem" className="msg-menu-item" onClick={() => { onForwardMessage(message); closePopovers(true); }}>
+                                        <Forward size={14} aria-hidden="true" /> Forward
+                                      </button>
+                                    )}
                                     {onTogglePin && (
                                       <button type="button" role="menuitem" className="msg-menu-item" onClick={() => { onTogglePin(message.id); closePopovers(true); }}>
                                         <Pin size={14} aria-hidden="true" /> {message.isPinned ? 'Unpin' : 'Pin'}
                                       </button>
                                     )}
-                                    {isOutgoing && onEditMessage && (
+                                    {isOutgoing && onEditMessage && canEditMessage && (
                                       <button
                                         type="button"
                                         role="menuitem"
@@ -524,9 +563,19 @@ export function MessageList({
                                         <Edit2 size={14} aria-hidden="true" /> Edit
                                       </button>
                                     )}
-                                    {isOutgoing && onDeleteMessage && (
-                                      <button type="button" role="menuitem" className="msg-menu-item msg-menu-item--danger" onClick={() => { onDeleteMessage(message.id); closePopovers(true); }}>
-                                        <Trash2 size={14} aria-hidden="true" /> Delete
+                                    {!isOutgoing && onDeleteMessage && (
+                                      <button type="button" role="menuitem" className="msg-menu-item" onClick={() => { onDeleteMessage(message.id); closePopovers(true); }}>
+                                        <Trash2 size={14} aria-hidden="true" /> Delete for me
+                                      </button>
+                                    )}
+                                    {isOutgoing && (onUnsendMessage || onDeleteMessage) && (
+                                      <button
+                                        type="button"
+                                        role="menuitem"
+                                        className="msg-menu-item msg-menu-item--danger"
+                                        onClick={() => { closePopovers(); setUnsendingMessage(message); }}
+                                      >
+                                        <Undo2 size={14} aria-hidden="true" /> Unsend
                                       </button>
                                     )}
                                   </div>
@@ -572,6 +621,18 @@ export function MessageList({
           </Button>
         </div>
       )}
+        <UnsendDialog
+          message={unsendingMessage}
+          canUnsendEveryone={Boolean(onUnsendMessage)}
+          onClose={() => setUnsendingMessage(null)}
+          onConfirm={(scope) => {
+            if (unsendingMessage) {
+              if (scope === 'everyone') onUnsendMessage?.(unsendingMessage.id);
+              else onDeleteMessage?.(unsendingMessage.id);
+            }
+            setUnsendingMessage(null);
+        }}
+      />
     </div>
   );
 }

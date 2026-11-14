@@ -1,5 +1,5 @@
 import type { Conversation } from '@/conversations/conversationModel';
-import type { EncryptedIncomingMessage, OutboundMessage } from '@/messaging/messageModel';
+import type { EncryptedIncomingMessage, MessageEncryptionMetadata, OutboundMessage } from '@/messaging/messageModel';
 import type { MessagingTransport, MessagingTransportHandlers } from '@/messaging/transport';
 import { DemoTransportDisposedError } from '@/messaging/localDemoTransport';
 import { RealtimeOperationError, type RealtimeClient, type RealtimeEvent } from './realtimeModel';
@@ -135,6 +135,37 @@ export class RealtimeMessagingTransport implements MessagingTransport {
   async markRead(conversationId: string, messageId: string) {
     this.assertConversation(conversationId);
     await this.client.markRead(conversationId, messageId);
+  }
+
+  async deleteMessage(conversationId: string, messageId: string) {
+    this.assertConversation(conversationId);
+    if (!messageId) throw new RealtimeOperationError('invalid_payload');
+    if (!this.client.canSendMessages) throw new RealtimeOperationError('recipient_keys_unavailable');
+  }
+
+  async editMessage(
+    conversationId: string,
+    messageId: string,
+    encryption: MessageEncryptionMetadata,
+    editedAt: string
+  ) {
+    this.assertConversation(conversationId);
+    if (!messageId || !encryption || !editedAt) throw new RealtimeOperationError('invalid_payload');
+    // Real transport: needs server support for message:edit, so it stays blocked like deleteMessage.
+    if (this.mode !== 'local-demo' && !this.client.canSendMessages) {
+      throw new RealtimeOperationError('recipient_keys_unavailable');
+    }
+    // Local demo: no real recipient, replay to subscribed views.
+    if (this.mode === 'local-demo') {
+      this.notify(conversationId, (handlers) =>
+        handlers.onMessageEdited?.({
+          messageId,
+          senderId: this.client.actorId,
+          encryption,
+          editedAt,
+        })
+      );
+    }
   }
 
   async confirmDelivery(untrusted: EncryptedIncomingMessage) {

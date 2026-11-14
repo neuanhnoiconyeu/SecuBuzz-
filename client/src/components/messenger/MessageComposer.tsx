@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
-import { BellRing, Check, FileText, Mic, Paperclip, Send, Square, X } from 'lucide-react';
+import { BellRing, Check, FileText, Mic, Paperclip, Send, Smile, Square, X } from 'lucide-react';
+import { EMOJI_CATEGORIES } from './emojiData';
 import { Button } from '@/components/ui';
 import type { MessageAttachment, VoiceMessageMetadata } from '@/messaging/messageModel';
 
@@ -56,6 +57,9 @@ export function MessageComposer({
   const [voiceDraft, setVoiceDraft] = useState<VoiceMessageMetadata | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [emojiCategory, setEmojiCategory] = useState(0);
+  const emojiWrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -77,6 +81,25 @@ export function MessageComposer({
     window.addEventListener('resize', resizeInput);
     return () => window.removeEventListener('resize', resizeInput);
   }, []);
+
+  useEffect(() => {
+    if (!emojiOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!emojiWrapRef.current?.contains(event.target as Node)) setEmojiOpen(false);
+    };
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setEmojiOpen(false);
+        inputRef.current?.focus();
+      }
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [emojiOpen]);
 
   useEffect(() => {
       return () => {
@@ -158,6 +181,21 @@ export function MessageComposer({
       mediaRecorderRef.current.stop();
     }
     setIsRecording(false);
+  };
+
+  const insertEmoji = (emoji: string) => {
+    const input = inputRef.current;
+    const start = input?.selectionStart ?? value.length;
+    const end = input?.selectionEnd ?? value.length;
+    const next = value.slice(0, start) + emoji + value.slice(end);
+    setValue(next);
+    setSendFeedback(false);
+    onTypingActivity?.();
+    const caret = start + emoji.length;
+    window.requestAnimationFrame(() => {
+      input?.focus();
+      input?.setSelectionRange(caret, caret);
+    });
   };
 
   const submit = async () => {
@@ -344,29 +382,76 @@ export function MessageComposer({
         <Button
           type="button"
           variant="ghost"
+          className="composer-icon-button"
           disabled={disabled || isSending}
           onClick={() => fileInputRef.current?.click()}
           className="composer-attach"
           aria-label="Attach files or images"
           title="Attach image or file"
-          leadingIcon={<Paperclip size={16} aria-hidden="true" />}
-        >
-          Attach
-        </Button>
+          leadingIcon={<Paperclip size={18} aria-hidden="true" />}
+        />
 
         <Button
           type="button"
           variant="ghost"
+          className="composer-icon-button"
+          data-recording={isRecording}
           disabled={disabled || isSending}
           onClick={isRecording ? stopRecording : () => void startRecording()}
           className="composer-voice"
           aria-label={isRecording ? 'Stop voice recording' : 'Record voice message'}
           title={isRecording ? 'Stop recording' : 'Record voice message'}
-          leadingIcon={isRecording ? <Square size={16} aria-hidden="true" /> : <Mic size={16} aria-hidden="true" />}
-        >
-          {isRecording ? `${recordingSeconds}s` : 'Voice'}
-        </Button>
+          leadingIcon={isRecording ? <Square size={18} aria-hidden="true" /> : <Mic size={18} aria-hidden="true" />}
+        />
+                <div className="composer-emoji-wrap" ref={emojiWrapRef}>
+          <Button
+            type="button"
+            variant="ghost"
+            className="composer-icon-button"
+            disabled={disabled || isSending}
+            onClick={() => setEmojiOpen((open) => !open)}
+            aria-label="Insert emoji"
+            aria-haspopup="true"
+            aria-expanded={emojiOpen}
+            title="Insert emoji"
+            leadingIcon={<Smile size={18} aria-hidden="true" />}
+          />
 
+          {emojiOpen && (
+            <div className="composer-emoji-popover" role="dialog" aria-label="Emoji picker">
+              <div className="rx-tabs" role="tablist" aria-label="Emoji categories">
+                {EMOJI_CATEGORIES.map((category, index) => (
+                  <button
+                    key={category.id}
+                    type="button"
+                    role="tab"
+                    className="rx-tab"
+                    aria-selected={index === emojiCategory}
+                    aria-label={category.label}
+                    title={category.label}
+                    onClick={() => setEmojiCategory(index)}
+                  >
+                    {category.icon}
+                  </button>
+                ))}
+              </div>
+              <div className="composer-emoji-grid">
+                {EMOJI_CATEGORIES[emojiCategory]!.emojis.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    className="composer-emoji-btn"
+                    onClick={() => insertEmoji(emoji)}
+                    title={emoji}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        
         <textarea
           ref={inputRef}
           id="message-input"

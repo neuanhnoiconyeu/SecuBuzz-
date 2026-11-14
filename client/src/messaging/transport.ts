@@ -1,9 +1,11 @@
+import type { EncryptedMessagePayload } from '@/utils/crypto';
 import type {
   ChatMessage,
   ConnectionStatus,
   DeliveryStatus,
   EncryptedIncomingMessage,
   IncomingMessage,
+  MessageEncryptionMetadata,
   OutboundMessage,
   PresenceStatus,
   TransportMode,
@@ -21,6 +23,20 @@ export interface TypingUpdate {
   timestamp: string;
 }
 
+export interface MessageDeletedUpdate {
+  messageId: string;
+  senderId: string;
+  encryption: EncryptedMessagePayload;
+  editedAt: string;
+}
+
+export interface MessageEditedUpdate {
+  messageId: string;
+  senderId: string;
+  encryption: EncryptedMessagePayload;
+  editedAt: string;
+}
+
 export interface MessagingTransportHandlers {
   onMessage(message: IncomingMessage): void;
   onDeliveryStatus(update: DeliveryStatusUpdate): void;
@@ -28,6 +44,8 @@ export interface MessagingTransportHandlers {
   onSecurityAlert(message: ChatMessage): void;
   onConnectionChange(status: ConnectionStatus): void;
   onTypingUpdate?(update: TypingUpdate): void;
+  onMessageDeleted?(update: MessageDeletedUpdate): void;
+  onMessageEdited?(update: MessageEditedUpdate): void;
 }
 
 /**
@@ -49,5 +67,12 @@ export interface MessagingTransport {
   disconnect(conversationId: string): Promise<void>;
   sendTyping?(conversationId: string, isTyping: boolean): void;
   markRead?(conversationId: string, messageId: string): Promise<void>;
+  deleteMessage?(conversationId: string, messageId: string): Promise<void>;
+  editMessage?(
+  conversationId: string,
+  messageId: string,
+  encryption: MessageEncryptionMetadata,
+  editedAt: string
+  ): Promise<void>;
   canRetryMessage?(conversationId: string, messageId: string): boolean;
 }

@@ -1,4 +1,4 @@
-import type { ChatMessage, DeliveryStatus } from './messageModel';
+import type { ChatMessage, DeliveryStatus, MessageEncryptionMetadata } from './messageModel';
 
 export type ConversationMessages = Record<string, ChatMessage[]>;
 export const MAX_MESSAGES_PER_CONVERSATION = 1_000;
@@ -147,3 +147,53 @@ export function toggleMessageReaction(
   };
 }
 
+export function removeMessageById(
+  messagesByConversation: ConversationMessages,
+  conversationId: string,
+  messageId: string
+): ConversationMessages {
+  const messages = messagesByConversation[conversationId];
+  if (!messages?.some((message) => message.id === messageId)) return messagesByConversation;
+  return {
+    ...messagesByConversation,
+    [conversationId]: messages.filter((message) => message.id !== messageId),
+  };
+}
+
+export function deleteMessageBySender(
+  messagesByConversation: ConversationMessages,
+  conversationId: string,
+  messageId: string,
+  senderId: string
+): ConversationMessages {
+  const messages = messagesByConversation[conversationId];
+  const target = messages?.find((message) => message.id === messageId);
+  if (!messages || !target || target.senderId !== senderId || target.isDeleted) return messagesByConversation;
+  return deleteMessageById(messagesByConversation, conversationId, messageId);
+}
+
+export function editMessageBySender(
+  messagesByConversation: ConversationMessages,
+  conversationId: string,
+  messageId: string,
+  senderId: string,
+  content: string,
+  encryption: MessageEncryptionMetadata | undefined,
+  editedAt: string
+): ConversationMessages {
+  const messages = messagesByConversation[conversationId];
+  const trimmed = content.trim();
+  const target = messages?.find((m) => m.id === messageId);
+  if (!messages || !target || !trimmed) return messagesByConversation;
+  if (target.senderId !== senderId || target.isDeleted) return messagesByConversation;
+  if (target.editedAt && Date.parse(editedAt) < Date.parse(target.editedAt)) return messagesByConversation;
+
+  return {
+    ...messagesByConversation,
+    [conversationId]: messages.map((m) =>
+      m.id === messageId
+        ? { ...m, content: trimmed, isEdited: true, editedAt, ...(encryption ? { encryption } : {}) }
+        : m
+    ),
+  };
+}

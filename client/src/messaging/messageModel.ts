@@ -72,6 +72,7 @@ export interface ChatMessage {
   replyTo?: MessageReplyReference | undefined;
   reactions?: MessageReaction[] | undefined;
   isEdited?: boolean | undefined;
+  editedAt?: string | undefined; 
   isDeleted?: boolean | undefined;
   isPinned?: boolean | undefined;
   forwardedFrom?: string | undefined;
