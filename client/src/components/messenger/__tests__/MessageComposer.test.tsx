@@ -22,7 +22,7 @@ describe('MessageComposer', () => {
     fireEvent.change(input, { target: { value: 'hello' } });
     fireEvent.keyDown(input, { key: 'Enter', shiftKey: false });
 
-    await waitFor(() => expect(onSend).toHaveBeenCalledWith('hello'));
+    await waitFor(() => expect(onSend).toHaveBeenCalledWith('hello', undefined));
     await waitFor(() => expect(input).toHaveValue(''));
   });
 

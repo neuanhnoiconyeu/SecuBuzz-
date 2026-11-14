@@ -1,4 +1,6 @@
 import type { EncryptedMessagePayload } from '@/utils/crypto';
+export type { AttachmentMetadata as MessageAttachment } from '../../../shared/attachmentPolicy';
+import type { AttachmentMetadata as MessageAttachment } from '../../../shared/attachmentPolicy';
 
 /** Message contracts used by the UI, local state, and future transports. */
 export type MessageType = 'text' | 'system' | 'security_alert' | 'voice';
@@ -20,14 +22,6 @@ export interface MessageReplyReference {
   messageId: string;
   senderName: string;
   contentSnippet: string;
-}
-
-export interface MessageAttachment {
-  id: string;
-  name: string;
-  type: 'image' | 'file';
-  url: string;
-  sizeBytes: number;
 }
 
 export interface VoiceMessageMetadata {

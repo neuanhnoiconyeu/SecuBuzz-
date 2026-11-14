@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
-import { BellRing, Check, FileText, Mic, Paperclip, Send, Smile, Square, X } from 'lucide-react';
+import { BellRing, Check, Mic, Paperclip, Send, Smile, Square, X } from 'lucide-react';
 import { EMOJI_CATEGORIES } from './emojiData';
 import { Button } from '@/components/ui';
 import type { MessageAttachment, VoiceMessageMetadata } from '@/messaging/messageModel';
+import { AttachmentUploadError, type AttachmentUploader } from '@/messaging/attachmentUpload';
+import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT } from '../../../../shared/attachmentPolicy';
+import { useAttachmentDrafts } from '@/hooks/useAttachmentDrafts';
+import { MessageAttachmentView } from './MessageAttachmentView';
 
 function sizeToDraft(input: HTMLTextAreaElement | null) {
   if (!input) return;
@@ -27,6 +31,11 @@ export interface MessageComposerProps {
   draftValue?: string;
   onDraftChange?: (draft: string) => void;
   demoNotice?: string;
+  uploadAttachment?: AttachmentUploader;
+  discardAttachment?: (attachment: MessageAttachment) => Promise<void>;
+  attachmentActionLabel?: string;
+  droppedFiles?: readonly File[];
+  attachmentUnavailableReason?: string;
   onSend(content: string, extras?: MessageComposerSendExtras): Promise<boolean>;
   onBuzz(): void;
   onTypingActivity?(): void;
@@ -47,13 +56,26 @@ export function MessageComposer({
   setupError,
   onTypingActivity,
   onTypingStop,
+  uploadAttachment,
+  attachmentUnavailableReason,
+  discardAttachment,
+  attachmentActionLabel = 'Uploading',
+  droppedFiles,
 }: MessageComposerProps) {
   const [internalValue, setInternalValue] = useState('');
   const value = draftValue ?? internalValue;
   const setValue = onDraftChange ?? setInternalValue;
   const [sendError, setSendError] = useState('');
   const [sendFeedback, setSendFeedback] = useState(false);
-  const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const attachmentDrafts = useAttachmentDrafts({ disabled: disabled || isSending || isSubmitting || Boolean(attachmentUnavailableReason), uploadAttachment, discardAttachment });
+  const attachments = attachmentDrafts.drafts.map((draft) => draft.attachment);
+  const uploadProgress = attachmentDrafts.progress;
+  const processingAttachments = attachmentDrafts.processing;
+  const displayedError = setupError || sendError || attachmentDrafts.error;
+  const addAttachmentFiles = attachmentDrafts.addFiles;
+  const mounted = useRef(true);
+  const previousDrop = useRef<readonly File[] | undefined>();
   const [voiceDraft, setVoiceDraft] = useState<VoiceMessageMetadata | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
@@ -70,7 +92,16 @@ export function MessageComposer({
   const latestValue = useRef(value);
   latestValue.current = value;
   const hasContent = Boolean(value.trim()) || attachments.length > 0 || Boolean(voiceDraft);
-  const canSend = hasContent && !disabled && !isSending && !isRecording;
+  const isUploading = uploadProgress !== null;
+  const canSend = hasContent && !disabled && !isSending && !isRecording && !isUploading && !processingAttachments && !isSubmitting;
+
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    if (!droppedFiles || previousDrop.current === droppedFiles) return;
+    previousDrop.current = droppedFiles;
+    setSendFeedback(false);
+    void addAttachmentFiles(droppedFiles);
+  }, [droppedFiles, addAttachmentFiles]);
 
   useEffect(() => {
     sizeToDraft(inputRef.current);
@@ -111,27 +142,16 @@ export function MessageComposer({
     }, []);
 
   const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    const selected: MessageAttachment[] = Array.from(files).map((file) => ({
-      id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      name: file.name,
-      type: file.type.startsWith('image/') ? 'image' : 'file',
-      url: URL.createObjectURL(file),
-      sizeBytes: file.size,
-    }));
-
-    setAttachments((prev) => [...prev, ...selected]);
-    event.target.value = '';
-  };
-
-  const removeAttachment = (id: string) => {
-    setAttachments((prev) => prev.filter((item) => item.id !== id));
+    const files = Array.from(event.currentTarget.files ?? []);
+    event.currentTarget.value = '';
+    if (files.length === 0 || disabled || isSending || submitLock.current || attachmentUnavailableReason) return;
+    setSendFeedback(false);
+    setSendError('');
+    void attachmentDrafts.addFiles(files);
   };
 
   const startRecording = async () => {
-    if (disabled || isSending) return;
+    if (disabled || isSending || submitLock.current) return;
     setSendError('');
     setVoiceDraft(null);
 
@@ -201,27 +221,33 @@ export function MessageComposer({
   const submit = async () => {
     const content = value.trim();
     const hasExtras = attachments.length > 0 || Boolean(voiceDraft);
-    if ((!content && !hasExtras) || disabled || isSending || isRecording || submitLock.current) return;
+    if ((!content && !hasExtras) || disabled || isSending || isRecording || processingAttachments || submitLock.current) return;
     submitLock.current = true;
+    setIsSubmitting(true);
     setSendError('');
     setSendFeedback(false);
     onTypingStop?.();
     try {
+      const sentAttachments = attachments.length ? await attachmentDrafts.prepareForSend() : [];
+      if (!mounted.current) return;
       const extras: MessageComposerSendExtras = {
-        ...(attachments.length > 0 ? { attachments } : {}),
+        ...(sentAttachments.length > 0 ? { attachments: sentAttachments } : {}),
         ...(voiceDraft ? { voice: voiceDraft } : {}),
       };
       const accepted = await onSend(content, hasExtras ? extras : undefined);
+      if (!mounted.current) return;
       if (accepted) {
+        attachmentDrafts.clearAccepted();
         if (latestValue.current === value) setValue('');
-        setAttachments([]);
         setVoiceDraft(null);
         setSendFeedback(true);
       } else setSendError('The message was not accepted. Your draft is still here.');
-    } catch {
-      setSendError('The message was not accepted. Your draft is still here.');
+    } catch (failure) {
+      if (mounted.current) setSendError(failure instanceof AttachmentUploadError
+        ? failure.message : 'The message was not accepted. Your draft is still here.');
     } finally {
       submitLock.current = false;
+      if (mounted.current) setIsSubmitting(false);
     }
   };
 
@@ -236,7 +262,7 @@ export function MessageComposer({
     <form
       className="message-composer"
       aria-label={`Message composer for ${conversationName}`}
-      aria-busy={isSending}
+      aria-busy={isSending || isSubmitting || processingAttachments}
       data-submit-feedback={sendFeedback}
       onSubmit={(event) => {
         event.preventDefault();
@@ -258,43 +284,13 @@ export function MessageComposer({
             alignItems: 'center',
           }}
         >
-          {attachments.map((att) => (
-            <div
-              key={att.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '4px 8px',
-                borderRadius: '6px',
-                background: 'rgba(255, 255, 255, 0.85)',
-                border: '1px solid rgba(0, 0, 0, 0.1)',
-                fontSize: '0.78rem',
-                color: '#1f2937',
-              }}
-            >
-              {att.type === 'image' ? (
-                <img
-                  src={att.url}
-                  alt={att.name}
-                  style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px' }}
-                />
-              ) : (
-                <FileText size={16} />
-              )}
-              <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {att.name}
-              </span>
-              <span style={{ opacity: 0.6, fontSize: '0.7rem' }}>
-                ({Math.max(1, Math.round(att.sizeBytes / 1024))} KB)
-              </span>
-              <button
-                type="button"
-                onClick={() => removeAttachment(att.id)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', display: 'flex' }}
-                aria-label={`Remove ${att.name}`}
-              >
-                <X size={14} />
+          {attachmentDrafts.drafts.map((draft) => (
+            <div key={draft.attachment.id} className="composer-attachment-item">
+              <MessageAttachmentView attachment={draft.attachment} previewUrl={draft.previewUrl} compact />
+              <button type="button" className="composer-attachment-remove" onClick={() => {
+                if (!submitLock.current) { attachmentDrafts.remove(draft.attachment.id); setSendError(''); }
+              }} disabled={isSending || isSubmitting || processingAttachments} aria-label={`Remove ${draft.attachment.name}`}>
+                <X size={14} aria-hidden="true" />
               </button>
             </div>
           ))}
@@ -375,28 +371,29 @@ export function MessageComposer({
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/*,.pdf,.doc,.docx,.txt,.zip"
+          accept={ATTACHMENT_ACCEPT}
+          aria-label="Select attachments"
+          aria-describedby="message-attachment-limits"
+          disabled={disabled || isSending || isSubmitting || processingAttachments || Boolean(attachmentUnavailableReason)}
           onChange={handleFileSelect}
           style={{ display: 'none' }}
         />
         <Button
           type="button"
           variant="ghost"
-          className="composer-icon-button"
-          disabled={disabled || isSending}
+          disabled={disabled || isSending || isSubmitting || processingAttachments || Boolean(attachmentUnavailableReason)}
           onClick={() => fileInputRef.current?.click()}
           className="composer-attach"
           aria-label="Attach files or images"
-          title="Attach image or file"
+          title={attachmentUnavailableReason ?? ATTACHMENT_HINT}
           leadingIcon={<Paperclip size={18} aria-hidden="true" />}
         />
 
         <Button
           type="button"
           variant="ghost"
-          className="composer-icon-button"
           data-recording={isRecording}
-          disabled={disabled || isSending}
+          disabled={disabled || isSending || isUploading}
           onClick={isRecording ? stopRecording : () => void startRecording()}
           className="composer-voice"
           aria-label={isRecording ? 'Stop voice recording' : 'Record voice message'}
@@ -408,7 +405,7 @@ export function MessageComposer({
             type="button"
             variant="ghost"
             className="composer-icon-button"
-            disabled={disabled || isSending}
+            disabled={disabled || isSending || isUploading}
             onClick={() => setEmojiOpen((open) => !open)}
             aria-label="Insert emoji"
             aria-haspopup="true"
@@ -469,31 +466,32 @@ export function MessageComposer({
           placeholder={`Message ${conversationName}…`}
           rows={1}
           disabled={disabled || isSending}
-          aria-invalid={Boolean(setupError || sendError)}
-          aria-describedby={`message-input-hint message-input-demo${setupError || sendError ? ' message-input-error' : ''}`}
+          aria-invalid={Boolean(displayedError)}
+          aria-describedby={`message-input-hint message-input-demo${displayedError ? ' message-input-error' : ''}`}
         />
         <Button
           className="composer-send"
           type="submit"
           disabled={!canSend}
-          loading={isSending}
+          loading={isSending || isSubmitting}
           leadingIcon={sendFeedback
             ? <Check size={16} className="composer-submit-mark" aria-hidden="true" />
             : <Send size={16} aria-hidden="true" />}
           >
-          Send
+          {isUploading ? `${attachmentActionLabel} ${uploadProgress}/${attachments.length}` : 'Send'}
         </Button>
       </div>
 
-      {(setupError || sendError) && (
-        <p className="composer-error" id="message-input-error" role="alert">{setupError || sendError}</p>
+      {displayedError && (
+        <p className="composer-error" id="message-input-error" role="alert">{displayedError}</p>
       )}
 
       <div className="composer-caption">
+        <span className="sr-only" id="message-attachment-limits">{ATTACHMENT_HINT}</span>
         <p className="composer-demo-notice" id="message-input-demo">{demoNotice}</p>
         <p className="composer-hint" id="message-input-hint">Enter sends · Shift+Enter for a new line</p>
         <span className="sr-only">{messageCount} {messageCount === 1 ? 'message' : 'messages'} in this conversation.</span>
-        <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">{sendFeedback ? 'Message submitted.' : ''}</span>
+        <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">{processingAttachments ? 'Checking attachments…' : sendFeedback ? 'Message submitted.' : ''}</span>
       </div>
     </form>
   );
