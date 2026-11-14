@@ -4,10 +4,8 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const testDbPath = path.join(
-    __dirname,
-    "test-database.sqlite"
-);
+const testDirectory = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'secubuzz-legacy-test-'));
+const testDbPath = path.join(testDirectory, 'test.sqlite');
 
 process.env.DB_PATH = testDbPath;
 
@@ -100,4 +98,5 @@ after(() => {
             fs.unlinkSync(file);
         }
     }
+    fs.rmdirSync(testDirectory);
 });
