@@ -1,6 +1,6 @@
 import { RealtimeMessagingTransport } from '../RealtimeMessagingTransport';
 import { DEMO_REALTIME_MESSAGE_TEXT, RealtimeOperationError, type RealtimeClient, type RealtimeConnectionStatus, type RealtimeEvent } from '../realtimeModel';
-import type { OutboundMessage, TransportMode } from '@/messaging/messageModel';
+import type { EncryptedIncomingMessage, OutboundMessage, TransportMode } from '@/messaging/messageModel';
 import type { MessagingTransportHandlers } from '@/messaging/transport';
 import { createDemoConversations } from '@/conversations/demoConversations';
 
@@ -18,6 +18,9 @@ class Client implements RealtimeClient {
   mode: TransportMode = 'local-demo';
   actorId = 'local-user';
   canSendMessages = true;
+  canConfirmDelivery = true;
+  confirmDelivery = jest.fn(async (_message: EncryptedIncomingMessage) => undefined);
+  watchConversationParticipants = jest.fn();
   status: RealtimeConnectionStatus = 'connected';
   private listeners = new Set<(event: RealtimeEvent) => void>();
   connect = jest.fn(async () => { this.status = 'connected'; });
@@ -34,6 +37,38 @@ class Client implements RealtimeClient {
 }
 
 describe('RealtimeMessagingTransport', () => {
+  test('projects participant scope and confirms only real, known, non-self encrypted messages', async () => {
+    const client = new Client(); client.mode = 'realtime';
+    const bridge = new RealtimeMessagingTransport(client, createDemoConversations());
+    expect(client.watchConversationParticipants).toHaveBeenCalledWith(expect.arrayContaining([
+      { conversationId: 'demo-direct-ava', participantIds: expect.arrayContaining(['local-user', 'demo-ava']) },
+    ]));
+    const { scope: _scope, ...encryption } = outbound.encryption;
+    const message: EncryptedIncomingMessage = { ...outbound, encryption, senderId: 'demo-ava', deliveryStatus: 'sent' };
+    await bridge.confirmDelivery(message);
+    expect(client.confirmDelivery).toHaveBeenCalledWith(message);
+    for (const invalid of [
+      { ...message, senderId: client.actorId }, { ...message, senderId: 'unknown' },
+      { ...message, conversationId: 'unknown' }, { ...message, encryption: outbound.encryption },
+    ]) await expect(bridge.confirmDelivery(invalid)).rejects.toBeDefined();
+    client.canConfirmDelivery = false;
+    await expect(bridge.confirmDelivery(message)).rejects.toMatchObject({ code: 'recipient_keys_unavailable' });
+    expect(client.confirmDelivery).toHaveBeenCalledTimes(1);
+    bridge.dispose();
+    expect(client.watchConversationParticipants).toHaveBeenLastCalledWith([]);
+    await expect(bridge.confirmDelivery(message)).rejects.toMatchObject({ code: 'session_ended' });
+  });
+
+  test('valid server send rejection never counts as accepted and does not enable retry', async () => {
+    const client = new Client();
+    client.sendMessage.mockResolvedValueOnce({ status: 'error', code: 'policy_denied' } as never);
+    const bridge = new RealtimeMessagingTransport(client, createDemoConversations());
+    await expect(bridge.sendMessage(outbound)).rejects.toMatchObject({ code: 'policy_denied', serverCode: 'policy_denied', retryable: false });
+    expect(bridge.canRetryMessage(outbound.conversationId, outbound.id)).toBe(false);
+    await expect(bridge.sendMessage(outbound)).rejects.toBeDefined();
+    expect(client.sendMessage).toHaveBeenCalledTimes(1);
+    bridge.dispose();
+  });
   test('adapts canonical conversations without owning or disconnecting the session client', async () => {
     const client = new Client();
     const bridge = new RealtimeMessagingTransport(client, createDemoConversations());

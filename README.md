@@ -117,7 +117,7 @@ The `MessagingTransport` interface is the client boundary for connecting/reconne
 
 ## Project Structure
 
-The directory diagram below includes planned backend components. In this checkout, `server/` contains only `src/database/schema.sql`; it has no backend package, routes, or realtime runtime.
+The directory diagram below includes planned backend components. In this checkout, `server/` contains the Phase 8.7B Socket.IO realtime package (`server/README.md`) and the planned `src/database/schema.sql`; it has no REST routes, agents, or database runtime. The Database Team's Express API lives in `DATA/`.
 
 ```
 yahoo-security-messenger/
@@ -350,6 +350,14 @@ Production disables demo authentication and shows an honest unavailable-service 
 
 Development demo sessions now use one session-owned realtime client through the existing message hook. Open **System Log → Realtime demo controls** to simulate DM/group incoming messages, typing, Ava's presence, failed sends, going offline, and reconnecting. Connected/typing/presence/delivery/read indicators explicitly describe simulated activity. Message history, unread counts, previews, drafts, and Phase 7 local actions keep using the existing application state. Refresh ends the demo session.
 
-The separate Socket.IO client adapter uses an API-authenticated identity and a proposed cookie-session contract. It stays disabled until `NEXT_PUBLIC_REALTIME_CONTRACT_READY=true` and an approved HTTPS URL are configured alongside real authentication. No matching Socket.IO server or recipient key exchange is present in this repository. **Real message sending remains disabled**; local AES-GCM keys do not establish multi-user E2EE. Real accounts receive no demo conversations. Connection failure never selects a mock.
+The separate Socket.IO client adapter uses an API-authenticated identity and a proposed cookie-session contract. It stays disabled until `NEXT_PUBLIC_REALTIME_CONTRACT_READY=true` and an approved HTTPS URL are configured alongside real authentication. Phase 8.7A shipped without a matching server; Phase 8.7B (below) adds one that fails closed until the backend adapters exist. No recipient key exchange is present in this repository. **Real message sending remains disabled**; local AES-GCM keys do not establish multi-user E2EE. Real accounts receive no demo conversations. Connection failure never selects a mock.
 
 See the [Realtime/Kiro handoff contract](docs/realtime-client-contract.md) for event schemas, acknowledgement and retry rules, authorization, lifecycle, configuration, and missing backend/group dependencies. Validation and browser evidence are recorded in `artifacts/phase8-7a/`.
+
+## Phase 8.7B: Realtime server infrastructure
+
+`server/` now contains a Socket.IO 4.8 server that implements the Phase 8.7A event contract without changing it: cookie-session authentication through an injected session resolver, server-authorized conversation rooms, typing relay, privacy-filtered presence, read/delivery receipt routing, payload validation, rate limits, revocation, reconnect handling and graceful shutdown. It is mountable on the Database Team's Express server or runnable on its own (`cd server`, `npm install`, `npm start`).
+
+No production session resolver, membership authorizer, message store or recipient key verifier exists yet, so the server **fails closed**: every connection is rejected with `REALTIME_UNAVAILABLE`, read receipts answer `unavailable`, and `message:send` answers `recipient_keys_unavailable`. Real messaging, production authentication and multi-user E2EE are still not available. The client's readiness flags are unchanged.
+
+`npm test` in `server/` runs unit tests, real-socket integration tests with test-only adapters, a compatibility test that drives the actual 8.7A `SocketIoRealtimeClient` against the server, and a standalone smoke test. See the [Database Team handoff](docs/realtime-server-integration.md) for adapter contracts, error codes, idempotency, receipts and remaining blockers, and the Kiro spec in `.kiro/specs/realtime-server/`.

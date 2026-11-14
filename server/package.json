@@ -1,0 +1,29 @@
+{
+  "name": "secubuzz-realtime-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SecuBuzz Phase 8.7B Socket.IO realtime server infrastructure. Fails closed until Database/Security adapters are integrated.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/main.ts",
+    "type-check": "tsc --noEmit -p tsconfig.json",
+    "test": "node --test --test-concurrency=1 --test-timeout=60000 \"test/**/*.test.ts\""
+  },
+  "dependencies": {
+    "socket.io": "^4.8.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "socket.io-client": "^4.8.4",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  }
+}

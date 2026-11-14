@@ -21,6 +21,14 @@ test('read is terminal and delayed acknowledgements cannot regress delivery rece
   }
 });
 
+test('delivered does not regress to accepted and unknown receipt IDs do not mutate state', () => {
+  const sent = appendMessage({}, message('receipt', 1));
+  const delivered = updateMessageDeliveryStatus(sent, 'conversation', 'receipt', 'delivered');
+  expect(updateMessageDeliveryStatus(delivered, 'conversation', 'receipt', 'sent')).toBe(delivered);
+  expect(updateMessageDeliveryStatus(delivered, 'conversation', 'unknown', 'read')).toBe(delivered);
+  expect(updateMessageDeliveryStatus(delivered, 'unknown', 'receipt', 'read')).toBe(delivered);
+});
+
 test('bounds the in-memory window to the newest messages without mixing conversations', () => {
   let state = {};
   for (let index = 0; index < MAX_MESSAGES_PER_CONVERSATION + 5; index++) state = appendMessage(state, message(String(index), index));

@@ -11,6 +11,13 @@ const outbound: OutboundMessage = { id: incoming.id, conversationId: incoming.co
   senderName: 'Actor', timestamp, type: 'text', encryption: { ...encryption, scope: 'browser-demo' } };
 
 describe('realtime event validation', () => {
+  test('preserves only consistent normalized error codes and never remote error details', () => {
+    const unavailable = { type: 'error' as const, code: 'unavailable' as const, serverCode: 'REALTIME_UNAVAILABLE' as const };
+    expect(parseRealtimeEvent('error', unavailable, 'realtime')).toEqual(unavailable);
+    expect(parseRealtimeEvent('error', { ...unavailable, code: 'authentication_rejected' }, 'realtime')).toBeNull();
+    expect(parseRealtimeEvent('error', { ...unavailable, serverCode: 'UNKNOWN' }, 'realtime')).toBeNull();
+    expect(parseRealtimeEvent('error', { ...unavailable, details: 'secret' }, 'realtime')).toBeNull();
+  });
   test('projects exact encrypted incoming envelopes without decrypting or mutating source metadata', () => {
     const result = parseRealtimeEvent('message', { message: incoming }, 'realtime');
     expect(result).toEqual({ type: 'message', message: incoming });

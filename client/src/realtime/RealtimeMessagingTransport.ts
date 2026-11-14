@@ -1,9 +1,9 @@
 import type { Conversation } from '@/conversations/conversationModel';
-import type { MessageEncryptionMetadata, OutboundMessage } from '@/messaging/messageModel';
+import type { EncryptedIncomingMessage, MessageEncryptionMetadata, OutboundMessage } from '@/messaging/messageModel';
 import type { MessagingTransport, MessagingTransportHandlers } from '@/messaging/transport';
 import { DemoTransportDisposedError } from '@/messaging/localDemoTransport';
 import { RealtimeOperationError, type RealtimeClient, type RealtimeEvent } from './realtimeModel';
-import { parseOutboundMessage, parseRealtimeEvent, parseSendAcknowledgement } from './realtimeValidation';
+import { parseErrorAcknowledgement, parseOutboundMessage, parseRealtimeEvent, parseSendAcknowledgement } from './realtimeValidation';
 
 const MAX_TRACKED_SENDS = 2_000;
 const MAX_TRACKED_BYTES = 16 * 1024 * 1024;
@@ -27,10 +27,14 @@ export class RealtimeMessagingTransport implements MessagingTransport {
     this.mode = client.mode;
     this.conversations = new Map(conversations.map((conversation) => [conversation.id, conversation]));
     client.watchConversations([...this.conversations.keys()]);
+    client.watchConversationParticipants?.(conversations.map((conversation) => ({
+      conversationId: conversation.id, participantIds: conversation.participants.map((user) => user.id),
+    })));
     this.unsubscribe = client.subscribe((event) => this.receive(event));
   }
 
   get canSendMessages() { return this.client.canSendMessages; }
+  get canConfirmDelivery() { return this.mode === 'realtime' && this.client.canConfirmDelivery === true; }
   getConnectionStatus() { return this.client.getStatus(); }
 
   private assertConversation(conversationId: string) {
@@ -99,7 +103,10 @@ export class RealtimeMessagingTransport implements MessagingTransport {
     this.sends.set(key, { fingerprint, attempts: (previous?.attempts ?? 0) + 1, retryable: false });
     const operation: Promise<void> = (async () => {
       try {
-        const acknowledgement = parseSendAcknowledgement(await this.client.sendMessage(message));
+        const result = await this.client.sendMessage(message);
+        const error = parseErrorAcknowledgement(result);
+        if (error) throw error;
+        const acknowledgement = parseSendAcknowledgement(result);
         if (this.disposed) throw new RealtimeOperationError('session_ended');
         if (!acknowledgement || acknowledgement.messageId !== message.id || acknowledgement.conversationId !== message.conversationId) {
           throw new RealtimeOperationError('invalid_payload');
@@ -144,11 +151,11 @@ export class RealtimeMessagingTransport implements MessagingTransport {
   ) {
     this.assertConversation(conversationId);
     if (!messageId || !encryption || !editedAt) throw new RealtimeOperationError('invalid_payload');
-    // Real transport: cần server hỗ trợ message:edit nên hiện vẫn bị chặn như deleteMessage.
+    // Real transport: needs server support for message:edit, so it stays blocked like deleteMessage.
     if (this.mode !== 'local-demo' && !this.client.canSendMessages) {
       throw new RealtimeOperationError('recipient_keys_unavailable');
     }
-    // Local demo: không có người nhận thật, phát lại cho các view đang subscribe.
+    // Local demo: no real recipient, replay to subscribed views.
     if (this.mode === 'local-demo') {
       this.notify(conversationId, (handlers) =>
         handlers.onMessageEdited?.({
@@ -159,6 +166,19 @@ export class RealtimeMessagingTransport implements MessagingTransport {
         })
       );
     }
+  }
+
+  async confirmDelivery(untrusted: EncryptedIncomingMessage) {
+    this.assertConversation(untrusted.conversationId);
+    if (!this.canConfirmDelivery || !this.client.confirmDelivery) throw new RealtimeOperationError('recipient_keys_unavailable');
+    const event = parseRealtimeEvent('message', untrusted, 'realtime');
+    if (event?.type !== 'message' || !('encryption' in event.message)) throw new RealtimeOperationError('invalid_payload');
+    const message = event.message;
+    if (message.senderId === this.client.actorId ||
+      !this.conversations.get(message.conversationId)?.participants.some((user) => user.id === message.senderId)) {
+      throw new RealtimeOperationError('unauthorized_conversation');
+    }
+    await this.client.confirmDelivery(message);
   }
 
   private notify(conversationId: string, operation: (handlers: MessagingTransportHandlers) => void) {
@@ -211,6 +231,7 @@ export class RealtimeMessagingTransport implements MessagingTransport {
     if (this.disposed) return;
     this.disposed = true;
     this.unsubscribe();
+    this.client.watchConversationParticipants?.([]);
     this.handlers.clear();
     this.sends.clear();
     this.pending.clear();

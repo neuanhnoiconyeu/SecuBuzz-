@@ -1,5 +1,7 @@
 # Phase 8.7A realtime client contract
 
+Phase 8.7C update: the server contract now exists. See [client/server compatibility and verification](phase8-7c-client-server-compatibility.md) for exact error mappings and the gated `message:new` delivery callback integration. This document retains the original 8.7A implementation boundary; default real sends and delivery confirmation remain disabled.
+
 This is a **proposed client contract for the Realtime/Kiro and Database teams**, not evidence of an implemented server. The repository audit started from clean `main` at `418202a121eabe4770e74ab3aeda4f3680f840c5`. No Socket.IO server, authenticated rooms, recipient key distribution, replay API, or approved realtime event contract was found. The existing Database Express routes are not the `/api/auth/*` cookie-session APIs expected by the client. No backend files, schemas, crypto primitives, Kiro Hooks, or MCP infrastructure were changed.
 
 ## Implemented boundaries
