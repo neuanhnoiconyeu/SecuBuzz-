@@ -1,10 +1,10 @@
-import { MessageCircle, ShieldCheck, UserRound, UsersRound } from 'lucide-react';
+import { MessageCircle, ShieldCheck, Sparkles, UserRound, UsersRound } from 'lucide-react';
 import { BrandLogo } from '@/components/branding';
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { PRESENCE_OPTIONS } from '@/profiles/profileModel';
 import type { UserProfile } from '@/profiles/profileModel';
 
-export type MessengerSection = 'chats' | 'friends' | 'security';
+export type MessengerSection = 'chats' | 'friends' | 'security' | 'ai';
 
 export interface MainNavigationProps {
   activeSection: MessengerSection;
@@ -42,6 +42,10 @@ export function MainNavigation({ activeSection, onSelect, profile, profileLoadin
           <UsersRound size={19} aria-hidden="true" />
           <span>Friends</span>
           {pendingRequestCount > 0 && <sup className="friends-navigation-count" aria-hidden="true">{pendingRequestCount}</sup>}
+        </button>
+        <button type="button" className={`messenger-navigation-item ${activeSection === 'ai' ? 'is-active' : ''}`}
+          aria-label="AI Hub" aria-current={activeSection === 'ai' ? 'page' : undefined} onClick={() => onSelect('ai')}>
+          <Sparkles size={19} aria-hidden="true" /><span>AI Hub</span>
         </button>
         <button
           type="button"

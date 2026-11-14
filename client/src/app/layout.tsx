@@ -13,6 +13,7 @@ import '@/styles/friends.css';
 import '@/styles/auth.css';
 import '@/styles/realtime.css';
 import '@/styles/typography.css';
+import '@/styles/ai.css';
 
 export const metadata: Metadata = {
   title: BRAND_NAME,

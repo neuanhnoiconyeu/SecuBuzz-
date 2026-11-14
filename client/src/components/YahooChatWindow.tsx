@@ -11,6 +11,7 @@ import type { MessagingTransport } from '@/messaging/transport';
 import type { ConversationMessageActivity, ConversationType } from '@/conversations/conversationModel';
 import type { ConversationSecurityStatus } from '@/security/keyManagement';
 import type { ConversationCryptoService } from '@/security/conversationCryptoService';
+import { validAIInput, type AIMessageAction, type AISelection } from '@/ai/aiModel';
 import type { ForwardTarget } from '@/components/messenger/ForwardDialog';
 
 export interface YahooChatWindowProps {
@@ -37,6 +38,7 @@ export interface YahooChatWindowProps {
   onSecurityStatusChange?: (status: ConversationSecurityStatus | null) => void;
   onBackToConversations?: () => void;
   showPresence?: boolean;
+  onRequestAI?(selection: AISelection): void;
 }
 
 export function YahooChatWindow({
@@ -61,6 +63,7 @@ export function YahooChatWindow({
   presenceStatus = 'offline',
   transport,
   cryptoService,
+  onRequestAI,
 }: YahooChatWindowProps) {
   const [buzzBusy, setBuzzBusy] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
@@ -226,6 +229,10 @@ const handleSendMessage = useCallback(async (
         currentUserName={currentUserName}
         active={presentationActive}
         transportMode={transportMode}
+        {...(onRequestAI ? { onAIMessage: (task: AIMessageAction, messageId: string) => {
+          const selected = messages.find(message => message.id === messageId && message.conversationId === conversationId && message.type === 'text' && !message.isDeleted);
+          if (selected && validAIInput(selected.content)) onRequestAI({ task, input: selected.content, conversationId, messageId: selected.id, kind: 'message' });
+        } } : {})}
         onRetryMessage={(messageId) => void retryMessage(messageId)}
         canRetryMessage={canRetryMessage}
         onReplyMessage={(message) => setReplyingTo(message)}
@@ -293,6 +300,9 @@ const handleSendMessage = useCallback(async (
         onBuzz={() => void handleBuzz()}
         onTypingActivity={notifyTypingActivity}
         onTypingStop={stopTyping}
+        {...(onRequestAI ? { onRewriteDraft: (draft: string) => {
+          if (validAIInput(draft)) onRequestAI({ task: 'rewrite', input: draft, conversationId, kind: 'draft' });
+        } } : {})}
       />
       <ForwardDialog
         message={forwardingMessage}
