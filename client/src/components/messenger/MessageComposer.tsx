@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
-import { BellRing, Check, Mic, Paperclip, Send, Smile, Square, X } from 'lucide-react';
+import { BellRing, Check, Mic, Paperclip, Send, Smile, Sparkles, Square, X } from 'lucide-react';
 import { EMOJI_CATEGORIES } from './emojiData';
 import { Button } from '@/components/ui';
 import type { MessageAttachment, VoiceMessageMetadata } from '@/messaging/messageModel';
@@ -8,6 +8,7 @@ import { AttachmentUploadError, type AttachmentUploader } from '@/messaging/atta
 import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT } from '../../../../shared/attachmentPolicy';
 import { useAttachmentDrafts } from '@/hooks/useAttachmentDrafts';
 import { MessageAttachmentView } from './MessageAttachmentView';
+import { validAIInput } from '@/ai/aiModel';
 
 function sizeToDraft(input: HTMLTextAreaElement | null) {
   if (!input) return;
@@ -40,6 +41,7 @@ export interface MessageComposerProps {
   onBuzz(): void;
   onTypingActivity?(): void;
   onTypingStop?(): void;
+  onRewriteDraft?(draft: string): void;
 }
 
 export function MessageComposer({
@@ -61,6 +63,7 @@ export function MessageComposer({
   discardAttachment,
   attachmentActionLabel = 'Uploading',
   droppedFiles,
+  onRewriteDraft,
 }: MessageComposerProps) {
   const [internalValue, setInternalValue] = useState('');
   const value = draftValue ?? internalValue;
@@ -234,7 +237,7 @@ export function MessageComposer({
         ...(sentAttachments.length > 0 ? { attachments: sentAttachments } : {}),
         ...(voiceDraft ? { voice: voiceDraft } : {}),
       };
-      const accepted = await onSend(content, hasExtras ? extras : undefined);
+      const accepted = hasExtras ? await onSend(content, extras) : await onSend(content);
       if (!mounted.current) return;
       if (accepted) {
         attachmentDrafts.clearAccepted();
@@ -350,6 +353,8 @@ export function MessageComposer({
         </div>
       )}
 
+      {onRewriteDraft && <div className="composer-ai-entry"><Button size="sm" variant="ghost" leadingIcon={<Sparkles size={14} aria-hidden="true" />}
+        disabled={disabled || isSending || isSubmitting || isRecording || processingAttachments || !validAIInput(value)} onClick={() => { onTypingStop?.(); onRewriteDraft(value); }}>Rewrite draft with @Secu</Button></div>}
       <label className="sr-only" htmlFor="message-input">Message to {conversationName}</label>
       <div className="composer-dock">
         <Button
@@ -381,9 +386,9 @@ export function MessageComposer({
         <Button
           type="button"
           variant="ghost"
+          className="composer-icon-button composer-attach"
           disabled={disabled || isSending || isSubmitting || processingAttachments || Boolean(attachmentUnavailableReason)}
           onClick={() => fileInputRef.current?.click()}
-          className="composer-attach"
           aria-label="Attach files or images"
           title={attachmentUnavailableReason ?? ATTACHMENT_HINT}
           leadingIcon={<Paperclip size={18} aria-hidden="true" />}
@@ -392,10 +397,10 @@ export function MessageComposer({
         <Button
           type="button"
           variant="ghost"
+          className="composer-icon-button composer-voice"
           data-recording={isRecording}
-          disabled={disabled || isSending || isUploading}
+          disabled={disabled || isSending || isSubmitting || isUploading}
           onClick={isRecording ? stopRecording : () => void startRecording()}
-          className="composer-voice"
           aria-label={isRecording ? 'Stop voice recording' : 'Record voice message'}
           title={isRecording ? 'Stop recording' : 'Record voice message'}
           leadingIcon={isRecording ? <Square size={18} aria-hidden="true" /> : <Mic size={18} aria-hidden="true" />}
@@ -405,7 +410,7 @@ export function MessageComposer({
             type="button"
             variant="ghost"
             className="composer-icon-button"
-            disabled={disabled || isSending || isUploading}
+            disabled={disabled || isSending || isSubmitting || isUploading}
             onClick={() => setEmojiOpen((open) => !open)}
             aria-label="Insert emoji"
             aria-haspopup="true"

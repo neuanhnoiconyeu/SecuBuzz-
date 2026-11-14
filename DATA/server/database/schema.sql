@@ -1,4 +1,6 @@
 
+-- Frozen legacy schema reference. Current setup uses migrations/ via npm run db:migrate.
+-- Do not execute this file to initialize a current DB-1 database.
 PRAGMA foreign_keys = ON;
 
 -- ==========================================

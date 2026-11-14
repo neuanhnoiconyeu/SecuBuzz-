@@ -20,6 +20,7 @@ npm install
 npm run type-check   # tsc --noEmit (strict, erasable syntax only)
 npm test             # node:test: unit, real-socket integration, 8.7A client compatibility, standalone smoke test
 npm start            # standalone fail-closed server on 127.0.0.1:5100 (reads .env if present)
+npm run ai:check-config   # Phase 9B: sanitized AI settings report from .env; never contacts Google
 ```
 
 The client compatibility test loads `../client/src/realtime/*`, so install the client's dependencies first.
@@ -39,9 +40,11 @@ The client compatibility test loads `../client/src/realtime/*`, so install the c
 | `src/realtime/eventGate.ts` | Argument shape, rate limits, invalid-event budget, security policy |
 | `src/realtime/typing.ts`, `presence.ts`, `receipts.ts`, `messages.ts` | Event routers |
 | `src/realtime/validation.ts`, `cookies.ts`, `clock.ts`, `rateLimiter.ts`, `logger.ts`, `adapterCall.ts`, `bounded.ts` | Supporting primitives |
+| `src/ai/` | Phase 9B AI API (`secubuzz-realtime-server/ai`): `createAiHttpHandler`, config, consent, privacy, quota, Gemini adapter ([docs/phase9b-gemini-integration.md](../docs/phase9b-gemini-integration.md)) |
 | `src/database/schema.sql` | Pre-existing planned schema (unchanged; the Database Team owns persistence) |
 | `test/support/` | Test-only fixtures and harness (not exported, refuse to load in production) |
 | `test/unit/`, `test/integration/` | Test suites |
+| `test/ai/` | Phase 9B AI tests with mocked Gemini; a fetch trap fails any non-loopback request |
 
 ## Integration
 
