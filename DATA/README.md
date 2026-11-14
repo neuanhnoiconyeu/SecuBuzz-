@@ -13,11 +13,19 @@ REST APIs for Yahoo! Security Messenger.
 - better-sqlite3
 - SQL
 
-### Database Tables
-1. Users
-2. Contacts
-3. Messages
-4. SecurityLogs
+### DB-1 Foundation
+
+The database now uses versioned transactional migrations. The twelve roadmap
+entities are represented, with legacy Contacts and SecurityLogs preserved.
+
+- [Schema inventory and ERD](docs/schema.md)
+- [Migration and operations guide](docs/migrations.md)
+- [Repository contracts and phase handoffs](docs/repositories.md)
+- [DB-1 implementation and verification report](docs/db1-handoff.md)
+
+DB-1 supplies persistence foundations. Authentication/session issuance,
+authorization, full friend/group workflows, uploads and realtime/AI integration
+remain later-phase work. Existing API endpoints below retain their signatures.
 
 ### API Endpoints
 
@@ -47,8 +55,22 @@ REST APIs for Yahoo! Security Messenger.
 ### Installation
 
 ```bash
-npm install
+npm ci
 ```
+
+### Configure and migrate
+
+Use Node 24 (tested on 24.20.0). Copy `.env.example` to `.env` only when no local
+environment file exists, then:
+
+```bash
+npm run db:migrate
+```
+
+Relative `DB_PATH` resolves from DATA/. `DB_BUSY_TIMEOUT_MS` defaults to 5000.
+Back up an existing database and verify the upgrade on a copy first. An unsafe
+legacy mapping stops and rolls back; see the migration guide. No seed data is
+automatically inserted.
 
 ### Run Development Server
 
@@ -63,8 +85,9 @@ npm test
 ```
 
 ### Database
-SQLite database is initialized automatically
-when the server starts.
+Pending migrations run automatically before the server starts. The old
+`server/database/schema.sql` is a frozen legacy reference; migration SQL is the
+current source of truth. Tests use unique isolated temporary databases.
 
 ### Security
 - Parameterized SQL queries
