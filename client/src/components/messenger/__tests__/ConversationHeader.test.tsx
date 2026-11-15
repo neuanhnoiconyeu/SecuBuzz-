@@ -16,6 +16,20 @@ const readyProps: ConversationHeaderProps = {
 };
 
 describe('ConversationHeader security disclosure', () => {
+  test('only direct conversations expose call actions and pass the selected call kind', () => {
+    const onStartCall = jest.fn();
+    const { rerender } = render(<ConversationHeader {...readyProps} onStartCall={onStartCall} />);
+    expect(screen.queryByRole('group', { name: 'Direct call actions' })).not.toBeInTheDocument();
+    rerender(<ConversationHeader {...readyProps} name="Ava" type="direct" onStartCall={onStartCall} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Voice call Ava' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Video call Ava' }));
+    expect(onStartCall.mock.calls).toEqual([['voice'], ['video']]);
+    rerender(<ConversationHeader {...readyProps} name="Ava" type="direct" callDisabled onStartCall={onStartCall} />);
+    expect(screen.getByRole('button', { name: 'Voice call Ava' })).toBeDisabled();
+    rerender(<ConversationHeader {...readyProps} type="group" onStartCall={onStartCall} />);
+    expect(screen.queryByRole('group', { name: 'Direct call actions' })).not.toBeInTheDocument();
+  });
+
   test('updates conversation identity immediately while preserving the open security disclosure', () => {
     const { rerender } = render(<ConversationHeader {...readyProps} transitionKey="securebot-demo" />);
     const originalHeading = screen.getByRole('heading', { name: 'Chat with SecureBot' });

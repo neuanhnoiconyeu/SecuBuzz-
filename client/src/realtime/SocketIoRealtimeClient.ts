@@ -8,6 +8,8 @@ import {
 } from './realtimeModel';
 import { isIdentifier, parseConnectionError, parseErrorAcknowledgement, parseReadAcknowledgement, parseRealtimeEvent } from './realtimeValidation';
 import { DeliveryConfirmations, type DeliveryConfirmationVerifier } from './deliveryConfirmations';
+import { CALL_CLIENT_EVENT_NAMES, CALL_SERVER_EVENTS, type CallClientEventName } from '../../../shared/directCalls';
+import type { CallSignalingPort } from '@/calls/callSignaling';
 
 export { PROPOSED_EVENT_NAMES } from './realtimeModel';
 
@@ -20,6 +22,7 @@ export interface SocketManagerPort {
 
 /** Small Socket.IO boundary so client lifecycle tests need no server or browser socket. */
 export interface SocketPort {
+  readonly id?: string;
   readonly connected: boolean;
   readonly active?: boolean;
   readonly io: SocketManagerPort;
@@ -122,6 +125,13 @@ interface PendingRead {
  * No recipient-authenticated envelope exists yet, so real message sending stays disabled.
  */
 export class SocketIoRealtimeClient implements RealtimeClient {
+  private readonly callListeners = new Set<(event: 'state' | 'cleared', payload: unknown) => void>();
+  private readonly pendingCalls = new Set<(error: RealtimeOperationError) => void>();
+  readonly calls: CallSignalingPort = {
+    getConnectionId: () => this.socket?.connected ? this.socket.id ?? null : null,
+    request: (event, body) => this.requestCall(event, body),
+    subscribe: (listener) => { if (this.disposed) return () => {}; this.callListeners.add(listener); return () => { this.callListeners.delete(listener); }; },
+  };
   readonly mode = 'realtime' as const;
   readonly canSendMessages = false;
   readonly actorId: string;
@@ -212,6 +222,7 @@ export class SocketIoRealtimeClient implements RealtimeClient {
       this.subscribePresence();
     });
     bind(socket, 'disconnect', (reason) => {
+      for (const cancel of this.pendingCalls) cancel(new RealtimeOperationError('disconnected'));
       this.cancelReads('disconnected');
       this.delivery.clear('disconnected');
       this.typingSent.clear();
@@ -250,6 +261,10 @@ export class SocketIoRealtimeClient implements RealtimeClient {
     bind(socket, names.typingUpdate, (payload) => this.receive('typing', payload));
     bind(socket, names.presenceUpdate, (payload) => this.receive('presence', payload));
     bind(socket, names.conversationUpdated, (payload) => this.receive('conversation', payload));
+    for (const event of ['state', 'cleared'] as const) bind(socket, CALL_SERVER_EVENTS[event], (payload) => {
+      if (this.status !== 'connected' || !socket.connected) return;
+      for (const listener of this.callListeners) { try { listener(event, payload); } catch { /* Isolate consumers. */ } }
+    });
   }
 
   private receive(kind: RealtimeEvent['type'], payload: unknown, expectedReceipt?: 'delivered' | 'read', acknowledge?: unknown) {
@@ -316,6 +331,7 @@ export class SocketIoRealtimeClient implements RealtimeClient {
 
   private stop(code: RealtimeErrorCode, status: RealtimeConnectionStatus, error = new RealtimeOperationError(code)) {
     this.generation += 1;
+    for (const cancel of this.pendingCalls) cancel(error);
     for (const { port, event, listener } of this.bindings.splice(0)) port.off(event, listener);
     this.settleConnect(error);
     this.cancelReads(code);
@@ -338,6 +354,27 @@ export class SocketIoRealtimeClient implements RealtimeClient {
     this.publicUsers.clear();
     this.participants.clear();
     this.listeners.clear();
+    this.callListeners.clear();
+  }
+
+  private requestCall(event: CallClientEventName, body: unknown): Promise<unknown> {
+    if (this.disposed || this.rejected || this.status !== 'connected' || !this.socket?.connected || !CALL_CLIENT_EVENT_NAMES.has(event) || this.pendingCalls.size >= 20) {
+      return Promise.reject(new RealtimeOperationError('unavailable'));
+    }
+    return new Promise((resolve, reject) => {
+      const socket = this.socket!, generation = this.generation;
+      let settled = false;
+      const finish = (error?: RealtimeOperationError, value?: unknown) => {
+        if (settled) return; settled = true; clearTimeout(timer); this.pendingCalls.delete(cancel);
+        if (error) reject(error); else resolve(value);
+      };
+      const cancel = (error: RealtimeOperationError) => finish(error);
+      const timer = setTimeout(() => finish(new RealtimeOperationError('ack_timeout')), ACK_TIMEOUT);
+      this.pendingCalls.add(cancel);
+      try { socket.emit(event, body, value => {
+        if (!settled && !this.disposed && generation === this.generation && this.socket === socket && socket.connected) finish(undefined, value);
+      }); } catch { finish(new RealtimeOperationError('unavailable')); }
+    });
   }
 
   async sendMessage(_message: OutboundMessage): Promise<SendAcknowledgement> {

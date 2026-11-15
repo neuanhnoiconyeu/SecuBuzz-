@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Bot, Search, Users, UserRound, X } from 'lucide-react';
 import { Avatar, Badge } from '@/components/ui';
 import type { Conversation } from '@/conversations/conversationModel';
@@ -8,6 +9,8 @@ export interface ConversationSidebarProps {
   activeConversationId: string | null;
   mobileListOpen: boolean;
   onSelect(conversationId: string): void;
+  voiceRooms?: ReactNode;
+  showConversations?: boolean;
 }
 
 function formatActivity(timestamp: string): string {
@@ -34,6 +37,8 @@ export function ConversationSidebar({
   conversations,
   mobileListOpen,
   onSelect,
+  voiceRooms,
+  showConversations = true,
 }: ConversationSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [hydrated, setHydrated] = useState(false);
@@ -58,8 +63,9 @@ export function ConversationSidebar({
   return (
     <aside
       className={`conversation-sidebar ${mobileListOpen ? 'is-mobile-open' : 'is-mobile-hidden'}`}
-      aria-label="Conversations"
+      aria-label={showConversations ? 'Conversations' : 'Voice rooms'}
     >
+      {showConversations && <>
       <div className="conversation-browse-header">
         <div className="conversation-sidebar-heading">
           <div>
@@ -173,6 +179,8 @@ export function ConversationSidebar({
         </ul>
       )}
       <p className="conversation-demo-note">Local examples only. No other users are connected.</p>
+      </>}
+      {voiceRooms}
     </aside>
   );
 }

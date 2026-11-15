@@ -6,19 +6,23 @@ import type { AuthUser } from '@/auth/authModel';
 import { createSessionRealtimeClient } from '@/realtime/createRealtimeClient';
 import type { RealtimeClient, RealtimeConnectionStatus } from '@/realtime/realtimeModel';
 import { RealtimeStatus } from './RealtimeStatus';
+import { DirectCallsRuntime } from '@/components/calls/DirectCallsRuntime';
+import type { ReactNode } from 'react';
 
 /** Real connections require a configured cookie-session contract, not a demo identity. */
-export function ApiRealtimeConnection({ user }: { user: AuthUser }) {
+export function ApiRealtimeConnection({ user, children }: { user: AuthUser; children?: ReactNode }) {
   const { restoreSession } = useAuth();
   const revalidate = useRef(restoreSession);
   revalidate.current = restoreSession;
   const initialUser = useRef(user).current;
   const [status, setStatus] = useState<RealtimeConnectionStatus>('disconnected');
+  const [callClient, setCallClient] = useState<RealtimeClient | null>(null);
   useEffect(() => {
     let active = true;
     let client: RealtimeClient;
     try { client = createSessionRealtimeClient(initialUser, 'api', []); }
     catch { setStatus('error'); return; }
+    setCallClient(client);
     const unsubscribe = client.subscribe((event) => {
       if (!active) return;
       if (event.type === 'connection') setStatus(event.status);
@@ -27,5 +31,6 @@ export function ApiRealtimeConnection({ user }: { user: AuthUser }) {
     void client.connect().catch(() => { if (active) setStatus(client.getStatus()); });
     return () => { active = false; unsubscribe(); client.dispose(); };
   }, [initialUser]);
-  return <RealtimeStatus status={status} />;
+  const content = <>{children ? <div className="call-workspace-status"><RealtimeStatus status={status} /></div> : <RealtimeStatus status={status} />}{children}</>;
+  return callClient?.calls ? <DirectCallsRuntime client={callClient} user={user}>{content}</DirectCallsRuntime> : content;
 }
