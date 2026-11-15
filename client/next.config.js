@@ -4,6 +4,7 @@ const nextConfig = {
   // This prevents production builds from replacing stylesheets used by `next dev`.
   distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
   reactStrictMode: true,
+  experimental: { externalDir: true },
   swcMinify: true,
   typescript: {
     // Strict type checking
@@ -19,7 +20,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' wss: ws:",
+            value: "default-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; frame-src 'self' blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' blob: wss: ws:",
           },
           {
             key: 'X-Frame-Options',

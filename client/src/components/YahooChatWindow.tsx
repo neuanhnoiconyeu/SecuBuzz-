@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ConversationHeader } from '@/components/messenger/ConversationHeader';
 import { MessageComposer } from '@/components/messenger/MessageComposer';
 import { MessageList } from '@/components/messenger/MessageList';
@@ -8,6 +8,9 @@ import { useConversationMessages } from '@/hooks/useConversationMessages';
 import { ForwardDialog } from '@/components/messenger/ForwardDialog';
 import type { ChatMessage, MessageAttachment, PresenceStatus, VoiceMessageMetadata } from '@/messaging/messageModel';
 import type { MessagingTransport } from '@/messaging/transport';
+import { createAttachmentUploader } from '@/messaging/attachmentUpload';
+import { createLocalAttachmentUploader, localAttachmentStore } from '@/messaging/localAttachmentStore';
+import { useChatFileDrop } from '@/hooks/useChatFileDrop';
 import type { ConversationMessageActivity, ConversationType } from '@/conversations/conversationModel';
 import type { ConversationSecurityStatus } from '@/security/keyManagement';
 import type { ConversationCryptoService } from '@/security/conversationCryptoService';
@@ -93,6 +96,8 @@ export function YahooChatWindow({
     stopTyping,
     canRetryMessage,
     canEdit,
+    attachmentHistoryLoading,
+    attachmentStorageError,
   } = useConversationMessages({
     conversationId,
     currentUserId,
@@ -108,6 +113,17 @@ export function YahooChatWindow({
   useEffect(() => () => {
     if (buzzTimeout.current !== null) window.clearTimeout(buzzTimeout.current);
   }, []);
+
+  const uploadAttachment = useMemo(() => transportMode === 'local-demo'
+    ? createLocalAttachmentUploader(currentUserId, conversationId)
+    : process.env.NEXT_PUBLIC_ATTACHMENT_API_READY === 'true' ? createAttachmentUploader(conversationId) : undefined,
+  [conversationId, currentUserId, transportMode]);
+  const discardAttachment = useCallback((attachment: MessageAttachment) =>
+    localAttachmentStore.discardUnusedFile(currentUserId, conversationId, attachment), [currentUserId, conversationId]);
+  const attachmentUnavailableReason = transportMode === 'realtime' && !uploadAttachment
+    ? 'File uploads are not available yet.' : attachmentHistoryLoading ? 'Restoring saved attachments…' : undefined;
+  const drop = useChatFileDrop(conversationId, identityReady && Boolean(securityStatus?.localEncryptionAvailable) &&
+    !isSending && !attachmentUnavailableReason && transport?.canSendMessages !== false);
 
   useEffect(() => {
     onSecurityStatusChange?.(securityStatus);
@@ -208,7 +224,8 @@ const handleSendMessage = useCallback(async (
     : undefined;
 
   return (
-    <section className="chat-window" aria-label={`${contactName} conversation`} data-buzz-active={buzzBusy}>
+    <section className="chat-window chat-attachment-drop-target" aria-label={`${contactName} conversation`} data-buzz-active={buzzBusy} {...drop.bind}>
+      {drop.dragging && <div className="chat-attachment-drop-overlay" aria-hidden="true">Drop files to attach</div>}
       <ConversationHeader
         name={contactName}
         transitionKey={conversationId}
@@ -290,9 +307,13 @@ const handleSendMessage = useCallback(async (
         disabled={!identityReady || !securityStatus?.localEncryptionAvailable || transport?.canSendMessages === false}
         isSending={isSending}
         buzzBusy={buzzBusy}
+        {...(uploadAttachment ? { uploadAttachment } : {})}
+        {...(transportMode === 'local-demo' ? { discardAttachment, attachmentActionLabel: 'Saving' } : {})}
+        {...(drop.files ? { droppedFiles: drop.files } : {})}
+        {...(attachmentUnavailableReason ? { attachmentUnavailableReason } : {})}
         {...(draftValue !== undefined ? { draftValue } : {})}
         {...(onDraftChange ? { onDraftChange } : {})}
-        demoNotice={conversationType === 'bot'
+        demoNotice={transportMode === 'local-demo' ? 'Local demo · Attachments are saved on this device only; other users cannot access them.' : conversationType === 'bot'
           ? 'SecureBot replies are scripted local demo text; no AI service is connected.'
           : 'Local conversation preview only. No other users receive these messages.'}
         {...(setupError ? { setupError } : {})}
@@ -304,6 +325,7 @@ const handleSendMessage = useCallback(async (
           if (validAIInput(draft)) onRequestAI({ task: 'rewrite', input: draft, conversationId, kind: 'draft' });
         } } : {})}
       />
+      {attachmentStorageError && <p className="composer-error" role="status">{attachmentStorageError}</p>}
       <ForwardDialog
         message={forwardingMessage}
         conversations={forwardTargets ?? []}

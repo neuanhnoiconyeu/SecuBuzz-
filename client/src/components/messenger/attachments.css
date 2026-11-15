@@ -1,0 +1,37 @@
+.message-attachments { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; min-width: 0; }
+.message-attachment { width: 18rem; max-width: 100%; min-width: 0; overflow: hidden; border: 1px solid var(--color-border-strong); border-radius: 0.5rem; color: var(--color-text); background: var(--color-surface-muted); }
+.message-attachment-image, .message-attachment-video { display: block; width: 100%; max-height: 18rem; object-fit: contain; background: var(--color-surface-muted); }
+.message-attachment-audio { display: block; width: 100%; max-width: 100%; margin-block: 0.5rem; }
+.message-attachment-download { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; color: inherit; text-decoration: none; }
+.message-attachment-download:hover { text-decoration: underline; }
+.message-attachment-download:focus-visible { outline: 2px solid currentColor; outline-offset: -3px; border-radius: 0.4rem; }
+.message-attachment-download > svg { flex-shrink: 0; }
+.message-attachment-details { display: flex; flex-direction: column; min-width: 0; line-height: 1.4; }
+.message-attachment-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 0.8rem; }
+.message-attachment-size { font-size: 0.7rem; opacity: 0.8; }
+.message-attachment-summary { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; min-width: 0; }
+.message-attachment-summary > svg { flex-shrink: 0; color: var(--color-brand); }
+.message-attachment-details { flex: 1; }
+.attachment-storage-label { font-size: 0.65rem; color: var(--color-text-muted); }
+.attachment-actions { display: flex; gap: 0.25rem; flex-shrink: 0; }
+.attachment-action { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 2rem; padding: 0.4rem; border: 1px solid var(--color-border); border-radius: 0.3rem; color: var(--color-text); background: var(--color-surface); cursor: pointer; text-decoration: none; font-size: 0.8rem; }
+.attachment-action:hover { background: var(--color-brand-soft); }
+.attachment-action:focus-visible, .attachment-thumbnail-button:focus-visible, .composer-attachment-remove:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.attachment-thumbnail-button { display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+.attachment-state { display: block; padding: 0.6rem; font-size: 0.75rem; overflow-wrap: anywhere; }
+.composer-attachments-preview { max-height: 15rem; overflow-y: auto; }
+.composer-attachment-item { position: relative; min-width: 0; max-width: 100%; }
+.composer-attachment-remove { position: absolute; top: 0.2rem; right: 0.2rem; display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border: 1px solid var(--color-border-strong); border-radius: 50%; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
+.composer-attachment-remove:disabled { opacity: 0.5; cursor: default; }
+.message-attachment--compact { width: 14rem; }
+.message-attachment--compact .message-attachment-image, .message-attachment--compact .message-attachment-video { height: 5rem; object-fit: contain; }
+.message-attachment--compact .message-attachment-summary { padding-right: 1.8rem; }
+.attachment-preview-dialog { width: min(56rem, 96vw); max-width: 96vw; }
+.attachment-preview-dialog .ui-dialog-title { overflow-wrap: anywhere; }
+.attachment-preview-dialog .ui-dialog-body { overflow: auto; max-height: 72vh; }
+.attachment-preview-image, .attachment-preview-video { display: block; max-width: 100%; max-height: 65vh; margin-inline: auto; object-fit: contain; }
+.attachment-preview-pdf { width: 100%; height: 60vh; border: 1px solid var(--color-border); background: var(--color-surface); }
+.attachment-preview-hint { margin-top: 0.5rem; color: var(--color-text-muted); font-size: 0.8rem; }
+.chat-attachment-drop-target { position: relative; }
+.chat-attachment-drop-overlay { position: absolute; inset: 0.5rem; z-index: 20; display: grid; place-items: center; border: 2px dashed var(--color-brand); border-radius: 0.75rem; background: var(--color-brand-soft); color: var(--color-text); font-weight: 600; pointer-events: none; }
+@media (max-width: 480px) { .message-attachment { width: min(18rem, 65vw); } .message-attachment--compact { width: min(14rem, 72vw); } }
