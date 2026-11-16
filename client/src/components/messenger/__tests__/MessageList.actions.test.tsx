@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MessageList } from '../MessageList';
 import type { MessageListProps } from '../MessageList';
 import type { ChatMessage } from '@/messaging/messageModel';
@@ -13,6 +13,18 @@ const props = (overrides: Partial<MessageListProps> = {}): MessageListProps => (
   messages: [incoming, outgoing], currentUserId: 'self', ...handlers(), ...overrides,
 });
 const row = (container: HTMLElement, id: string) => within(container.querySelector<HTMLElement>(`[data-message-id="${id}"]`)!);
+const originalShowModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
+const originalClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
+beforeAll(() => {
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value(this: HTMLDialogElement) { this.setAttribute('open', ''); } });
+  Object.defineProperty(HTMLDialogElement.prototype, 'close', { configurable: true, value(this: HTMLDialogElement) { this.removeAttribute('open'); this.dispatchEvent(new Event('close')); } });
+});
+afterAll(() => {
+  if (originalShowModal) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', originalShowModal);
+  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+  if (originalClose) Object.defineProperty(HTMLDialogElement.prototype, 'close', originalClose);
+  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
+});
 
 test('the active message renderer has compact icon controls and no duplicate inline toolbar', () => {
   const { container } = render(<MessageList {...props()} />);
@@ -30,16 +42,22 @@ test('the active message renderer has compact icon controls and no duplicate inl
   expect(screen.queryByText('Delete', { exact: true })).not.toBeInTheDocument();
 });
 
-test('incoming overflow permits pinning but reserves Edit and Delete for the message owner', () => {
+test('incoming overflow permits local removal; only the owner can edit or open the unsend review', () => {
   const callbacks = handlers(); const { container } = render(<MessageList {...props(callbacks)} />);
   fireEvent.click(row(container, 'incoming').getByRole('button', { name: 'More actions' }));
-  expect(screen.getAllByRole('menuitem')).toHaveLength(1);
+  expect(screen.getAllByRole('menuitem').map(element => element.textContent?.trim())).toEqual(['Pin', 'Delete for me']);
+  expect(screen.queryByRole('menuitem', { name: 'Edit' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('menuitem', { name: 'Unsend' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('menuitem', { name: 'Pin' }));
   expect(callbacks.onTogglePin).toHaveBeenCalledWith(incoming.id);
   expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   fireEvent.click(row(container, 'outgoing').getByRole('button', { name: 'More actions' }));
-  expect(screen.getAllByRole('menuitem').map((element) => element.textContent?.trim())).toEqual(['Pin', 'Edit', 'Delete']);
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+  expect(screen.getAllByRole('menuitem').map((element) => element.textContent?.trim())).toEqual(['Pin', 'Edit', 'Unsend']);
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Unsend' }));
+  expect(callbacks.onDeleteMessage).not.toHaveBeenCalled();
+  const review = within(screen.getByRole('dialog'));
+  expect(review.queryByRole('radio', { name: /Unsend for everyone/ })).not.toBeInTheDocument();
+  fireEvent.click(review.getByRole('button', { name: 'Remove' }));
   expect(callbacks.onDeleteMessage).toHaveBeenCalledWith(outgoing.id);
 });
 
@@ -65,7 +83,7 @@ test('only one popover is open; Escape restores focus and touch pointer outside 
   fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
   expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveFocus();
   fireEvent.keyDown(document.activeElement!, { key: 'End' });
-  expect(screen.getByRole('menuitem', { name: 'Delete' })).toHaveFocus();
+  expect(screen.getByRole('menuitem', { name: 'Unsend' })).toHaveFocus();
   fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
   expect(screen.queryByRole('menu')).not.toBeInTheDocument(); expect(more).toHaveFocus();
   fireEvent.click(more);
@@ -76,7 +94,7 @@ test('only one popover is open; Escape restores focus and touch pointer outside 
   expect(screen.queryByRole('menu')).not.toBeInTheDocument();
 });
 
-test('Reply and editing reuse existing callbacks; edit has accessible save/cancel controls', () => {
+test('Reply and editing reuse existing callbacks; edit has accessible save/cancel controls', async () => {
   const callbacks = handlers(); const { container } = render(<MessageList {...props(callbacks)} />);
   fireEvent.click(row(container, 'incoming').getByRole('button', { name: 'Reply' }));
   expect(callbacks.onReplyMessage).toHaveBeenCalledWith(incoming);
@@ -87,6 +105,7 @@ test('Reply and editing reuse existing callbacks; edit has accessible save/cance
   fireEvent.change(editor, { target: { value: 'Updated text' } });
   fireEvent.click(screen.getByRole('button', { name: 'Save edit' }));
   expect(callbacks.onEditMessage).toHaveBeenCalledWith(outgoing.id, 'Updated text');
+  await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Edit message' })).not.toBeInTheDocument());
   fireEvent.click(row(container, 'outgoing').getByRole('button', { name: 'More actions' }));
   fireEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
   fireEvent.click(screen.getByRole('button', { name: 'Cancel edit' }));
@@ -108,10 +127,11 @@ test('disabled conversation controls keep toolbar and open-menu actions disabled
   const { rerender } = render(element(false));
   fireEvent.click(screen.getAllByRole('button', { name: 'More actions' })[1]!);
   rerender(element(true));
-  expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeDisabled();
+  expect(screen.getByRole('menuitem', { name: 'Unsend' })).toBeDisabled();
   // Native activation honors disabled fieldsets; dispatchEvent bypasses that browser check.
-  screen.getByRole('menuitem', { name: 'Delete' }).click();
+  screen.getByRole('menuitem', { name: 'Unsend' }).click();
   expect(callbacks.onDeleteMessage).not.toHaveBeenCalled();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
 
 test('external deletion, hidden conversation, scroll and resize dismiss stale popovers', () => {
