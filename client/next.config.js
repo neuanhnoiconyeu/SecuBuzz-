@@ -1,3 +1,5 @@
+const { callingRewrites } = require('./dev/callingProxy.cjs');
+const developmentCallingRoutes = callingRewrites();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Keep a running dev server's assets separate from `next build` output.
@@ -12,6 +14,11 @@ const nextConfig = {
   },
   compress: true,
   poweredByHeader: false,
+  // Socket.IO requires its trailing slash; redirects can break polling and upgrade requests.
+  ...(developmentCallingRoutes.length ? { skipTrailingSlashRedirect: true } : {}),
+  async rewrites() {
+    return { beforeFiles: developmentCallingRoutes, afterFiles: [], fallback: [] };
+  },
   // Security headers
   async headers() {
     return [

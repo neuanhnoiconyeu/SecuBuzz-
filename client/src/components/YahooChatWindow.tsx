@@ -16,6 +16,7 @@ import type { ConversationSecurityStatus } from '@/security/keyManagement';
 import type { ConversationCryptoService } from '@/security/conversationCryptoService';
 import { validAIInput, type AIMessageAction, type AISelection } from '@/ai/aiModel';
 import type { ForwardTarget } from '@/components/messenger/ForwardDialog';
+import type { DirectCallKind } from '@/calls/directCallMachine';
 
 export interface YahooChatWindowProps {
   forwardTargets?: ForwardTarget[];
@@ -42,6 +43,9 @@ export interface YahooChatWindowProps {
   onBackToConversations?: () => void;
   showPresence?: boolean;
   onRequestAI?(selection: AISelection): void;
+  onStartCall?(kind: DirectCallKind): void;
+  callDisabled?: boolean;
+  callPeerId?: string;
 }
 
 export function YahooChatWindow({
@@ -67,6 +71,9 @@ export function YahooChatWindow({
   transport,
   cryptoService,
   onRequestAI,
+  onStartCall,
+  callDisabled,
+  callPeerId,
 }: YahooChatWindowProps) {
   const [buzzBusy, setBuzzBusy] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
@@ -237,6 +244,9 @@ const handleSendMessage = useCallback(async (
         securityStatus={securityStatus}
         connectionStatus={connectionStatus}
         transportMode={transportMode}
+        {...(onStartCall ? { onStartCall } : {})}
+        {...(callDisabled !== undefined ? { callDisabled } : {})}
+        {...(callPeerId ? { callTarget: { conversationId, peer: { id: callPeerId, name: contactName } } } : {})}
       />
 
       <MessageList

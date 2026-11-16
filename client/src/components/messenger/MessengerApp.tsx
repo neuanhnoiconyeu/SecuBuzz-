@@ -13,6 +13,10 @@ import { FriendsPage } from '@/components/friends/FriendsPage';
 import type { MessengerSection } from '@/components/messenger/MainNavigation';
 import { Button, Dialog, Surface } from '@/components/ui';
 import { AIHub } from '@/components/ai/AIHub';
+import { VoiceRoomsSidebar } from '@/components/voice/VoiceRoomsSidebar';
+import { VoiceRoomPanel } from '@/components/voice/VoiceRoomPanel';
+import { useVoiceRooms } from '@/voice/useVoiceRooms';
+import { VOICE_ROOMS } from '@/voice/voiceRooms';
 import { createAIProvider } from '@/ai/demoAIProvider';
 import { AI_MAX_OUTPUT, validAIInput, type AIEntry, type AISelection } from '@/ai/aiModel';
 import type { AIResult } from '@/ai/useAIWorkspace';
@@ -25,6 +29,10 @@ import { existingDirectConversationAdapter } from '@/friends/conversationAdapter
 import type { DemoMessengerSession } from '@/auth/messengerSession';
 import type { ConversationMessageActivity } from '@/conversations/conversationModel';
 import type { ConversationSecurityStatus } from '@/security/keyManagement';
+import { useDirectCallPreview } from '@/calls/useDirectCallPreview';
+import type { DirectCallKind } from '@/calls/directCallMachine';
+import { DirectCallLayer } from '@/components/calls/DirectCallLayer';
+import { DirectCallPreviewControls } from '@/components/calls/DirectCallPreviewControls';
 
 export interface MessengerAppProps {
   session: DemoMessengerSession;
@@ -35,6 +43,10 @@ export interface MessengerAppProps {
 
 /** Existing Messenger UI, mounted inside its authenticated session boundary. */
 export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutError = null }: MessengerAppProps) {
+  const directCall = useDirectCallPreview(session);
+  const voiceRooms = useVoiceRooms(session);
+  const [selectedVoiceRoomId, setSelectedVoiceRoomId] = useState<string | null>(null);
+  const selectedVoiceRoom = VOICE_ROOMS.find((room) => room.id === selectedVoiceRoomId);
   const { profile, isLoading: profileLoading, isSaving: profileSaving, error: profileError, fieldErrors,
     loadProfile, updateProfile } = useCurrentProfile(session.profileService);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -101,8 +113,8 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const previousMobileListOpen = useRef(false);
   useEffect(() => {
-    if (activeSection === 'chats' && !mobileListOpen && activeConversationId) selectConversation(activeConversationId);
-  }, [activeConversationId, activeSection, mobileListOpen, selectConversation]);
+    if (activeSection === 'chats' && !selectedVoiceRoom && !mobileListOpen && activeConversationId) selectConversation(activeConversationId);
+  }, [activeConversationId, activeSection, selectedVoiceRoom, mobileListOpen, selectConversation]);
   const friendChatFocusPending = useRef(false);
   const [securityStatus, setSecurityStatus] = useState<ConversationSecurityStatus | null>(null);
   const [lastBuzz, setLastBuzz] = useState<string>('');
@@ -114,6 +126,13 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
   const directRelationship = directContact ? relationshipForUser(friends.snapshot, directContact.id, session.user.id).relationship : null;
   const directBlocked = directRelationship === 'blocked';
   const directControlsDisabled = Boolean(directContact) && (directBlocked || friends.isStale || friends.isLoading);
+  const callAvailable = Boolean(activeConversation?.type === 'direct' && activeConversation.participants.length === 2 && directContact?.kind === 'person' &&
+    profile && !directControlsDisabled && directCall.state.phase === 'idle');
+  const startDirectCall = (kind: DirectCallKind, direction: 'incoming' | 'outgoing' = 'outgoing') => {
+    if (!callAvailable || !directContact || !activeConversation) return;
+    directCall.start(activeConversation.id, { id: directContact.id, name: activeConversation.displayName,
+      ...(activeConversation.avatarUrl ? { avatarUrl: activeConversation.avatarUrl } : {}) }, kind, direction);
+  };
   useEffect(() => { setAIEntry(null); setDraftReview(null); }, [activeConversationId]);
 
   const requestAI = (selection: AISelection) => {
@@ -139,6 +158,7 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
     const id = await directAdapter.openDirectConversation(user.id);
     if (!selectConversation(id)) throw new Error('Conversation unavailable.');
     friendChatFocusPending.current = true;
+    setSelectedVoiceRoomId(null);
     setMobileListOpen(false);
     setActiveSection('chats');
   };
@@ -162,11 +182,11 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
           ?? sidebar?.querySelector<HTMLElement>('.conversation-search-input');
         focusTarget?.focus();
       } else if (previousMobileListOpen.current) {
-        document.querySelector<HTMLHeadingElement>('.chat-title-heading')?.focus();
+        document.querySelector<HTMLHeadingElement>(selectedVoiceRoom ? '#voice-room-name' : '.chat-title-heading')?.focus();
       }
     }
     previousMobileListOpen.current = mobileListOpen;
-  }, [mobileListOpen]);
+  }, [mobileListOpen, selectedVoiceRoom]);
 
   useEffect(() => {
     if (!mobileListOpen) return;
@@ -197,6 +217,7 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
   }, []);
 
   const handleSelectConversation = (conversationId: string) => {
+    setSelectedVoiceRoomId(null);
     setActiveSection('chats');
     selectConversation(conversationId);
     setMobileListOpen(false);
@@ -225,12 +246,20 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
         <section id="chats" className="messenger-chat-section" hidden={activeSection !== 'chats'} aria-label="Chats">
           <ConversationSidebar
             conversations={presentedConversations}
-            activeConversationId={activeConversationId}
+            activeConversationId={selectedVoiceRoom ? null : activeConversationId}
             mobileListOpen={mobileListOpen}
             onSelect={handleSelectConversation}
+            voiceRooms={<VoiceRoomsSidebar selectedRoomId={selectedVoiceRoomId} joinedRoomId={voiceRooms.joinedRoomId}
+              onLeave={voiceRooms.leave} onSelect={(roomId) => {
+                setSelectedVoiceRoomId(roomId); setMobileListOpen(false); setActiveSection('chats');
+              }} />}
           />
 
-          <div className={`messenger-main-column ${directContact ? 'has-friend-context' : ''}`}>
+          {selectedVoiceRoom && <div className="messenger-main-column voice-main-column">
+            <VoiceRoomPanel room={selectedVoiceRoom} controller={voiceRooms} user={profile ?? session.user}
+              onBack={showConversationsOnMobile} />
+          </div>}
+          <div className={`messenger-main-column ${directContact ? 'has-friend-context' : ''}`} hidden={Boolean(selectedVoiceRoom)}>
             {directContact && <div className="friends-chat-notice">
               <p role="status">{friends.isStale ? 'Friend status unavailable. Messaging is paused until it refreshes.' : directBlocked ? 'Blocked in this local demo' : directRelationship === 'friend' ? 'Friends · local demo' : 'Not friends · local demo'}
                 {directBlocked && <span> Chat controls are disabled here. History is preserved; this is not server-enforced blocking.</span>}
@@ -258,7 +287,7 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
                   identityReady={Boolean(profile)}
                   cryptoService={session.cryptoService}
                   transport={session.transport}
-                  presentationActive={activeSection === 'chats' && !mobileListOpen}
+                  presentationActive={activeSection === 'chats' && !selectedVoiceRoom && !mobileListOpen}
                   {...(activeConversation.avatarUrl ? { avatarUrl: activeConversation.avatarUrl } : {})}
                   {...(activePresence ? { presenceStatus: activePresence } : {})}
                   showPresence={Boolean(activePresence)}
@@ -271,6 +300,8 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
                   onMessageActivity={handleActivity}
                   onSecurityStatusChange={handleSecurityStatusChange}
                   onBackToConversations={showConversationsOnMobile}
+                  onStartCall={startDirectCall}
+                  callDisabled={!callAvailable}
                   onBuzz={handleBuzz}
                   onSendMessage={handleSendMessage}
                   {...(aiProvider.acceptsMessengerContent === false ? {} : { onRequestAI: requestAI })}
@@ -291,6 +322,8 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
                       <div key={`${log}-${index}`} className="debug-entry">&gt; {log}</div>
                     ))}
                     <RealtimeDemoControls client={session.realtime} conversations={conversations} activeConversationId={activeConversationId} status={realtimeState.status} />
+                    {activeConversation.type === 'direct' && <DirectCallPreviewControls disabled={!callAvailable}
+                      onIncoming={(kind) => startDirectCall(kind, 'incoming')} />}
                   </div>
                 </details>
               </>
@@ -348,6 +381,7 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
         <h3>Proposed replacement</h3><p className="ai-review-text">{draftReview?.response.output}</p>
         {!reviewMatchesDraft && <p className="ai-error" role="alert">Your draft or conversation has changed. Nothing will be replaced. Return to Chats and choose your draft again.</p>}
       </Dialog>}
+      <DirectCallLayer state={directCall.state} actions={directCall} />
       <ProfileDialog
         open={profileOpen}
         onOpenChange={setProfileOpen}
