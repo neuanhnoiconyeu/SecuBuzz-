@@ -25,7 +25,7 @@ function sectionFromHash(): MessengerSection {
 }
 
 /** Real sessions have no demo transport, conversations, AI provider or inferred presence. */
-export function RealMessengerWorkspace() {
+export function RealMessengerWorkspace({ onOpenVoiceRooms }: { onOpenVoiceRooms?: () => void } = {}) {
   const auth = useAuth();
   const createApi = auth.createSessionApi;
   const actor = useRef(auth.user).current;
@@ -40,10 +40,10 @@ export function RealMessengerWorkspace() {
     setResources({ version: ++resourceVersion.current, api, profiles: new RemoteProfileService(api), friends: new RemoteFriendsService(api), secure, ...(live ? { live } : {}) });
     return () => { live?.dispose(); secure.dispose(); api.dispose(); };
   }, [actor, createApi]);
-  return resources ? <ConnectedMessenger key={resources.version} resources={resources} /> : <p role="status">Opening your workspace…</p>;
+  return resources ? <ConnectedMessenger key={resources.version} resources={resources} {...(onOpenVoiceRooms ? { onOpenVoiceRooms } : {})} /> : <p role="status">Opening your workspace…</p>;
 }
 
-function ConnectedMessenger({ resources }: { resources: Resources }) {
+function ConnectedMessenger({ resources, onOpenVoiceRooms }: { resources: Resources; onOpenVoiceRooms?: () => void }) {
   const auth = useAuth();
   const profile = useCurrentProfile(resources.profiles);
   const friends = useFriends(resources.friends);
@@ -75,6 +75,7 @@ function ConnectedMessenger({ resources }: { resources: Resources }) {
           {account && <><ProfileAvatar displayName={account.displayName} avatar={account.avatar} size="lg" />
             <h2 className="display-heading display-heading--section">{account.displayName}</h2><p>@{account.username}</p></>}
           <Button variant="outline" onClick={() => setProfileOpen(true)}>Your profile</Button>
+          {onOpenVoiceRooms && <Button variant="outline" onClick={onOpenVoiceRooms}>Open Voice Rooms</Button>}
           <div className="real-sidebar-summary"><h3 className="display-heading display-heading--section">Your people</h3>
             <p>{friends.isLoading ? 'Loading friends…' : friends.isStale ? 'Friends need a refresh.' : `${friends.snapshot.friends.length} friends`}</p>
             <Button variant="outline" onClick={() => selectSection('friends')}>Manage Friends</Button></div>

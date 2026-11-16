@@ -9,6 +9,7 @@ import type { CryptoMessageContext } from '@/utils/crypto';
 import type { TransportMode } from '@/messaging/messageModel';
 import { useMessengerConversations } from '@/hooks/useMessengerConversations';
 import { createDemoConversations } from '@/conversations/demoConversations';
+import { decodeAttachmentContent, encodeAttachmentContent } from '@/messaging/attachmentContent';
 
 class TestTransport implements MessagingTransport {
   constructor(readonly mode: TransportMode = 'realtime') {}
@@ -68,6 +69,33 @@ async function encryptedIncoming(overrides: Partial<CryptoMessageContext> = {}) 
 }
 
 describe('useConversationMessages', () => {
+  test('sends attachment references inside ciphertext and renders authenticated incoming references', async () => {
+    const transport = new TestTransport();
+    const { result } = renderHook(() => useConversationMessages(options(transport)));
+    await waitFor(() => expect(result.current.securityStatus?.localEncryptionAvailable).toBe(true));
+    const attachment = {
+      id: '550e8400-e29b-41d4-a716-446655440000', name: 'report.pdf', type: 'file' as const,
+      mimeType: 'application/pdf', sizeBytes: 100, url: '/api/attachments/550e8400-e29b-41d4-a716-446655440000',
+    };
+    await act(async () => { expect(await result.current.sendMessage('Read this', { attachments: [attachment] })).toBe(true); });
+    const outbound = transport.sendMessage.mock.calls[0]![0];
+    expect(outbound).not.toHaveProperty('attachments');
+    const context = { conversationId: outbound.conversationId, messageId: outbound.id, senderId: outbound.senderId,
+      senderName: outbound.senderName, timestamp: outbound.timestamp };
+    const plaintext = await demoConversationCryptoService.decrypt(
+      { conversationId: 'conversation-a', localUserId: 'user-a' }, outbound.encryption, context);
+    expect(decodeAttachmentContent(plaintext)).toEqual({ content: 'Read this', attachments: [attachment] });
+
+    const incoming = await encryptedIncoming();
+    const encryption = await demoConversationCryptoService.encrypt(
+      { conversationId: 'conversation-a', localUserId: 'user-a' }, encodeAttachmentContent('A document', [attachment]),
+      { conversationId: incoming.conversationId, messageId: incoming.id, senderId: incoming.senderId,
+        senderName: incoming.senderName, timestamp: incoming.timestamp });
+    act(() => transport.emitMessage({ ...incoming, encryption }));
+    await waitFor(() => expect(result.current.messages.find((message) => message.id === incoming.id))
+      .toMatchObject({ content: 'A document', attachments: [attachment] }));
+  });
+
   test('encrypts before adding local state and sends only a versioned encrypted envelope', async () => {
     const transport = new TestTransport();
     const { result } = renderHook(() => useConversationMessages(options(transport)));

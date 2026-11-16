@@ -4,6 +4,9 @@ import { Avatar, Badge } from '@/components/ui';
 import type { ConnectionStatus, PresenceStatus, TransportMode } from '@/messaging/messageModel';
 import type { ConversationSecurityStatus } from '@/security/keyManagement';
 import type { ConversationType } from '@/conversations/conversationModel';
+import type { DirectCallKind } from '@/calls/directCallMachine';
+import type { DirectCallPeer } from '@/calls/directCallMachine';
+import { DirectCallActions } from '@/components/calls/DirectCallActions';
 
 export type { ConversationType } from '@/conversations/conversationModel';
 
@@ -19,6 +22,9 @@ export interface ConversationHeaderProps {
   /** Only the identity group transitions; message history and disclosures remain mounted. */
   transitionKey?: string;
   onBackToConversations?: () => void;
+  onStartCall?(kind: DirectCallKind): void;
+  callDisabled?: boolean;
+  callTarget?: { conversationId: string; peer: DirectCallPeer };
 }
 
 const presenceLabel: Record<PresenceStatus, string> = {
@@ -45,6 +51,9 @@ export function ConversationHeader({
   headingRef,
   transitionKey,
   onBackToConversations,
+  onStartCall,
+  callDisabled = false,
+  callTarget,
 }: ConversationHeaderProps) {
   const localEncryptionLabel = !securityStatus
     ? 'Preparing local encryption'
@@ -88,6 +97,8 @@ export function ConversationHeader({
       </div>
 
       <div className="chat-header-actions">
+        {type === 'direct' && <DirectCallActions name={name} disabled={callDisabled}
+          {...(callTarget ? { target: callTarget } : {})} {...(onStartCall ? { onPreviewCall: onStartCall } : {})} />}
         <details className="conversation-security-details">
           <summary className="conversation-security-summary">
             <LockKeyhole size={15} aria-hidden="true" />

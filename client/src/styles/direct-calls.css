@@ -1,0 +1,81 @@
+.chat-header-actions:has(.direct-call-header-actions) { display: flex; align-items: flex-start; gap: .65rem; flex-basis: 25rem; }
+.chat-header-actions:has(.direct-call-header-actions) .conversation-security-details { flex: 1; min-width: 0; }
+.direct-call-header-actions { display: flex; flex-shrink: 0; gap: .4rem; }
+.direct-call-header-actions button { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0; color: var(--color-brand-hover); background: var(--color-brand-soft); border: 1px solid var(--color-brand-border); border-radius: .7rem; }
+.direct-call-header-actions button:hover:not(:disabled) { background: var(--color-row-active); }
+.direct-call-header-actions button:disabled { opacity: .45; cursor: not-allowed; }
+.direct-call-window.ui-dialog { width: min(32rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); color: var(--color-text); }
+.direct-call-window .ui-dialog-panel { background: var(--color-surface); }
+.direct-call-window .ui-dialog-title { font-size: 1rem; overflow-wrap: anywhere; }
+.direct-call-window .ui-dialog-body { padding: 0 1.25rem 1.25rem; }
+.direct-call-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 19rem; padding: 2.25rem 1.5rem 1.5rem; border: 1px solid var(--color-brand-border); border-radius: 1rem; background: radial-gradient(ellipse at 50% 12%, var(--color-brand-soft), transparent 80%), var(--color-chat); text-align: center; }
+.direct-call-stage > .ui-avatar { width: 6rem; height: 6rem; flex-shrink: 0; border: 2px solid var(--color-brand-border); font-size: 1.8rem; box-shadow: 0 0 0 .5rem var(--color-brand-soft); }
+.direct-call-stage h3 { max-width: 100%; margin: 1.6rem 0 .35rem; color: var(--color-text); font-size: 1.3rem; overflow-wrap: anywhere; }
+.direct-call-status { display: flex; flex-direction: column; align-items: center; gap: .4rem; }
+.direct-call-status > p { display: flex; align-items: center; justify-content: center; gap: .4rem; margin: 0; color: var(--color-text-muted); font-size: .8rem; }
+.direct-call-status svg { flex-shrink: 0; }
+.direct-call-status[data-state='connected'] > p { color: var(--color-success); }
+.direct-call-status[data-state='connecting'] > p > svg { animation: direct-call-spin 1.1s linear infinite; }
+.direct-call-duration { display: inline-flex; align-items: center; gap: .4rem; color: var(--color-text-muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.direct-call-note { margin: 1rem 0 0; color: var(--color-text-muted); font-size: .75rem; line-height: 1.65; overflow-wrap: anywhere; }
+.direct-call-controls { display: flex; justify-content: center; gap: .65rem; margin-top: 1.25rem; }
+.direct-call-controls .ui-button { flex: 1; flex-direction: column; gap: .45rem; min-height: 4rem; min-width: 0; padding-inline: .45rem; font-size: .7rem; }
+.direct-call-device-note { text-align: center; font-size: .65rem; }
+.direct-call-finished { margin-top: 1.25rem; text-align: center; }
+.direct-call-stage.has-call-media { min-height: 0; padding: 1rem; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.direct-call-stage.has-call-media > .ui-avatar { width: 3rem; height: 3rem; font-size: 1rem; box-shadow: none; }
+.direct-call-stage.has-call-media h3 { margin-top: .6rem; font-size: 1rem; }
+.direct-call-media-content .voice-stage { gap: .65rem; padding: .65rem; border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
+.direct-call-media-content .voice-stage.has-participants { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.direct-call-media-content .voice-participant-tile { min-height: 9rem; }
+.direct-call-media-content > .ui-button { margin-top: .65rem; }
+.direct-call-status[data-state='reconnecting'] > p { color: var(--color-warning); }
+.incoming-call-notification { position: fixed; z-index: 80; top: max(1rem, env(safe-area-inset-top)); right: max(1rem, env(safe-area-inset-right)); width: min(25rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow-y: auto; padding: 1.25rem; border: 1px solid var(--color-brand-border); border-radius: 1rem; background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-popover); }
+.incoming-call-identity { display: flex; align-items: center; gap: 1rem; }
+.incoming-call-identity > .ui-avatar { flex-shrink: 0; width: 3.5rem; height: 3.5rem; font-size: 1.1rem; }
+.incoming-call-identity > div { min-width: 0; }
+.incoming-call-identity h2 { margin: .25rem 0 .4rem; font-size: 1.1rem; overflow-wrap: anywhere; }
+.incoming-call-identity .direct-call-status { align-items: flex-start; }
+.incoming-call-identity .direct-call-status > p { justify-content: flex-start; }
+.direct-call-eyebrow { margin: 0; font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; color: var(--color-brand-hover); }
+.incoming-call-actions { display: flex; gap: .65rem; margin-top: 1.1rem; }
+.incoming-call-actions .ui-button { flex: 1; min-height: 2.75rem; }
+.direct-call-preview-controls { margin-top: .75rem; padding-top: .75rem; border-top: 1px solid var(--color-border); color: var(--color-text-muted); }
+.direct-call-preview-controls p { font-size: .75rem; }
+.direct-call-preview-controls > div { display: flex; gap: .6rem; flex-wrap: wrap; }
+@keyframes direct-call-spin { to { transform: rotate(360deg); } }
+.floating-call-panel { position: fixed; z-index: 75; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); width: min(34rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow-y: auto; padding: 1rem; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-brand-border); border-radius: 1rem; box-shadow: var(--shadow-popover); }
+.floating-call-panel.is-minimized { width: min(22rem, calc(100vw - 2rem)); top: max(1rem, env(safe-area-inset-top)); bottom: auto; }
+.floating-call-panel.is-minimized .direct-call-controls .ui-button { min-height: 2.75rem; flex-direction: row; }
+.floating-call-panel.is-minimized .direct-call-controls .ui-button > span { display: none; }
+.floating-call-panel.is-minimized.direct-call-preview-window > .direct-call-note, .floating-call-panel.is-minimized .direct-call-device-note { display: none; }
+.floating-call-panel.is-minimized .floating-call-participants { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.floating-call-header { display: flex; align-items: center; gap: .7rem; }
+.floating-call-header > .ui-avatar { flex-shrink: 0; }
+.floating-call-header > div { flex: 1; min-width: 0; }
+.floating-call-header h2 { margin: 0 0 .3rem; font-size: 1rem; overflow-wrap: anywhere; }
+.floating-call-header .direct-call-status { align-items: flex-start; }
+.floating-call-header .direct-call-status p { justify-content: flex-start; }
+.floating-call-toggle { display: grid; place-items: center; flex-shrink: 0; width: 2.75rem; height: 2.75rem; border: 1px solid var(--color-brand-border); border-radius: .6rem; color: var(--color-brand-hover); background: var(--color-brand-soft); }
+.floating-call-participants { margin: .6rem 0; font-size: .7rem; color: var(--color-text-muted); overflow-wrap: anywhere; }
+.floating-call-body { max-height: 45dvh; overflow-y: auto; }
+.floating-call-panel .direct-call-controls { margin-top: .65rem; }
+.floating-call-panel .call-screen-share { margin-top: .65rem; width: 100%; min-height: 2.75rem; }
+.call-screen-stage { position: relative; padding-top: 1.9rem; min-height: 12rem; aspect-ratio: 16 / 10; background: var(--color-background); border-radius: .6rem; overflow: hidden; }
+.call-screen-stage > p { position: relative; z-index: 1; padding: .4rem .6rem; margin: -1.9rem 0 0; font-size: .7rem; background: var(--color-surface-raised); }
+.call-screen-stage > video { object-fit: contain; top: 1.9rem; height: calc(100% - 1.9rem); }
+.call-workspace-status { position: fixed; bottom: .35rem; left: .5rem; z-index: 10; }
+.development-call-readiness { margin: 0; padding: .75rem; background: var(--color-brand-soft); border: 1px solid var(--color-brand-border); border-radius: .6rem; }
+.development-call-readiness > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; }
+.development-call-readiness dt { color: var(--color-text-muted); }
+.development-call-readiness dd { margin: 0; }
+@media (max-width: 480px) { .floating-call-panel { right: .5rem; bottom: max(.5rem, env(safe-area-inset-bottom)); width: calc(100vw - 1rem); max-height: 85dvh; padding: .75rem; } .floating-call-panel.is-minimized { width: min(21rem, calc(100vw - 1rem)); bottom: auto; top: max(.5rem, env(safe-area-inset-top)); } .floating-call-body { max-height: 35dvh; } }
+@media (max-width: 680px) {
+  .chat-header-actions:has(.direct-call-header-actions) { flex-basis: 100%; gap: .5rem; }
+  .direct-call-window .ui-dialog-body { padding-inline: .85rem; }
+  .direct-call-stage { min-height: 16rem; padding: 1.5rem 1rem; }
+  .direct-call-stage > .ui-avatar { width: 5rem; height: 5rem; }
+  .direct-call-stage h3 { font-size: 1.15rem; }
+  .direct-call-controls { gap: .4rem; }
+}
+@media (prefers-reduced-motion: reduce) { .direct-call-status[data-state='connecting'] > p > svg { animation: none; } }

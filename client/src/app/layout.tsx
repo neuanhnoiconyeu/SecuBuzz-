@@ -14,6 +14,8 @@ import '@/styles/auth.css';
 import '@/styles/realtime.css';
 import '@/styles/typography.css';
 import '@/styles/ai.css';
+import '@/styles/voice-rooms.css';
+import '@/styles/direct-calls.css';
 
 export const metadata: Metadata = {
   title: BRAND_NAME,

@@ -1,4 +1,5 @@
 import type { EncryptedIncomingMessage, IncomingMessage, OutboundMessage, PresenceStatus, TransportMode } from '@/messaging/messageModel';
+import type { CallSignalingPort } from '@/calls/callSignaling';
 
 /** Phase 8.7B protocol.ts: failure callbacks and handshake errors are different contracts. */
 export const SERVER_ACK_ERROR_CODES = ['invalid_payload', 'unauthorized_conversation', 'rate_limited', 'unavailable',
@@ -29,6 +30,7 @@ export interface SendAcknowledgement {
 }
 
 export interface RealtimeClient {
+  readonly calls?: CallSignalingPort;
   readonly mode: TransportMode;
   readonly actorId: string;
   readonly canSendMessages: boolean;

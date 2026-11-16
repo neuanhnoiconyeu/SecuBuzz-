@@ -1,3 +1,5 @@
+import { developmentCallingEnabled } from '@/dev/calling/developmentCalling';
+import { createDevelopmentCallingAuthService } from '@/dev/calling/authService';
 import { AuthError, type AuthResult, type AuthUser, type LoginInput, type RegisterInput, type RegisterResult } from './authModel';
 import { HttpAuthService } from './httpAuthService';
 import type { SessionApi } from '@/api/sessionApi';
@@ -27,6 +29,7 @@ export function createConfiguredAuthService(): AuthService {
   const mode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'api';
   // Demo credentials/personas cannot be enabled through deployed configuration, even in dev.
   if (mode !== 'api' || process.env.NEXT_PUBLIC_AUTH_API_READY === 'false') return new UnconfiguredAuthService();
+  if (developmentCallingEnabled()) return createDevelopmentCallingAuthService();
   try { return new HttpAuthService({ basePath: process.env.NEXT_PUBLIC_AUTH_API_BASE_PATH ?? '/api/auth' }); }
   catch { return new UnconfiguredAuthService(); }
 }

@@ -1,6 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { ApiRealtimeConnection } from '@/components/messenger/ApiRealtimeConnection';
+import { VoiceRoomsWorkspace } from '@/components/voice/VoiceRoomsWorkspace';
+import { developmentCallingEnabled } from '@/dev/calling/developmentCalling';
+import { DevelopmentCallingTestView } from '@/dev/calling/DevelopmentCallingTestView';
 import { AuthLoading } from '@/components/auth/AuthShell';
 import { MessengerApp } from '@/components/messenger/MessengerApp';
 import { RealMessengerWorkspace } from '@/components/messenger/RealMessengerWorkspace';
@@ -22,10 +26,24 @@ function DemoWorkspace({ user }: { user: AuthUser }) {
     logoutError={auth.error?.message ?? null} />;
 }
 
+function ApiWorkspace({ user }: { user: AuthUser }) {
+  const auth = useAuth();
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  if (developmentCallingEnabled()) return <DevelopmentCallingTestView user={user} />;
+  // Keep the DATA session and drafts mounted while browsing the separate media workspace.
+  // The legacy calling socket must not replace DATA's authenticated v2 messaging transport.
+  return <>
+    <div hidden={voiceOpen}><RealMessengerWorkspace onOpenVoiceRooms={() => setVoiceOpen(true)} /></div>
+    {voiceOpen && <ApiRealtimeConnection user={user}><VoiceRoomsWorkspace user={user}
+      onClose={() => setVoiceOpen(false)} onLogout={auth.logout}
+      isLoggingOut={auth.pending === 'logout'} logoutError={auth.error?.message ?? null} /></ApiRealtimeConnection>}
+  </>;
+}
+
 export function AuthenticatedWorkspace() {
   const auth = useAuth();
   if (auth.status !== 'authenticated' || !auth.user) return null;
   if (auth.mode === 'demo' && auth.user.isDemo) return <DemoWorkspace key={auth.sessionVersion} user={auth.user} />;
   if (auth.mode !== 'api' || auth.user.isDemo) return null;
-  return <RealMessengerWorkspace key={auth.sessionVersion} />;
+  return <ApiWorkspace key={auth.sessionVersion} user={auth.user} />;
 }

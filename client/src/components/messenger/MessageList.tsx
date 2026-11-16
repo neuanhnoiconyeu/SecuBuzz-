@@ -3,7 +3,7 @@ import { EMOJI_CATEGORIES, QUICK_EMOJIS } from './emojiData';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import {
-  AlertTriangle, ArrowDown, Check, Edit2, FileText, Forward, LockKeyhole, Mic, MoreHorizontal,
+  AlertTriangle, ArrowDown, Check, Edit2, Forward, LockKeyhole, Mic, MoreHorizontal,
   Pin, Plus, Reply, Undo2, SmilePlus, Sparkles, Trash2, X,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/branding';
@@ -11,6 +11,7 @@ import { Badge, Button, Surface } from '@/components/ui';
 import type { ChatMessage, TransportMode } from '@/messaging/messageModel';
 import { AI_MAX_INPUT, type AIMessageAction } from '@/ai/aiModel';
 import { useMessageEntryMotion } from './useMessageEntryMotion';
+import { MessageAttachmentView } from './MessageAttachmentView';
 import './message-reactions.css';
 
 export interface MessageListProps {
@@ -381,16 +382,8 @@ export function MessageList({
                           {message.content}
 
                           {!message.isDeleted && message.attachments && message.attachments.length > 0 && (
-                            <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              {message.attachments.map((att) =>
-                                att.type === 'image' ? (
-                                  <img key={att.id} src={att.url} alt={att.name} style={{ maxWidth: '220px', borderRadius: '6px', marginTop: '4px' }} />
-                                ) : (
-                                  <a key={att.id} href={att.url} download={att.name} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', textDecoration: 'underline' }}>
-                                    <FileText size={14} /> {att.name} ({Math.round(att.sizeBytes / 1024)} KB)
-                                  </a>
-                                )
-                              )}
+                            <div className="message-attachments">
+                              {message.attachments.map((attachment) => <MessageAttachmentView key={attachment.id} attachment={attachment} ownerId={currentUserId} conversationId={message.conversationId} />)}
                             </div>
                           )}
 
