@@ -19,7 +19,7 @@ function adapter(...responses: Response[]) {
 afterEach(() => jest.restoreAllMocks());
 
 test('login uses same-origin credentialed no-store requests with CSRF, exact password and identity allowlisting', async () => {
-  const { service, request } = adapter(response(200, { user: { ...user, accessToken: 'never-forward', email: 'private@example.test' } }));
+  const { service, request } = adapter(response(200, { user: { ...user, accessToken: 'never-forward', email: 'private@example.test' } }), response(200, { user }));
   expect(await service.login(login)).toEqual({ user });
   expect(request).toHaveBeenCalledWith('/api/auth/login', {
     method: 'POST', credentials: 'same-origin', mode: 'same-origin', redirect: 'error', cache: 'no-store',
@@ -40,7 +40,7 @@ test.each([null, '', ' ', '\r\ninvalid'])('missing/invalid CSRF token fails clos
 test('CSRF bootstrap failure never sends a mutation', async () => {
   const request = jest.fn();
   const service = new HttpAuthService({ fetch: request, getCsrfToken: () => { throw new Error('private bootstrap details'); } });
-  await expect(service.login(login)).rejects.toMatchObject({ code: 'unavailable' });
+  await expect(service.login(login)).rejects.toMatchObject({ code: 'network' });
   expect(request).not.toHaveBeenCalled();
 });
 
@@ -66,14 +66,14 @@ test.each([
   await expect(service.login(login)).rejects.toMatchObject({ code: 'invalid_response' });
 });
 
-test('registration explicitly supports both authenticated and requires-login contracts', async () => {
-  const { service } = adapter(response(201, { status: 'authenticated', user }), response(200, { status: 'requires-login' }));
-  expect(await service.register(register)).toEqual({ status: 'authenticated', user });
+test('DB-2 registration requires explicit login and rejects an auto-authentication response', async () => {
+  const { service } = adapter(response(201, { status: 'authenticated', user }), response(201, { status: 'requires-login' }));
+  await expect(service.register(register)).rejects.toMatchObject({ code: 'invalid_response' });
   expect(await service.register(register)).toEqual({ status: 'requires-login' });
 });
 
 test('registration never assumes session establishment from an unspecified success shape', async () => {
-  const { service } = adapter(response(201, { user }), response(200, { status: 'authenticated', user: null }));
+  const { service } = adapter(response(201, { user }), response(201, { status: 'authenticated', user: null }));
   await expect(service.register(register)).rejects.toMatchObject({ code: 'invalid_response' });
   await expect(service.register(register)).rejects.toMatchObject({ code: 'invalid_response' });
 });
@@ -93,7 +93,7 @@ test('backend validation maps only known field names to fixed text', async () =>
 
 test('network and backend failures never manufacture identities or switch to a demo adapter', async () => {
   const { service, request } = adapter(response(503, { user }));
-  await expect(service.login(login)).rejects.toMatchObject({ code: 'unavailable' });
+  await expect(service.login(login)).rejects.toMatchObject({ code: 'service_unavailable' });
   request.mockRejectedValueOnce(new Error('private network stack'));
   await expect(service.login(login)).rejects.toMatchObject({ code: 'network' });
   expect(service.mode).toBe('api');
@@ -107,11 +107,11 @@ test('malformed/non-JSON responses fail closed', async () => {
   await expect(service.getCurrentUser()).rejects.toMatchObject({ code: 'invalid_response' });
 });
 
-test('logout only confirms explicit success or an already-absent session', async () => {
+test('logout only confirms DB-2 204 success; other response shapes never claim revocation', async () => {
   const { service } = adapter(response(204), response(200, { success: true }), response(401), response(200, { success: false }), response(500));
   await expect(service.logout()).resolves.toBeUndefined();
-  await expect(service.logout()).resolves.toBeUndefined();
-  await expect(service.logout()).resolves.toBeUndefined();
+  await expect(service.logout()).rejects.toMatchObject({ code: 'logout_failed' });
+  await expect(service.logout()).rejects.toMatchObject({ code: 'logout_failed' });
   await expect(service.logout()).rejects.toMatchObject({ code: 'logout_failed' });
   await expect(service.logout()).rejects.toMatchObject({ code: 'logout_failed' });
 });
@@ -149,6 +149,7 @@ test('bounds slow fetches and body parsing to 15 seconds without retrying or con
     const loginAttempt = service.login(login);
     const rejectedLogin = expect(loginAttempt).rejects.toMatchObject({ code: 'network' });
     await Promise.resolve();
+    await Promise.resolve();
     jest.advanceTimersByTime(15_000);
     await rejectedLogin;
     expect(request).toHaveBeenCalledTimes(1);
@@ -160,13 +161,13 @@ test('bounds slow fetches and body parsing to 15 seconds without retrying or con
     const bodyService = new HttpAuthService({ fetch: bodyRequest, getCsrfToken: () => 'test-csrf' });
     const invalidated = jest.fn();
     bodyService.subscribeToInvalidation(invalidated);
-    const logoutAttempt = bodyService.logout();
-    const rejectedLogout = expect(logoutAttempt).rejects.toMatchObject({ code: 'network' });
+    const restoreAttempt = bodyService.getCurrentUser();
+    const rejectedRestore = expect(restoreAttempt).rejects.toMatchObject({ code: 'network' });
     await Promise.resolve();
     await Promise.resolve();
     jest.advanceTimersByTime(15_000);
-    await rejectedLogout;
-    finishBody({ success: true });
+    await rejectedRestore;
+    finishBody({ user });
     await Promise.resolve();
     await Promise.resolve();
     expect(invalidated).not.toHaveBeenCalled();

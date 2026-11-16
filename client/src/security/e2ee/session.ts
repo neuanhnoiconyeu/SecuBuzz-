@@ -1,0 +1,227 @@
+import { ApiError, type SessionApi } from '@/api/sessionApi';
+import { E2eeApi } from './api';
+import { BrowserKeyStore } from './storage';
+import { generateDevice, matchesDevice, registration, safetyNumber, validateLocalDevice } from './devices';
+import { decryptV2, encryptV2 } from './messages';
+import { openKey, sealKey } from './hpke';
+import { base64url, digest, epochStatement, importPoint, parseEnvelope, parseEpoch, recipientOrder, sign, verifyDevice, verifySignature, wrapInfo } from './protocol';
+import { E2eeError, type DeviceIdentity, type DeviceRecord, type DirectConversation, type EnvelopeV2, type KeyEpoch, type KeyState, type StoredMessage } from './model';
+
+interface CachedEpoch { epoch: KeyEpoch; creator: DeviceRecord; key: CryptoKey }
+interface TrustedPeer { ids: string[] }
+export interface PreparedConversation { conversation: DirectConversation; keyId: string; key: CryptoKey; safetyNumber: string }
+export interface DecryptedRow { message: StoredMessage; text: string | null; error: string | null }
+export interface PersistenceAck { conversationId: string; messageId: string; status: 'sent'; timestamp: string }
+export type EncryptedSubmit = (envelope: EnvelopeV2) => Promise<PersistenceAck>;
+export type SendProgress = (state: 'Encrypting' | 'Sending' | 'Awaiting persistence acknowledgment' | 'Persisted — delivery pending') => void;
+export class SecureMessagingSession {
+  readonly api: E2eeApi;
+  readonly store: BrowserKeyStore;
+  private active = true;
+  private initialization: Promise<DeviceIdentity> | undefined;
+  private identity: DeviceIdentity | undefined;
+  private review: { conversationId: string; digest: string; oldIds: string[]; newIds: string[] } | undefined;
+  constructor(session: SessionApi, store = new BrowserKeyStore(session.actor.id)) {
+    if (store.accountId !== session.actor.id) throw new E2eeError('storage_corrupt');
+    this.api = new E2eeApi(session); this.store = store;
+  }
+  private assert(): void { if (!this.active) throw new E2eeError('disposed'); }
+  initialize(explicitEnrollment = false): Promise<DeviceIdentity> {
+    this.assert();
+    if (!this.initialization) { const pending = this.initializeDevice(explicitEnrollment).catch((e: unknown) => { this.initialization = undefined; throw e; }); this.initialization = pending; }
+    return this.initialization;
+  }
+  private async initializeDevice(explicit: boolean): Promise<DeviceIdentity> {
+    let device = await this.store.get<DeviceIdentity>('device'); const own = await this.api.ownDevices(); this.assert();
+    if (!device) {
+      if (await this.store.get('enrolled')) throw new E2eeError('storage_corrupt');
+      if (own.length && !explicit) throw new E2eeError('enrollment_required');
+      const candidate = await generateDevice(this.api.session.actor.id); this.assert(); device = await this.store.enroll(candidate);
+    }
+    await validateLocalDevice(device, this.api.session.actor.id); this.assert(); this.identity = device;
+    const prior = own.find(d => d.deviceKeyId === device.deviceKeyId);
+    if (prior && (prior.status !== 'active' || !matchesDevice(device, prior))) throw new E2eeError('device_revoked');
+    let registered: DeviceRecord;
+    try { registered = await this.api.register(await registration(device)); }
+    catch (e) { if (e instanceof ApiError && e.code === 'key_conflict') throw new E2eeError('device_revoked'); throw e; }
+    this.assert(); if (!matchesDevice(device, registered) || registered.status !== 'active') throw new E2eeError('invalid_proof');
+    await this.store.put('verified-device', registered.deviceKeyId, registered); this.assert(); return device;
+  }
+  getKeyReview(cid?: string): { oldIds: string[]; newIds: string[] } | null { return this.review && (!cid || this.review.conversationId === cid) ? { oldIds: [...this.review.oldIds], newIds: [...this.review.newIds] } : null; }
+  private async trust(state: KeyState, accept?: string): Promise<void> {
+    const peer = state.participantIds.find(id => id !== this.api.session.actor.id)!;
+    const ids = state.devices.filter(d => d.userId === peer).map(d => d.deviceKeyId).sort();
+    if (!ids.length) throw new E2eeError('recipient_missing');
+    const fingerprint = await digest(JSON.stringify([state.conversationId, peer, ids]));
+    const known = await this.store.putIfAbsent<TrustedPeer>('trust', peer, { ids }); this.assert();
+    if (!known || !Array.isArray(known.ids) || known.ids.some(id => typeof id !== 'string')) throw new E2eeError('storage_corrupt');
+    if (JSON.stringify(known.ids) !== JSON.stringify(ids)) {
+      if (accept !== fingerprint) { this.review = { conversationId: state.conversationId, digest: fingerprint, oldIds: known.ids, newIds: ids }; throw new E2eeError('keys_changed'); }
+      await this.store.put('trust', peer, { ids });
+    }
+    for (const device of state.devices) await this.store.put('verified-device', device.deviceKeyId, device);
+    this.assert(); this.review = undefined;
+  }
+  async acceptKeyChange(conversationId: string): Promise<void> {
+    this.assert(); const expected = this.review; if (!expected || expected.conversationId !== conversationId) throw new E2eeError('keys_changed');
+    const c = await this.api.getConversation(conversationId), state = await this.api.state(conversationId, c.participants.map(p => p.id));
+    await this.trust(state, expected.digest); this.assert();
+  }
+  private covers(epoch: KeyEpoch, devices: DeviceRecord[]): boolean {
+    const expected = [...devices].sort(recipientOrder);
+    return expected.length === epoch.wraps.length && expected.every((d, i) => d.userId === epoch.wraps[i]!.recipientUserId && d.deviceKeyId === epoch.wraps[i]!.recipientDeviceKeyId);
+  }
+  private async verifyEpoch(epoch: KeyEpoch, creator: DeviceRecord, participants: string[]): Promise<void> {
+    if (creator.deviceKeyId !== epoch.creatorDeviceKeyId || creator.userId !== epoch.creatorUserId || !participants.includes(creator.userId) || epoch.wraps.some(w => !participants.includes(w.recipientUserId))) throw new E2eeError('invalid_proof');
+    await verifySignature(creator.signingPublicKey, epochStatement(epoch), epoch.signature);
+    await Promise.all(epoch.wraps.map(w => importPoint(w.enc, false)));
+  }
+  private async openEpoch(epoch: KeyEpoch, creator: DeviceRecord, participants: string[], device: DeviceIdentity): Promise<CryptoKey> {
+    await this.verifyEpoch(epoch, creator, participants); const own = epoch.wraps.find(w => w.recipientUserId === device.userId && w.recipientDeviceKeyId === device.deviceKeyId);
+    if (!own) throw new E2eeError('missing_key');
+    const key = await openKey(device.agreement, own.enc, own.ciphertext, wrapInfo(epoch, own)); this.assert();
+    await this.store.put<CachedEpoch>('epoch', JSON.stringify([epoch.conversationId, epoch.keyId]), { epoch, creator, key }); this.assert(); return key;
+  }
+  private async validatedState(cid: string): Promise<{ device: DeviceIdentity; conversation: DirectConversation; state: KeyState }> {
+    const device = await this.initialize(), conversation = await this.api.getConversation(cid);
+    if (!conversation.interactionAllowed) throw new ApiError('forbidden');
+    const state = await this.api.state(cid, conversation.participants.map(p => p.id)); this.assert();
+    if (!state.devices.some(d => d.deviceKeyId === device.deviceKeyId && matchesDevice(device, d))) throw new E2eeError('device_revoked');
+    if (state.participantIds.some(id => !state.devices.some(d => d.userId === id))) throw new E2eeError('recipient_missing');
+    await this.trust(state); return { device, conversation, state };
+  }
+  async prepare(cid: string): Promise<PreparedConversation> {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const { device, conversation, state } = await this.validatedState(cid);
+      let epoch = state.epochs[0];
+      if (!epoch || !this.covers(epoch, state.devices) || !state.devices.some(d => d.deviceKeyId === epoch!.creatorDeviceKeyId)) {
+        const raw = crypto.getRandomValues(new Uint8Array(32));
+        const fields = { conversationId: cid, keyId: base64url(crypto.getRandomValues(new Uint8Array(16))), epoch: (state.currentEpoch?.epoch ?? 0) + 1,
+          previousKeyId: state.currentEpoch?.keyId ?? null, creatorUserId: device.userId, creatorDeviceKeyId: device.deviceKeyId, createdAt: new Date().toISOString() };
+        try {
+          const wraps = [];
+          for (const recipient of [...state.devices].sort(recipientOrder)) {
+            const target = { recipientUserId: recipient.userId, recipientDeviceKeyId: recipient.deviceKeyId };
+            wraps.push({ ...target, ...await sealKey(recipient.agreementPublicKey, raw, wrapInfo(fields, target)) }); this.assert();
+          }
+          const signature = await sign(device.signing.privateKey, epochStatement({ ...fields, wraps })); this.assert();
+          const { conversationId: _cid, creatorUserId: _actor, ...body } = fields;
+          epoch = await this.api.publish(cid, { ...body, wraps, signature });
+        } catch (e) { if (e instanceof ApiError && e.code === 'recipient_keys_changed' && attempt === 0) continue; throw e; }
+        finally { raw.fill(0); }
+      }
+      const creator = state.devices.find(d => d.deviceKeyId === epoch.creatorDeviceKeyId);
+      if (!creator || !this.covers(epoch, state.devices) || epoch.epoch < (state.currentEpoch?.epoch ?? 0)) throw new E2eeError('invalid_proof');
+      const key = await this.openEpoch(epoch, creator, state.participantIds, device); this.assert();
+      return { conversation, keyId: epoch.keyId, key, safetyNumber: await safetyNumber(state.devices, state.participantIds) };
+    }
+    throw new E2eeError('stale_epoch');
+  }
+  async pending(cid: string): Promise<EnvelopeV2 | null> {
+    const pending = await this.store.get<unknown>('pending', cid); this.assert();
+    if (pending === undefined) return null;
+    try { const e = parseEnvelope(pending); if (e.conversationId !== cid || e.senderId !== this.api.session.actor.id) throw new Error(); return e; }
+    catch { throw new E2eeError('storage_corrupt'); }
+  }
+  private async confirmed(envelope: EnvelopeV2, submit?: EncryptedSubmit, progress?: SendProgress): Promise<StoredMessage> {
+    let message: StoredMessage | undefined;
+    if (submit) {
+      progress?.('Sending');
+      const operation = submit(envelope);
+      progress?.('Awaiting persistence acknowledgment');
+      const ack = await operation; this.assert();
+      if (ack.conversationId !== envelope.conversationId || ack.messageId !== envelope.id || ack.status !== 'sent') throw new E2eeError('invalid_message');
+      progress?.('Persisted — delivery pending');
+      // Socket acknowledgments contain no storage ID or sequence. Never fabricate either,
+      // and never POST a second copy to obtain them. Read the already committed row.
+      message = await this.findPersisted(envelope);
+      if (!message || message.storedAt !== ack.timestamp) throw new ApiError('unavailable');
+    } else { progress?.('Sending'); message = await this.api.submit(envelope); }
+    this.assert();
+    if (message.timestamp !== envelope.timestamp || message.senderName !== envelope.senderName ||
+      (message.encryption !== null && JSON.stringify([message.encryption.version, message.encryption.keyId, message.encryption.iv, message.encryption.ciphertext]) !==
+        JSON.stringify([2, envelope.encryption.keyId, envelope.encryption.iv, envelope.encryption.ciphertext]))) throw new E2eeError('invalid_message');
+    await this.store.clearPending(envelope.conversationId, envelope.id); this.assert(); return message;
+  }
+  async send(cid: string, displayName: string, text: string, submit?: EncryptedSubmit, progress?: SendProgress): Promise<StoredMessage> {
+    this.assert(); if (await this.pending(cid)) throw new E2eeError('pending_message');
+    progress?.('Encrypting');
+    const prepared = await this.prepare(cid); this.assert();
+    const envelope = await encryptV2(prepared.key, this.store, { id: crypto.randomUUID(), conversationId: cid, senderId: this.api.session.actor.id, senderName: displayName, timestamp: new Date().toISOString(), type: 'text' }, prepared.keyId, text); this.assert();
+    const stored = await this.store.putIfAbsent('pending', cid, envelope); this.assert(); if (stored.id !== envelope.id) throw new E2eeError('pending_message');
+    return this.confirmed(envelope, submit, progress);
+  }
+  private async findPersisted(envelope: EnvelopeV2): Promise<StoredMessage | undefined> {
+    let cursor: string | undefined;
+    for (let page = 0; page < 20; page++) {
+      const history = await this.api.history(envelope.conversationId, cursor); this.assert(); const found = history.items.find(m => m.id === envelope.id);
+      if (found) { if (found.timestamp !== envelope.timestamp || found.senderName !== envelope.senderName || (found.encryption !== null &&
+        JSON.stringify([found.encryption.version, found.encryption.keyId, found.encryption.iv, found.encryption.ciphertext]) !== JSON.stringify([2, envelope.encryption.keyId, envelope.encryption.iv, envelope.encryption.ciphertext])) || found.senderId !== envelope.senderId) throw new E2eeError('invalid_message');
+        return found; }
+      if (!history.nextCursor) break; cursor = history.nextCursor;
+      if (page === 19) throw new ApiError('resource_limit');
+    }
+    return undefined;
+  }
+  async retryPending(cid: string, submit?: EncryptedSubmit, progress?: SendProgress): Promise<StoredMessage | null> {
+    const envelope = await this.pending(cid); if (!envelope) return null;
+    // Reconcile an uncertain outcome before any transport retry, without changing bytes.
+    const found = await this.findPersisted(envelope);
+    if (found) { await this.store.clearPending(cid, envelope.id); this.assert(); return found; }
+    const { state } = await this.validatedState(cid), epoch = state.epochs[0];
+    if (!epoch || state.currentEpoch?.keyId !== envelope.encryption.keyId || !this.covers(epoch, state.devices)) throw new E2eeError('pending_stale');
+    const creator = state.devices.find(d => d.deviceKeyId === epoch.creatorDeviceKeyId); if (!creator) throw new E2eeError('pending_stale');
+    await this.verifyEpoch(epoch, creator, state.participantIds); this.assert(); return this.confirmed(envelope, submit, progress);
+  }
+  /** Hints never provide trusted key material. No current-directory cache is retained. */
+  async revalidate(cid: string): Promise<void> {
+    const { state } = await this.validatedState(cid), epoch = state.epochs[0];
+    if (epoch && this.covers(epoch, state.devices)) {
+      const creator = state.devices.find(d => d.deviceKeyId === epoch.creatorDeviceKeyId);
+      if (!creator) throw new E2eeError('invalid_proof');
+      await this.verifyEpoch(epoch, creator, state.participantIds);
+    }
+    this.assert();
+  }
+  async decryptIncoming(input: EnvelopeV2): Promise<string> {
+    this.assert(); const envelope = parseEnvelope(input), c = await this.api.getConversation(envelope.conversationId); this.assert();
+    if (!c.interactionAllowed || !c.participants.some(p => p.id === envelope.senderId)) throw new ApiError('forbidden');
+    const text = await decryptV2(await this.historyKey(c, envelope.encryption.keyId), envelope); this.assert(); return text;
+  }
+  private async historyKey(c: DirectConversation, keyId: string): Promise<CryptoKey> {
+    const cache = await this.store.get<CachedEpoch>('epoch', JSON.stringify([c.id, keyId])); this.assert();
+    if (cache) {
+      const epoch = parseEpoch(cache.epoch, c.id); if (epoch.keyId !== keyId || !cache.key || cache.key.extractable || cache.key.type !== 'secret' || cache.key.algorithm.name !== 'AES-GCM') throw new E2eeError('storage_corrupt');
+      await this.verifyEpoch(epoch, await verifyDevice(cache.creator), c.participants.map(p => p.id)); this.assert(); return cache.key;
+    }
+    const epoch = await this.api.epoch(c.id, keyId);
+    // Known historical signer/own wrap remain usable even while new peer keys await review.
+    let creator = await this.store.get<DeviceRecord>('verified-device', epoch.creatorDeviceKeyId);
+    if (!creator) { const state = await this.api.state(c.id, c.participants.map(p => p.id)); await this.trust(state); creator = state.devices.find(d => d.deviceKeyId === epoch.creatorDeviceKeyId); }
+    if (!creator) throw new E2eeError('missing_key');
+    const local = this.identity ?? await this.store.get<DeviceIdentity>('device'); if (!local) throw new E2eeError('missing_key'); await validateLocalDevice(local, this.api.session.actor.id);
+    return this.openEpoch(epoch, await verifyDevice(creator), c.participants.map(p => p.id), local);
+  }
+  async history(cid: string, cursor?: string): Promise<{ items: DecryptedRow[]; nextCursor: string | null }> {
+    this.assert();
+    const conversation = await this.api.getConversation(cid), result = await this.api.history(cid, cursor); this.assert();
+    const keys = new Map<string, Promise<CryptoKey>>();
+    const items = await Promise.all(result.items.map(async message => {
+      if (!conversation.participants.some(p => p.id === message.senderId)) throw new E2eeError('invalid_message');
+      if (message.state === 'deleted') return { message, text: null, error: null };
+      try {
+        if (message.encryption?.version !== 2) throw new E2eeError('missing_key');
+        const keyId = message.encryption.keyId;
+        if (!keys.has(keyId)) keys.set(keyId, this.historyKey(conversation, keyId));
+        const wire = { id: message.id, conversationId: cid, senderId: message.senderId, senderName: message.senderName, timestamp: message.timestamp, type: message.type, encryption: message.encryption };
+        const text = await decryptV2(await keys.get(keyId)!, wire); return { message, text, error: null };
+      } catch (e) { return { message, text: null, error: e instanceof E2eeError ? e.message : 'Unable to decrypt this message.' }; }
+    }));
+    this.assert(); return { items, nextCursor: result.nextCursor };
+  }
+  async revokeCurrentDevice(): Promise<void> {
+    const local = await this.initialize(); await this.api.revoke(local.deviceId); this.assert(); this.initialization = undefined;
+    throw new E2eeError('device_revoked');
+  }
+  dispose(): void { this.active = false; this.initialization = undefined; this.identity = undefined; this.review = undefined; this.store.close(); }
+}

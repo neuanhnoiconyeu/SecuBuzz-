@@ -1,0 +1,605 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SecuBuzz DB-4A Conversations API",
+    "version": "1.0.0",
+    "description": "Authenticated direct-conversation metadata only. No message persistence, previews, groups, uploads or realtime. All operations recheck current durable authorization. Existing legacy conversations require explicit friendship-approved activation."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "sessionCookie": []
+    },
+    {
+      "localSessionCookie": []
+    }
+  ],
+  "paths": {
+    "/api/conversations": {
+      "get": {
+        "operationId": "listConversations",
+        "summary": "List the actor's visible authenticated direct conversations",
+        "description": "Both participants must have active credentials and active memberships. Archived, blocked, legacy and group conversations are omitted. Unfriended conversations remain readable with interactionAllowed=false. Ordering: updatedAt descending, then ID descending; keyset pagination is current-state, not a frozen snapshot.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string",
+              "maxLength": 2048
+            },
+            "description": "Opaque base64url actor/endpoint-bound cursor from nextCursor. Unknown/owner/filter parameters are rejected."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bounded page of visible conversation metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Seconds before another explicit attempt."
+              }
+            }
+          },
+          "500": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conversations/dm": {
+      "post": {
+        "operationId": "getOrCreateDirectConversation",
+        "summary": "Create or retrieve one direct conversation for the session actor and recipient",
+        "description": "The actor is derived exclusively from the session. Initial creation and legacy activation require confirmed authenticated friendship. Either-direction blocking refuses lookup and creation with generic 404. Existing authenticated conversations may be retrieved after unfriending, without creating a new interaction or changing timestamps. Missing/left memberships and archives are never repaired here. Creation, membership, policy checks and safe audit metadata share one immediate SQLite transaction. Repeated and reversed requests return the same durable ID.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          },
+          {
+            "localSessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Browser-managed public frontend origin; exact configured allowlist match required."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectRequest"
+              },
+              "example": {
+                "recipientId": "22222222-2222-4222-8222-222222222222"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Existing direct conversation, including explicit legacy activation, returned with the same ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "New direct conversation and both memberships committed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Seconds before another explicit attempt."
+              }
+            }
+          },
+          "500": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conversations/{id}": {
+      "get": {
+        "operationId": "getConversation",
+        "summary": "Retrieve authorized direct-conversation metadata",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,1023}$",
+              "maxLength": 1024,
+              "description": "Opaque stable ID. New conversations use UUIDs; approved legacy conversations retain their longer DB-1 IDs."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current authorized metadata; not a future write grant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Seconds before another explicit attempt."
+              }
+            }
+          },
+          "500": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fixed privacy-safe code and allowlisted field names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-secubuzz_session",
+        "description": "Production Secure/HttpOnly/SameSite=Lax cookie. Never expose its value to application JS."
+      },
+      "localSessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "secubuzz_session",
+        "description": "Explicit loopback development/test HTTP only."
+      },
+      "csrf": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token",
+        "description": "Fresh DB-2 bootstrap before mutation: GET /api/auth/csrf with same-origin cookies. Not a session bearer."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "fields"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALIDATION_ERROR",
+              "UNAUTHENTICATED",
+              "SESSION_EXPIRED",
+              "CSRF_INVALID",
+              "FORBIDDEN",
+              "NOT_FOUND",
+              "CONFLICT",
+              "RATE_LIMITED",
+              "PAYLOAD_TOO_LARGE",
+              "UNSUPPORTED_MEDIA_TYPE",
+              "INTERNAL_ERROR",
+              "SERVICE_UNAVAILABLE"
+            ]
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "DirectRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recipientId"
+        ],
+        "properties": {
+          "recipientId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+            "maxLength": 128
+          }
+        }
+      },
+      "Participant": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "avatar"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+            "maxLength": 128
+          },
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 30
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "avatar": {
+            "type": "string",
+            "enum": [
+              "initials",
+              "smile",
+              "star",
+              "rocket",
+              "cat"
+            ]
+          }
+        }
+      },
+      "Conversation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "participants",
+          "createdAt",
+          "updatedAt",
+          "interactionAllowed"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,1023}$",
+            "maxLength": 1024,
+            "description": "Opaque stable ID. New conversations use UUIDs; approved legacy conversations retain their longer DB-1 IDs."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "direct"
+            ]
+          },
+          "participants": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/components/schemas/Participant"
+            },
+            "description": "Exactly the two canonical pair members, ordered by binary user ID."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "interactionAllowed": {
+            "type": "boolean",
+            "description": "Current friendship/policy hint. DB-4B must reauthorize inside every write transaction; this boolean is never a bearer/grant."
+          }
+        }
+      },
+      "ConversationResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "conversation"
+        ],
+        "properties": {
+          "conversation": {
+            "$ref": "#/components/schemas/Conversation"
+          }
+        }
+      },
+      "ConversationPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/Conversation"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2048
+          }
+        }
+      }
+    }
+  }
+}

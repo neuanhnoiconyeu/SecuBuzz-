@@ -11,11 +11,11 @@ test('unconfigured mode leaves auth reachable and rejects all authentication act
 });
 
 test.each([
-  ['development', undefined, undefined, 'demo'],
-  ['development', 'demo', undefined, 'demo'],
-  ['production', undefined, undefined, 'unconfigured'],
+  ['development', undefined, undefined, 'api'],
+  ['development', 'demo', undefined, 'unconfigured'],
+  ['production', undefined, undefined, 'api'],
   ['production', 'demo', undefined, 'unconfigured'],
-  ['production', 'api', undefined, 'unconfigured'],
+  ['production', 'api', undefined, 'api'],
   ['development', 'api', 'false', 'unconfigured'],
   ['production', 'api', 'true', 'api'],
   ['development', 'api', 'true', 'api'],

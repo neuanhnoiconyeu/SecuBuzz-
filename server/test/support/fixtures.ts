@@ -120,6 +120,10 @@ export class TestAuthorizer implements RealtimeAuthorizer {
   /** Overrides the conversation list (for oversized or invalid adapter results). */
   conversationsOverride: unknown = undefined;
   conversationCalls = 0;
+  /** Optional capabilities of the DATA composition. Tests assign them when they need them; absent means legacy behavior. */
+  canReceive?: NonNullable<RealtimeAuthorizer['canReceive']>;
+  currentKeyEpoch?: NonNullable<RealtimeAuthorizer['currentKeyEpoch']>;
+  presencePreference?: NonNullable<RealtimeAuthorizer['presencePreference']>;
   presenceCalls: Array<{ viewer: string; subjects: readonly string[] }> = [];
 
   grant(userId: string, ...conversationIds: string[]): void {

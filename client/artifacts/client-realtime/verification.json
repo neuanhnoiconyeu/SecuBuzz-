@@ -1,0 +1,269 @@
+{
+  "task": "Authenticated Socket.IO client integration with existing E2EE v2",
+  "date": "2026-11-16",
+  "verdict": "COMPLETE",
+  "ownership": "client only",
+  "baseline": {
+    "suites": 70,
+    "tests": 810,
+    "passed": true
+  },
+  "finalTests": {
+    "success": true,
+    "passed": 867,
+    "failed": 0,
+    "skipped": 0,
+    "suitesPassed": 73,
+    "suitesFailed": 0,
+    "suitesSkipped": 0
+  },
+  "checks": {
+    "typeCheck": {
+      "command": "npm run type-check",
+      "passed": true,
+      "exitCode": 0
+    },
+    "lint": {
+      "command": "npm run lint",
+      "passed": true,
+      "exitCode": 0,
+      "existingWarnings": 2,
+      "newWarnings": 0
+    },
+    "productionBuild": {
+      "command": "npm run build:verify",
+      "passed": true,
+      "exitCode": 0,
+      "distDir": ".next-e2ee-build-2e4ef034",
+      "staticPagesGenerated": 6,
+      "isolated": true,
+      "notice": "The isolated tsconfig extends the main config; Next emits its existing TypeScript-plugin inheritance notice."
+    }
+  },
+  "browser": {
+    "command": "npm run test:realtime:browser",
+    "passed": true,
+    "checksPassed": 41,
+    "checksFailed": 0,
+    "checksSkipped": 0,
+    "handshakes": 13,
+    "invalidAuthShapes": 0,
+    "socketSends": 7,
+    "v2Sends": 7,
+    "persistenceAcks": 7,
+    "receivedMessages": 9,
+    "restSends": 1,
+    "plaintextLeaks": 0,
+    "runtimeErrors": 0,
+    "startedAt": "2026-11-16T21:11:57.548Z",
+    "finishedAt": "2026-11-16T21:13:15.707Z",
+    "evidence": "browser-evidence.json",
+    "screenshots": [
+      "mobile-redacted.png",
+      "midnight-mobile-redacted.png"
+    ],
+    "engineProxyVerified": true,
+    "websocketMissingCredentialsRejected": "AUTH_REQUIRED",
+    "isolation": "Real DATA+Socket.IO combined process, disposable client/tmp database, isolated Chrome contexts; only spawned test processes stopped."
+  },
+  "architecture": {
+    "authentication": "Existing HttpOnly DATA cookie with fresh identity-checked auth:{csrfToken}; no identity query or JWT.",
+    "send": "Shared SecureMessagingSession v2 encryption and durable pending envelope; ten-second ack; committed REST-row reconciliation; exact bytes on explicit retry.",
+    "receive": "Strict v2 scope validation; existing local decrypt; REST wire-ID/sequence reconciliation including history/live overlap.",
+    "keys": "Hint only; refetch signed directory; TOFU review; reconnect and every new send revalidate.",
+    "rest": "Explicit transport selector; same crypto/pending record; no automatic fallback or re-encryption.",
+    "privacy": "No raw cookie/token/key/frame or decrypted-message logs. Server-authenticated plus TOFU, without independent identity proof."
+  },
+  "limitations": [
+    "Production TLS/reverse-proxy deployment is not exercised by localhost acceptance.",
+    "Chrome contexts verified; other browsers, load and multi-node server behavior not verified.",
+    "Receipt/unread UI observations are session-local; the audited REST history DTO has no receipt projection.",
+    "Automatic realtime retries do not re-encrypt or retry invalid crypto; permanent/conflicting pending IDs require explicit reconciliation."
+  ],
+  "dependencies": {
+    "added": [],
+    "serverOrDataEdits": [],
+    "remainingImplementationDependencies": []
+  },
+  "scope": {
+    "branch": "chuong-data",
+    "head": "72f4e806e1446ce65036f705f9f7eb82275942d9",
+    "branchUnchanged": true,
+    "headUnchanged": true,
+    "stashesUnchanged": true,
+    "baselineDirtyPaths": 260,
+    "currentDirtyPaths": 276,
+    "changedPaths": [
+      "client/E2EE_CLIENT_INTEGRATION.md",
+      "client/E2EE_KIRO_HANDOFF.md",
+      "client/REALTIME_CLIENT_INTEGRATION.md",
+      "client/REALTIME_FILES.md",
+      "client/artifacts/client-realtime/browser-evidence.json",
+      "client/artifacts/client-realtime/midnight-mobile-redacted.png",
+      "client/artifacts/client-realtime/mobile-redacted.png",
+      "client/artifacts/client-realtime/verification.json",
+      "client/authProxy.cjs",
+      "client/next.config.js",
+      "client/package.json",
+      "client/scripts/verify-client-realtime.cjs",
+      "client/src/api/__tests__/sessionApi.test.ts",
+      "client/src/api/sessionApi.ts",
+      "client/src/auth/__tests__/realtimeProxy.test.ts",
+      "client/src/auth/httpAuthService.ts",
+      "client/src/components/messenger/RealMessengerWorkspace.tsx",
+      "client/src/components/messenger/SecureConversationPanel.module.css",
+      "client/src/components/messenger/SecureConversationPanel.tsx",
+      "client/src/realtime/AuthenticatedSocketIoClient.ts",
+      "client/src/realtime/SecureRealtimeWorkspace.ts",
+      "client/src/realtime/SocketIoRealtimeClient.ts",
+      "client/src/realtime/__tests__/AuthenticatedSocketIoClient.test.ts",
+      "client/src/realtime/__tests__/SecureRealtimeWorkspace.test.ts",
+      "client/src/realtime/authenticatedProtocol.ts",
+      "client/src/realtime/testing/authenticatedFixtures.ts",
+      "client/src/security/e2ee/__tests__/backend.test.ts",
+      "client/src/security/e2ee/session.ts"
+    ],
+    "changedOutsideClient": [],
+    "developmentDatabases": [
+      {
+        "path": "DATA/server/database/database.sqlite",
+        "unchanged": true
+      },
+      {
+        "path": "DATA/server/database/database.sqlite-shm",
+        "unchanged": true
+      },
+      {
+        "path": "DATA/server/database/database.sqlite-wal",
+        "unchanged": true
+      }
+    ],
+    "preexistingTsconfig": {
+      "contentMatchesIndex": true,
+      "lastWriteTime": "2026-11-15T13:51:55.072Z"
+    },
+    "typeCachePreserved": true,
+    "baselineProtectedOutsideClientPaths": 172,
+    "commitsCreated": 0,
+    "pushesPerformed": 0,
+    "mergeRequestsCreated": 0,
+    "existingServicesRestarted": 0,
+    "developmentDatabasesModified": 0
+  },
+  "sourceHashes": [
+    {
+      "path": "client/E2EE_CLIENT_INTEGRATION.md",
+      "sha256": "F101496EB773FA2A9D18D712CC7D9FFA27F629C06525D05261D0CE64A5BF2CE3"
+    },
+    {
+      "path": "client/E2EE_KIRO_HANDOFF.md",
+      "sha256": "B1EEB20F175B3F8C323151A85BC8FFFB8E1341BD4DAF5089C79E5B9BCD24E3B2"
+    },
+    {
+      "path": "client/REALTIME_CLIENT_INTEGRATION.md",
+      "sha256": "5C44F55980F48EF010F9021274338A1C227FD4F99795CA124031FA03C12EF387"
+    },
+    {
+      "path": "client/REALTIME_FILES.md",
+      "sha256": "A61870F248CAEE67A7E0677923D759DA5AAC6DF3ABA68C6810D55E6FD5CCF148"
+    },
+    {
+      "path": "client/artifacts/client-realtime/browser-evidence.json",
+      "sha256": "7A94FF6282F2305CE634809C428E8FDF6B8AF645E4A28637C4DE55FDD51A0BDC"
+    },
+    {
+      "path": "client/artifacts/client-realtime/midnight-mobile-redacted.png",
+      "sha256": "4B1B370A16A3C945028CAF38EFA035195CF76E92E43CBE878A8F64F96A333698"
+    },
+    {
+      "path": "client/artifacts/client-realtime/mobile-redacted.png",
+      "sha256": "B7169329A3FB60E392CFE810F1C5CB15F8BE9EDD7CBB2ACA889E27AD00DEDEF6"
+    },
+    {
+      "path": "client/authProxy.cjs",
+      "sha256": "C02E236B5944A83AA0A8BC1AF05665CD0A0A9EA3C857FE25E8F0BA05DA0E7C10"
+    },
+    {
+      "path": "client/next.config.js",
+      "sha256": "E11E0962FEB2DCD1E44106C5BA44C1CD59578C7F45380984340B8F6C25C74C7D"
+    },
+    {
+      "path": "client/package.json",
+      "sha256": "7CAF058E79C43381BD495B2BE427952D4ADB50E290E5297C68F0E0D242EAB2BF"
+    },
+    {
+      "path": "client/scripts/verify-client-realtime.cjs",
+      "sha256": "94325414C6457958E3CA6F86C8A545018E429726C0056CF70276CEC418540F8B"
+    },
+    {
+      "path": "client/src/api/__tests__/sessionApi.test.ts",
+      "sha256": "C25F774D24CAA9F22FC69B46C3B080340A009384E669B46256FC29951C980531"
+    },
+    {
+      "path": "client/src/api/sessionApi.ts",
+      "sha256": "7023DC65B1CBDA27D276A51B5A13C1E6894754D896024F7233ADA951CC19E496"
+    },
+    {
+      "path": "client/src/auth/__tests__/realtimeProxy.test.ts",
+      "sha256": "CDA02BAAF9AE61B2767FC5FC7FAD790516BDF46CA69A9DFD4289198716FA5208"
+    },
+    {
+      "path": "client/src/auth/httpAuthService.ts",
+      "sha256": "587C6E55120C5D302831DCD79B3EC0C4E5D5265DE5A3A94A3EBA9633A1BC092E"
+    },
+    {
+      "path": "client/src/components/messenger/RealMessengerWorkspace.tsx",
+      "sha256": "65C514F01D287F6BB4DD5AB57547BB80F48D23BBF2B0364E33D4EF903A5A4360"
+    },
+    {
+      "path": "client/src/components/messenger/SecureConversationPanel.module.css",
+      "sha256": "BB3F5E2F7F1492E544A0D768AFDDDD43B84B572DF1912E3639E40E259CDFE411"
+    },
+    {
+      "path": "client/src/components/messenger/SecureConversationPanel.tsx",
+      "sha256": "F85BDF6E9336C90516B0762696DAD57E8EEF891BA864C30A12648D861C44527B"
+    },
+    {
+      "path": "client/src/realtime/AuthenticatedSocketIoClient.ts",
+      "sha256": "F35008D780A5C60FCAD91F77E7282E14FF0053FB16F83CA5953E5EC05F3505A9"
+    },
+    {
+      "path": "client/src/realtime/SecureRealtimeWorkspace.ts",
+      "sha256": "6EF48CD174944BA15861EC0E8390CBBB4D094FD4762D6A21782D43BE115662A3"
+    },
+    {
+      "path": "client/src/realtime/SocketIoRealtimeClient.ts",
+      "sha256": "951023250897ECC5FACE216D7E03EABFC35F61D46ABB2E8FFD2BC1E6294515D7"
+    },
+    {
+      "path": "client/src/realtime/__tests__/AuthenticatedSocketIoClient.test.ts",
+      "sha256": "4CD7E253FA64873253C8A7DE65CB17B3EC6327B55B270D086275EEDA9CCC62AE"
+    },
+    {
+      "path": "client/src/realtime/__tests__/SecureRealtimeWorkspace.test.ts",
+      "sha256": "F75069C90639BA5A6B80F354F66A1364392289F641EA35C19E48BEDCDA93EEED"
+    },
+    {
+      "path": "client/src/realtime/authenticatedProtocol.ts",
+      "sha256": "77654FFE924E05F4B36F2B8C6F641FA5BE357D35A45D3DDB5F77E2A391C58445"
+    },
+    {
+      "path": "client/src/realtime/testing/authenticatedFixtures.ts",
+      "sha256": "40E5390BFB025C18058F1B26F78DFF2BB37468C1C4910AA30BB25A1776A4B77B"
+    },
+    {
+      "path": "client/src/security/e2ee/__tests__/backend.test.ts",
+      "sha256": "281CB876FFA146C0530176DE9F417AD5DB6A503C39E9C8A5CD346D9AD3E2FAEA"
+    },
+    {
+      "path": "client/src/security/e2ee/session.ts",
+      "sha256": "79991BDE5BE0B60FF26606C4AA422654E003619DF5CFCC8F7D01E020C8CA0213"
+    }
+  ],
+  "sourceHashNote": "SHA-256 of raw file bytes; verification.json excludes its own hash.",
+  "environment": {
+    "node": "v24.20.0",
+    "next": "14.2.35",
+    "browser": "Chrome, isolated real contexts"
+  }
+}

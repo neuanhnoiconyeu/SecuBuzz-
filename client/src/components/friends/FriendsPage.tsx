@@ -8,12 +8,14 @@ import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { relationshipForUser } from '@/friends/friendsModel';
 import type { FriendUser, RelationshipStatus, UserSearchResult } from '@/friends/friendsModel';
 import type { FriendAction, FriendsController } from '@/hooks/useFriends';
+import { safeApiMessage } from '@/api/sessionApi';
 
 export interface FriendsPageProps {
   controller: FriendsController;
   currentUser: FriendUser | null;
   onMessage(user: FriendUser): Promise<void>;
   canMessage(userId: string): boolean;
+  loadPublicProfile?(userId: string, signal: AbortSignal): Promise<UserSearchResult>;
 }
 
 type FriendsTab = 'all' | 'pending' | 'find' | 'blocked';
@@ -41,11 +43,15 @@ function EmptyState({ children, heading, icon = <Users size={25} aria-hidden="tr
   );
 }
 
-export function FriendsPage({ canMessage, controller, currentUser, onMessage }: FriendsPageProps) {
+export function FriendsPage({ canMessage, controller, currentUser, onMessage, loadPublicProfile }: FriendsPageProps) {
   const { snapshot, isLoading, isPending, isStale, mode } = controller;
   const [activeTab, setActiveTab] = useState<FriendsTab>('all');
   const [friendFilter, setFriendFilter] = useState('');
   const [selectedProfile, setSelectedProfile] = useState<FriendUser | null>(null);
+  const [remoteProfile, setRemoteProfile] = useState<UserSearchResult | null>(null);
+  const [publicError, setPublicError] = useState('');
+  const [publicLoading, setPublicLoading] = useState(false);
+  const [publicRevision, setPublicRevision] = useState(0);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [messageError, setMessageError] = useState('');
   const [messagePending, setMessagePending] = useState(false);
@@ -68,7 +74,19 @@ export function FriendsPage({ canMessage, controller, currentUser, onMessage }: 
     ...snapshot.outgoingRequests.map((request) => request.user), ...controller.searchResults,
     ...(currentUser ? [currentUser] : []),
   ];
-  const profile = selectedProfile ? allUsers.find((user) => user.id === selectedProfile.id) ?? selectedProfile : null;
+  const profile = loadPublicProfile ? remoteProfile : selectedProfile ? allUsers.find((user) => user.id === selectedProfile.id) ?? selectedProfile : null;
+  const selectedId = selectedProfile?.id;
+  useEffect(() => {
+    if (!loadPublicProfile || !selectedId) return;
+    const controller = new AbortController();
+    let active = true;
+    setRemoteProfile(null); setPublicError(''); setPublicLoading(true);
+    if (!isPending) void loadPublicProfile(selectedId, controller.signal).then(user => {
+      if (active) setRemoteProfile(user);
+    }, failure => { if (active) setPublicError(safeApiMessage(failure, 'This public profile could not be loaded. Try again.')); })
+      .finally(() => { if (active) setPublicLoading(false); });
+    return () => { active = false; controller.abort(); };
+  }, [isPending, loadPublicProfile, publicRevision, selectedId, snapshot]);
 
   const selectTab = (tab: FriendsTab) => {
     setActiveTab(tab);
@@ -203,6 +221,7 @@ export function FriendsPage({ canMessage, controller, currentUser, onMessage }: 
       aria-haspopup="dialog" data-friend-profile={user.id} onClick={(event) => {
         profileOpener.current = event.currentTarget;
         setMessageError('');
+        setRemoteProfile(null); setPublicError(''); setPublicLoading(Boolean(loadPublicProfile));
         setSelectedProfile(user);
       }}>View profile</Button>
   );
@@ -241,6 +260,8 @@ export function FriendsPage({ canMessage, controller, currentUser, onMessage }: 
         <p className="friends-demo-note"><strong>Local demo.</strong> People and requests are fictional and reset on refresh.
           {' '}Search checks demo usernames only. Blocking is local to this page and is not server-enforced.</p>
       )}
+      {mode === 'remote' && <p className="friends-discovery-hint">Profiles and friendships are saved to your account. Presence and messaging are not available yet.
+        {' '}<Button size="sm" variant="outline" disabled={isLoading || isPending} onClick={() => void controller.refresh()}>Refresh Friends</Button></p>}
 
       <div className="friends-tabs" role="tablist" aria-label="Friends sections">
         {tabs.map((tab) => (
@@ -324,7 +345,7 @@ export function FriendsPage({ canMessage, controller, currentUser, onMessage }: 
               <TextInput id="friends-discovery" type="search" className="friends-search" label="Search by username"
                 placeholder="Enter a username" maxLength={64} autoComplete="off" spellCheck={false}
                 value={controller.query} onChange={(event) => controller.setQuery(event.target.value)}
-                hint={mode === 'local-demo' ? 'Try ava.morgan, jules.park, kai.chen, mina.patel, rowan.blake, or your own demo username.' : 'Only public profiles available to you appear in results.'} />
+                hint={mode === 'local-demo' ? 'Try ava.morgan, jules.park, kai.chen, mina.patel, rowan.blake, or your own demo username.' : 'Enter a username prefix of 2–64 characters. Matches start with that prefix; display names and email addresses are not searched.'} />
               {controller.searchLoading ? <p role="status">Searching usernames…</p> : controller.searchError ? (
                 <div role="alert" className="friends-feedback friends-feedback--error">
                   <p>{controller.searchError}</p>
@@ -345,11 +366,14 @@ export function FriendsPage({ canMessage, controller, currentUser, onMessage }: 
               ) : <EmptyState heading={controller.hasSearched ? 'No matching users' : 'A connection starts here'} icon={<Search size={25} aria-hidden="true" />}>
                 {controller.hasSearched ? 'Try another username.' : 'Search by username to see public profiles and request status.'}
               </EmptyState>}
+              {controller.searchHasMore && !controller.searchLoading && <Button size="sm" variant="outline"
+                loading={Boolean(controller.searchLoadingMore)} disabled={isPending || Boolean(controller.searchLoadingMore)}
+                onClick={() => void controller.loadMoreSearch?.()}>Load more users</Button>}
             </>
           ) : (
             <>
               <div className="friends-panel-heading"><h2 className="display-heading display-heading--section">Blocked users</h2></div>
-              <p className="friends-discovery-hint">Unblocking does not restore a friendship. Chat history and shared files are preserved.</p>
+              <p className="friends-discovery-hint">Unblocking does not restore a friendship. {mode === 'local-demo' ? 'Chat history and shared files are preserved.' : 'Blocking removes your friendship and pending requests.'}</p>
               {snapshot.blockedUsers.length ? (
                 <ul className="friends-list" aria-label="Blocked users">
                   {snapshot.blockedUsers.map((user) => (
@@ -365,9 +389,12 @@ export function FriendsPage({ canMessage, controller, currentUser, onMessage }: 
         </section>
       ))}
 
-      <Dialog open={Boolean(profile)} onOpenChange={(open) => { if (!open) closePublicProfile(); }}
+      <Dialog open={Boolean(selectedProfile)} onOpenChange={(open) => { if (!open) closePublicProfile(); }}
         title="Public profile" closeLabel="Close public profile" description="Public identity and your relationship."
         className="friends-profile-dialog">
+        {loadPublicProfile && publicLoading && <p role="status">Loading public profile…</p>}
+        {loadPublicProfile && publicError && <div><p role="alert">{publicError}</p>
+          <Button variant="outline" onClick={() => setPublicRevision(value => value + 1)}>Try public profile again</Button></div>}
         {profile && (
           <div className="friends-profile">
             <div className="friends-profile-identity">
@@ -376,12 +403,12 @@ export function FriendsPage({ canMessage, controller, currentUser, onMessage }: 
                 <p className="friends-username">@{profile.username}</p></div>
             </div>
             <dl className="friends-profile-details">
-              <div><dt>Relationship</dt><dd>{relationshipBadge(relationship(profile.id).relationship)}</dd></div>
+              <div><dt>Relationship</dt><dd>{relationshipBadge(remoteProfile?.relationship ?? relationship(profile.id).relationship)}</dd></div>
               <div><dt>Presence</dt><dd>{profile.presence ? `${presenceLabels[profile.presence]}${mode === 'local-demo' ? ' · simulated' : ''}` : 'Unknown'}</dd></div>
             </dl>
             {mode === 'local-demo' && <p className="friends-row-note">Fictional local demo profile. No private account information is shown.</p>}
             {relationship(profile.id).relationship === 'friend' && !canMessage(profile.id) && <p className="friends-message-note">No direct chat is connected for this user. Creating a conversation is not available yet.</p>}
-            <div className="friends-dialog-actions">{relationshipActions(profile)}
+            <div className="friends-dialog-actions">{relationshipActions(profile, remoteProfile ?? undefined)}
               {relationship(profile.id).relationship !== 'self' && relationship(profile.id).relationship !== 'blocked' && managementMenu(profile, relationship(profile.id).relationship)}
             </div>
             <p role="status" className="friends-feedback" aria-live="polite">{isPending ? 'Updating relationship…' : controller.notice}</p>
@@ -407,7 +434,7 @@ export function FriendsPage({ canMessage, controller, currentUser, onMessage }: 
             }}>{confirmation?.type === 'remove' ? 'Remove friend' : 'Block user'}</Button>
         </div>}>
         <p className="friends-confirm-note">{confirmation?.type === 'remove' ? 'Remove ' : 'Block '}<strong>{confirmation?.user.displayName}</strong>?
-          {' '}Existing chat history and shared files will stay.</p>
+          {' '}{mode === 'local-demo' ? 'Existing chat history and shared files will stay.' : 'Your relationship will update after the server confirms the change.'}</p>
         {confirmation?.type === 'block' && mode === 'local-demo' && <p className="friends-row-note">This block only changes the local friends demo. It does not enforce server messaging permissions.</p>}
         {controller.error && <p role="alert" className="friends-feedback friends-feedback--error">{controller.error}</p>}
       </Dialog>

@@ -1,0 +1,948 @@
+{
+  "task": "Post-DB-4B E2EE key directory and envelope-v2 DATA integration",
+  "verdict": "COMPLETE for DATA dependency; full product/browser E2EE readiness is not claimed",
+  "generatedAtUtc": "2026-11-15 04:06:21 UTC",
+  "repository": {
+    "branch": "chuong-data",
+    "head": "72f4e806e1446ce65036f705f9f7eb82275942d9",
+    "branchUnchanged": true,
+    "headUnchanged": true,
+    "stashesUnchanged": true,
+    "gitStatusInspected": true,
+    "gitMutationsPerformed": []
+  },
+  "baselineTests": {
+    "passed": 288,
+    "failed": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "durationMs": 51646.9953
+  },
+  "finalTests": {
+    "command": "npm test",
+    "cwd": "DATA",
+    "runtime": "Node.js v24.20.0",
+    "passed": 321,
+    "failed": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "todo": 0,
+    "suites": 2,
+    "durationMs": 70940.8086,
+    "baselinePassed": 288,
+    "newTests": 33,
+    "newDataSpecificTests": 22,
+    "reusedKiroDirectoryTests": 7,
+    "reusedKiroVectorTests": 4,
+    "exitCode": 0
+  },
+  "staticChecks": {
+    "nodeCheck": {
+      "javaScriptFiles": 22,
+      "exitCode": 0
+    },
+    "openapi": [
+      {
+        "file": "e2ee-keys-openapi.json",
+        "openapi": "3.1.0",
+        "paths": 5,
+        "operations": 6,
+        "resolvedReferences": 72
+      },
+      {
+        "file": "messaging-openapi.json",
+        "openapi": "3.1.0",
+        "paths": 3,
+        "operations": 5,
+        "resolvedReferences": 65
+      }
+    ],
+    "gitDiffCheck": {
+      "exitCode": 0,
+      "notes": "Only pre-existing LF/CRLF normalization warnings; no whitespace errors"
+    },
+    "documentation": {
+      "relativeDocumentationLinksChecked": 7,
+      "handoffPathsMatchManifest": 37
+    }
+  },
+  "integration": {
+    "runtime": "Node.js 24.20.0",
+    "protocolEntrypoint": "server/src/e2ee/index.ts (Kiro-owned, unchanged)",
+    "dataLoader": "DATA/server/e2ee/protocol.js",
+    "actualExportsReused": [
+      "validateDeviceRegistration",
+      "planDeviceRegistration",
+      "planDeviceRevocation",
+      "planEpochPublication",
+      "parseMessageEnvelopeV2",
+      "envelopeV2Fingerprint",
+      "createRecipientKeyVerifier",
+      "verifyRecipientKeysSync"
+    ],
+    "defaultVerifier": "Real Kiro verifier backed by authoritative SQLite public key/epoch state; no success fixture in normal entrypoint",
+    "atomicRecheck": "Fresh directory state read on same connection inside second DB-4A immediate transaction, before idempotency lookup",
+    "keyApiOperations": 6,
+    "messageV2": true,
+    "verifiedV1Sending": false,
+    "missingInfrastructureStatus503": "RECIPIENT_KEYS_UNAVAILABLE",
+    "invalidKeyStateStatus403": "RECIPIENT_KEYS_UNVERIFIED",
+    "newDependencyChanges": false,
+    "environmentBypassAdded": false
+  },
+  "evidence": {
+    "http": "Independent real DB-2 accounts/cookies/CSRF and DB-3 friendship/DB-4A DM; normal six key APIs and v2 REST path with actual Kiro verifier",
+    "recipientDecryption": "Independent Kiro WebCrypto/HPKE test device opens its signed wrap and decrypts stored v2 envelope; no browser claim",
+    "registrationRace": {
+      "nativeServerProcesses": 2,
+      "created201": 1,
+      "duplicate200": 1,
+      "deviceRows": 1,
+      "auditEvents": 1
+    },
+    "epochRace": {
+      "nativeServerProcesses": 2,
+      "created201": 1,
+      "conflict409": 1,
+      "epochRows": 1,
+      "completeWraps": 2
+    },
+    "messageRetryRace": {
+      "nativeServerProcesses": 2,
+      "simultaneousRequests": 6,
+      "created201": 1,
+      "duplicate200": 5,
+      "messageRows": 1,
+      "storedAuditEvents": 1
+    },
+    "keyStateRaces": [
+      "revocation during genuine async verification refused with no write",
+      "epoch rotation during genuine async verification refused with no write",
+      "new active device during genuine async verification refused with no write"
+    ],
+    "rollback": "Device supersession/registration, revocation, epoch/wrap publication and message/lifecycle transitions roll back on forced audit failures",
+    "restart": "Fixture HTTP service stopped. First normal native DATA process wrote v2 ciphertext/receipt and stopped; a replacement normal native process reopened the isolated DB and retained public records, signatures, wraps, epochs, v2 history, receipts, IDs and original idempotency/timestamps. Only the isolated DB observer connection remained.",
+    "migration": "Standard v6 disposable database upgrade preserves every original column/value, receipts, attachment references, IDs, sequence/tombstone/fingerprint, named indexes/triggers and checksums. Repeat, FK/integrity and forced full rebuild rollback passed.",
+    "authorization": [
+      "valid/revoked/expired sessions",
+      "CSRF and actual Origin enforcement",
+      "own device listing and revocation",
+      "public-key/member scoping",
+      "current friendship for publication/sending",
+      "either-direction blocks",
+      "forged user/device/signature refusals",
+      "shared SQLite limits and JSON byte bounds"
+    ],
+    "protocolReuse": "7 unchanged Kiro directory contract tests against actual DATA SQLite/auth services plus 4 unchanged fixed interoperability-vector tests",
+    "productionPolicy": "Genuine persisted-key adapter accepted under production message-service policy; testOnly adapters remain refused by prior regressions",
+    "runtimeUnavailable": "Missing and incompatible public exports tested in independent in-memory child processes; key APIs and v2 validation return unavailable, never success"
+  },
+  "ownership": {
+    "scope": "DATA/ only",
+    "preTaskDirtyOrUntrackedFiles": 182,
+    "preTaskOutsideDataFiles": 98,
+    "phaseFiles": 37,
+    "noOutsideDataChanges": true,
+    "noMissingBaselineFiles": true,
+    "outsideDataHashComparisons": [
+      {
+        "path": ".kiro/specs/e2ee-recipient-keys/design.md",
+        "preTaskSha256": "78E9BD234B21184FC2660CE70B216B857A58941AA77022FEE1C67C2AA7701F01",
+        "currentSha256": "78E9BD234B21184FC2660CE70B216B857A58941AA77022FEE1C67C2AA7701F01",
+        "unchanged": true
+      },
+      {
+        "path": ".kiro/specs/e2ee-recipient-keys/requirements.md",
+        "preTaskSha256": "46B8D4A83D8434495B12CD0399C55AC52B7168D7F36473C6998CE4E2AF365F33",
+        "currentSha256": "46B8D4A83D8434495B12CD0399C55AC52B7168D7F36473C6998CE4E2AF365F33",
+        "unchanged": true
+      },
+      {
+        "path": ".kiro/specs/e2ee-recipient-keys/tasks.md",
+        "preTaskSha256": "817C1F4C6E370F363E9A2A8816450CE7D842233ED2AE104E97F551667B96ACF9",
+        "currentSha256": "817C1F4C6E370F363E9A2A8816450CE7D842233ED2AE104E97F551667B96ACF9",
+        "unchanged": true
+      },
+      {
+        "path": "client/.env.example",
+        "preTaskSha256": "B4243BDD10A581B8C922A4029AF2E6E3FDA366035B291320E7F12F773E81BE44",
+        "currentSha256": "B4243BDD10A581B8C922A4029AF2E6E3FDA366035B291320E7F12F773E81BE44",
+        "unchanged": true
+      },
+      {
+        "path": "client/AUTH_LOCAL_DEBUG.md",
+        "preTaskSha256": "A19DC95A865C0D937CABE8067839D9A3C4042EC801E791E0BD07489C1EC1581E",
+        "currentSha256": "A19DC95A865C0D937CABE8067839D9A3C4042EC801E791E0BD07489C1EC1581E",
+        "unchanged": true
+      },
+      {
+        "path": "client/PHASE_8_6_AUTH_INTEGRATION.md",
+        "preTaskSha256": "262CAFA282E337D4E7E49335E24127B34C1A8A93006E27C655F55DE9DB7FEDCB",
+        "currentSha256": "262CAFA282E337D4E7E49335E24127B34C1A8A93006E27C655F55DE9DB7FEDCB",
+        "unchanged": true
+      },
+      {
+        "path": "client/PHASE_8_8_PROFILES_FRIENDS_INTEGRATION.md",
+        "preTaskSha256": "4E084AC60A0F59FEE0DE445C73FB2AAEF3121CC3C1AE773361533FAAD32FA58B",
+        "currentSha256": "4E084AC60A0F59FEE0DE445C73FB2AAEF3121CC3C1AE773361533FAAD32FA58B",
+        "unchanged": true
+      },
+      {
+        "path": "client/PHASE_8_8_PROFILE_HOTFIX.md",
+        "preTaskSha256": "6770148189404EE9C077768B719F05456508047A8441457946964A1184FF7F74",
+        "currentSha256": "6770148189404EE9C077768B719F05456508047A8441457946964A1184FF7F74",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/account-switch-profile.png",
+        "preTaskSha256": "15448E235BA8DD4B93834F204611EB5539B5921F7F2730AB13C68125446C76E9",
+        "currentSha256": "15448E235BA8DD4B93834F204611EB5539B5921F7F2730AB13C68125446C76E9",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/after-profile-recovered.png",
+        "preTaskSha256": "20C8B7C864CBEA390CC00EF2AEF297822C33E5FE02579C61D37F6B45B3C4A7B3",
+        "currentSha256": "20C8B7C864CBEA390CC00EF2AEF297822C33E5FE02579C61D37F6B45B3C4A7B3",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/before-profile-feature-unavailable.png",
+        "preTaskSha256": "9107E0B1AB2DF45B20CA4AB7367F9D580AB74F724E1DDACE71039CEE0CC6FDA9",
+        "currentSha256": "9107E0B1AB2DF45B20CA4AB7367F9D580AB74F724E1DDACE71039CEE0CC6FDA9",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/browser-evidence.json",
+        "preTaskSha256": "C2B151F3770BAAF7471D09897B8A21248D417F1413FBCDB3CE8BA83578B510A6",
+        "currentSha256": "C2B151F3770BAAF7471D09897B8A21248D417F1413FBCDB3CE8BA83578B510A6",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/jest-results.json",
+        "preTaskSha256": "84C73F22B8B24511D17A7A80FCF2CE1F37043D68ACF47790185DAFB3A9939D8E",
+        "currentSha256": "84C73F22B8B24511D17A7A80FCF2CE1F37043D68ACF47790185DAFB3A9939D8E",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/ownership-audit.json",
+        "preTaskSha256": "AA41FAA39B70A13DF0C50BD2D26317419009CEDC510A9E1E668989E9FEFB387E",
+        "currentSha256": "AA41FAA39B70A13DF0C50BD2D26317419009CEDC510A9E1E668989E9FEFB387E",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/temporary-outage.png",
+        "preTaskSha256": "CC8BCD0C2D1C1695E17A1EEFE9E79CF6EEDF960875200324D4709151D11E2DD5",
+        "currentSha256": "CC8BCD0C2D1C1695E17A1EEFE9E79CF6EEDF960875200324D4709151D11E2DD5",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/browser-evidence.json",
+        "preTaskSha256": "9884F690A38E01B07378E7DCBC22B86E4F3F429CBD02CE613EF259FC547B045A",
+        "currentSha256": "9884F690A38E01B07378E7DCBC22B86E4F3F429CBD02CE613EF259FC547B045A",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/desktop-discovery-light.png",
+        "preTaskSha256": "927F11AF5EFE159355A117CFF87F7AF877FDBAC7EBA299B7B9B75E90D99211C1",
+        "currentSha256": "927F11AF5EFE159355A117CFF87F7AF877FDBAC7EBA299B7B9B75E90D99211C1",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/desktop-friends-light.png",
+        "preTaskSha256": "69FBA6A32C283C32E23F3202A157017E8321016F5CF78C79AD454E22EE201267",
+        "currentSha256": "69FBA6A32C283C32E23F3202A157017E8321016F5CF78C79AD454E22EE201267",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/desktop-profile-light.png",
+        "preTaskSha256": "31E37A3D26C1E16CE239B6DE218ECD2E7AE9D12D10EF43A4CA1C9A8B92F69498",
+        "currentSha256": "31E37A3D26C1E16CE239B6DE218ECD2E7AE9D12D10EF43A4CA1C9A8B92F69498",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/jest-results.json",
+        "preTaskSha256": "1A95C49793D51562499EB4C4A303C1AD04ECB8C5822ABA373A1A7E908CEB9745",
+        "currentSha256": "1A95C49793D51562499EB4C4A303C1AD04ECB8C5822ABA373A1A7E908CEB9745",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/mobile-backend-unavailable.png",
+        "preTaskSha256": "80E03720D9CC6299392617898CCA69FCA7F2F79F5F3A4637E381A25C60D0CEC0",
+        "currentSha256": "80E03720D9CC6299392617898CCA69FCA7F2F79F5F3A4637E381A25C60D0CEC0",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/mobile-discovery-dark.png",
+        "preTaskSha256": "09EFB6D243FB163E5D66CEEFDED2F09ABE3890EB516822F2C304F1DB108159B5",
+        "currentSha256": "09EFB6D243FB163E5D66CEEFDED2F09ABE3890EB516822F2C304F1DB108159B5",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/mobile-profile-dark.png",
+        "preTaskSha256": "83759E99A33C16448EAF3A49441598E54CEE1D6EA2A3947590DE60A6517B48BA",
+        "currentSha256": "83759E99A33C16448EAF3A49441598E54CEE1D6EA2A3947590DE60A6517B48BA",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/ownership-audit.json",
+        "preTaskSha256": "2CFE06391593CCF67A027DDFDF7B17008C436C655BC38C8CBB548E58BB6CB19E",
+        "currentSha256": "2CFE06391593CCF67A027DDFDF7B17008C436C655BC38C8CBB548E58BB6CB19E",
+        "unchanged": true
+      },
+      {
+        "path": "client/authProxy.cjs",
+        "preTaskSha256": "A3CD1C6996E52ABEFFD79B5D2D44B0B1BEF084752E063BFB4AC4B9CA71086BEB",
+        "currentSha256": "A3CD1C6996E52ABEFFD79B5D2D44B0B1BEF084752E063BFB4AC4B9CA71086BEB",
+        "unchanged": true
+      },
+      {
+        "path": "client/next.config.js",
+        "preTaskSha256": "2325541D0896BD040E4553F9C04CD260D48A2305B33FA919F40DBDD3DC4223AD",
+        "currentSha256": "2325541D0896BD040E4553F9C04CD260D48A2305B33FA919F40DBDD3DC4223AD",
+        "unchanged": true
+      },
+      {
+        "path": "client/scripts/verify-phase88.cjs",
+        "preTaskSha256": "01D058CCB1533101A48925CBCA8358B3BC7A29403D521D8CA925F10C4A3BD251",
+        "currentSha256": "01D058CCB1533101A48925CBCA8358B3BC7A29403D521D8CA925F10C4A3BD251",
+        "unchanged": true
+      },
+      {
+        "path": "client/scripts/verify-profile-hotfix.cjs",
+        "preTaskSha256": "5E46E5CB6BFF65767DF3D3211B40950FACC3EC70574F6510CF08C02B1679269B",
+        "currentSha256": "5E46E5CB6BFF65767DF3D3211B40950FACC3EC70574F6510CF08C02B1679269B",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/api/__tests__/sessionApi.test.ts",
+        "preTaskSha256": "81B963FD76156BA121DAA61A575AFF3068323351391637A50BABFA35158890EB",
+        "currentSha256": "81B963FD76156BA121DAA61A575AFF3068323351391637A50BABFA35158890EB",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/api/sessionApi.ts",
+        "preTaskSha256": "62F0C43032A0B05B03687B7A6E31F67A8AC34AA07BF1EF9729AE0517458C3DBE",
+        "currentSha256": "62F0C43032A0B05B03687B7A6E31F67A8AC34AA07BF1EF9729AE0517458C3DBE",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/api/socialValidation.ts",
+        "preTaskSha256": "83E8EDB26F19D00E01D69E8D2CD388ED7F7487EBD9C10AD9BCBEED3E2A78100D",
+        "currentSha256": "83E8EDB26F19D00E01D69E8D2CD388ED7F7487EBD9C10AD9BCBEED3E2A78100D",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/app/globals.css",
+        "preTaskSha256": "7ECA0B5F58BA4685621FB3DF690784BBC0E72CA927C9FCAF866BED7C90E6F273",
+        "currentSha256": "7ECA0B5F58BA4685621FB3DF690784BBC0E72CA927C9FCAF866BED7C90E6F273",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/AuthProvider.tsx",
+        "preTaskSha256": "DF3424626EB90DB2E2A9BF4E8637192CF0DF1A009C5206C0996E5BF52CD06CDB",
+        "currentSha256": "DF3424626EB90DB2E2A9BF4E8637192CF0DF1A009C5206C0996E5BF52CD06CDB",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/AuthenticatedWorkspace.tsx",
+        "preTaskSha256": "5D0028C52619F14EDF0F94C1320A9896BFB2FFEBA9FE37AA4C400126363305C9",
+        "currentSha256": "5D0028C52619F14EDF0F94C1320A9896BFB2FFEBA9FE37AA4C400126363305C9",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/INTEGRATION.md",
+        "preTaskSha256": "94D04334AA64C8CFAD16ADF10565A59257E265B03BE73B59ABDC1E661D420DF1",
+        "currentSha256": "94D04334AA64C8CFAD16ADF10565A59257E265B03BE73B59ABDC1E661D420DF1",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/AuthProvider.test.tsx",
+        "preTaskSha256": "89797828C48B560AE5369F80083E3A383D7B7EE0F06F520A100E8838F79767D1",
+        "currentSha256": "89797828C48B560AE5369F80083E3A383D7B7EE0F06F520A100E8838F79767D1",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/authModel.test.ts",
+        "preTaskSha256": "14F86DE21736119D6DD48AF7628E607BE76532997C42B0A71AF9E594E3FD45AB",
+        "currentSha256": "14F86DE21736119D6DD48AF7628E607BE76532997C42B0A71AF9E594E3FD45AB",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/authProxy.test.ts",
+        "preTaskSha256": "0225031843A2DF1171017F2B8C83508A4C01F72BBD0C205275A6A4F535A871A2",
+        "currentSha256": "0225031843A2DF1171017F2B8C83508A4C01F72BBD0C205275A6A4F535A871A2",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/authService.test.ts",
+        "preTaskSha256": "F16A58C9D25A181A784034FDA03D6DDEDD4FE29142F9EC7236802424C1FC0F48",
+        "currentSha256": "F16A58C9D25A181A784034FDA03D6DDEDD4FE29142F9EC7236802424C1FC0F48",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/db2Auth.test.ts",
+        "preTaskSha256": "FB2CD0CD4D660B0C529EB790EDEEF3E16259C3DFA5904AB77E79369B81684B55",
+        "currentSha256": "FB2CD0CD4D660B0C529EB790EDEEF3E16259C3DFA5904AB77E79369B81684B55",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/developmentAuthService.test.ts",
+        "preTaskSha256": "7A2452DA61D1F06F03747BB53830EE710A9B9B6A8D2F4A8F3BCD7E6C14742FA7",
+        "currentSha256": "7A2452DA61D1F06F03747BB53830EE710A9B9B6A8D2F4A8F3BCD7E6C14742FA7",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/httpAuthService.test.ts",
+        "preTaskSha256": "1844B5A0C0605D4C1045D884F5F41E62B524AB722598DED1036C9B8D158A4184",
+        "currentSha256": "1844B5A0C0605D4C1045D884F5F41E62B524AB722598DED1036C9B8D158A4184",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/socialProxy.test.ts",
+        "preTaskSha256": "0701CB84B7AAEB39D992EBE20C57D2EA33908022723CC487E0F9AF0B38DC92A8",
+        "currentSha256": "0701CB84B7AAEB39D992EBE20C57D2EA33908022723CC487E0F9AF0B38DC92A8",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/workspaceIntegration.test.tsx",
+        "preTaskSha256": "A2DFE1554F3D19C0D699E7E68AFEE527CDC627A1D39FA5853E8DE3501E84C867",
+        "currentSha256": "A2DFE1554F3D19C0D699E7E68AFEE527CDC627A1D39FA5853E8DE3501E84C867",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/authModel.ts",
+        "preTaskSha256": "9DF588ADCD4049324A25D2677FD32DD3BAAA9A3D72024B3F8AFBFF56B41A8035",
+        "currentSha256": "9DF588ADCD4049324A25D2677FD32DD3BAAA9A3D72024B3F8AFBFF56B41A8035",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/authService.ts",
+        "preTaskSha256": "4BEA5F7B3FD8328868627BED58176CDC4EED1EF8F1113D4B98294C2A538E5453",
+        "currentSha256": "4BEA5F7B3FD8328868627BED58176CDC4EED1EF8F1113D4B98294C2A538E5453",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/httpAuthService.ts",
+        "preTaskSha256": "DDDEECB3AD4B44DD247B1D79878C53401FB0401F6B5290A0EEDA56BFBC2B6AC4",
+        "currentSha256": "DDDEECB3AD4B44DD247B1D79878C53401FB0401F6B5290A0EEDA56BFBC2B6AC4",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/auth/AuthForm.tsx",
+        "preTaskSha256": "78F93A7B974E8D62E1A185154EC7E505F36E76FB8F6AE984C1C4CC1DABE3D0D9",
+        "currentSha256": "78F93A7B974E8D62E1A185154EC7E505F36E76FB8F6AE984C1C4CC1DABE3D0D9",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/auth/__tests__/AuthForm.test.tsx",
+        "preTaskSha256": "C555D72713A07417168F448AAE73E9334979B3C2F7A681779A19A176166115F6",
+        "currentSha256": "C555D72713A07417168F448AAE73E9334979B3C2F7A681779A19A176166115F6",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/friends/FriendsPage.tsx",
+        "preTaskSha256": "A02FBC500044ABA5AA4BB0B535BED3FADFB840258E42ADA0A25DD5810B159527",
+        "currentSha256": "A02FBC500044ABA5AA4BB0B535BED3FADFB840258E42ADA0A25DD5810B159527",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/friends/__tests__/RemotePublicProfile.test.tsx",
+        "preTaskSha256": "C73DF3165260A16FF7A44E8263B2F26DD4B84F3B0ABA68D7EBF5FB9C1D7BB7CB",
+        "currentSha256": "C73DF3165260A16FF7A44E8263B2F26DD4B84F3B0ABA68D7EBF5FB9C1D7BB7CB",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/messenger/MainNavigation.tsx",
+        "preTaskSha256": "F5D4DD6739D557F0C5BA90454707BA95A85D406D9AE79AE310A3DB7247472E10",
+        "currentSha256": "F5D4DD6739D557F0C5BA90454707BA95A85D406D9AE79AE310A3DB7247472E10",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/messenger/RealMessengerWorkspace.tsx",
+        "preTaskSha256": "E6BFFEF6FB552CBD76D24B66DE16A82072402A2824B14333DA3B0E4ED1DEE7B3",
+        "currentSha256": "E6BFFEF6FB552CBD76D24B66DE16A82072402A2824B14333DA3B0E4ED1DEE7B3",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/messenger/__tests__/MessageList.actions.test.tsx",
+        "preTaskSha256": "E5D5BE9648432AC30F83DA2F0CCA787BBE170974B5F2D49BB422C54A4E9E4308",
+        "currentSha256": "E5D5BE9648432AC30F83DA2F0CCA787BBE170974B5F2D49BB422C54A4E9E4308",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/profile/ProfileDialog.tsx",
+        "preTaskSha256": "3AA42A16D56FBE375B814248E48EA46581904FB49D7977E7CF44DF9396F6B729",
+        "currentSha256": "3AA42A16D56FBE375B814248E48EA46581904FB49D7977E7CF44DF9396F6B729",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/friends/__tests__/remoteFriendsService.test.ts",
+        "preTaskSha256": "15AB824AE7F1064C7664B61830478E05B9EBFCF19B44E019E254A60258725D61",
+        "currentSha256": "15AB824AE7F1064C7664B61830478E05B9EBFCF19B44E019E254A60258725D61",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/friends/friendsService.ts",
+        "preTaskSha256": "88A3682525C46885BCA5E929CA5DE69ED97782D9D0B8877A4AEF31F15A8BD014",
+        "currentSha256": "88A3682525C46885BCA5E929CA5DE69ED97782D9D0B8877A4AEF31F15A8BD014",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/friends/remoteFriendsService.ts",
+        "preTaskSha256": "E8FCD2DFD6EDF41723CA52DE007271B483D3BC186ABA9D1A4F6F5603891057A6",
+        "currentSha256": "E8FCD2DFD6EDF41723CA52DE007271B483D3BC186ABA9D1A4F6F5603891057A6",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/hooks/__tests__/useCurrentProfile.test.tsx",
+        "preTaskSha256": "33E3EAA689C2CCC6D9EA4717A7E8529E33644E6E31FDE2FCA7B2D457917346EB",
+        "currentSha256": "33E3EAA689C2CCC6D9EA4717A7E8529E33644E6E31FDE2FCA7B2D457917346EB",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/hooks/__tests__/useRemoteFriends.test.tsx",
+        "preTaskSha256": "ED7949D7790EF46E288018FC17D762D4FB6B4FB2C41854603DEFEE2EF82EB8F5",
+        "currentSha256": "ED7949D7790EF46E288018FC17D762D4FB6B4FB2C41854603DEFEE2EF82EB8F5",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/hooks/useCurrentProfile.ts",
+        "preTaskSha256": "2F167778D0CB0CAB4EC52A6B67CF3D144858D17AFE978ADD681558E1A6704BF8",
+        "currentSha256": "2F167778D0CB0CAB4EC52A6B67CF3D144858D17AFE978ADD681558E1A6704BF8",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/hooks/useFriends.ts",
+        "preTaskSha256": "8528356AE194579F3430801D98DE7D4D8272E2281E9B4AB9DE16D2F5067F7FF6",
+        "currentSha256": "8528356AE194579F3430801D98DE7D4D8272E2281E9B4AB9DE16D2F5067F7FF6",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/profiles/__tests__/remoteProfileService.test.ts",
+        "preTaskSha256": "61C61A7B517F48B2C29C55D92556FD139C11FA92C73FD1EA8B9F91CD78299074",
+        "currentSha256": "61C61A7B517F48B2C29C55D92556FD139C11FA92C73FD1EA8B9F91CD78299074",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/profiles/remoteProfileService.ts",
+        "preTaskSha256": "6078012B2E4E7B14CA50E6CF3496B1A93112C4C0E0A234C7C81F5B694FEC18F2",
+        "currentSha256": "6078012B2E4E7B14CA50E6CF3496B1A93112C4C0E0A234C7C81F5B694FEC18F2",
+        "unchanged": true
+      },
+      {
+        "path": "docs/e2ee-recipient-key-integration.md",
+        "preTaskSha256": "482D24CC00AD793DF59F78A834788BA0CBA8EA55E1BD184D5BEBA45EDD407C8E",
+        "currentSha256": "482D24CC00AD793DF59F78A834788BA0CBA8EA55E1BD184D5BEBA45EDD407C8E",
+        "unchanged": true
+      },
+      {
+        "path": "server/README.md",
+        "preTaskSha256": "5A70B506F9AE8CEA9EA0EA2A01D6C50DB1BFA2DD403AAF975E9D4EB22E4122EA",
+        "currentSha256": "5A70B506F9AE8CEA9EA0EA2A01D6C50DB1BFA2DD403AAF975E9D4EB22E4122EA",
+        "unchanged": true
+      },
+      {
+        "path": "server/package.json",
+        "preTaskSha256": "98F35F66790716DD9D8A2319E1565D0F1F1F8F5FDB6F79970BB2BDB75EBF0776",
+        "currentSha256": "98F35F66790716DD9D8A2319E1565D0F1F1F8F5FDB6F79970BB2BDB75EBF0776",
+        "unchanged": true
+      },
+      {
+        "path": "server/src/e2ee/codec.ts",
+        "preTaskSha256": "2A436389C1CB6A47F8B1C253BD765BFFA79BAB12D298A5E333364EE43DE6B42F",
+        "currentSha256": "2A436389C1CB6A47F8B1C253BD765BFFA79BAB12D298A5E333364EE43DE6B42F",
+        "unchanged": true
+      },
+      {
+        "path": "server/src/e2ee/envelope.ts",
+        "preTaskSha256": "90FBC2A8BA52DFC930B3EC248266D1AD804EB7BDB090BC2DA1DC263C1EC745C4",
+        "currentSha256": "90FBC2A8BA52DFC930B3EC248266D1AD804EB7BDB090BC2DA1DC263C1EC745C4",
+        "unchanged": true
+      },
+      {
+        "path": "server/src/e2ee/epochs.ts",
+        "preTaskSha256": "730E290C2F2F2BE061C647B5172724540DC8840132087E78DAF637DF1A5DB256",
+        "currentSha256": "730E290C2F2F2BE061C647B5172724540DC8840132087E78DAF637DF1A5DB256",
+        "unchanged": true
+      },
+      {
+        "path": "server/src/e2ee/evaluation.ts",
+        "preTaskSha256": "4D0F01EFBD480C51FEF56469147517EC474B81A4D97CE0DE0C685015B35A08C2",
+        "currentSha256": "4D0F01EFBD480C51FEF56469147517EC474B81A4D97CE0DE0C685015B35A08C2",
+        "unchanged": true
+      },
+      {
+        "path": "server/src/e2ee/index.ts",
+        "preTaskSha256": "29E0951A75B0B9118CBFED72A144644112EBBD50A1685B6C2363195B659E1C34",
+        "currentSha256": "29E0951A75B0B9118CBFED72A144644112EBBD50A1685B6C2363195B659E1C34",
+        "unchanged": true
+      },
+      {
+        "path": "server/src/e2ee/keys.ts",
+        "preTaskSha256": "15A860D87E454DF1BCC53B4E49FC3199EE04975307D013E1D567AF997533974E",
+        "currentSha256": "15A860D87E454DF1BCC53B4E49FC3199EE04975307D013E1D567AF997533974E",
+        "unchanged": true
+      },
+      {
+        "path": "server/src/e2ee/protocol.ts",
+        "preTaskSha256": "2C775F68CEC9A80775AE6AB6D3AB3BE1DD2C8EC39BA5D8562C83008A953B2FD3",
+        "currentSha256": "2C775F68CEC9A80775AE6AB6D3AB3BE1DD2C8EC39BA5D8562C83008A953B2FD3",
+        "unchanged": true
+      },
+      {
+        "path": "server/src/e2ee/records.ts",
+        "preTaskSha256": "95C53A6CEB9512A567B43976F0995F30BABB48BD6DFFA327F5899A0E95370F7D",
+        "currentSha256": "95C53A6CEB9512A567B43976F0995F30BABB48BD6DFFA327F5899A0E95370F7D",
+        "unchanged": true
+      },
+      {
+        "path": "server/src/e2ee/registration.ts",
+        "preTaskSha256": "54565676B42385DAF36EFDE57E8AEF1EFDC6177DBEC0125CB0140472BC6B6056",
+        "currentSha256": "54565676B42385DAF36EFDE57E8AEF1EFDC6177DBEC0125CB0140472BC6B6056",
+        "unchanged": true
+      },
+      {
+        "path": "server/src/e2ee/signatures.ts",
+        "preTaskSha256": "D95FD26C18585D881ECE808233BCE4554734D26AB30F0337AE1E59CD4EF269F7",
+        "currentSha256": "D95FD26C18585D881ECE808233BCE4554734D26AB30F0337AE1E59CD4EF269F7",
+        "unchanged": true
+      },
+      {
+        "path": "server/src/e2ee/statements.ts",
+        "preTaskSha256": "B25063E1D1F78C8DBEB5C7E639A493614E5B28B771C86D9FF3B784ADA5CBCB69",
+        "currentSha256": "B25063E1D1F78C8DBEB5C7E639A493614E5B28B771C86D9FF3B784ADA5CBCB69",
+        "unchanged": true
+      },
+      {
+        "path": "server/src/e2ee/verifier.ts",
+        "preTaskSha256": "3BFAE0E1E2715393C703BE5AE543B4A227C9DCC2EA6CEB13536807F3622308D2",
+        "currentSha256": "3BFAE0E1E2715393C703BE5AE543B4A227C9DCC2EA6CEB13536807F3622308D2",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/boundaries.test.ts",
+        "preTaskSha256": "491C10126050C2B4AA2DF0AD4D46894CA543DB44260B5373FE350AB455AF5E1E",
+        "currentSha256": "491C10126050C2B4AA2DF0AD4D46894CA543DB44260B5373FE350AB455AF5E1E",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/data-integration.test.ts",
+        "preTaskSha256": "39C3CCDB16E31775418602D83E6E687A106F03FBFE7617B47308B0CDD788249D",
+        "currentSha256": "39C3CCDB16E31775418602D83E6E687A106F03FBFE7617B47308B0CDD788249D",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/directory-contract.test.ts",
+        "preTaskSha256": "71D60BC0B5AF07C28433B7A1390CACEB0AC167EAEAB4929F50D2156A5799A4D0",
+        "currentSha256": "71D60BC0B5AF07C28433B7A1390CACEB0AC167EAEAB4929F50D2156A5799A4D0",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/envelope.test.ts",
+        "preTaskSha256": "C2E2FDD855136BEDF09CEF90C7057FFF1820E469204D3670721F38667DE0FD94",
+        "currentSha256": "C2E2FDD855136BEDF09CEF90C7057FFF1820E469204D3670721F38667DE0FD94",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/hpke.test.ts",
+        "preTaskSha256": "777E83B0310423198B9413BDB32F03F230CC81B69872EEAA8E7105672072C52E",
+        "currentSha256": "777E83B0310423198B9413BDB32F03F230CC81B69872EEAA8E7105672072C52E",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/primitives.test.ts",
+        "preTaskSha256": "B5F022255AA14A71A26F528D261C28A5FC7A510FD213DC23938D059140303308",
+        "currentSha256": "B5F022255AA14A71A26F528D261C28A5FC7A510FD213DC23938D059140303308",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/realtime-integration.test.ts",
+        "preTaskSha256": "2CA4D37DCB4415F4DBC399816D89EC2A891B58802133BEFEEC452EED213BE7A1",
+        "currentSha256": "2CA4D37DCB4415F4DBC399816D89EC2A891B58802133BEFEEC452EED213BE7A1",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/rules.test.ts",
+        "preTaskSha256": "D41634823419444AD71CC52EB5C71CA30882CF61FFCBE79D148EEE01A11F1D5D",
+        "currentSha256": "D41634823419444AD71CC52EB5C71CA30882CF61FFCBE79D148EEE01A11F1D5D",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/support/dataApp.ts",
+        "preTaskSha256": "8D213BEC43DB0D31A73CA20232EC0DD641AFEFB2527A5F77D804E0604AD07C57",
+        "currentSha256": "8D213BEC43DB0D31A73CA20232EC0DD641AFEFB2527A5F77D804E0604AD07C57",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/support/deviceClient.ts",
+        "preTaskSha256": "053522FDB89C1A4571803C6B7982FB6547E3AD352A98797EB7B350B9F7AA0473",
+        "currentSha256": "053522FDB89C1A4571803C6B7982FB6547E3AD352A98797EB7B350B9F7AA0473",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/support/hpke.ts",
+        "preTaskSha256": "A9A39113D3FD02968A55D66184691E77A5722A291F95567D53D250D4B78CADA7",
+        "currentSha256": "A9A39113D3FD02968A55D66184691E77A5722A291F95567D53D250D4B78CADA7",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/support/keyDirectoryContract.ts",
+        "preTaskSha256": "CEE27D6C3DD1CFFCF1CA0DA70BECE2BC1D7E9BC3EC2F80D592C8447D3A5DB1BA",
+        "currentSha256": "CEE27D6C3DD1CFFCF1CA0DA70BECE2BC1D7E9BC3EC2F80D592C8447D3A5DB1BA",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/support/memoryKeyDirectory.ts",
+        "preTaskSha256": "573B695EE6897D95CCFADE5CDD2D3C7B73B400914063EBC4EBE9F30251084294",
+        "currentSha256": "573B695EE6897D95CCFADE5CDD2D3C7B73B400914063EBC4EBE9F30251084294",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/support/scenario.ts",
+        "preTaskSha256": "11CE9600E2488E974BA8C366AA0A063DE8539F51FB1FE44C34D17090276EF54D",
+        "currentSha256": "11CE9600E2488E974BA8C366AA0A063DE8539F51FB1FE44C34D17090276EF54D",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/two-account-flow.test.ts",
+        "preTaskSha256": "03792DF0FA29B85C35653AC0FFD67910DED894B8A98C17B0980D102022878D42",
+        "currentSha256": "03792DF0FA29B85C35653AC0FFD67910DED894B8A98C17B0980D102022878D42",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/vectors.test.ts",
+        "preTaskSha256": "1B2634B9745DEE4E39902D9E0B35C6EFFE140C0FF49AC4EEBD01D288B597F382",
+        "currentSha256": "1B2634B9745DEE4E39902D9E0B35C6EFFE140C0FF49AC4EEBD01D288B597F382",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/vectors/protocol-v1.json",
+        "preTaskSha256": "8A327BB98CDC5D00C2020C2D115BC34AFD8D4B74402DEA29C2E630BBC76A34B3",
+        "currentSha256": "8A327BB98CDC5D00C2020C2D115BC34AFD8D4B74402DEA29C2E630BBC76A34B3",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/e2ee/verifier.test.ts",
+        "preTaskSha256": "9C9D6BE1D6722A1E42E8E1F0982AA24D9854FACB36F06F0C0740E6EF76B1D1D0",
+        "currentSha256": "9C9D6BE1D6722A1E42E8E1F0982AA24D9854FACB36F06F0C0740E6EF76B1D1D0",
+        "unchanged": true
+      },
+      {
+        "path": "server/test/support/harness.ts",
+        "preTaskSha256": "883D839D3110915B93CD66753F4F96DC8E750A42E04B56FA9AFE647772C185D0",
+        "currentSha256": "883D839D3110915B93CD66753F4F96DC8E750A42E04B56FA9AFE647772C185D0",
+        "unchanged": true
+      }
+    ],
+    "migrations1Through6": [
+      {
+        "path": "DATA/server/database/migrations/0001-legacy.sql",
+        "preTaskSha256": "7AC0D3B5695135A3F8B2A2BC747E707B211899EE6651AFF63D0AEB4EA49A006F",
+        "currentSha256": "7AC0D3B5695135A3F8B2A2BC747E707B211899EE6651AFF63D0AEB4EA49A006F",
+        "unchanged": true
+      },
+      {
+        "path": "DATA/server/database/migrations/0002-foundation.sql",
+        "preTaskSha256": "8F2E3B0BBDD09E59E85AB5C395518B816B9590804B42FCB0C84EF26A893C55C4",
+        "currentSha256": "8F2E3B0BBDD09E59E85AB5C395518B816B9590804B42FCB0C84EF26A893C55C4",
+        "unchanged": true
+      },
+      {
+        "path": "DATA/server/database/migrations/0003-authentication.sql",
+        "preTaskSha256": "AD5B31788A95EA296A7BA908F647FBC9BC8AE91D9035A31503681A3F5199634F",
+        "currentSha256": "AD5B31788A95EA296A7BA908F647FBC9BC8AE91D9035A31503681A3F5199634F",
+        "unchanged": true
+      },
+      {
+        "path": "DATA/server/database/migrations/0004-profiles-friends.sql",
+        "preTaskSha256": "CC3E1700A5EC4B83E9FD4A72A61A6AD647108D08A0E4C816CBCDCC9F99F7BD89",
+        "currentSha256": "CC3E1700A5EC4B83E9FD4A72A61A6AD647108D08A0E4C816CBCDCC9F99F7BD89",
+        "unchanged": true
+      },
+      {
+        "path": "DATA/server/database/migrations/0005-conversation-provenance.sql",
+        "preTaskSha256": "E6129FAB323E2F0576F3B30B2DA3225AB0EFEDB4CC02C37307EA949EA81C1E0C",
+        "currentSha256": "E6129FAB323E2F0576F3B30B2DA3225AB0EFEDB4CC02C37307EA949EA81C1E0C",
+        "unchanged": true
+      },
+      {
+        "path": "DATA/server/database/migrations/0006-encrypted-message-lifecycle.sql",
+        "preTaskSha256": "68B73B2D80569DDB24D8E68B51DE919F61FA167B93032E76012ED9AF96712EF9",
+        "currentSha256": "68B73B2D80569DDB24D8E68B51DE919F61FA167B93032E76012ED9AF96712EF9",
+        "unchanged": true
+      }
+    ],
+    "userDevelopmentDatabasesTouched": false,
+    "userDevelopmentServicesChangedOrRestarted": false,
+    "packageAndLockfilesChanged": false,
+    "stashesPreserved": true,
+    "notes": "Hashes compare against the pre-edit snapshot; the existing combined Git diff includes earlier user work. All migration comparisons use raw file bytes."
+  },
+  "limitations": {
+    "fullProductE2eeReady": false,
+    "browserVerified": false,
+    "liveSocketIoVerified": false,
+    "fullServerSuiteRun": false,
+    "remaining": [
+      "Persistent browser device keys, reviewed HPKE, v2 client AAD/parser/proxy/composer and TOFU/key-change UX",
+      "Real two-browser integration/security review",
+      "Kiro per-actor session/proof binding, v2 socket parsing, DATA authorizer and post-commit recipient delivery",
+      "Kiro-owned historical pre-integration DATA seam tests need new default/v2 expectations",
+      "Six-route contract has no general retired-peer-key discovery/historical rewrapping API; client must retain verified old keys",
+      "Encrypted editing, groups, attachments, AI and durable outbox remain out of scope"
+    ],
+    "retryNuance": "Current key verification precedes duplicate lookup. Old committed envelopes can become unverifiable after rotation; reconcile history before re-encryption or changing logical IDs.",
+    "trustBoundary": "Consistency with a server-trusted registry is not malicious-operator key-substitution protection or proof of actual ciphertext key use."
+  },
+  "files": [
+    {
+      "path": "DATA/docs/db4b-e2ee-storage-contract.md",
+      "sha256": "00A39107CFEF65FCEA5AA73BDD50C1FC55AF531FEFAD565BBCA58B682A325355"
+    },
+    {
+      "path": "DATA/docs/db4b-frontend-integration.md",
+      "sha256": "93CB160E10A18A9BEF35211A0F53E3E9A8D34B88F40563B7DE8B5246845D5A3E"
+    },
+    {
+      "path": "DATA/docs/db4b-handoff.md",
+      "sha256": "89C24C55FE8DD1770CA0637C7BF4A1B318298BE74CB7C865F9011B1B997D4B60"
+    },
+    {
+      "path": "DATA/docs/db4b-realtime-integration.md",
+      "sha256": "680CCC8BDE381DA2166C2ABB95EA85F60CAFCEC90C404CC72DB7F18A4F5B7208"
+    },
+    {
+      "path": "DATA/docs/e2ee-frontend-integration.md",
+      "sha256": "76E26E512752C8C0250B2A1D80B7F8AF483FFC37688454FD0E4687CB935BB8BB"
+    },
+    {
+      "path": "DATA/docs/e2ee-key-directory-handoff.md",
+      "sha256": "DBF9DCD9198163C0EB06E9E7028C9DBC8E126638F4CBD83F8C4E492E5BAB841D"
+    },
+    {
+      "path": "DATA/docs/e2ee-keys-openapi.json",
+      "sha256": "0735C57E93F39A1DE250F87F9ED4E2A95EF93B66494BCB9CF0905C29FAF94920"
+    },
+    {
+      "path": "DATA/docs/e2ee-realtime-integration.md",
+      "sha256": "44080CFCD3E82618205C2CB64C77554CE03B2FA425B6896159D1E45E7F9DD646"
+    },
+    {
+      "path": "DATA/docs/e2ee-verification.json",
+      "sha256": null
+    },
+    {
+      "path": "DATA/docs/messaging-openapi.json",
+      "sha256": "6D52A5FC6462242438006BE6607FDCF0313CE7100F88E11E5CF8566D4823860D"
+    },
+    {
+      "path": "DATA/docs/migrations.md",
+      "sha256": "798C41460993AE2548471CD7DEAD452028E9E2BE9C0900E9C081A5E5057AAF46"
+    },
+    {
+      "path": "DATA/docs/repositories.md",
+      "sha256": "54782B8A62BB33F241BD4F363A95CC9B3DC6D9C4B25F088666680A87799D5AF6"
+    },
+    {
+      "path": "DATA/docs/schema.md",
+      "sha256": "046E86C0166A583BC17AFEE87444D65F6D26BE286DA0AF40B6B1F58FB9E90F26"
+    },
+    {
+      "path": "DATA/README.md",
+      "sha256": "06B3BF15F30539EEAF9783662CF13EF77DB2834FA84D1CC714894631B87F5282"
+    },
+    {
+      "path": "DATA/server/app.js",
+      "sha256": "365407AFC875A4F0149DB40570014FC3AA9665DCED293F47BB1ABAE3F43869F9"
+    },
+    {
+      "path": "DATA/server/database/migrations/0007-recipient-keys.sql",
+      "sha256": "6A73D3A1533A40F09546FFF27639EC654363837F4E6FCB6BD23A7AEF5EFF06C2"
+    },
+    {
+      "path": "DATA/server/database/repositories.js",
+      "sha256": "F23753836A81BB359E53BDE0BC2A60856A0E7BF092A22455EDB98FE8CF1F2964"
+    },
+    {
+      "path": "DATA/server/e2ee/directory.js",
+      "sha256": "AC053D87EF941580A0EA2FE4FE5E761B03B7B7E15D306502A8E6CB24533797D7"
+    },
+    {
+      "path": "DATA/server/e2ee/protocol.js",
+      "sha256": "E471A7289F14B2D61CF0AE1B6A1D03031E6C81964339D98C898C0D3B95800C95"
+    },
+    {
+      "path": "DATA/server/e2ee/repository.js",
+      "sha256": "3106A4A1631C7BDC4747194FD37CCABB516665DE7C32EE7F8652C522A07F0803"
+    },
+    {
+      "path": "DATA/server/e2ee/service.js",
+      "sha256": "8BE1FFBA12586D5CBC15FB4E4B820E26E58A38CE80AE7F582019CAF5F014D7DC"
+    },
+    {
+      "path": "DATA/server/messaging/service.js",
+      "sha256": "AA31F7B586527970D4822155E3DBFF090D5B47669D9DF8D33F8990EB2C8973A0"
+    },
+    {
+      "path": "DATA/server/messaging/validation.js",
+      "sha256": "60A589763BDF05F1C464013849B6691389C0DD5E9C6A4822C514C9DC18916BE4"
+    },
+    {
+      "path": "DATA/server/routes/keys.js",
+      "sha256": "5C4BAC76B12C7F3A492CA0167143CC38FB11BEE1F0CCCDA610DF5C00393AD154"
+    },
+    {
+      "path": "DATA/tests/auth-migrations.test.js",
+      "sha256": "2BFC350AE5BA4E62DD123FADC4279F742F5239100B54F235F3779DA74492A16C"
+    },
+    {
+      "path": "DATA/tests/conversations-migrations.test.js",
+      "sha256": "4B243852D17E6BA5A9DE5119AD8132C90F5DC303B5FB687EE8F0DF17CEA03CE6"
+    },
+    {
+      "path": "DATA/tests/e2ee-concurrency.test.js",
+      "sha256": "B0C9FB95E753B6314890E444D60FDB338F850CC11E99C722D7DBBFD28408593C"
+    },
+    {
+      "path": "DATA/tests/e2ee-contracts.test.js",
+      "sha256": "507B47EDCF92E64F4915130F17907287F85C0C0C915E9CEAFCEC209C02DAB285"
+    },
+    {
+      "path": "DATA/tests/e2ee-http.test.js",
+      "sha256": "A33A2C71934B6D435623080CF70482E1CE16966CC8D77E6C20742E11D4A2A2FF"
+    },
+    {
+      "path": "DATA/tests/e2ee-migrations.test.js",
+      "sha256": "57966E96F076E234718A1A2CD3AFAF5C4EDE984767458BE3D1A3CE00642D0A46"
+    },
+    {
+      "path": "DATA/tests/e2ee-security.test.js",
+      "sha256": "F3FD08C404F4A8415A9F07C2BA2BAFE6500EF4E792A8C9E8E9A2451721EF3D8D"
+    },
+    {
+      "path": "DATA/tests/e2ee-vectors.test.js",
+      "sha256": "7B4BAD8948739DEC463C8BF9D19D4355929B58E9F4EB8A19851DD87A4BA3C064"
+    },
+    {
+      "path": "DATA/tests/messaging-migrations.test.js",
+      "sha256": "F3B7B6A9FAC6040E9749C396B3ECC702A70F933774BE3860835ADC0946D23AA6"
+    },
+    {
+      "path": "DATA/tests/messaging-security.test.js",
+      "sha256": "F8624DA00DB8C02282B183E325AA0EB217182A626FFEC82713D3841B990EDDDE"
+    },
+    {
+      "path": "DATA/tests/migrations.test.js",
+      "sha256": "90B1F1DE7681A5D1D060D1225F034C039B3F603DC4A570401D1776B6B22F2C1F"
+    },
+    {
+      "path": "DATA/tests/social-migrations.test.js",
+      "sha256": "DFFEB0A2CEC69902F8E904A31F17622954B4B566143A271E14E4A145E2B1876C"
+    },
+    {
+      "path": "DATA/tests/support/e2ee.js",
+      "sha256": "AA80DD1B56126485A43F0086CB76F000DFDEC85D16E5DDA12763741AFD7698D0"
+    }
+  ],
+  "hashNotes": "Uppercase raw-byte SHA-256. Manifest self hash is null to avoid circularity."
+}

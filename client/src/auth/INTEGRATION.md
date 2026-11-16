@@ -1,4 +1,12 @@
-# Phase 8.5 — Authentication UI and session boundary
+# Phase 8.6 — Real authentication integration
+
+Current integration: Phase 8.8 now connects real Profiles & Friends to the authenticated Messenger shell.
+See [the Phase 8.8 handoff](../../PHASE_8_8_PROFILES_FRIENDS_INTEGRATION.md) for current behavior, routing and verification.
+The archived placeholder-workspace descriptions below describe earlier phases.
+
+**Current setup and contract:** [PHASE_8_6_AUTH_INTEGRATION.md](../../PHASE_8_6_AUTH_INTEGRATION.md). This supersedes the Phase 8.5 notes below, including their demo defaults, provisional validation, static meta-token callback and auto-authenticating registration. The configured application now uses DB-2, bootstraps CSRF before every mutation, confirms login through `/me`, and requires explicit login after registration. Configuration cannot enable demo authentication, even in development. No Database Team or Kiro-owned implementation was modified.
+
+## Archived Phase 8.5 notes — historical context only
 
 ## Implemented frontend
 

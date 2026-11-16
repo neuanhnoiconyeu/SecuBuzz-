@@ -1,0 +1,5 @@
+# Lock this client's added dependencies; the root's optional lockfile rule is overridden here.
+!package-lock.json
+# Isolated frontend verification must not overwrite an existing dev server's assets.
+/.next-e2ee-*/
+/.e2ee-typescript-*

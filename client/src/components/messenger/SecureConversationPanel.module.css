@@ -1,0 +1,15 @@
+.panel { grid-column: 2; grid-row: 1; min-width: 0; width: 100%; padding: 1.25rem; overflow: auto; color: var(--color-text); }
+.heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+.body { display: flex; gap: 1rem; min-height: 22rem; }
+.list { display: flex; flex-direction: column; align-items: stretch; gap: .5rem; width: 11rem; flex-shrink: 0; }
+.preview { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .75; }
+.conversation select { padding: .4rem; max-width: 100%; color: inherit; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: .4rem; font: inherit; }
+.conversation { flex: 1; min-width: 0; }
+.history { max-height: 24rem; overflow: auto; padding: .5rem 0; }
+.history article { border-bottom: 1px solid var(--color-border); padding: .75rem 0; }
+.history p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.composer { display: flex; flex-direction: column; gap: .5rem; padding: 1rem 0; }
+.composer textarea { padding: .75rem; border-radius: .5rem; color: inherit; background: var(--color-surface); border: 1px solid var(--color-border); font: inherit; resize: vertical; }
+.warning { border: 1px solid #c58a32; border-radius: .5rem; padding: .75rem; overflow-wrap: anywhere; }
+.safety { display: block; white-space: normal; overflow-wrap: anywhere; padding: .75rem 0; }
+@media (max-width: 760px) { .body { flex-direction: column; } .list { width: 100%; } .panel { grid-column: 1; padding: .75rem; } }

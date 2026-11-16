@@ -32,9 +32,9 @@ test('synthetic sign-in discards credentials, never verifies a password, and iso
 
 test('temporary registration reuses profile identity without retaining email or password', async () => {
   const service = new DevelopmentAuthService();
-  const result = await service.register({ username: 'Demo.Person', email: 'private@example.test', password: 'not-a-real-secret', displayName: ' Demo Person ' });
+  const result = await service.register({ username: 'Sample.Person', email: 'private@example.test', password: 'not-a-real-secret', displayName: ' Demo Person ' });
   expect(result).toEqual({ status: 'authenticated', user: {
-    id: 'demo-account-demo.person', username: 'Demo.Person', displayName: 'Demo Person', avatar: 'initials', isDemo: true,
+    id: 'demo-account-sample.person', username: 'sample.person', displayName: 'Demo Person', avatar: 'initials', isDemo: true,
   } });
   expect(JSON.stringify(service)).not.toContain('private@example.test');
   expect(JSON.stringify(service)).not.toContain('not-a-real-secret');

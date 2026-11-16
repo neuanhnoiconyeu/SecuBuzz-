@@ -154,7 +154,7 @@ describe('AuthProvider identity and session state', () => {
     expect(result.current.error).toBeNull();
   });
 
-  test('registration distinguishes account-created/sign-in-required from an established session', async () => {
+  test('API registration requires explicit login and rejects an unexpected authenticated result', async () => {
     const { service } = fakeService();
     service.register.mockResolvedValueOnce({ status: 'requires-login' });
     const { result } = mount(service);
@@ -164,10 +164,11 @@ describe('AuthProvider identity and session state', () => {
     expect(result.current.status).toBe('unauthenticated');
     expect(result.current.user).toBeNull();
     expect(result.current.sessionVersion).toBe(generation);
-    await act(async () => { expect(await result.current.register(registerInput)).toEqual({ status: 'authenticated', user: alice }); });
-    expect(result.current.status).toBe('authenticated');
-    expect(result.current.user).toEqual(alice);
-    expect(result.current.sessionVersion).toBe(generation + 1);
+    await act(async () => { expect(await result.current.register(registerInput)).toBeNull(); });
+    expect(result.current.status).toBe('unauthenticated');
+    expect(result.current.user).toBeNull();
+    expect(result.current.error?.code).toBe('invalid_response');
+    expect(result.current.sessionVersion).toBe(generation);
   });
 
   test('confirmed logout clears identity only when its promise succeeds', async () => {
@@ -190,7 +191,7 @@ describe('AuthProvider identity and session state', () => {
     expect(result.current.error).toBeNull();
   });
 
-  test('failed logout preserves user and session generation and reports unconfirmed revocation', async () => {
+  test('failed logout preserves identity, renews canceled data scopes and reports unconfirmed revocation', async () => {
     const { service } = fakeService();
     service.getCurrentUser.mockResolvedValue(alice);
     service.logout.mockRejectedValue(new Error('private transport stack'));
@@ -200,7 +201,7 @@ describe('AuthProvider identity and session state', () => {
     await act(async () => { expect(await result.current.logout()).toBe(false); });
     expect(result.current.user).toEqual(alice);
     expect(result.current.status).toBe('authenticated');
-    expect(result.current.sessionVersion).toBe(generation);
+    expect(result.current.sessionVersion).toBe(generation + 1);
     expect(result.current.error?.code).toBe('logout_failed');
     expect(result.current.error?.message).toMatch(/server session may still be active/);
     expect(result.current.pending).toBeNull();
@@ -323,6 +324,24 @@ describe('AuthProvider identity and session state', () => {
     });
     expect(result.current.user).toBeNull();
     expect(service.continueAsDemo).not.toHaveBeenCalled();
+  });
+
+  test('logout supersedes an in-flight session recheck and discards its late identity', async () => {
+    const { service } = fakeService();
+    service.getCurrentUser.mockResolvedValueOnce(alice);
+    const { result } = mount(service);
+    await waitFor(() => expect(result.current.status).toBe('authenticated'));
+    const late = deferred<AuthUser | null>();
+    service.getCurrentUser.mockReturnValueOnce(late.promise);
+    let lookup!: Promise<void>;
+    act(() => { lookup = result.current.restoreSession(); });
+    expect(result.current.pending).toBe('restore');
+    await act(async () => { expect(await result.current.logout()).toBe(true); });
+    expect(result.current.user).toBeNull();
+    await act(async () => { late.resolve(alice); await lookup; });
+    expect(result.current.status).toBe('unauthenticated');
+    expect(result.current.user).toBeNull();
+    expect(result.current.pending).toBeNull();
   });
 
   test('production rejects even an injected demo adapter for restoration, login, registration and personas', async () => {

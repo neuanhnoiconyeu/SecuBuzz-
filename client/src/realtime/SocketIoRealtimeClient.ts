@@ -10,6 +10,7 @@ import { isIdentifier, parseConnectionError, parseErrorAcknowledgement, parseRea
 import { DeliveryConfirmations, type DeliveryConfirmationVerifier } from './deliveryConfirmations';
 
 export { PROPOSED_EVENT_NAMES } from './realtimeModel';
+// Real accounts import AuthenticatedSocketIoClient directly; this legacy interface stays read-only.
 
 type SocketListener = (...args: unknown[]) => void;
 export interface SocketManagerPort {

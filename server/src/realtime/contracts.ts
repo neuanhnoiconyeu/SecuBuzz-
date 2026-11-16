@@ -16,6 +16,7 @@
  * treats throws, timeouts and malformed results as failures, and never logs their messages.
  * See docs/realtime-server-integration.md for the full handoff.
  */
+import type { MessageEnvelopeV2 } from '../e2ee/envelope.ts';
 import type { ClientEventName } from './protocol.ts';
 
 /** The authenticated identity bound to one connection. Never taken from client input. */
@@ -81,6 +82,39 @@ export interface SessionResolver {
 }
 
 /**
+ * Transient secrets of one handshake. They exist only for the duration of {@link ConnectionBinder.bind}
+ * and are never stored, logged or echoed by the realtime server.
+ */
+export interface ConnectionCredentials {
+  /** Session cookie value (URL-decoded). */
+  readonly sessionToken: string;
+  /** Session-bound CSRF token from `handshake.auth.csrfToken`, or `null` when the client sent none. */
+  readonly csrfToken: string | null;
+  /** Direct peer address of the handshake (a trusted proxy when one is in front). For per-source rate budgets only. */
+  readonly remoteAddress: string;
+}
+
+/** Authority that belongs to exactly one authenticated connection. */
+export interface BoundConnection {
+  /**
+   * A store bound to this connection's actor and session proof. Every call is re-authorized by its
+   * owner (DATA re-checks session, CSRF proof, membership, friendship and blocks per operation), so
+   * a logout or revocation stops writes even while the socket is still open.
+   */
+  readonly store: MessageStore;
+}
+
+/**
+ * Database Team composition seam. After the session resolves, `bind` verifies the handshake CSRF
+ * proof for THAT session and returns per-connection authority, or `null` when the proof is missing
+ * or invalid. A global actor-bound store must never be installed: each connection gets its own.
+ * Throws and timeouts fail the handshake closed.
+ */
+export interface ConnectionBinder {
+  bind(actor: RealtimeActor, credentials: ConnectionCredentials): Promise<BoundConnection | null>;
+}
+
+/**
  * Authoritative membership and relationship decisions. Results are validated and bounded by the
  * server; returning more entries than the configured limits fails the connection closed.
  */
@@ -94,7 +128,31 @@ export interface RealtimeAuthorizer {
    * that have not hidden their presence). The server intersects the result with the request.
    */
   filterPresenceSubjects(viewer: RealtimeActor, subjectIds: readonly string[]): Promise<readonly string[]>;
+  /**
+   * Optional. Whether `actor` may receive events for `conversationId` RIGHT NOW (active session,
+   * membership, friendship, no block). Called immediately before every message delivery, so a
+   * cached room grant is never the only authority. Return `false` to withhold delivery.
+   */
+  canReceive?(actor: RealtimeActor, conversationId: string): Promise<boolean>;
+  /**
+   * Optional. The conversation's current key epoch as seen by `actor`: the summary, `null` when no
+   * epoch exists yet, or `undefined` when the actor may not read the conversation's key state.
+   * Used so `conversation:keys-changed` never reaches an account that DATA would refuse.
+   */
+  currentKeyEpoch?(actor: RealtimeActor, conversationId: string): Promise<KeyEpochSummary | null | undefined>;
+  /** Optional. The actor's stored presence preference, so "invisible" is honoured from the first event. */
+  presencePreference?(actor: RealtimeActor): Promise<PresencePreference | null>;
 }
+
+/** Public facts about the current conversation key epoch. No keys, wraps or signatures. */
+export interface KeyEpochSummary {
+  /** Canonical 16-byte base64url epoch identifier. */
+  readonly keyId: string;
+  readonly epoch: number;
+}
+
+/** Either wire envelope version. Realtime only transports it; it never decrypts or rewrites it. */
+export type AnyMessageEnvelope = MessageEnvelope | MessageEnvelopeV2;
 
 /** Version 1 AES-256-GCM metadata. Structure alone is not proof of multi-user E2EE. */
 export interface EncryptionEnvelope {
@@ -143,8 +201,8 @@ export type ReceiptOutcome =
 
 export interface StoreMessageRequest {
   /** Already validated; `envelope.senderId` equals the authenticated actor. */
-  readonly envelope: MessageEnvelope;
-  /** Lowercase hex SHA-256 of the canonical envelope (see `envelopeFingerprint`). */
+  readonly envelope: AnyMessageEnvelope;
+  /** Lowercase hex SHA-256 of the canonical envelope (`envelopeFingerprint` for v1, `envelopeV2Fingerprint` for v2). */
   readonly fingerprint: string;
   readonly receivedAt: Date;
 }

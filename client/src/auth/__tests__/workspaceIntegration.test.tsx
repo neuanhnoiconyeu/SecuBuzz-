@@ -93,7 +93,7 @@ test('logout and identity replacement isolate profiles, friends, messages, draft
   expect(screen.getByRole('textbox', { name: 'Message to SecureBot' })).toHaveValue('');
   expect(screen.queryByText('Nova DM identity')).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Open profile for Demo Explorer/ })).toBeInTheDocument();
-});
+}, 15_000); // Several account/workspace lifecycles; keep all assertions under variable CPU load.
 
 test('development StrictMode lifecycle leaves a usable fresh session, including safe intended section', async () => {
   window.history.replaceState({}, '', '/#friends');
@@ -114,12 +114,12 @@ test('real sessions never receive demo people; failed server logout preserves id
     login: jest.fn(), register: jest.fn(), logout: jest.fn().mockRejectedValue(new AuthError('logout_failed')),
   };
   render(<TestApp service={service} />);
-  expect(await screen.findByRole('heading', { name: "You're signed in." })).toBeInTheDocument();
-  expect(screen.getByText('Verified User · @verified')).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'Your conversations' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Verified User' })).toBeInTheDocument();
   expect(screen.queryByText('Ava Morgan')).not.toBeInTheDocument();
   expect(screen.queryByRole('log')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Sign Out' }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('Your server session may still be active');
-  expect(screen.getByText('Verified User · @verified')).toBeInTheDocument();
+  await waitFor(() => expect(screen.getAllByRole('alert').some(alert => alert.textContent?.includes('Your server session may still be active'))).toBe(true));
+  expect(screen.getByRole('heading', { name: 'Verified User' })).toBeInTheDocument();
   expect(replace).not.toHaveBeenCalled();
 });

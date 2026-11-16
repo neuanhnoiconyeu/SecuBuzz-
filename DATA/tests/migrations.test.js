@@ -6,13 +6,14 @@ const { spawnSync } = require('node:child_process');
 const { fixture,legacy,temporary,Database } = require('./support/database');
 const { migrate,loadMigrations } = require('../server/database/migrate');
 const { openDatabase } = require('../server/database/connection');
+const currentVersion=loadMigrations().length;
 
 test('fresh initialization applies ordered migrations, tracks checksums and repeats safely', t => {
     const { db } = fixture(t);
     const history = db.prepare('SELECT * FROM SchemaMigrations ORDER BY version').all();
-    assert.deepEqual(history.map(row => row.version),[1,2]);
+    assert.deepEqual(history.map(row => row.version),[1,2,3,4,5,6,7]);
     assert.ok(history.every(row => /^[a-f0-9]{64}$/.test(row.checksum)));
-    assert.deepEqual(migrate(db),{version:2,applied:[]});
+    assert.deepEqual(migrate(db),{version:currentVersion,applied:[]});
     assert.equal(db.prepare('PRAGMA integrity_check').get().integrity_check,'ok');
 });
 
@@ -100,7 +101,7 @@ test('failed migration rolls back the complete pending batch and history, includ
     db.exec("INSERT INTO Users(user_id,username,display_name) VALUES('a','a','A'),('b','b','B'); INSERT INTO Messages(message_id,sender_id,receiver_id,ciphertext,iv) VALUES('old','a','b','cipher','iv')");
     const directory = temporary(t);
     for (const migration of loadMigrations()) fs.writeFileSync(path.join(directory,migration.name),migration.sql);
-    fs.writeFileSync(path.join(directory,'0003-fail.sql'), 'CREATE TABLE MustRollback(id TEXT); INSERT INTO MissingTable VALUES(1);');
+    fs.writeFileSync(path.join(directory,`${String(currentVersion+1).padStart(4,'0')}-fail.sql`), 'CREATE TABLE MustRollback(id TEXT); INSERT INTO MissingTable VALUES(1);');
     assert.throws(() => migrate(db,{directory}), {code:'MIGRATION_FAILED'});
     assert.equal(db.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name IN ('MustRollback','SchemaMigrations','Conversations')").get().n,0);
     assert.equal(db.prepare('SELECT ciphertext FROM Messages').get().ciphertext,'cipher');
@@ -119,10 +120,10 @@ test('a failed later migration preserves previously committed versions and user 
     db.exec("INSERT INTO Users(user_id,username,display_name) VALUES('a','a','A')");
     const directory = temporary(t);
     for (const migration of loadMigrations()) fs.writeFileSync(path.join(directory,migration.name),migration.sql);
-    fs.writeFileSync(path.join(directory,'0003-fail.sql'),"CREATE TABLE MustRollback(id TEXT); UPDATE Users SET display_name='Changed'; INSERT INTO Absent VALUES(1);");
+    fs.writeFileSync(path.join(directory,`${String(currentVersion+1).padStart(4,'0')}-fail.sql`),"CREATE TABLE MustRollback(id TEXT); UPDATE Users SET display_name='Changed'; INSERT INTO Absent VALUES(1);");
     assert.throws(() => migrate(db,{directory}),{code:'MIGRATION_FAILED'});
     assert.equal(db.prepare('SELECT display_name FROM Users').get().display_name,'A');
-    assert.equal(db.prepare('SELECT count(*) AS n FROM SchemaMigrations').get().n,2);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM SchemaMigrations').get().n,currentVersion);
     assert.equal(db.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name='MustRollback'").get().n,0);
 });
 
@@ -130,7 +131,7 @@ test('migration checksums survive Windows/Unix line-ending changes', t => {
     const { db } = fixture(t);
     const directory=temporary(t);
     for (const migration of loadMigrations()) fs.writeFileSync(path.join(directory,migration.name),migration.sql.replace(/\r?\n/g,'\r\n'));
-    assert.deepEqual(migrate(db,{directory}),{version:2,applied:[]});
+    assert.deepEqual(migrate(db,{directory}),{version:currentVersion,applied:[]});
 });
 
 test('migration order, disabled foreign keys and nested transactions fail clearly', t => {

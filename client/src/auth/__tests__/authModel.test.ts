@@ -1,6 +1,6 @@
 import { AuthError, validateLogin, validateRegistration } from '../authModel';
 
-const registration = { username: 'demo.person', email: 'person@example.test', password: '  not-a-real-password  ', confirmPassword: '  not-a-real-password  ' };
+const registration = { username: 'sample.person', email: 'person@example.test', password: '  not-a-real-password  ', confirmPassword: '  not-a-real-password  ' };
 
 test('login validates required fields and trims only the identifier', () => {
   expect(validateLogin({ identifier: ' ', password: '' })).toEqual({ valid: false, errors: {
@@ -13,12 +13,12 @@ test('login validates required fields and trims only the identifier', () => {
 });
 
 test('registration normalizes public fields without trimming password or retaining confirmation', () => {
-  expect(validateRegistration({ ...registration, username: ' demo.person ', email: ' person@example.test ', displayName: ' Demo Person ' })).toEqual({
-    valid: true, value: { username: 'demo.person', email: 'person@example.test', displayName: 'Demo Person', password: registration.password },
+  expect(validateRegistration({ ...registration, username: ' Sample.Person ', email: ' Person@example.test ', displayName: ' Demo Person ' })).toEqual({
+    valid: true, value: { username: 'sample.person', email: 'person@example.test', displayName: 'Demo Person', password: registration.password },
   });
 });
 
-test.each(['ab', 'a'.repeat(31), 'not a name', 'name!'])('validates provisional username rules: %s', (username) => {
+test.each(['ab', 'a'.repeat(31), 'not a name', 'name!', '.name', 'demo.person', 'local-user'])('validates DB-2 username rules: %s', (username) => {
   const result = validateRegistration({ ...registration, username });
   expect(result.valid).toBe(false);
   if (!result.valid) expect(result.errors.username).toBeDefined();
@@ -39,15 +39,22 @@ test('registration reports missing fields and exact password confirmation mismat
   if (!mismatch.valid) expect(mismatch.errors.confirmPassword).toBe('Passwords do not match.');
 });
 
-test('does not invent password complexity or maximum length rules', () => {
-  expect(validateRegistration({ ...registration, password: ' ', confirmPassword: ' ' }).valid).toBe(true);
-  expect(validateRegistration({ ...registration, password: 'x'.repeat(10_000), confirmPassword: 'x'.repeat(10_000) }).valid).toBe(true);
+test('matches DB-2 Unicode length/byte bounds without adding composition or trimming rules', () => {
+  for (const password of ['x'.repeat(15), ' '.repeat(15), '😀'.repeat(15), 'x'.repeat(1024)]) {
+    expect(validateRegistration({ ...registration, password, confirmPassword: password }).valid).toBe(true);
+  }
+  for (const password of ['x'.repeat(14), '😀'.repeat(14), 'x'.repeat(1025), '😀'.repeat(257), '\ud800'.repeat(15), '\udc00'.repeat(15)]) {
+    expect(validateRegistration({ ...registration, password, confirmPassword: password }).valid).toBe(false);
+  }
+  expect(validateLogin({ identifier: 'person', password: 'x' }).valid).toBe(true);
+  expect(validateLogin({ identifier: 'person', password: 'x'.repeat(1025) }).valid).toBe(false);
 });
 
-test('reuses the profile display-name limit and excludes empty optional display name', () => {
+test('reuses the profile display-name limit and rejects explicitly empty optional display name', () => {
   expect(validateRegistration({ ...registration, displayName: 'x'.repeat(41) }).valid).toBe(false);
   expect(validateRegistration({ ...registration, displayName: 'line\nbreak' }).valid).toBe(false);
-  const valid = validateRegistration({ ...registration, displayName: ' ' });
+  expect(validateRegistration({ ...registration, displayName: ' ' }).valid).toBe(false);
+  const valid = validateRegistration(registration);
   if (valid.valid) expect(valid.value).not.toHaveProperty('displayName');
 });
 
