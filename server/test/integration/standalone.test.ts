@@ -74,6 +74,12 @@ describe('standalone entry point (node src/main.ts)', () => {
     const health = await fetch(`http://127.0.0.1:${port}/healthz`);
     assert.equal(health.status, 200);
     assert.deepEqual(await health.json(), { status: 'ok' });
+    const voice = await fetch(`http://127.0.0.1:${port}/api/voice/token`, {
+      method: 'POST', headers: { 'content-type': 'application/json', origin: 'http://localhost:3000' },
+      body: JSON.stringify({ roomId: 'lounge' }),
+    });
+    assert.equal(voice.status, 503);
+    assert.deepEqual(await voice.json(), { error: 'livekit_unavailable' });
     const missing = await fetch(`http://127.0.0.1:${port}/api/users`);
     await missing.arrayBuffer();
     assert.equal(missing.status, 404);

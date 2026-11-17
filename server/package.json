@@ -9,7 +9,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./ai": "./src/ai/index.ts",
-    "./calls": "./src/calls/index.ts"
+    "./calls": "./src/calls/index.ts",
+    "./livekit": "./src/livekit/index.ts"
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/main.ts",
@@ -18,6 +19,7 @@
     "test": "node --test --test-concurrency=1 --test-timeout=60000 \"test/**/*.test.ts\""
   },
   "dependencies": {
+    "livekit-server-sdk": "^2.19.3",
     "socket.io": "^4.8.4"
   },
   "devDependencies": {

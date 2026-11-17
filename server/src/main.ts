@@ -11,6 +11,7 @@ import type { AddressInfo } from 'node:net';
 import { loadStandaloneConfig, RealtimeConfigError } from './realtime/config.ts';
 import { createConsoleLogger } from './realtime/logger.ts';
 import { attachRealtimeServer } from './realtime/server.ts';
+import { createLiveKitHttpHandler, loadLiveKitConfig } from './livekit/index.ts';
 
 const logger = createConsoleLogger();
 
@@ -30,7 +31,14 @@ function handleHttp(request: IncomingMessage, response: ServerResponse): void {
 
 async function main(): Promise<void> {
   const { host, port, options } = loadStandaloneConfig(process.env);
-  const httpServer = createServer(handleHttp);
+  // The standalone host has no auth/CSRF/voice-policy adapters. Credentials alone cannot enable this route.
+  const voice = createLiveKitHttpHandler({ config: loadLiveKitConfig(process.env), allowedOrigins: options.allowedOrigins,
+    ...(options.sessionCookieName ? { sessionCookieName: options.sessionCookieName } : {}) });
+  const httpServer = createServer((request, response) => {
+    void voice(request, response).then((handled) => {
+      if (!handled) handleHttp(request, response);
+    });
+  });
   const realtime = attachRealtimeServer(httpServer, { ...options, logger });
   await new Promise<void>((resolve, reject) => {
     httpServer.once('error', reject);
