@@ -1,0 +1,1260 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SecuBuzz DB-4B encrypted message storage",
+    "version": "2.0.0",
+    "description": "DATA ciphertext persistence with the real Kiro verifier and persistent device/epoch directory. Default composition accepts only verified v2 sends; v1 is never verified. Missing protocol or directory infrastructure fails closed with 503. See e2ee-keys-openapi.json for the six key APIs. Test-only compositions are isolated and refused in production."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "sessionCookie": []
+    },
+    {
+      "localSessionCookie": []
+    }
+  ],
+  "paths": {
+    "/api/conversations/{id}/messages": {
+      "get": {
+        "operationId": "encryptedMessageHistory",
+        "summary": "Authorized snapshot-paginated ciphertext history",
+        "description": "Both active direct members may read after unfriend; either-direction blocking, archive, disabled accounts and left memberships deny access. Legacy messages remain hidden. Newest sequence first. Snapshot excludes later insertions; tombstones retain their original positions.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024,
+              "description": "Authorized DB-4A conversation ID. Version-1 message envelopes additionally require it to fit Kiro's 256-character wire bound."
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string",
+              "maxLength": 1024
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bounded encrypted messages and tombstones",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/History"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "persistEncryptedMessage",
+        "summary": "Persist one encrypted envelope through the shared write service",
+        "description": "Strict envelope parsing by version. The real verifier checks the authenticated actor and actual recipient against persisted active devices, signatures, exact coverage and the current epoch. The same key state is rechecked on the write connection under BEGIN IMMEDIATE before duplicate lookup or insert. V1/stale/revoked/mismatched state is 403 RECIPIENT_KEYS_UNVERIFIED. Identical currently valid retries return original metadata; changed-content reuse is 409. Reconcile history after uncertain delivery before re-encrypting: an already-stored ID cannot be reused with changed ciphertext/keyId.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          },
+          {
+            "localSessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024,
+              "description": "Authorized DB-4A conversation ID. Version-1 message envelopes additionally require it to fit Kiro's 256-character wire bound."
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Browser-managed origin, exactly allowlisted."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Envelope"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Identical retry with original storage ID/time, possibly now tombstoned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreResult"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "First durable creation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/messages/{id}": {
+      "patch": {
+        "operationId": "editMessageDeferred",
+        "summary": "Deferred encrypted editing",
+        "description": "After current sender/membership/session/proof checks, returns 503 FEATURE_UNAVAILABLE. No encrypted edit/revision protocol is implemented; immutable encrypted AAD is not rewritten.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          },
+          {
+            "localSessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Server-generated storageId from a Message response; not envelope.id."
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Browser-managed origin, exactly allowlisted."
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "tombstoneMessage",
+        "summary": "Idempotent sender-only global tombstone",
+        "description": "Requires current friendship and no block. Does not physically erase ciphertext or remove records from devices/backups. First deletion sets revision=1 and deletedAt; repeated deletion preserves metadata. Per-user hiding and unread counts are not implemented.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          },
+          {
+            "localSessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Server-generated storageId from a Message response; not envelope.id."
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Browser-managed origin, exactly allowlisted."
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Empty"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current tombstone; encrypted payload omitted from public history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/messages/{id}/read": {
+      "post": {
+        "operationId": "markMessageRead",
+        "summary": "Record the eligible authenticated recipient's first read observation",
+        "description": "No body or {}. Cannot select observer/status/time. Requires current interaction permission. First observation and recording times are durable; identical retries return them. New observations on tombstones are refused; an existing observation can be returned idempotently. This endpoint does not manufacture delivery acknowledgements.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          },
+          {
+            "localSessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Server-generated storageId from a Message response; not envelope.id."
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Browser-managed origin, exactly allowlisted."
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Empty"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created or duplicate eligible read receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Fixed safe code and allowlisted fields; never includes payloads, keys or diagnostics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-secubuzz_session"
+      },
+      "localSessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "secubuzz_session",
+        "description": "Explicit loopback development/test only."
+      },
+      "csrf": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token",
+        "description": "DB-2 session-bound proof from fresh /api/auth/csrf bootstrap."
+      }
+    },
+    "schemas": {
+      "Empty": {
+        "type": "object",
+        "additionalProperties": false,
+        "maxProperties": 0
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "fields"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALIDATION_ERROR",
+              "UNAUTHENTICATED",
+              "SESSION_EXPIRED",
+              "FORBIDDEN",
+              "CSRF_INVALID",
+              "NOT_FOUND",
+              "CONFLICT",
+              "IDEMPOTENCY_CONFLICT",
+              "RECIPIENT_KEYS_UNAVAILABLE",
+              "RECIPIENT_KEYS_UNVERIFIED",
+              "FEATURE_UNAVAILABLE",
+              "SERVICE_UNAVAILABLE",
+              "INTERNAL_ERROR",
+              "PAYLOAD_TOO_LARGE",
+              "UNSUPPORTED_MEDIA_TYPE",
+              "RATE_LIMITED"
+            ]
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Encryption": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/EncryptionV1"
+          },
+          {
+            "$ref": "#/components/schemas/EncryptionV2"
+          }
+        ],
+        "description": "History preserves authorized historical v1. Genuine verified new sending requires v2 and its current keyId."
+      },
+      "Envelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "conversationId",
+          "senderId",
+          "senderName",
+          "timestamp",
+          "type",
+          "encryption"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Original client idempotency ID / encrypted AAD field; no whitespace, controls or unpaired surrogates."
+          },
+          "conversationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Original client idempotency ID / encrypted AAD field; no whitespace, controls or unpaired surrogates."
+          },
+          "senderId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Original client idempotency ID / encrypted AAD field; no whitespace, controls or unpaired surrogates."
+          },
+          "senderName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "type": {
+            "const": "text"
+          },
+          "encryption": {
+            "$ref": "#/components/schemas/Encryption"
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "storageId",
+          "id",
+          "conversationId",
+          "senderId",
+          "senderName",
+          "timestamp",
+          "type",
+          "encryption",
+          "storedAt",
+          "updatedAt",
+          "sequence",
+          "revision",
+          "state",
+          "deletedAt"
+        ],
+        "properties": {
+          "storageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Original client idempotency ID / encrypted AAD field; no whitespace, controls or unpaired surrogates."
+          },
+          "conversationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Original client idempotency ID / encrypted AAD field; no whitespace, controls or unpaired surrogates."
+          },
+          "senderId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Original client idempotency ID / encrypted AAD field; no whitespace, controls or unpaired surrogates."
+          },
+          "senderName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "type": {
+            "const": "text"
+          },
+          "encryption": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Encryption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "storedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "deleted"
+            ]
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "description": "Active records carry the unchanged wire envelope plus authoritative metadata. Tombstones have encryption=null, state=deleted and revision=1. Original encrypted bytes remain in the existing database."
+      },
+      "StoreResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "message"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "created",
+              "duplicate"
+            ]
+          },
+          "message": {
+            "$ref": "#/components/schemas/Message"
+          }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/Message"
+          }
+        }
+      },
+      "History": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024
+          }
+        }
+      },
+      "ReceiptResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "receipt"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "created",
+              "duplicate"
+            ]
+          },
+          "receipt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "conversationId",
+              "storageId",
+              "messageId",
+              "userId",
+              "status",
+              "observedAt",
+              "recordedAt"
+            ],
+            "properties": {
+              "conversationId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "description": "Original client idempotency ID / encrypted AAD field; no whitespace, controls or unpaired surrogates."
+              },
+              "storageId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "messageId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "description": "Original client idempotency ID / encrypted AAD field; no whitespace, controls or unpaired surrogates."
+              },
+              "userId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "description": "Original client idempotency ID / encrypted AAD field; no whitespace, controls or unpaired surrogates."
+              },
+              "status": {
+                "const": "read"
+              },
+              "observedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "recordedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "EncryptionV1": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "algorithm",
+          "encoding",
+          "iv",
+          "ciphertext"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "algorithm": {
+            "const": "AES-256-GCM"
+          },
+          "encoding": {
+            "const": "base64"
+          },
+          "iv": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 16,
+            "description": "Canonical padded base64 of exactly 12 bytes."
+          },
+          "ciphertext": {
+            "type": "string",
+            "minLength": 24,
+            "maxLength": 65536,
+            "description": "Canonical padded base64 of more than 16 decoded bytes, including the 128-bit GCM tag. No separate tag/key/plaintext fields."
+          }
+        }
+      },
+      "EncryptionV2": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "algorithm",
+          "encoding",
+          "keyId",
+          "iv",
+          "ciphertext"
+        ],
+        "properties": {
+          "version": {
+            "const": 2
+          },
+          "algorithm": {
+            "const": "AES-256-GCM"
+          },
+          "encoding": {
+            "const": "base64"
+          },
+          "iv": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 16,
+            "description": "Canonical padded base64 of exactly 12 bytes."
+          },
+          "ciphertext": {
+            "type": "string",
+            "minLength": 24,
+            "maxLength": 65536,
+            "description": "Canonical padded base64 of more than 16 decoded bytes including the attached 128-bit GCM tag."
+          },
+          "keyId": {
+            "type": "string",
+            "minLength": 22,
+            "maxLength": 22,
+            "pattern": "^[A-Za-z0-9_-]{22}$",
+            "description": "Canonical unpadded base64url of the current signed epoch ID, authenticated in v2 AAD."
+          }
+        }
+      }
+    }
+  }
+}

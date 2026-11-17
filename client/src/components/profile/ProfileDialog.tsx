@@ -32,6 +32,7 @@ export interface ProfileDialogProps {
   onLogout?: () => Promise<boolean>;
   isLoggingOut?: boolean;
   logoutError?: string | null;
+  mode?: 'remote' | 'local-demo';
 }
 
 const emptyDraft: EditableProfileFields = {
@@ -60,7 +61,9 @@ export function ProfileDialog({
   onLogout,
   isLoggingOut = false,
   logoutError = null,
+  mode,
 }: ProfileDialogProps) {
+  const remote = mode === 'remote' || profile?.isDemo === false;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<EditableProfileFields>(emptyDraft);
   const [errors, setErrors] = useState<ProfileFieldErrors>({});
@@ -162,7 +165,7 @@ export function ProfileDialog({
       open={open}
       onOpenChange={requestOpenChange}
       title="Your profile"
-      description="Your local demo identity and preferences."
+      description={remote ? 'Your account profile and saved preferences.' : 'Your local demo identity and preferences.'}
       closeLabel="Close profile"
       dismissible={!busy}
       className="profile-dialog"
@@ -191,9 +194,9 @@ export function ProfileDialog({
     >
       {!profile ? (
         <div className="profile-loading-state">
-          {isLoading ? <p role="status">Loading your local demo profile…</p> : (
+          {isLoading ? <p role="status">{remote ? 'Loading your profile…' : 'Loading your local demo profile…'}</p> : (
             <>
-              <p role="alert">{error ?? 'Your demo profile could not be loaded.'}</p>
+              <p role="alert">{error ?? (remote ? 'Your profile could not be loaded.' : 'Your demo profile could not be loaded.')}</p>
               <Button onClick={onRetry}>Try again</Button>
             </>
           )}
@@ -207,7 +210,7 @@ export function ProfileDialog({
             <ProfileAvatar displayName={draft.displayName || 'Your profile'} avatar={draft.avatar} />
             <div className="profile-edit-heading-copy">
               <h3 className="display-heading display-heading--section">Profile settings</h3>
-              <p>Your user ID and demo username stay the same.</p>
+              <p>{remote ? 'Your user ID and username stay the same.' : 'Your user ID and demo username stay the same.'}</p>
             </div>
           </div>
           <TextInput
@@ -235,7 +238,7 @@ export function ProfileDialog({
 
           <fieldset className="profile-avatar-field" disabled={busy} aria-describedby={errors.avatar ? 'profile-avatar-error' : 'profile-avatar-hint'}>
             <legend>Avatar</legend>
-            <p className="ui-field-message" id="profile-avatar-hint">Choose a look for your local profile.</p>
+            <p className="ui-field-message" id="profile-avatar-hint">{remote ? 'Choose a built-in avatar for your account.' : 'Choose a look for your local profile.'}</p>
             <div className="profile-avatar-options">
               {PROFILE_AVATARS.map((preset, index) => (
                 <label className={`profile-avatar-option ${draft.avatar === preset.id ? 'is-selected' : ''}`} key={preset.id}>
@@ -276,11 +279,11 @@ export function ProfileDialog({
             </select>
             {errors.presencePreference
               ? <p className="profile-field-error" id="profile-presence-error">{errors.presencePreference}</p>
-              : <p className="ui-field-message" id="profile-presence-hint">Local preference only. It is not broadcast to other users.</p>}
+              : <p className="ui-field-message" id="profile-presence-hint">{remote ? 'Saved preference only. Live presence is not available.' : 'Local preference only. It is not broadcast to other users.'}</p>}
           </div>
 
           {saveError && <p className="profile-save-error" role="alert">{error ?? saveError}</p>}
-          <p className="profile-local-note">Changes stay in this page and reset on refresh.</p>
+          <p className="profile-local-note">{remote ? 'Changes are saved to your account after server confirmation.' : 'Changes stay in this page and reset on refresh.'}</p>
         </form>
       ) : (
         <div className="profile-view">
@@ -290,7 +293,7 @@ export function ProfileDialog({
             <div className="profile-summary-identity">
               <h3 className="display-heading display-heading--section">{profile.displayName}</h3>
               <p className="profile-username">@{profile.username}</p>
-              <Badge status="info">Local demo identity</Badge>
+              <Badge status="info">{remote ? 'Registered account' : 'Local demo identity'}</Badge>
             </div>
           </div>
           <div className="profile-status">
@@ -298,15 +301,15 @@ export function ProfileDialog({
             <p className="profile-status-message">{profile.statusMessage || 'No status message yet.'}</p>
           </div>
           <dl className="profile-details">
-            <div><dt>Demo username</dt><dd>@{profile.username}</dd></div>
+            <div><dt>{remote ? 'Username' : 'Demo username'}</dt><dd>@{profile.username}</dd></div>
             <div><dt>User ID</dt><dd><code>{profile.id}</code></dd></div>
             <div><dt>Presence preference</dt><dd className="profile-presence">
               <span className="profile-presence-value" data-presence={profile.presencePreference}>
                 <span className="profile-presence-dot" aria-hidden="true" />{presenceLabel}
-              </span> <span>(local)</span>
+              </span> <span>{remote ? '(saved preference; not live presence)' : '(local)'}</span>
             </dd></div>
           </dl>
-          <p className="profile-local-note">This is a demo identity, not a registered account. Profile changes reset on refresh. Your presence preference is not broadcast.</p>
+          <p className="profile-local-note">{remote ? 'Your profile is saved to your account. Your status message and presence preference are private. Live presence is not available.' : 'This is a demo identity, not a registered account. Profile changes reset on refresh. Your presence preference is not broadcast.'}</p>
           <AppearanceSelector />
         </div>
       )}

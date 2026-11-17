@@ -13,10 +13,12 @@ export interface MainNavigationProps {
   profileLoading?: boolean;
   onOpenProfile?: () => void;
   pendingRequestCount?: number;
+  mode?: 'remote' | 'local-demo';
 }
 
-export function MainNavigation({ activeSection, onSelect, profile, profileLoading = false, onOpenProfile, pendingRequestCount = 0 }: MainNavigationProps) {
+export function MainNavigation({ activeSection, onSelect, profile, profileLoading = false, onOpenProfile, pendingRequestCount = 0, mode }: MainNavigationProps) {
   const presenceLabel = PRESENCE_OPTIONS.find((option) => option.value === profile?.presencePreference)?.label;
+  const remote = mode === 'remote' || profile?.isDemo === false;
   return (
     <nav className="messenger-navigation" aria-label="Main navigation">
       <a className="messenger-navigation-brand" href="#chats" aria-label="Yahoo Security Messenger home" onClick={() => onSelect('chats')}>
@@ -62,23 +64,23 @@ export function MainNavigation({ activeSection, onSelect, profile, profileLoadin
           <button
             type="button"
             className="navigation-profile-button"
-            aria-label={profile ? `Open profile for ${profile.displayName}; ${presenceLabel} local preference` : 'Open your profile'}
+            aria-label={profile ? `Open profile for ${profile.displayName}; ${presenceLabel} ${remote ? 'saved' : 'local'} preference` : 'Open your profile'}
             aria-haspopup="dialog"
             aria-busy={profileLoading}
-            title={profile ? `${profile.displayName} — ${presenceLabel} (local preference)${profile.statusMessage ? ` · ${profile.statusMessage}` : ''}` : 'Your local demo profile'}
+            title={remote ? 'Your account profile and saved preferences' : profile ? `${profile.displayName} — ${presenceLabel} (local preference)${profile.statusMessage ? ` · ${profile.statusMessage}` : ''}` : 'Your local demo profile'}
             onClick={onOpenProfile}
           >
             <span className="navigation-profile-avatar">
               {profile ? <ProfileAvatar displayName={profile.displayName} avatar={profile.avatar} /> : <UserRound size={24} aria-hidden="true" />}
-              {profile && <span className={`navigation-profile-dot navigation-profile-dot--${profile.presencePreference}`} aria-hidden="true" />}
+              {profile && !remote && <span className={`navigation-profile-dot navigation-profile-dot--${profile.presencePreference}`} aria-hidden="true" />}
             </span>
             <span className="navigation-profile-copy">
               <span className="navigation-profile-name">{profile?.displayName ?? 'Profile'}</span>
               <span className="navigation-profile-presence">
-                {profileLoading ? 'Loading' : presenceLabel ?? 'Open profile'}
-                <span className="navigation-profile-local-inline"> · local</span>
+                {profileLoading ? 'Loading' : remote ? 'Account profile' : presenceLabel ?? 'Open profile'}
+                {!remote && <span className="navigation-profile-local-inline"> · local</span>}
               </span>
-              <span className="navigation-profile-local">Local preference</span>
+              <span className="navigation-profile-local">{remote ? 'Presence unavailable' : 'Local preference'}</span>
             </span>
           </button>
         </div>

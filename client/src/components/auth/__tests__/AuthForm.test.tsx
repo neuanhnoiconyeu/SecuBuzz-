@@ -43,6 +43,16 @@ function registrationFields(password = 'sample password', confirmation = passwor
 }
 
 describe('AuthForm', () => {
+  test.each(['rate_limited', 'csrf_invalid', 'network', 'service_unavailable', 'forbidden'] as const)('announces safe %s feedback without navigating', async code => {
+    const auth = createAuth();
+    auth.login = jest.fn(async () => { auth.error = new AuthError(code); return false; });
+    mockUseAuth.mockImplementation(() => auth);
+    render(<AuthForm variant="login" />);
+    loginFields();
+    fireEvent.submit(screen.getByRole('form', {name:'Sign in'}));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(new AuthError(code).message));
+    expect(replace).not.toHaveBeenCalled();
+  });
   test('validates required login fields and focuses the first invalid field', () => {
     const auth = createAuth();
     mockUseAuth.mockReturnValue(auth);

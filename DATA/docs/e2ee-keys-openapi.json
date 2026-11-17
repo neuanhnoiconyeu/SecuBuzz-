@@ -1,0 +1,1082 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SecuBuzz DATA recipient-key directory",
+    "version": "1.0.0",
+    "description": "Exact six §9.2 Kiro handoff operations. Authenticated public directory, signed epochs and opaque HPKE wraps. 8192 request bytes for device mutations, 16384 for epochs. Key mutations share 30/min/actor and 120/min/direct source; reads 120/min/actor. No private/raw conversation keys or plaintext accepted. This is DATA integration, not full browser E2EE readiness."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "sessionCookie": []
+    },
+    {
+      "localSessionCookie": []
+    }
+  ],
+  "paths": {
+    "/api/keys/devices": {
+      "get": {
+        "operationId": "listOwnDeviceKeys",
+        "summary": "Own devices, all statuses, newest first, maximum 50",
+        "responses": {
+          "200": {
+            "description": "Public records only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "maxItems": 50,
+                      "items": {
+                        "$ref": "#/components/schemas/Device"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      },
+      "post": {
+        "operationId": "registerDeviceKey",
+        "summary": "Session-bound signed device registration or rotation",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Actual allowlisted browser origin; never fabricate."
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Registration"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Public records only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "device"
+                  ],
+                  "properties": {
+                    "device": {
+                      "$ref": "#/components/schemas/Device"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Public records only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "device"
+                  ],
+                  "properties": {
+                    "device": {
+                      "$ref": "#/components/schemas/Device"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/keys/devices/{deviceId}/revoke": {
+      "post": {
+        "operationId": "revokeDevice",
+        "summary": "Owner permanently revokes every version of a device",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 22,
+              "maxLength": 22,
+              "pattern": "^[A-Za-z0-9_-]+$",
+              "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Actual allowlisted browser origin; never fabricate."
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Empty"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Public records only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "outcome"
+                  ],
+                  "properties": {
+                    "outcome": {
+                      "enum": [
+                        "revoked",
+                        "unchanged"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/conversations/{id}/keys": {
+      "get": {
+        "operationId": "getConversationKeys",
+        "summary": "Authorized active public devices and latest 20 signed epochs",
+        "description": "DB-4A read policy. Unfriend retains history; blocks, archive, inactive membership/account and outsiders return 404. Full signed wrap list is returned; each recipient can open only its own ciphertext. Each page reapplies authorization. Earlier epochs are selected by an actor/conversation-bound cursor; concurrent newer epochs do not shift older pages.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 512
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public records only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeyState"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/conversations/{id}/keys/epochs/{keyId}": {
+      "get": {
+        "operationId": "getKeyEpoch",
+        "summary": "Authorized historical signed epoch and complete ordered wraps",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "keyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 22,
+              "maxLength": 22,
+              "pattern": "^[A-Za-z0-9_-]+$",
+              "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public records only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "epoch"
+                  ],
+                  "properties": {
+                    "epoch": {
+                      "$ref": "#/components/schemas/Epoch"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/conversations/{id}/keys/epochs": {
+      "post": {
+        "operationId": "publishKeyEpoch",
+        "summary": "Publish the next signed epoch for the exact active device set",
+        "description": "Current friendship required. BEGIN IMMEDIATE protects read-plan-insert. Identical retry returns the original epoch/publishedAt, including an older epoch; it does not make stale keys sendable. Malformed statements are 400; changed ordering/coverage/creator/key reuse are 409.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Actual allowlisted browser origin; never fabricate."
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Publication"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Public records only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "epoch"
+                  ],
+                  "properties": {
+                    "epoch": {
+                      "$ref": "#/components/schemas/Epoch"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Public records only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "epoch"
+                  ],
+                  "properties": {
+                    "epoch": {
+                      "$ref": "#/components/schemas/Epoch"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-secubuzz_session"
+      },
+      "localSessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "secubuzz_session",
+        "description": "Explicit localhost HTTP development only."
+      }
+    },
+    "schemas": {
+      "Empty": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "fields"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Registration": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "deviceId",
+          "keyVersion",
+          "createdAt",
+          "agreementPublicKey",
+          "signingPublicKey",
+          "signature"
+        ],
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "minLength": 22,
+            "maxLength": 22,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "keyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+          },
+          "agreementPublicKey": {
+            "type": "string",
+            "minLength": 87,
+            "maxLength": 87,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "signingPublicKey": {
+            "type": "string",
+            "minLength": 87,
+            "maxLength": 87,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "signature": {
+            "type": "string",
+            "minLength": 86,
+            "maxLength": 86,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          }
+        }
+      },
+      "Device": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "deviceId",
+          "keyVersion",
+          "createdAt",
+          "agreementPublicKey",
+          "signingPublicKey",
+          "signature",
+          "deviceKeyId",
+          "userId",
+          "status",
+          "registeredAt"
+        ],
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "minLength": 22,
+            "maxLength": 22,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "keyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+          },
+          "agreementPublicKey": {
+            "type": "string",
+            "minLength": 87,
+            "maxLength": 87,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "signingPublicKey": {
+            "type": "string",
+            "minLength": 87,
+            "maxLength": 87,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "signature": {
+            "type": "string",
+            "minLength": 86,
+            "maxLength": 86,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "deviceKeyId": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "status": {
+            "enum": [
+              "active",
+              "superseded",
+              "revoked"
+            ]
+          },
+          "registeredAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+          }
+        }
+      },
+      "Wrap": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recipientUserId",
+          "recipientDeviceKeyId",
+          "enc",
+          "ciphertext"
+        ],
+        "properties": {
+          "recipientUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "recipientDeviceKeyId": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "enc": {
+            "type": "string",
+            "minLength": 87,
+            "maxLength": 87,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "ciphertext": {
+            "type": "string",
+            "minLength": 64,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          }
+        }
+      },
+      "Publication": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "keyId",
+          "epoch",
+          "previousKeyId",
+          "creatorDeviceKeyId",
+          "createdAt",
+          "wraps",
+          "signature"
+        ],
+        "properties": {
+          "keyId": {
+            "type": "string",
+            "minLength": 22,
+            "maxLength": 22,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000000
+          },
+          "previousKeyId": {
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 22,
+                "maxLength": 22,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "creatorDeviceKeyId": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+          },
+          "wraps": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/Wrap"
+            },
+            "description": "Strictly ordered by recipientUserId then recipientDeviceKeyId; exactly all active devices of both participants."
+          },
+          "signature": {
+            "type": "string",
+            "minLength": 86,
+            "maxLength": 86,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          }
+        }
+      },
+      "Epoch": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "keyId",
+          "epoch",
+          "previousKeyId",
+          "creatorDeviceKeyId",
+          "createdAt",
+          "wraps",
+          "signature",
+          "conversationId",
+          "creatorUserId",
+          "publishedAt"
+        ],
+        "properties": {
+          "keyId": {
+            "type": "string",
+            "minLength": 22,
+            "maxLength": 22,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000000
+          },
+          "previousKeyId": {
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 22,
+                "maxLength": 22,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "creatorDeviceKeyId": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+          },
+          "wraps": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/Wrap"
+            },
+            "description": "Strictly ordered by recipientUserId then recipientDeviceKeyId; exactly all active devices of both participants."
+          },
+          "signature": {
+            "type": "string",
+            "minLength": 86,
+            "maxLength": 86,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+          },
+          "conversationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "creatorUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+          }
+        }
+      },
+      "KeyState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "conversationId",
+          "participantIds",
+          "devices",
+          "currentEpoch",
+          "epochs",
+          "cursor"
+        ],
+        "properties": {
+          "conversationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "participantIds": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "devices": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/Device"
+            }
+          },
+          "currentEpoch": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "keyId",
+                  "epoch"
+                ],
+                "properties": {
+                  "keyId": {
+                    "type": "string",
+                    "minLength": 22,
+                    "maxLength": 22,
+                    "pattern": "^[A-Za-z0-9_-]+$",
+                    "description": "Canonical unpadded base64url; decoded length and public points/signatures are validated by Kiro's protocol."
+                  },
+                  "epoch": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000000
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "epochs": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/Epoch"
+            }
+          },
+          "cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 512
+          }
+        }
+      }
+    },
+    "responses": {
+      "Error400": {
+        "description": "VALIDATION_ERROR or KEY_PROOF_INVALID",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error401": {
+        "description": "UNAUTHENTICATED or SESSION_EXPIRED",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error403": {
+        "description": "CSRF_INVALID or FORBIDDEN",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error404": {
+        "description": "NOT_FOUND",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error409": {
+        "description": "KEY_CONFLICT, DEVICE_LIMIT, RECIPIENT_KEYS_CHANGED or RECIPIENT_KEYS_UNAVAILABLE (participant lacks a device)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error413": {
+        "description": "PAYLOAD_TOO_LARGE",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error415": {
+        "description": "UNSUPPORTED_MEDIA_TYPE",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error429": {
+        "description": "RATE_LIMITED",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        },
+        "headers": {
+          "Retry-After": {
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Seconds to wait"
+          }
+        }
+      },
+      "Error500": {
+        "description": "INTERNAL_ERROR",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error503": {
+        "description": "RECIPIENT_KEYS_UNAVAILABLE (missing protocol) or SERVICE_UNAVAILABLE (database busy)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}

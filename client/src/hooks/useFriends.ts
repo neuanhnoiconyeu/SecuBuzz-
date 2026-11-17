@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FriendsServiceError, type FriendsSnapshot, type UserSearchResult } from '@/friends/friendsModel';
 import type { FriendsService } from '@/friends/friendsService';
+import { safeApiMessage } from '@/api/sessionApi';
 
 export type FriendAction = {
   type: 'send' | 'accept' | 'decline' | 'cancel' | 'remove' | 'block' | 'unblock';
@@ -23,6 +24,9 @@ export interface FriendsController {
   setQuery(query: string): void;
   refresh(): Promise<void>;
   perform(action: FriendAction): Promise<boolean>;
+  searchHasMore?: boolean;
+  searchLoadingMore?: boolean;
+  loadMoreSearch?(): Promise<void>;
 }
 
 const emptySnapshot = (): FriendsSnapshot => ({
@@ -51,6 +55,10 @@ export function useFriends(service: FriendsService): FriendsController {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchRevision, setSearchRevision] = useState(0);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [searchLoadingMore, setSearchLoadingMore] = useState(false);
+  const searchAbort = useRef<AbortController | null>(null);
+  const moreLock = useRef(false);
   const mounted = useRef(false);
   const currentService = useRef(service);
   currentService.current = service;
@@ -72,10 +80,10 @@ export function useFriends(service: FriendsService): FriendsController {
       setIsStale(false);
       setSearchRevision((value) => value + 1);
       return true;
-    } catch {
+    } catch (failure) {
       if (current()) {
         setIsStale(true);
-        setError('Friends could not be refreshed. Try again before making changes.');
+        setError(safeApiMessage(failure, 'Friends could not be refreshed. Try again before making changes.'));
       }
       return false;
     } finally {
@@ -107,15 +115,20 @@ export function useFriends(service: FriendsService): FriendsController {
   }, [load, service]);
 
   const setQuery = useCallback((value: string) => {
+    searchAbort.current?.abort();
     searchSequence.current += 1;
     setQueryState(value);
     setSearchResults([]);
     setSearchError(null);
     setHasSearched(false);
     setSearchLoading(Boolean(value.trim()));
+    setNextCursor(null);
   }, []);
 
   useEffect(() => {
+    searchAbort.current?.abort();
+    const controller = new AbortController(); searchAbort.current = controller;
+    setNextCursor(null); setSearchLoadingMore(false); moreLock.current = false;
     const request = ++searchSequence.current;
     const epoch = generation.current;
     const current = () => mounted.current && currentService.current === service &&
@@ -124,15 +137,21 @@ export function useFriends(service: FriendsService): FriendsController {
     setSearchError(null);
     setHasSearched(false);
     if (!query.trim() || isPending) { setSearchLoading(false); return; }
+    if (service.mode === 'remote' && !/^[a-z0-9._-]{2,64}$/i.test(query.trim())) {
+      setSearchLoading(false);
+      setSearchError('Enter a username prefix of 2–64 letters, digits, dots, underscores or hyphens.');
+      return;
+    }
     setSearchLoading(true);
     const timer = window.setTimeout(() => {
       void (async () => {
         try {
-          const results = await service.searchUsers(query);
-          if (current()) { setSearchResults(results); setHasSearched(true); }
-        } catch {
+          const page = service.searchPage ? await service.searchPage(query, null, controller.signal) :
+            { items: await service.searchUsers(query), nextCursor: null };
+          if (current()) { setSearchResults(page.items); setNextCursor(page.nextCursor); setHasSearched(true); }
+        } catch (failure) {
           if (current()) {
-            setSearchError('Search is unavailable. Try again.');
+            setSearchError(safeApiMessage(failure, 'Search is unavailable. Try again.'));
             setHasSearched(true);
           }
         } finally {
@@ -140,16 +159,33 @@ export function useFriends(service: FriendsService): FriendsController {
         }
       })();
     }, service.mode === 'remote' ? 300 : 0);
-    return () => { window.clearTimeout(timer); searchSequence.current += 1; };
+    return () => { controller.abort(); window.clearTimeout(timer); searchSequence.current += 1; };
   }, [isPending, query, searchRevision, service]);
 
   const refresh = useCallback(async () => { await load(); }, [load]);
+  const loadMoreSearch = useCallback(async () => {
+    if (!service.searchPage || !nextCursor || moreLock.current || isPending || searchLoading) return;
+    moreLock.current = true; setSearchLoadingMore(true); setSearchError(null);
+    const sequence = searchSequence.current; const epoch = generation.current;
+    const current = () => mounted.current && currentService.current === service && sequence === searchSequence.current && epoch === generation.current;
+    try {
+      const page = await service.searchPage(query, nextCursor, searchAbort.current?.signal);
+      if (current()) {
+        if (page.nextCursor === nextCursor) throw new Error('Repeated cursor');
+        setSearchResults(previous => [...previous, ...page.items.filter(item => !previous.some(user => user.id === item.id))]);
+        setNextCursor(page.nextCursor);
+      }
+    } catch (failure) { if (current()) setSearchError(safeApiMessage(failure, 'More results could not be loaded. Try again.')); }
+    finally { if (current()) { moreLock.current = false; setSearchLoadingMore(false); } }
+  }, [isPending, nextCursor, query, searchLoading, service]);
 
   const perform = useCallback(async (action: FriendAction): Promise<boolean> => {
     if (!mounted.current || mutationLock.current || isStale || isLoading) return false;
     const epoch = generation.current;
     const current = () => mounted.current && currentService.current === service && epoch === generation.current;
     mutationLock.current = true;
+    loadSequence.current += 1;
+    searchAbort.current?.abort();
     searchSequence.current += 1;
     setSearchResults([]);
     setIsPending(true);
@@ -173,8 +209,8 @@ export function useFriends(service: FriendsService): FriendsController {
       if (!current()) return false;
       // Reconcile rejected/stale requests with the authoritative adapter before enabling another action.
       await load();
-      if (current()) setError(failure instanceof FriendsServiceError ? failure.message :
-        'The action could not be confirmed. Refresh Friends before trying again.');
+      if (current()) setError(failure instanceof FriendsServiceError ? failure.message : safeApiMessage(failure,
+        'The action could not be confirmed. Refresh Friends before trying again.'));
       return false;
     } finally {
       if (current()) { mutationLock.current = false; setIsPending(false); }
@@ -182,5 +218,6 @@ export function useFriends(service: FriendsService): FriendsController {
   }, [isLoading, isStale, load, service]);
 
   return { snapshot, isLoading, isStale, error, notice, isPending, query, searchResults,
-    searchLoading, searchError, hasSearched, mode: service.mode, setQuery, refresh, perform };
+    searchLoading, searchError, hasSearched, mode: service.mode, setQuery, refresh, perform,
+    searchHasMore: Boolean(nextCursor), searchLoadingMore, loadMoreSearch };
 }

@@ -65,7 +65,7 @@ describe('useCurrentProfile', () => {
     jest.spyOn(service, 'getCurrentProfile').mockRejectedValueOnce(new Error('internal account details'));
     const { result } = renderHook(() => useCurrentProfile(service));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.error).toBe('Your local profile could not be loaded. Try again.');
+    expect(result.current.error).toBe('Your profile could not be loaded. Try again.');
     await act(async () => { await result.current.loadProfile(); });
     expect(result.current.profile).toEqual(createDemoProfile());
     expect(result.current.error).toBeNull();

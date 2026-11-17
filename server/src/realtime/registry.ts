@@ -1,6 +1,6 @@
 import type { DefaultEventsMap, Socket } from 'socket.io';
 import type { RealtimeRates } from './config.ts';
-import type { RealtimeActor } from './contracts.ts';
+import type { MessageStore, PresencePreference, RealtimeActor } from './contracts.ts';
 import { TokenBucket } from './rateLimiter.ts';
 
 /** Result of a successful handshake, stored on `socket.data` between middleware and `connection`. */
@@ -11,6 +11,10 @@ export interface HandshakeGrant {
   readonly blockedUserIds: readonly string[];
   /** Access sequence taken just before the authorizer was queried (orders snapshots and revocations). */
   readonly loadedSequence: number;
+  /** Per-connection authority from the `ConnectionBinder`; `null` in legacy (global store) mode. */
+  readonly store: MessageStore | null;
+  /** The account's stored presence preference when the authorizer reports one; applied before the first publish. */
+  readonly presencePreference: PresencePreference | null;
 }
 
 export interface RealtimeSocketData {
@@ -47,6 +51,11 @@ export interface Connection {
   readonly user: UserState;
   readonly connectedAt: number;
   readonly buckets: ConnectionBuckets;
+  /**
+   * Store bound to THIS connection's actor and session proof, or `null` in legacy mode. When set,
+   * sends are envelope v2 only and are persisted and key-verified by the store's owner.
+   */
+  readonly store: MessageStore | null;
   expiresAt: number;
   expiryTimer: NodeJS.Timeout | null;
   closed: boolean;

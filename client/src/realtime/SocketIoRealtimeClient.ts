@@ -12,6 +12,7 @@ import { CALL_CLIENT_EVENT_NAMES, CALL_SERVER_EVENTS, type CallClientEventName }
 import type { CallSignalingPort } from '@/calls/callSignaling';
 
 export { PROPOSED_EVENT_NAMES } from './realtimeModel';
+// Real accounts import AuthenticatedSocketIoClient directly; this legacy interface stays read-only.
 
 type SocketListener = (...args: unknown[]) => void;
 export interface SocketManagerPort {

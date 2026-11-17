@@ -8,7 +8,7 @@ import { createServer, type Server as HttpServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { io as connectClient, type Socket as ClientSocket } from 'socket.io-client';
 import type { RealtimeServerOptions } from '../../src/realtime/config.ts';
-import type { RealtimeSecurityPolicy } from '../../src/realtime/contracts.ts';
+import type { RealtimeSecurityPolicy, RecipientKeyVerifier } from '../../src/realtime/contracts.ts';
 import { attachRealtimeServer, type RealtimeServerHandle } from '../../src/realtime/server.ts';
 import {
   CapturingLogger,
@@ -141,6 +141,8 @@ export interface HarnessOptions extends Partial<Omit<RealtimeServerOptions, 'ses
   readonly withStore?: boolean;
   /** Defaults to false: production has no RecipientKeyVerifier. */
   readonly withVerifier?: boolean;
+  /** A specific verifier (for example the genuine e2ee verifier); takes precedence over `withVerifier`. */
+  readonly recipientKeyVerifier?: RecipientKeyVerifier;
   readonly securityPolicy?: RealtimeSecurityPolicy;
 }
 
@@ -262,7 +264,7 @@ export async function startTestServer(options: HarnessOptions = {}): Promise<Tes
   const logger = new CapturingLogger();
   const {
     withSessionResolver = true, minimalSessionResolver = false, withAuthorizer = true, withStore = false, withVerifier = false,
-    securityPolicy, timing, ...rest
+    recipientKeyVerifier, securityPolicy, timing, ...rest
   } = options;
   const httpServer = createServer((_request, response) => {
     response.writeHead(404);
@@ -277,7 +279,7 @@ export async function startTestServer(options: HarnessOptions = {}): Promise<Tes
     ...(withSessionResolver ? { sessionResolver: minimalSessionResolver ? new MinimalSessionResolver(sessions) : sessions } : {}),
     ...(withAuthorizer ? { authorizer } : {}),
     ...(withStore ? { messageStore: store } : {}),
-    ...(withVerifier ? { recipientKeyVerifier: verifier } : {}),
+    ...(recipientKeyVerifier ? { recipientKeyVerifier } : withVerifier ? { recipientKeyVerifier: verifier } : {}),
     ...(securityPolicy ? { securityPolicy } : {}),
   });
   await new Promise<void>((resolve) => httpServer.listen(0, '127.0.0.1', () => resolve()));

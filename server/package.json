@@ -8,16 +8,21 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./ai": "./src/ai/index.ts"
+    "./ai": "./src/ai/index.ts",
+    "./e2ee": "./src/e2ee/index.ts",
+    "./data": "./src/data/index.ts"
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/main.ts",
+    "start:data": "node src/data/main.ts",
     "ai:check-config": "node --env-file-if-exists=.env src/ai/checkConfig.ts",
     "type-check": "tsc --noEmit -p tsconfig.json",
     "test": "node --test --test-concurrency=1 --test-timeout=60000 \"test/**/*.test.ts\""
   },
   "dependencies": {
-    "socket.io": "^4.8.4"
+    "socket.io": "^4.8.4",
+    "express": "^5.3.0",
+    "better-sqlite3": "^13.0.3"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

@@ -38,7 +38,8 @@ export interface MessageComposerProps {
   droppedFiles?: readonly File[];
   attachmentUnavailableReason?: string;
   onSend(content: string, extras?: MessageComposerSendExtras): Promise<boolean>;
-  onBuzz(): void;
+  onBuzz?(): void;
+  textOnly?: boolean;
   onTypingActivity?(): void;
   onTypingStop?(): void;
   onRewriteDraft?(draft: string): void;
@@ -64,6 +65,7 @@ export function MessageComposer({
   attachmentActionLabel = 'Uploading',
   droppedFiles,
   onRewriteDraft,
+  textOnly = false,
 }: MessageComposerProps) {
   const [internalValue, setInternalValue] = useState('');
   const value = draftValue ?? internalValue;
@@ -99,6 +101,7 @@ export function MessageComposer({
   const canSend = hasContent && !disabled && !isSending && !isRecording && !isUploading && !processingAttachments && !isSubmitting;
 
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => { if (textOnly && draftValue === '') setSendError(''); }, [textOnly, draftValue]);
   useEffect(() => {
     if (!droppedFiles || previousDrop.current === droppedFiles) return;
     previousDrop.current = droppedFiles;
@@ -244,7 +247,7 @@ export function MessageComposer({
         if (latestValue.current === value) setValue('');
         setVoiceDraft(null);
         setSendFeedback(true);
-      } else setSendError('The message was not accepted. Your draft is still here.');
+      } else setSendError(textOnly ? 'Your message was not confirmed. Your draft is still here.' : 'The message was not accepted. Your draft is still here.');
     } catch (failure) {
       if (mounted.current) setSendError(failure instanceof AttachmentUploadError
         ? failure.message : 'The message was not accepted. Your draft is still here.');
@@ -357,7 +360,7 @@ export function MessageComposer({
         disabled={disabled || isSending || isSubmitting || isRecording || processingAttachments || !validAIInput(value)} onClick={() => { onTypingStop?.(); onRewriteDraft(value); }}>Rewrite draft with @Secu</Button></div>}
       <label className="sr-only" htmlFor="message-input">Message to {conversationName}</label>
       <div className="composer-dock">
-        <Button
+        {!textOnly && onBuzz && <Button
           id="buzz-button"
           className="composer-buzz"
           type="button"
@@ -370,9 +373,9 @@ export function MessageComposer({
           leadingIcon={<BellRing size={16} aria-hidden="true" />}
         >
           BUZZ!
-        </Button>
+        </Button>}
 
-        <input
+        {!textOnly && <><input
           ref={fileInputRef}
           type="file"
           multiple
@@ -405,6 +408,7 @@ export function MessageComposer({
           title={isRecording ? 'Stop recording' : 'Record voice message'}
           leadingIcon={isRecording ? <Square size={18} aria-hidden="true" /> : <Mic size={18} aria-hidden="true" />}
         />
+        </>}
                 <div className="composer-emoji-wrap" ref={emojiWrapRef}>
           <Button
             type="button"

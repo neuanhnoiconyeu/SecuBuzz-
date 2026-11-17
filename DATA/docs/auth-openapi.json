@@ -1,0 +1,796 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SecuBuzz DB-2 Authentication API",
+    "version": "1.0.0",
+    "description": "Same-origin cookie authentication. Production HTTPS required. Local explicit loopback development uses secubuzz_session and secubuzz_preauth instead of __Host- names. Credentials, private email and bearer secrets are never returned in JSON. No refresh endpoint."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Serve the browser and /api/auth under the same public origin."
+    }
+  ],
+  "paths": {
+    "/api/auth/csrf": {
+      "get": {
+        "operationId": "bootstrapCsrf",
+        "summary": "Retrieve a session-bound or anonymous pre-session CSRF proof",
+        "security": [
+          {},
+          {
+            "SessionCookie": []
+          }
+        ],
+        "description": "No request body. Same-origin GET; unsafe Origin/Fetch Metadata/Referer is rejected. Guest proof lifetime is ten minutes; authenticated proof is stable for that session. Responses are Cache-Control:no-store.",
+        "responses": {
+          "200": {
+            "description": "Proof for the current active session or a fresh/reused guest pre-session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsrfResponse"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Host-only HttpOnly session or pre-session cookie. Secure in production, SameSite=Lax, Path=/; may also clear previous cookies.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN or CSRF_INVALID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds before another attempt; returned for counter/concurrency refusals.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "operationId": "registerAccount",
+        "summary": "Create an account without signing in",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "description": "Browser-supplied exact allowlisted origin. Missing, null, foreign or unapproved origin is rejected.",
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        ],
+        "security": [
+          {
+            "PreSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "SessionCookie": [],
+            "CsrfHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Registration"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created atomically; guest pre-session consumed/cleared. User must explicitly log in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "status": {
+                      "const": "requires-login"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Host-only HttpOnly session or pre-session cookie. Secure in production, SameSite=Lax, Path=/; may also clear previous cookies.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS, UNAUTHENTICATED or SESSION_EXPIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN or CSRF_INVALID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT: account unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "PAYLOAD_TOO_LARGE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "UNSUPPORTED_MEDIA_TYPE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds before another attempt; returned for counter/concurrency refusals.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "Verify password and issue a new durable session",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "description": "Browser-supplied exact allowlisted origin. Missing, null, foreign or unapproved origin is rejected.",
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        ],
+        "security": [
+          {
+            "PreSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "SessionCookie": [],
+            "CsrfHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New session cookie; guest proof consumed. A valid browser session used for login is revoked and replaced.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Host-only HttpOnly session or pre-session cookie. Secure in production, SameSite=Lax, Path=/; may also clear previous cookies.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS, UNAUTHENTICATED or SESSION_EXPIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN or CSRF_INVALID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT: account unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "PAYLOAD_TOO_LARGE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "UNSUPPORTED_MEDIA_TYPE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds before another attempt; returned for counter/concurrency refusals.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "currentUser",
+        "summary": "Resolve the current user from SQLite session state",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active authoritative identity, including after backend restart.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS, UNAUTHENTICATED or SESSION_EXPIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN or CSRF_INVALID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "Revoke this browser session and clear cookies",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "description": "Browser-supplied exact allowlisted origin. Missing, null, foreign or unapproved origin is rejected.",
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        ],
+        "security": [
+          {
+            "PreSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "SessionCookie": [],
+            "CsrfHeader": []
+          }
+        ],
+        "description": "No request body. Requires the authenticated session proof, or a fresh guest proof for a safe already-logged-out retry. Other user/browser sessions are unaffected. Expired sessions require guest bootstrap before retry.",
+        "responses": {
+          "204": {
+            "description": "Session revoked or already absent; session and pre-session cookies cleared.",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Clear session and pre-session cookies with the original security/path attributes.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN or CSRF_INVALID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "PAYLOAD_TOO_LARGE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds before another attempt; returned for counter/concurrency refusals.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "SessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-secubuzz_session",
+        "description": "HttpOnly, Secure, host-only, SameSite=Lax, Path=/. Explicit local HTTP uses secubuzz_session."
+      },
+      "PreSessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-secubuzz_preauth",
+        "description": "Anonymous ten-minute HttpOnly pre-session cookie; never authorizes protected reads. Local HTTP uses secubuzz_preauth."
+      },
+      "CsrfHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token",
+        "description": "Proof from same-origin GET /api/auth/csrf; bound to the cookie and current session phase."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "code",
+          "fields"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALIDATION_ERROR",
+              "INVALID_CREDENTIALS",
+              "UNAUTHENTICATED",
+              "SESSION_EXPIRED",
+              "CSRF_INVALID",
+              "FORBIDDEN",
+              "RATE_LIMITED",
+              "CONFLICT",
+              "PAYLOAD_TOO_LARGE",
+              "UNSUPPORTED_MEDIA_TYPE",
+              "INTERNAL_ERROR",
+              "SERVICE_UNAVAILABLE",
+              "FEATURE_UNAVAILABLE",
+              "NOT_FOUND"
+            ]
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "username",
+                "email",
+                "password",
+                "displayName",
+                "identifier"
+              ]
+            },
+            "uniqueItems": true
+          }
+        }
+      },
+      "AuthUser": {
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "avatar",
+          "isDemo"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Authoritative stable user ID; never a reserved demo identity."
+          },
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 30
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "avatar": {
+            "type": "string",
+            "enum": [
+              "initials",
+              "smile",
+              "star",
+              "rocket",
+              "cat"
+            ]
+          },
+          "isDemo": {
+            "const": false
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "required": [
+          "user"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AuthUser"
+          }
+        }
+      },
+      "Registration": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "username",
+          "email",
+          "password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 30,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,29}$",
+            "description": "Trimmed/lowercased. Reserved demo/local names rejected. Case-insensitive uniqueness including legacy reservations."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "description": "ASCII conventional syntax, trimmed/lowercased, mailbox <=64. Ownership not verified by registration."
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true,
+            "minLength": 15,
+            "maxLength": 1024,
+            "description": "At least 15 Unicode code points and at most 1024 UTF-8 bytes; no trimming, normalization or truncation. Malformed surrogates rejected."
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "description": "Trimmed; no control characters. Defaults to normalized username."
+          }
+        }
+      },
+      "Login": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "password"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 254,
+            "description": "Username or email, trimmed and lowercased."
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true,
+            "minLength": 1,
+            "maxLength": 1024,
+            "description": "Exact password; at most 1024 UTF-8 bytes."
+          }
+        }
+      },
+      "CsrfResponse": {
+        "type": "object",
+        "required": [
+          "csrfToken",
+          "expiresAt"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "csrfToken": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$",
+            "description": "In-memory CSRF proof; not a session bearer."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}
