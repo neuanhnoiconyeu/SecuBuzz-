@@ -4,13 +4,15 @@ import { Bot, Search, Users, UserRound, X } from 'lucide-react';
 import { Avatar, Badge } from '@/components/ui';
 import type { Conversation } from '@/conversations/conversationModel';
 
+export type ConversationSidebarItem = Pick<Conversation, 'id' | 'displayName' | 'type' | 'avatarUrl' | 'presence' | 'lastMessagePreview' | 'lastActivityAt' | 'unreadCount'>;
 export interface ConversationSidebarProps {
-  conversations: Conversation[];
+  conversations: readonly ConversationSidebarItem[];
   activeConversationId: string | null;
   mobileListOpen: boolean;
   onSelect(conversationId: string): void;
   voiceRooms?: ReactNode;
   showConversations?: boolean;
+  mode?: 'demo' | 'remote';
 }
 
 function formatActivity(timestamp: string): string {
@@ -39,6 +41,7 @@ export function ConversationSidebar({
   onSelect,
   voiceRooms,
   showConversations = true,
+  mode = 'demo',
 }: ConversationSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [hydrated, setHydrated] = useState(false);
@@ -62,8 +65,9 @@ export function ConversationSidebar({
 
   return (
     <aside
+      role={mode === 'remote' ? 'navigation' : undefined}
       className={`conversation-sidebar ${mobileListOpen ? 'is-mobile-open' : 'is-mobile-hidden'}`}
-      aria-label={showConversations ? 'Conversations' : 'Voice rooms'}
+      aria-label={mode === 'remote' ? 'Direct conversations' : showConversations ? 'Conversations' : 'Voice rooms'}
     >
       {showConversations && <>
       <div className="conversation-browse-header">
@@ -72,7 +76,7 @@ export function ConversationSidebar({
             <p className="conversation-sidebar-eyebrow">Your conversations</p>
             <h2 className="display-heading">Messages</h2>
           </div>
-          <Badge status="info">Demo</Badge>
+          <Badge status="info">{mode === 'demo' ? 'Demo' : 'Private chats'}</Badge>
         </div>
 
         <div className="conversation-search">
@@ -115,7 +119,7 @@ export function ConversationSidebar({
       {conversations.length === 0 ? (
         <div className="conversation-list-empty" role="status">
           <strong>No conversations yet</strong>
-          <span>Demo conversations will appear here when available.</span>
+          <span>{mode === 'demo' ? 'Demo conversations will appear here when available.' : 'Message a friend to start a conversation.'}</span>
         </div>
       ) : visibleConversations.length === 0 ? (
         <div className="conversation-list-empty" role="status">
@@ -134,7 +138,7 @@ export function ConversationSidebar({
               conversation.displayName,
               typeLabel,
               conversation.unreadCount ? `${conversation.unreadCount} unread` : 'No unread messages',
-              'Local demo',
+              ...(mode === 'demo' ? ['Local demo'] : []),
             ].join(', ');
             return (
               <li key={conversation.id}>
@@ -178,7 +182,7 @@ export function ConversationSidebar({
           })}
         </ul>
       )}
-      <p className="conversation-demo-note">Local examples only. No other users are connected.</p>
+      {mode === 'demo' && <p className="conversation-demo-note">Local examples only. No other users are connected.</p>}
       </>}
       {voiceRooms}
     </aside>

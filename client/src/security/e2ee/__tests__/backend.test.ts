@@ -54,7 +54,7 @@ async function pair() {
 }
 
 test('socket transport seam shares real encryption and DATA persistence; a lost ack reconciles without REST resubmission', async () => {
-  const { a, b, c } = await pair(); await a.secure.initialize(); await b.secure.initialize();
+  const { a, b, c } = await pair(); await a.secure.initialize(true); await b.secure.initialize(true);
   const posted: unknown[] = [];
   const submit = jest.fn(async (envelope: Parameters<typeof a.secure.api.submit>[0]) => {
     posted.push(structuredClone(envelope)); await a.secure.api.submit(envelope); throw new Error('Synthetic dropped socket ack');
@@ -66,7 +66,7 @@ test('socket transport seam shares real encryption and DATA persistence; a lost 
 });
 
 test('verified socket ack reads the committed row; rejected send preserves exact pending bytes for an explicit REST retry', async () => {
-  const { a, b, c } = await pair(); await a.secure.initialize(); await b.secure.initialize();
+  const { a, b, c } = await pair(); await a.secure.initialize(true); await b.secure.initialize(true);
   const submit = jest.fn(async (envelope: Parameters<typeof a.secure.api.submit>[0]) => {
     const row = await a.secure.api.submit(envelope); return { conversationId: c.id, messageId: row.id, status: 'sent' as const, timestamp: row.storedAt };
   });
@@ -78,7 +78,7 @@ test('verified socket ack reads the committed row; rejected send preserves exact
   expect(retried?.id).toBe(pending?.id); expect(retried?.encryption).toEqual(pending?.encryption); expect((await a.secure.api.history(c.id)).items).toHaveLength(2);
 });
 test('two actual authenticated DATA accounts register, publish HPKE epoch, exchange v2, refresh keys and survive a backend restart', async () => {
-  const { a, b, c } = await pair(); await a.secure.initialize(); await expect(a.secure.prepare(c.id)).rejects.toMatchObject({ code: 'recipient_missing' }); await b.secure.initialize();
+  const { a, b, c } = await pair(); await a.secure.initialize(true); await expect(a.secure.prepare(c.id)).rejects.toMatchObject({ code: 'recipient_missing' }); await b.secure.initialize(true);
   await a.secure.send(c.id, 'Alice', 'Alice private integration text'); const received = await b.secure.history(c.id); expect(received.items[0]?.text).toBe('Alice private integration text');
   await b.secure.send(c.id, 'Bob', 'Bob private integration text'); expect((await a.secure.history(c.id)).items[0]?.text).toBe('Bob private integration text');
   const before = (await a.secure.initialize()).deviceId; a.secure.dispose(); const restored = new SecureMessagingSession(a.api, new BrowserKeyStore(a.user.id, a.storageName)); sessions.push(restored);
@@ -86,12 +86,12 @@ test('two actual authenticated DATA accounts register, publish HPKE epoch, excha
   await stop(); await start(); expect((await restored.history(c.id)).items[0]?.text).toBe('Bob private integration text');
   const messageBodies = [...a.bodies, ...b.bodies].filter((v: unknown) => Boolean(v && typeof v === 'object' && 'encryption' in v));
   expect(messageBodies).toHaveLength(2); expect(JSON.stringify(messageBodies)).not.toContain('private integration text');
-  const charlie = await actor('Charlie'); await charlie.secure.initialize(); await expect(charlie.secure.api.getConversation(c.id)).rejects.toMatchObject({ code: 'not_found' });
+  const charlie = await actor('Charlie'); await charlie.secure.initialize(true); await expect(charlie.secure.api.getConversation(c.id)).rejects.toMatchObject({ code: 'not_found' });
   const encrypted = received.items[0]!.message; const wrongKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
   const { decryptV2 } = await import('../messages'); await expect(decryptV2(wrongKey, { id: encrypted.id, conversationId: c.id, senderId: encrypted.senderId, senderName: encrypted.senderName, timestamp: encrypted.timestamp, type: 'text', encryption: encrypted.encryption })).rejects.toMatchObject({ code: 'decryption_failed' });
 }, 30000);
 test('TOFU changes require review; new devices lack old keys; revocation, unavailable directory and stale epochs fail closed', async () => {
-  const { a, b, c } = await pair(); await a.secure.initialize(); await b.secure.initialize(); await a.secure.send(c.id, 'Alice', 'Previously authorized history');
+  const { a, b, c } = await pair(); await a.secure.initialize(true); await b.secure.initialize(true); await a.secure.send(c.id, 'Alice', 'Previously authorized history');
   const old = await a.secure.prepare(c.id), b2 = new SecureMessagingSession(b.api, new BrowserKeyStore(b.user.id, 'new-browser-' + randomUUID())); sessions.push(b2);
   await expect(b2.initialize()).rejects.toMatchObject({ code: 'enrollment_required' }); await b2.initialize(true);
   await expect(a.secure.prepare(c.id)).rejects.toMatchObject({ code: 'keys_changed' }); expect(a.secure.getKeyReview()?.newIds).toHaveLength(2);
@@ -104,8 +104,35 @@ test('TOFU changes require review; new devices lack old keys; revocation, unavai
   await expect(a.secure.prepare(c.id)).rejects.toMatchObject({ code: 'keys_changed' });
   a.unavailable(true); await expect(a.secure.send(c.id, 'Alice', 'must not use cached keys')).rejects.toMatchObject({ code: 'key_service_unavailable' }); a.unavailable(false);
 }, 30000);
+test('an account with only revoked devices explicitly enrolls in a fresh profile without restoring or replacing old keys', async () => {
+  const { a, b, c } = await pair();
+  await expect(a.secure.initialize()).rejects.toMatchObject({ code: 'enrollment_required' });
+  expect(await a.secure.api.ownDevices()).toHaveLength(0);
+  const old = await a.secure.initialize(true); await b.secure.initialize(true);
+  await a.secure.send(c.id, 'Alice', 'History for the original device only'); await b.secure.prepare(c.id);
+  await expect(a.secure.revokeCurrentDevice()).rejects.toMatchObject({ code: 'device_revoked' });
+  await expect(a.secure.send(c.id, 'Alice', 'Must not be sent')).rejects.toMatchObject({ code: 'device_revoked' });
+  await expect(a.secure.initialize(true)).rejects.toMatchObject({ code: 'device_revoked' });
+  const fresh = new SecureMessagingSession(a.api, new BrowserKeyStore(a.user.id, 'fresh-profile-' + randomUUID())); sessions.push(fresh);
+  await expect(fresh.initialize()).rejects.toMatchObject({ code: 'enrollment_required' });
+  expect((await fresh.api.ownDevices()).map(d => d.status)).toEqual(['revoked']);
+  const enrolled = await fresh.initialize(true);
+  expect(enrolled.deviceId).not.toBe(old.deviceId); expect(enrolled.deviceKeyId).not.toBe(old.deviceKeyId);
+  expect(enrolled.agreement.privateKey.extractable).toBe(false); expect(enrolled.signing.privateKey.extractable).toBe(false);
+  const directory = await fresh.api.ownDevices(); expect(directory).toHaveLength(2);
+  expect(directory.find(d => d.deviceKeyId === old.deviceKeyId)?.status).toBe('revoked');
+  expect(directory.find(d => d.deviceKeyId === enrolled.deviceKeyId)?.status).toBe('active');
+  expect((await a.secure.store.get<typeof old>('device'))?.deviceKeyId).toBe(old.deviceKeyId);
+  expect((await a.secure.history(c.id)).items[0]?.text).toBe('History for the original device only');
+  const historical = (await fresh.history(c.id)).items[0]; expect(historical?.text).toBeNull(); expect(historical?.error).toBeTruthy();
+  await expect(b.secure.prepare(c.id)).rejects.toMatchObject({ code: 'keys_changed' });
+  await b.secure.acceptKeyChange(c.id);
+  await fresh.send(c.id, 'Alice', 'Message from the explicitly enrolled device');
+  expect((await b.secure.history(c.id)).items[0]?.text).toBe('Message from the explicitly enrolled device');
+});
+
 test('lost acknowledgements retain original ciphertext and reconcile one durable message; logout/disposal denies stale operations', async () => {
-  const { a, b, c } = await pair(); await a.secure.initialize(); await b.secure.initialize(); a.drop();
+  const { a, b, c } = await pair(); await a.secure.initialize(true); await b.secure.initialize(true); a.drop();
   await expect(a.secure.send(c.id, 'Alice', 'ambiguous outcome')).rejects.toMatchObject({ code: 'unavailable' }); const pending = await a.secure.pending(c.id); expect(pending).not.toBeNull();
   await expect(a.secure.send(c.id, 'Alice', 'do not duplicate')).rejects.toMatchObject({ code: 'pending_message' }); const reconciled = await a.secure.retryPending(c.id);
   expect(reconciled?.id).toBe(pending?.id); expect(await a.secure.pending(c.id)).toBeNull(); expect((await b.secure.history(c.id)).items).toHaveLength(1);

@@ -24,7 +24,7 @@ const messages: Record<ApiErrorCode, string> = {
   recipient_keys_missing: 'Waiting for recipient keys. Every participant needs an active device.',
   key_service_unavailable: 'Recipient key verification is unavailable. No insecure fallback is available.',
   key_proof_invalid: 'The device or epoch signature or timestamp was rejected.',
-  key_conflict: 'This device key is revoked, superseded, or conflicts with an existing registration.',
+  key_conflict: 'This device registration conflicts with an existing record. Refresh device status before retrying. Existing keys were not replaced.',
   device_limit: 'The account has reached its active-device limit.',
   idempotency_conflict: 'This message ID already belongs to different encrypted content. Check history before continuing.',
 };

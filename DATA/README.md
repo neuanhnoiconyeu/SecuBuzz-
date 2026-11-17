@@ -166,6 +166,15 @@ configuration fails startup. The app and API must be routed under one browser or
 npm run dev
 ```
 
+Development runs the existing unified entry point at `server/src/data/main.ts`.
+DATA HTTP routes and authenticated Socket.IO share one HTTP server, database,
+session configuration and CSRF policy. Install dependencies in both `DATA` and
+`server` first. `npm run start:data` from `server` starts the same unified service
+without a watcher. `npm start` here remains the HTTP-only DATA entry point.
+Do not run both entry points on port 5000. Keep the existing `DB_PATH` and auth
+settings in `DATA/.env`; include the frontend's exact origin (for example
+`http://localhost:3001`) in `AUTH_ALLOWED_ORIGINS` for local development.
+
 ### Run Tests
 
 ```bash

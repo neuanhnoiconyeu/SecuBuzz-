@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
+    "dev": "nodemon --watch server --watch ../server/src --exec \"node ../server/src/data/main.ts\"",
     "test": "node --test",
     "db:migrate": "node scripts/migrate.js",
     "auth:cleanup": "node scripts/auth-cleanup.js"

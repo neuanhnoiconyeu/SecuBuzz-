@@ -22,11 +22,57 @@ The demo still uses its existing page-local InMemoryDemoKeyManager and v1 crypto
 | messages.ts | Client-only AES-256-GCM v2 encryption/decryption and authenticated metadata |
 | api.ts | Strict typed DATA projections over the existing SessionApi |
 | session.ts | Device lifecycle, trust, current epochs, historical keys, pending sends and disposal |
-| SecureConversationPanel.tsx | Minimal real-account conversations/history/composer and security states |
+| SecureConversationPanel.tsx | Authenticated controller using the original chat presentation and secure device states |
+| components/messenger/authenticatedChatPresentation.ts | Decrypted-row, receipt, conversation and connection view models; no crypto or transport implementation |
 
 RealMessengerWorkspace continues to own profiles/friends/navigation and scopes resources to its authenticated session lifecycle. Old resources are disposed and the subtree remounts when the API resource generation changes, including development StrictMode. Plaintext drafts/history live in React memory and disappear on account replacement/logout/unmount; they are not persisted as plaintext. Persistent device/epoch keys remain enrolled locally after logout, by design.
 
+### Original chat presentation with real services
+
+Authenticated chats reuse ConversationSidebar, ConversationHeader, MessageList
+and MessageComposer, including their theme tokens, bubbles, grouping, entry motion,
+emoji input and responsive navigation. The YahooChatWindow demo controller is not
+mounted for real accounts: its mock transport and page-local crypto remain demo-only.
+The presentation adapter accepts authenticated conversations and already decrypted
+rows from SecureMessagingSession/SecureRealtimeWorkspace. Ciphertext is never used
+as a message preview or a placeholder for successful decryption.
+
+Per-conversation drafts survive conversation changes, secure refresh, reconnect,
+Friends navigation and Meeting Rooms navigation. Drafts remain in session memory;
+logout, account replacement and browser reload do not persist plaintext drafts.
+Sent means persisted; delivered/read require matching realtime receipts. Loading
+older history preserves the current scroll position. Hidden chats, including the
+mobile conversation list and Meeting Rooms, do not issue visible-chat read receipts.
+
+Transport selection, manual secure refresh, reconnect and browser key management
+live in collapsed Advanced settings. Enrollment, revocation and changed-contact-key
+warnings remain actionable in the visible chat or mobile conversation list.
+Enrollment confirmation and non-extractable persistent key handling are unchanged.
+Unverified group/file/voice/direct-call controls are not offered by the real text
+composer; their existing separate implementations are preserved. Meeting Rooms
+navigation remains available without substituting its transport for DATA messaging.
+
+Run `npm test -- --runInBand --roots src` for source regressions and
+`npm run test:realtime:browser` for isolated browser verification. Browser evidence
+and redacted screenshots are saved under a unique `tmp/client-realtime-*` directory,
+without opening the user's browser profile or modifying the development database.
+
 ## Device identity and IndexedDB
+
+New device creation always requires explicit enrollment, including an account's
+first device. Startup restores an existing identity or offers **Enroll this
+browser**, followed by a confirmation explaining historical-key limitations.
+Registration uses the existing authenticated DATA SessionApi and CSRF proof;
+private keys remain non-extractable and are never uploaded.
+
+A revoked identity is never reactivated or replaced in place. For an account
+whose devices are all revoked, use a fresh browser profile at the same application
+address, sign in, and confirm enrollment there. Preserve the original profile and
+IndexedDB for any history it can still decrypt. New devices do not automatically
+receive old epoch keys; contacts must review changed device sets. The application
+does not offer automatic key reset, identity replacement or password-based key
+recovery. A generic registration conflict is reported as a conflict, not proof
+that the device was revoked.
 
 The origin database is secubuzz-e2ee-v1, schema version 1. Its two object stores are records and nonces. Record keys are JSON arrays prefixed by the SessionApi actor ID, never an actor selected from request body input.
 

@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
-import { transportSecurityFor } from '../../src/data/index.ts';
+import { attachRealtimeToData, transportSecurityFor } from '../../src/data/index.ts';
 import { Browser } from '../e2ee/support/dataApp.ts';
 import { DataStack, SESSION_COOKIE } from './support/stack.ts';
 
@@ -19,7 +19,8 @@ describe('realtime handshake authenticates real DATA sessions', () => {
   before(async () => {
     stack = await DataStack.start({ dependencies: { now: () => Date.now() + clock.skewMs } });
     bare = await DataStack.start({ bridge: { observeChanges: false } });
-    sweeping = await DataStack.start({ bridge: { observeChanges: false, timing: { revalidationIntervalMs: 120 } } });
+    sweeping = await DataStack.start({ dependencies: { now: () => Date.now() + clock.skewMs },
+      bridge: { observeChanges: false, timing: { revalidationIntervalMs: 120 } } });
   });
   after(async () => {
     await Promise.all([stack?.close(), bare?.close(), sweeping?.close()]);
@@ -38,6 +39,32 @@ describe('realtime handshake authenticates real DATA sessions', () => {
     const { alice } = await stack.pair();
     const client = await stack.connect(alice, { transports: ['polling'] });
     assert.equal(client.connected, true);
+  });
+
+  test('an authenticated polling connection upgrades to WebSocket without attaching a second server', async () => {
+    const { alice, conversationId, epoch } = await stack.pair();
+    const client = await stack.connect(alice, { transports: ['polling', 'websocket'] });
+    const engine = client.socket.io.engine;
+    if (engine.transport.name !== 'websocket') await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('Authenticated WebSocket upgrade timed out')), 5_000);
+      engine.once('upgrade', () => { clearTimeout(timer); resolve(); });
+      engine.once('upgradeError', () => { clearTimeout(timer); reject(new Error('Authenticated WebSocket upgrade failed')); });
+    });
+    assert.equal(engine.transport.name, 'websocket');
+    assert.equal((await stack.send(client, await stack.envelope(alice, conversationId, epoch, 'after upgrade', 'upgrade-1'))).status, 'sent');
+    assert.throws(() => attachRealtimeToData(stack.data.server, stack.data.application), /already attached/);
+    assert.equal(client.connected, true);
+  });
+
+  test('periodic DATA session expiration disconnects an already connected client and denies reconnect', async () => {
+    const { alice } = await sweeping.pair();
+    const client = await sweeping.connect(alice);
+    const closed = client.waitForDisconnect(3_000);
+    clock.skewMs = 9 * 3_600_000;
+    try {
+      assert.equal(await closed, 'io server disconnect');
+      assert.equal((await sweeping.connectError(alice)).code, 'SESSION_EXPIRED');
+    } finally { clock.skewMs = 0; }
   });
 
   test('no cookie, an unknown token, a malformed cookie, or the wrong cookie name is rejected', async () => {

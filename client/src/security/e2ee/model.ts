@@ -35,7 +35,7 @@ export const securityMessages = {
   unavailable: 'Secure key services are unavailable. Refresh before trying again.',
   storage_unavailable: 'Secure local key storage is unavailable. No temporary key fallback was created.',
   storage_corrupt: 'Local device keys could not be restored. Existing encrypted history may be inaccessible. No replacement was created.',
-  enrollment_required: 'This account has other registered devices. Enroll this browser explicitly; older history may not be available here.',
+  enrollment_required: 'Enroll this browser explicitly to create a new secure device. Older encrypted history may not be available here.',
   device_revoked: 'This device was revoked or superseded. It cannot prepare new secure messages.',
   recipient_missing: 'Waiting for recipient keys. Your contact must register a secure device.',
   keys_changed: 'Your contact’s device keys changed. Review and trust the current devices before sending.',

@@ -6,7 +6,6 @@ import { BrandLogo } from '@/components/branding';
 import { Button } from '@/components/ui';
 import { FriendsPage } from '@/components/friends/FriendsPage';
 import { ProfileDialog } from '@/components/profile/ProfileDialog';
-import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { useAuth } from '@/auth/AuthProvider';
 import { ApiError, type SessionApi } from '@/api/sessionApi';
 import { RemoteProfileService } from '@/profiles/remoteProfileService';
@@ -25,7 +24,7 @@ function sectionFromHash(): MessengerSection {
 }
 
 /** Real sessions have no demo transport, conversations, AI provider or inferred presence. */
-export function RealMessengerWorkspace({ onOpenVoiceRooms }: { onOpenVoiceRooms?: () => void } = {}) {
+export function RealMessengerWorkspace({ onOpenVoiceRooms, active = true }: { onOpenVoiceRooms?: () => void; active?: boolean } = {}) {
   const auth = useAuth();
   const createApi = auth.createSessionApi;
   const actor = useRef(auth.user).current;
@@ -40,10 +39,10 @@ export function RealMessengerWorkspace({ onOpenVoiceRooms }: { onOpenVoiceRooms?
     setResources({ version: ++resourceVersion.current, api, profiles: new RemoteProfileService(api), friends: new RemoteFriendsService(api), secure, ...(live ? { live } : {}) });
     return () => { live?.dispose(); secure.dispose(); api.dispose(); };
   }, [actor, createApi]);
-  return resources ? <ConnectedMessenger key={resources.version} resources={resources} {...(onOpenVoiceRooms ? { onOpenVoiceRooms } : {})} /> : <p role="status">Opening your workspace…</p>;
+  return resources ? <ConnectedMessenger key={resources.version} resources={resources} active={active} {...(onOpenVoiceRooms ? { onOpenVoiceRooms } : {})} /> : <p role="status">Opening your workspace…</p>;
 }
 
-function ConnectedMessenger({ resources, onOpenVoiceRooms }: { resources: Resources; onOpenVoiceRooms?: () => void }) {
+function ConnectedMessenger({ resources, onOpenVoiceRooms, active }: { resources: Resources; onOpenVoiceRooms?: () => void; active: boolean }) {
   const auth = useAuth();
   const profile = useCurrentProfile(resources.profiles);
   const friends = useFriends(resources.friends);
@@ -71,19 +70,8 @@ function ConnectedMessenger({ resources, onOpenVoiceRooms }: { resources: Resour
         profile={profile.profile} profileLoading={profile.isLoading} onOpenProfile={() => setProfileOpen(true)}
         pendingRequestCount={friends.snapshot.incomingRequests.length} />
       <section id="chats" className="messenger-chat-section real-chat-section" hidden={section !== 'chats'} aria-labelledby="real-chats-title">
-        <aside className="real-account-sidebar" aria-label="Your account">
-          {account && <><ProfileAvatar displayName={account.displayName} avatar={account.avatar} size="lg" />
-            <h2 className="display-heading display-heading--section">{account.displayName}</h2><p>@{account.username}</p></>}
-          <Button variant="outline" onClick={() => setProfileOpen(true)}>Your profile</Button>
-          {onOpenVoiceRooms && <Button variant="outline" onClick={onOpenVoiceRooms}>Open Voice Rooms</Button>}
-          <div className="real-sidebar-summary"><h3 className="display-heading display-heading--section">Your people</h3>
-            <p>{friends.isLoading ? 'Loading friends…' : friends.isStale ? 'Friends need a refresh.' : `${friends.snapshot.friends.length} friends`}</p>
-            <Button variant="outline" onClick={() => selectSection('friends')}>Manage Friends</Button></div>
-          <p className="friends-row-note">{resources.live ? 'Your presence follows your profile preference.' : 'Presence unavailable'}</p>
-          {profile.error && <div><p role="alert">{profile.error}</p><Button size="sm" variant="outline" onClick={() => void profile.loadProfile()}>Retry profile</Button></div>}
-          {friends.error && <div><p role="alert">{friends.error}</p><Button size="sm" variant="outline" disabled={friends.isLoading} onClick={() => void friends.refresh()}>Retry friends</Button></div>}
-        </aside>
-        <SecureConversationPanel session={resources.secure} live={resources.live} active={section === 'chats'} selectedId={conversationId} onSelect={setConversationId} displayName={account?.displayName ?? ''} />
+        <SecureConversationPanel session={resources.secure} live={resources.live} active={active && section === 'chats'} selectedId={conversationId} onSelect={setConversationId} displayName={account?.displayName ?? ''}
+          onOpenVoiceRooms={onOpenVoiceRooms} onOpenFriends={() => selectSection('friends')} />
       </section>
       <section id="friends" className="messenger-friends-section" hidden={section !== 'friends'} aria-labelledby="friends-page-title">
         <FriendsPage controller={friends} currentUser={account} canMessage={() => true}
@@ -99,7 +87,7 @@ function ConnectedMessenger({ resources, onOpenVoiceRooms }: { resources: Resour
           <p>Secure device keys persist in this browser. Messages use verified key epochs, authenticated live delivery and encrypted REST history. Server-authenticated keys use trust on first use.</p></div>
       </section>
       <footer className="real-account-footer">
-        <span>{auth.user ? `@${auth.user.username}` : ''}</span>
+        <span>{account ? `${account.displayName} · @${account.username}` : ''}</span>
         {auth.error && <p role="alert">{auth.error.message}</p>}
         <Button size="sm" variant="outline" loading={auth.pending === 'logout'} disabled={Boolean(auth.pending)} onClick={() => void auth.logout()}>Sign Out</Button>
       </footer>

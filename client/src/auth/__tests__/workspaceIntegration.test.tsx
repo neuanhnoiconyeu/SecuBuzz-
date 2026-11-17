@@ -115,11 +115,11 @@ test('real sessions never receive demo people; failed server logout preserves id
   };
   render(<TestApp service={service} />);
   expect(await screen.findByRole('heading', { name: 'Your conversations' })).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: 'Verified User' })).toBeInTheDocument();
+  expect(screen.getByText('Verified User · @verified')).toBeInTheDocument();
   expect(screen.queryByText('Ava Morgan')).not.toBeInTheDocument();
   expect(screen.queryByRole('log')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Sign Out' }));
   await waitFor(() => expect(screen.getAllByRole('alert').some(alert => alert.textContent?.includes('Your server session may still be active'))).toBe(true));
-  expect(screen.getByRole('heading', { name: 'Verified User' })).toBeInTheDocument();
+  expect(screen.getByText('Verified User · @verified')).toBeInTheDocument();
   expect(replace).not.toHaveBeenCalled();
 });

@@ -7,7 +7,7 @@ const { spawn, execFileSync } = require('node:child_process');
 const { once } = require('node:events');
 const { chromium, expect } = require('@playwright/test');
 const root = path.resolve(__dirname, '..'), suffix = randomUUID().slice(0, 8);
-const temporary = path.join(root, 'tmp', 'client-e2ee-' + suffix), artifacts = path.join(root, 'artifacts', 'client-e2ee');
+const temporary = path.join(root, 'tmp', 'client-e2ee-' + suffix), artifacts = path.join(temporary, 'artifacts');
 const children = [], pages = [], secretTexts = ['Alice browser E2EE ' + suffix, 'Bob browser reply ' + suffix, 'New device epoch ' + suffix];
 const evidence = { startedAt: new Date().toISOString(), checks: [], network: [], plaintextLeaks: 0, runtimeErrors: 0, browser: 'Chrome, separate isolated contexts', screenshots: [] };
 const delay = ms => new Promise(r => setTimeout(r, ms));
@@ -38,9 +38,30 @@ async function device(page, id) { return page.evaluate(async id => {
     return { deviceId: d.deviceId, nonExtractable: d.signing.privateKey.extractable === false && d.agreement.privateKey.extractable === false };
   } finally { db.close(); }
 }, id); }
-async function ready(page) { await expect(page.getByText('Secure message ready', { exact: true })).toBeVisible({ timeout: 45000 }); await expect(page.getByLabel('Secure message', { exact: true })).toBeEnabled(); }
-async function select(page, name) { await page.getByRole('button', { name: 'Refresh conversations', exact: true }).click(); await page.getByRole('navigation', { name: 'Direct conversations' }).getByRole('button', { name, exact: true }).click(); await ready(page); }
-async function send(page, text) { await page.getByLabel('Secure message', { exact: true }).fill(text); await page.getByRole('button', { name: 'Send encrypted message', exact: true }).click(); await expect(page.getByRole('log').getByText(text, { exact: true })).toBeVisible({ timeout: 30000 }); }
+async function enroll(page) {
+  const button = page.getByRole('button', { name: /^Enroll this browser/ });
+  await expect(button).toBeVisible();
+  const before = (await api(page, '/api/keys/devices')).body.items;
+  page.once('dialog', dialog => dialog.dismiss()); await button.click();
+  const cancelled = (await api(page, '/api/keys/devices')).body.items;
+  check('cancelled enrollment preserves the key directory', JSON.stringify(cancelled) === JSON.stringify(before));
+  page.once('dialog', dialog => dialog.accept()); await button.click();
+  await expect(page.getByText('Secure device ready', { exact: true })).toBeVisible({ timeout: 30000 });
+}
+async function advanced(page) { const section = page.getByText('Advanced settings', { exact: true }).locator('..'); if (await section.getAttribute('open') === null) await section.locator('summary').first().click(); }
+async function refresh(page) { await advanced(page); await page.getByRole('button', { name: 'Refresh secure conversation', exact: true }).click(); await ready(page); await page.getByText('Advanced settings', { exact: true }).click(); }
+async function ready(page) {
+  await expect(page.getByText('Secure message ready', { exact: true })).toBeVisible({ timeout: 45000 });
+  // This fixture deliberately runs HTTP-only DATA. Select the existing explicit
+  // REST mode through the UI; production never falls back automatically.
+  const settings = page.getByText('Advanced settings', { exact: true }).locator('..');
+  const wasOpen = await settings.getAttribute('open') !== null;
+  await advanced(page); await page.getByLabel('Message transport', { exact: true }).selectOption('rest');
+  if (!wasOpen) await page.getByText('Advanced settings', { exact: true }).click();
+  await expect(page.getByRole('textbox', { name: /^Message to / })).toBeEnabled();
+}
+async function select(page, name) { if (!await page.getByRole('navigation', { name: 'Direct conversations' }).isVisible()) await page.getByRole('button', { name: 'Back to conversations', exact: true }).click(); await page.getByRole('button', { name: 'Refresh conversations', exact: true }).click(); await page.getByRole('navigation', { name: 'Direct conversations' }).getByRole('button', { name: new RegExp('^' + name + ',') }).click(); await ready(page); }
+async function send(page, text) { await page.getByRole('textbox', { name: /^Message to / }).fill(text); await page.getByRole('button', { name: 'Send', exact: true }).click(); await expect(page.getByRole('log').getByText(text, { exact: true })).toBeVisible({ timeout: 30000 }); }
 (async () => {
   fs.mkdirSync(temporary, { recursive: true }); fs.mkdirSync(artifacts, { recursive: true }); let host;
   try {
@@ -55,7 +76,7 @@ async function send(page, text) { await page.getByLabel('Secure message', { exac
     const password = randomBytes(24).toString('base64url'), usernames = ['alice', 'bob', 'charlie'].map(n => 'browser-' + n + '-' + suffix), accounts = [];
     for (const [i, page] of [alice, bob, charlie].entries()) {
       await page.goto(origin + '/login'); const r = await api(page, '/api/auth/register', 'POST', { username: usernames[i], email: usernames[i] + '@example.test', password, displayName: ['Alice', 'Bob', 'Charlie'][i] }); check('register isolated account ' + i, r.status === 201);
-      await login(page, origin, usernames[i], password); await expect(page.getByText('Secure device ready', { exact: true })).toBeVisible({ timeout: 30000 });
+      await login(page, origin, usernames[i], password); check('startup does not register device keys', (await api(page, '/api/keys/devices')).body.items.length === 0); await enroll(page);
       accounts.push((await api(page, '/api/auth/me')).body.user);
     }
     const before = await device(alice, accounts[0].id); check('persistent private keys are non-extractable', before.nonExtractable);
@@ -64,23 +85,23 @@ async function send(page, text) { await page.getByLabel('Secure message', { exac
     await alice.reload(); await expect(alice.getByText('Secure device ready', { exact: true })).toBeVisible();
     await alice.getByRole('button', { name: /^Friends(?:,|$)/ }).click(); await alice.getByRole('button', { name: 'Message Bob', exact: true }).click(); await ready(alice); check('real DM and signed HPKE epoch prepared through UI', true);
     await send(alice, secretTexts[0]); await select(bob, 'Alice'); await expect(bob.getByRole('log').getByText(secretTexts[0], { exact: true })).toBeVisible(); check('Bob decrypts Alice ciphertext through real DATA', true);
-    await send(bob, secretTexts[1]); await alice.getByRole('button', { name: 'Refresh secure conversation', exact: true }).click(); await ready(alice); await expect(alice.getByRole('log').getByText(secretTexts[1], { exact: true })).toBeVisible(); check('Alice decrypts Bob reply', true);
+    await send(bob, secretTexts[1]); await refresh(alice); await expect(alice.getByRole('log').getByText(secretTexts[1], { exact: true })).toBeVisible(); check('Alice decrypts Bob reply', true);
     const conversations = await api(alice, '/api/conversations?limit=50'), cid = conversations.body.items[0].id;
     check('Charlie denied conversation/history', (await api(charlie, `/api/conversations/${cid}/messages`)).status === 404);
     await alice.reload(); await expect(alice.getByText('Secure device ready', { exact: true })).toBeVisible(); await select(alice, 'Bob');
     check('refresh restores same device identity', (await device(alice, accounts[0].id)).deviceId === before.deviceId); await expect(alice.getByRole('log').getByText(secretTexts[0], { exact: true })).toBeVisible(); check('refresh restores conversation key and history decryption', true);
     const newer = await browser.newContext(), bob2 = await newer.newPage(); monitor(bob2); await login(bob2, origin, usernames[1], password);
-    await bob2.getByRole('button', { name: 'Enroll this browser — older history may be unavailable', exact: true }).click(); await expect(bob2.getByText('Secure device ready', { exact: true })).toBeVisible();
-    await alice.getByRole('button', { name: 'Refresh secure conversation', exact: true }).click(); await expect(alice.getByText('Contact device keys changed', { exact: true })).toBeVisible(); await expect(alice.getByRole('button', { name: 'Send encrypted message', exact: true })).toBeDisabled(); check('peer key change blocks send and warns before trust', true);
+    await enroll(bob2);
+    await advanced(alice); await alice.getByRole('button', { name: 'Refresh secure conversation', exact: true }).click(); await expect(alice.getByText('Contact device keys changed', { exact: true })).toBeVisible(); await expect(alice.getByRole('button', { name: 'Send', exact: true })).toBeDisabled(); check('peer key change blocks send and warns before trust', true);
     await alice.getByRole('button', { name: 'Trust these device changes', exact: true }).click(); await ready(alice); await send(alice, secretTexts[2]); await select(bob2, 'Alice');
     await expect(bob2.getByRole('log').getByText(secretTexts[2], { exact: true })).toBeVisible(); await expect(bob2.getByRole('log').getByText(secretTexts[0], { exact: true })).toHaveCount(0); check('new epoch includes new device without pretending old-key recovery', true);
-    bob2.once('dialog', d => d.accept()); await bob2.getByText('This browser and key recovery', { exact: true }).click(); await bob2.getByRole('button', { name: 'Revoke this browser', exact: true }).click(); await expect(bob2.getByText('Device revoked', { exact: true })).toBeVisible(); check('device revocation blocks new secure sends', true);
+    await advanced(bob2); bob2.once('dialog', d => d.accept()); await bob2.getByText('This browser and key recovery', { exact: true }).click(); await bob2.getByRole('button', { name: 'Revoke this browser', exact: true }).click(); await expect(bob2.getByText('Device revoked', { exact: true })).toBeVisible(); check('device revocation blocks new secure sends', true);
     await alice.setViewportSize({ width: 390, height: 844 }); check('mobile layout has no horizontal overflow', await alice.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
-    await alice.addStyleTag({ content: '[role=log] article p { filter:blur(8px); }' }); await alice.screenshot({ path: path.join(artifacts, 'mobile-redacted.png'), fullPage: true }); evidence.screenshots.push('mobile-redacted.png');
+    await alice.addStyleTag({ content: '.message-bubble, .conversation-list-preview, .composer-input { filter:blur(8px); }' }); await alice.screenshot({ path: path.join(artifacts, 'mobile-redacted.png'), fullPage: true }); evidence.screenshots.push('mobile-redacted.png');
     await alice.emulateMedia({ colorScheme: 'dark' }); await expect(alice.locator('html')).toHaveAttribute('data-theme', 'dark');
     await alice.screenshot({ path: path.join(artifacts, 'midnight-mobile-redacted.png'), fullPage: true }); evidence.screenshots.push('midnight-mobile-redacted.png');
     await alice.emulateMedia({ colorScheme: 'light' }); await expect(alice.locator('html')).toHaveAttribute('data-theme', 'light'); check('new panel preserves System appearance in light and Midnight dark', true);
-    check('Bungee and Space Grotesk remain active', await alice.evaluate(async () => { await document.fonts.ready; return /bungee/i.test(getComputedStyle(document.querySelector('h1')).fontFamily) && /space.?grotesk/i.test(getComputedStyle(document.body).fontFamily); }));
+    check('Bungee and Space Grotesk remain active', await alice.evaluate(async () => { await document.fonts.ready; return /bungee/i.test(getComputedStyle(document.querySelector('.chat-title-heading')).fontFamily) && /space.?grotesk/i.test(getComputedStyle(document.body).fontFamily); }));
     await alice.getByRole('button', { name: 'Sign Out', exact: true }).click(); await expect(alice.getByLabel('Username or email')).toBeVisible();
     await login(alice, origin, usernames[2], password); await expect(alice.getByRole('button', { name: 'Enroll this browser — older history may be unavailable', exact: true })).toBeVisible();
     await expect(alice.getByRole('log')).toHaveCount(0); check('same-browser account switch clears plaintext and isolates device enrollment', true);
@@ -90,7 +111,7 @@ async function send(page, text) { await page.getByLabel('Secure message', { exac
   finally {
     await host?.close().catch(() => {});
     for (const p of children.reverse()) if (p.exitCode === null) { const exited = once(p, 'exit'); if (process.platform === 'win32') { try { execFileSync('taskkill.exe', ['/PID', String(p.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' }); } catch {} } else p.kill(); await Promise.race([exited, delay(5000)]); }
-    evidence.finishedAt = new Date().toISOString(); fs.writeFileSync(path.join(artifacts, 'browser-evidence.json'), JSON.stringify(evidence, null, 2));
+    evidence.finishedAt = new Date().toISOString(); fs.writeFileSync(path.join(artifacts, 'browser-evidence.json'), JSON.stringify(evidence, null, 2)); console.log('Evidence: ' + path.join(artifacts, 'browser-evidence.json'));
     // Only known isolated files/processes above are owned by this script. No existing service is inspected/stopped.
   }
 })();

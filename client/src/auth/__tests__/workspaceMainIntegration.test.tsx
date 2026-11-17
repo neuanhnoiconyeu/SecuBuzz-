@@ -8,10 +8,10 @@ import type { AuthService } from '../authService';
 // media suites and full build separately expose main's missing shared dependencies.
 const mockMounted = jest.fn(), mockDisposed = jest.fn();
 jest.mock('@/components/messenger/RealMessengerWorkspace', () => ({
-  RealMessengerWorkspace: function Workspace({ onOpenVoiceRooms }: { onOpenVoiceRooms(): void }) {
+  RealMessengerWorkspace: function Workspace({ onOpenVoiceRooms, active }: { onOpenVoiceRooms(): void; active: boolean }) {
     const [draft, setDraft] = useState('');
     useEffect(() => { mockMounted(); return () => { mockDisposed(); }; }, []);
-    return <section aria-label="DATA workspace"><input aria-label="Retained draft" value={draft} onChange={e => setDraft(e.target.value)} />
+    return <section aria-label="DATA workspace" data-active={active}><input aria-label="Retained draft" value={draft} onChange={e => setDraft(e.target.value)} />
       <button onClick={onOpenVoiceRooms}>Open Voice Rooms</button></section>;
   },
 }));
@@ -39,8 +39,10 @@ test('opening media preserves DATA resources and drafts; logout disposes the ses
   fireEvent.click(screen.getByRole('button', { name: 'Open Voice Rooms' }));
   expect(screen.getByRole('region', { name: 'Media workspace' })).toBeInTheDocument();
   expect(mockMounted).toHaveBeenCalledTimes(1); expect(mockDisposed).not.toHaveBeenCalled();
+  expect(screen.getByRole('region', { name: 'DATA workspace', hidden: true })).toHaveAttribute('data-active', 'false');
   fireEvent.click(screen.getByRole('button', { name: 'Back to account' }));
   expect(screen.getByRole('textbox', { name: 'Retained draft' })).toHaveValue('Private draft');
+  expect(screen.getByRole('region', { name: 'DATA workspace' })).toHaveAttribute('data-active', 'true');
   expect(screen.queryByTestId('legacy-calling-transport')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Open Voice Rooms' }));
   fireEvent.click(screen.getByRole('button', { name: 'Sign Out' }));

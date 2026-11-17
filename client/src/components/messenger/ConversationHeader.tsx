@@ -1,4 +1,4 @@
-import type { Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 import { ChevronDown, ChevronLeft, LockKeyhole } from 'lucide-react';
 import { Avatar, Badge } from '@/components/ui';
 import type { ConnectionStatus, PresenceStatus, TransportMode } from '@/messaging/messageModel';
@@ -25,6 +25,8 @@ export interface ConversationHeaderProps {
   onStartCall?(kind: DirectCallKind): void;
   callDisabled?: boolean;
   callTarget?: { conversationId: string; peer: DirectCallPeer };
+  showCalls?: boolean;
+  securePresentation?: { ready: boolean; label: string; details: ReactNode };
 }
 
 const presenceLabel: Record<PresenceStatus, string> = {
@@ -54,6 +56,8 @@ export function ConversationHeader({
   onStartCall,
   callDisabled = false,
   callTarget,
+  showCalls = true,
+  securePresentation,
 }: ConversationHeaderProps) {
   const localEncryptionLabel = !securityStatus
     ? 'Preparing local encryption'
@@ -86,7 +90,7 @@ export function ConversationHeader({
           <p className="chat-contact-eyebrow">{conversationTypeLabel[type]}</p>
           <h1 ref={headingRef} tabIndex={-1} className="chat-title-heading contact-name display-heading display-heading--conversation"><span className="sr-only">Chat with </span>{name}</h1>
           <div className="contact-details">
-            {presence && <Badge status={presence}>{presenceLabel[presence]}</Badge>}
+            {presence && <Badge status={presence} announce={Boolean(securePresentation)} aria-label={securePresentation ? 'Contact presence' : undefined}>{presenceLabel[presence]}</Badge>}
             <span className={`conversation-connection ${connectionStatus === 'connected' ? 'is-connected' : ''}`}>
               <span className="conversation-connection-dot" aria-hidden="true" />
               {transportMode === 'local-demo' && <><span>Local demo</span><span aria-hidden="true"> · </span></>}
@@ -97,22 +101,22 @@ export function ConversationHeader({
       </div>
 
       <div className="chat-header-actions">
-        {type === 'direct' && <DirectCallActions name={name} disabled={callDisabled}
+        {showCalls && type === 'direct' && <DirectCallActions name={name} disabled={callDisabled}
           {...(callTarget ? { target: callTarget } : {})} {...(onStartCall ? { onPreviewCall: onStartCall } : {})} />}
         <details className="conversation-security-details">
           <summary className="conversation-security-summary">
             <LockKeyhole size={15} aria-hidden="true" />
             <span className="conversation-security-copy">
               <span className="conversation-security-primary">
-                <span>{primarySecurityLabel}</span>
+                <span>{securePresentation?.label ?? primarySecurityLabel}</span>
                 <span className="conversation-security-toggle">Security details</span>
               </span>
-              <span className="conversation-security-limitation">E2EE not established</span>
+              <span className="conversation-security-limitation">{securePresentation ? securePresentation.ready ? 'Conversation keys checked' : 'Sending is locked' : 'E2EE not established'}</span>
             </span>
             <ChevronDown className="conversation-security-chevron" size={15} aria-hidden="true" />
           </summary>
           <div className="conversation-security-panel" role="region" aria-label="Conversation security details" tabIndex={0}>
-            <div className="conversation-security-facts" aria-label="Encryption status">
+            {securePresentation ? securePresentation.details : <><div className="conversation-security-facts" aria-label="Encryption status">
               <Badge status={securityStatus?.localEncryptionAvailable ? 'success' : 'warning'}>
                 {localEncryptionLabel}
               </Badge>
@@ -127,6 +131,7 @@ export function ConversationHeader({
                 Local demo replies are mock text. No other user receives messages in these demo conversations.
               </p>
             )}
+            </>}
           </div>
         </details>
       </div>

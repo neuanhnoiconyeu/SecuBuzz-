@@ -35,15 +35,18 @@ export class SecureMessagingSession {
     let device = await this.store.get<DeviceIdentity>('device'); const own = await this.api.ownDevices(); this.assert();
     if (!device) {
       if (await this.store.get('enrolled')) throw new E2eeError('storage_corrupt');
-      if (own.length && !explicit) throw new E2eeError('enrollment_required');
+      // Creating an identity is a user-confirmed operation, including the first device.
+      // A revoked identity in this profile is never replaced by this path.
+      if (!explicit) throw new E2eeError('enrollment_required');
       const candidate = await generateDevice(this.api.session.actor.id); this.assert(); device = await this.store.enroll(candidate);
     }
     await validateLocalDevice(device, this.api.session.actor.id); this.assert(); this.identity = device;
     const prior = own.find(d => d.deviceKeyId === device.deviceKeyId);
-    if (prior && (prior.status !== 'active' || !matchesDevice(device, prior))) throw new E2eeError('device_revoked');
-    let registered: DeviceRecord;
-    try { registered = await this.api.register(await registration(device)); }
-    catch (e) { if (e instanceof ApiError && e.code === 'key_conflict') throw new E2eeError('device_revoked'); throw e; }
+    if (prior && !matchesDevice(device, prior)) throw new E2eeError('invalid_proof');
+    if (prior && prior.status !== 'active') throw new E2eeError('device_revoked');
+    // KEY_CONFLICT also covers ownership/version/registration conflicts. It is not
+    // evidence of revocation; only verified directory state establishes that.
+    const registered = await this.api.register(await registration(device));
     this.assert(); if (!matchesDevice(device, registered) || registered.status !== 'active') throw new E2eeError('invalid_proof');
     await this.store.put('verified-device', registered.deviceKeyId, registered); this.assert(); return device;
   }
