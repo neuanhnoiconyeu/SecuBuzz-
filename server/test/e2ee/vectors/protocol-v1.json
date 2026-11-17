@@ -1,0 +1,119 @@
+{
+  "description": "secubuzz-dm-keys v1 interoperability vector. SYNTHETIC TEST KEYS ONLY: never use them outside tests.",
+  "protocol": {
+    "name": "secubuzz-dm-keys",
+    "version": 1,
+    "hpke": {
+      "mode": 0,
+      "kemId": 16,
+      "kdfId": 1,
+      "aeadId": 2
+    }
+  },
+  "conversationId": "33333333-3333-4333-8333-333333333333",
+  "devices": {
+    "alice": {
+      "userId": "11111111-1111-4111-8111-111111111111",
+      "deviceId": "lyq-t2x1cJy_5wjkDsGt5Q",
+      "keyVersion": 1,
+      "createdAt": "2026-11-14T12:00:00.000Z",
+      "agreementPublicKey": "BM4CYOdc3f0IMYQnADMd4qXxUicRLuI_vMflNKtUtDCdN1rAEyDX--pxwPSJ2k6k8r_4wcWKkcPN44zMytp5BtE",
+      "signingPublicKey": "BCXXv0duxWbmHIL8R0i7eU7nSPk_454AsXlpFeQu4qIFEw1MMEiNbFHbVY3GqtLDUpLeSVEuFnmSC5GS8XJldPQ",
+      "deviceKeyIdText": "[\"secubuzz-device-key-id\",1,\"BM4CYOdc3f0IMYQnADMd4qXxUicRLuI_vMflNKtUtDCdN1rAEyDX--pxwPSJ2k6k8r_4wcWKkcPN44zMytp5BtE\",\"BCXXv0duxWbmHIL8R0i7eU7nSPk_454AsXlpFeQu4qIFEw1MMEiNbFHbVY3GqtLDUpLeSVEuFnmSC5GS8XJldPQ\"]",
+      "deviceKeyId": "VfTkBgZNUyQYeOWs-CG6PAVCzZ1CS-KGEBJWm16p6pA",
+      "registrationStatement": "[\"secubuzz-device-key\",1,\"11111111-1111-4111-8111-111111111111\",\"lyq-t2x1cJy_5wjkDsGt5Q\",1,\"2026-11-14T12:00:00.000Z\",\"BM4CYOdc3f0IMYQnADMd4qXxUicRLuI_vMflNKtUtDCdN1rAEyDX--pxwPSJ2k6k8r_4wcWKkcPN44zMytp5BtE\",\"BCXXv0duxWbmHIL8R0i7eU7nSPk_454AsXlpFeQu4qIFEw1MMEiNbFHbVY3GqtLDUpLeSVEuFnmSC5GS8XJldPQ\"]",
+      "signature": "e1vLAIjWVtJTZ6Rf8CIZiVaze-vHSTHk62t7Qu7gaI31800dJOCrsnVK-609isZwmOlxDw3rWNhsPNi8empGtA",
+      "privateKeys": {
+        "signingD": "W8nSglVRFCgqJ1B9f2YalhhVXgoIHKRbvSxqweYohLI",
+        "agreementD": "hYWWx4iYeWdh22stWxvAMV66u2UoMksulMdiHH1KIf0"
+      }
+    },
+    "bob": {
+      "userId": "22222222-2222-4222-8222-222222222222",
+      "deviceId": "WNqMeqIgc1IA2Wo_GhXrFw",
+      "keyVersion": 1,
+      "createdAt": "2026-11-14T12:00:01.000Z",
+      "agreementPublicKey": "BNRkYEoPmeVFyguH3DeS8tZ3ZBEYT3LVXon6cT0rYDsx_z6Z99o0DxiZuOavHKOAKsifsjStLfnwsJpZNfE31mo",
+      "signingPublicKey": "BGR2yCh4dr8GfGBk5Ju_M-BdzO-ixa_FodtQYJ6IHaIj0yo7R6H7MaxmOoCTYEwqIgsugxC2VjXWXAToHtLr7f4",
+      "deviceKeyIdText": "[\"secubuzz-device-key-id\",1,\"BNRkYEoPmeVFyguH3DeS8tZ3ZBEYT3LVXon6cT0rYDsx_z6Z99o0DxiZuOavHKOAKsifsjStLfnwsJpZNfE31mo\",\"BGR2yCh4dr8GfGBk5Ju_M-BdzO-ixa_FodtQYJ6IHaIj0yo7R6H7MaxmOoCTYEwqIgsugxC2VjXWXAToHtLr7f4\"]",
+      "deviceKeyId": "wf1dxIoTt5ZBypzg9vyFHYgelxgGCfW16UCPJ0A-EMg",
+      "registrationStatement": "[\"secubuzz-device-key\",1,\"22222222-2222-4222-8222-222222222222\",\"WNqMeqIgc1IA2Wo_GhXrFw\",1,\"2026-11-14T12:00:01.000Z\",\"BNRkYEoPmeVFyguH3DeS8tZ3ZBEYT3LVXon6cT0rYDsx_z6Z99o0DxiZuOavHKOAKsifsjStLfnwsJpZNfE31mo\",\"BGR2yCh4dr8GfGBk5Ju_M-BdzO-ixa_FodtQYJ6IHaIj0yo7R6H7MaxmOoCTYEwqIgsugxC2VjXWXAToHtLr7f4\"]",
+      "signature": "PNrw0AM1yxZtd_yzfWoXgRyzDR-bx_mkj9q8CD8F1X_4te0t1vmlnyTIRjiKXy4iZELxljpPAsxykpBvsEHW5g",
+      "privateKeys": {
+        "signingD": "xcSYhm0HG1FOVqsEb8Ihv3fvr5t3rbyMKE2QHbE3_dg",
+        "agreementD": "a0IukVCTCssPNRzGITfMq0OmSwZIOldYa99I8BFg9rg"
+      }
+    }
+  },
+  "registrations": {
+    "alice": {
+      "deviceId": "lyq-t2x1cJy_5wjkDsGt5Q",
+      "keyVersion": 1,
+      "createdAt": "2026-11-14T12:00:00.000Z",
+      "agreementPublicKey": "BM4CYOdc3f0IMYQnADMd4qXxUicRLuI_vMflNKtUtDCdN1rAEyDX--pxwPSJ2k6k8r_4wcWKkcPN44zMytp5BtE",
+      "signingPublicKey": "BCXXv0duxWbmHIL8R0i7eU7nSPk_454AsXlpFeQu4qIFEw1MMEiNbFHbVY3GqtLDUpLeSVEuFnmSC5GS8XJldPQ",
+      "signature": "e1vLAIjWVtJTZ6Rf8CIZiVaze-vHSTHk62t7Qu7gaI31800dJOCrsnVK-609isZwmOlxDw3rWNhsPNi8empGtA"
+    },
+    "bob": {
+      "deviceId": "WNqMeqIgc1IA2Wo_GhXrFw",
+      "keyVersion": 1,
+      "createdAt": "2026-11-14T12:00:01.000Z",
+      "agreementPublicKey": "BNRkYEoPmeVFyguH3DeS8tZ3ZBEYT3LVXon6cT0rYDsx_z6Z99o0DxiZuOavHKOAKsifsjStLfnwsJpZNfE31mo",
+      "signingPublicKey": "BGR2yCh4dr8GfGBk5Ju_M-BdzO-ixa_FodtQYJ6IHaIj0yo7R6H7MaxmOoCTYEwqIgsugxC2VjXWXAToHtLr7f4",
+      "signature": "PNrw0AM1yxZtd_yzfWoXgRyzDR-bx_mkj9q8CD8F1X_4te0t1vmlnyTIRjiKXy4iZELxljpPAsxykpBvsEHW5g"
+    }
+  },
+  "epoch": {
+    "body": {
+      "keyId": "98XxiODalyNX0JC-Q2bzNw",
+      "epoch": 1,
+      "previousKeyId": null,
+      "creatorDeviceKeyId": "VfTkBgZNUyQYeOWs-CG6PAVCzZ1CS-KGEBJWm16p6pA",
+      "createdAt": "2026-11-14T12:00:02.000Z",
+      "wraps": [
+        {
+          "recipientUserId": "11111111-1111-4111-8111-111111111111",
+          "recipientDeviceKeyId": "VfTkBgZNUyQYeOWs-CG6PAVCzZ1CS-KGEBJWm16p6pA",
+          "enc": "BMt4XLXGeoDNEAryLSZZPkAzeu4qpcUpn-lgDkq3FkRwOn2hO_42js4yWMo3jEwqgGC37pF1DQZ7iKgxLTQFMg8",
+          "ciphertext": "fnr5uhao_7m-zrzJhrKLLSF8vNT7_EbJjDcr0zAFgIXMMUTqPRPJBhr38WjTlOPO"
+        },
+        {
+          "recipientUserId": "22222222-2222-4222-8222-222222222222",
+          "recipientDeviceKeyId": "wf1dxIoTt5ZBypzg9vyFHYgelxgGCfW16UCPJ0A-EMg",
+          "enc": "BEq8cDJ9zLlVVXFF4uVD8p0QWKG3dG6tMXOVcXr5bWSUj8lRmv2n5HVm9ASSAUjwtioLjfqrVLg4aMyxtc3ituU",
+          "ciphertext": "cuI6r-lXoJ1-H4d13G3zlbzs4jxRkwyCkoaM2znrrP5Dllb2pNv_dPhhT32H602L"
+        }
+      ],
+      "signature": "Nha5ObxJWxrlu3MJr-r5ELFSxR5CdNmMFgvCVS8UUCtJBGesVjNvUzNZ6rwapUdkhGCltFdLrvq2UcpB6RdVbA"
+    },
+    "creatorUserId": "11111111-1111-4111-8111-111111111111",
+    "statement": "[\"secubuzz-conversation-key\",1,\"33333333-3333-4333-8333-333333333333\",\"98XxiODalyNX0JC-Q2bzNw\",1,null,\"11111111-1111-4111-8111-111111111111\",\"VfTkBgZNUyQYeOWs-CG6PAVCzZ1CS-KGEBJWm16p6pA\",\"2026-11-14T12:00:02.000Z\",[[\"11111111-1111-4111-8111-111111111111\",\"VfTkBgZNUyQYeOWs-CG6PAVCzZ1CS-KGEBJWm16p6pA\",\"BMt4XLXGeoDNEAryLSZZPkAzeu4qpcUpn-lgDkq3FkRwOn2hO_42js4yWMo3jEwqgGC37pF1DQZ7iKgxLTQFMg8\",\"fnr5uhao_7m-zrzJhrKLLSF8vNT7_EbJjDcr0zAFgIXMMUTqPRPJBhr38WjTlOPO\"],[\"22222222-2222-4222-8222-222222222222\",\"wf1dxIoTt5ZBypzg9vyFHYgelxgGCfW16UCPJ0A-EMg\",\"BEq8cDJ9zLlVVXFF4uVD8p0QWKG3dG6tMXOVcXr5bWSUj8lRmv2n5HVm9ASSAUjwtioLjfqrVLg4aMyxtc3ituU\",\"cuI6r-lXoJ1-H4d13G3zlbzs4jxRkwyCkoaM2znrrP5Dllb2pNv_dPhhT32H602L\"]]]",
+    "wrapInfos": {
+      "VfTkBgZNUyQYeOWs-CG6PAVCzZ1CS-KGEBJWm16p6pA": "[\"secubuzz-conversation-key-wrap\",1,\"33333333-3333-4333-8333-333333333333\",\"98XxiODalyNX0JC-Q2bzNw\",1,\"11111111-1111-4111-8111-111111111111\",\"VfTkBgZNUyQYeOWs-CG6PAVCzZ1CS-KGEBJWm16p6pA\",\"11111111-1111-4111-8111-111111111111\",\"VfTkBgZNUyQYeOWs-CG6PAVCzZ1CS-KGEBJWm16p6pA\"]",
+      "wf1dxIoTt5ZBypzg9vyFHYgelxgGCfW16UCPJ0A-EMg": "[\"secubuzz-conversation-key-wrap\",1,\"33333333-3333-4333-8333-333333333333\",\"98XxiODalyNX0JC-Q2bzNw\",1,\"11111111-1111-4111-8111-111111111111\",\"VfTkBgZNUyQYeOWs-CG6PAVCzZ1CS-KGEBJWm16p6pA\",\"22222222-2222-4222-8222-222222222222\",\"wf1dxIoTt5ZBypzg9vyFHYgelxgGCfW16UCPJ0A-EMg\"]"
+    },
+    "epochKeyHex": "28fb7892c334691607a5d4b831825e2f7c76bf614c62f050589d588c5e73237b"
+  },
+  "message": {
+    "plaintext": "Hello Bob. This vector is synthetic.",
+    "aad": "[\"yahoo-security-messenger\",2,\"33333333-3333-4333-8333-333333333333\",\"vector-message-1\",\"11111111-1111-4111-8111-111111111111\",\"Alice\",\"2026-11-14T12:00:03.000Z\",\"text\",\"98XxiODalyNX0JC-Q2bzNw\"]",
+    "envelope": {
+      "id": "vector-message-1",
+      "conversationId": "33333333-3333-4333-8333-333333333333",
+      "senderId": "11111111-1111-4111-8111-111111111111",
+      "senderName": "Alice",
+      "timestamp": "2026-11-14T12:00:03.000Z",
+      "type": "text",
+      "encryption": {
+        "version": 2,
+        "algorithm": "AES-256-GCM",
+        "encoding": "base64",
+        "keyId": "98XxiODalyNX0JC-Q2bzNw",
+        "iv": "yEzkth/ScnKW7Zdw",
+        "ciphertext": "Es9/CY28Lz5alX2yMuBV8lLG6Ol80z4NxUW0zM+yI2HmTkM0Z6BKwDypgdD4+21x+sfEYA=="
+      }
+    },
+    "fingerprintText": "[\"vector-message-1\",\"33333333-3333-4333-8333-333333333333\",\"11111111-1111-4111-8111-111111111111\",\"Alice\",\"2026-11-14T12:00:03.000Z\",\"text\",2,\"AES-256-GCM\",\"base64\",\"98XxiODalyNX0JC-Q2bzNw\",\"yEzkth/ScnKW7Zdw\",\"Es9/CY28Lz5alX2yMuBV8lLG6Ol80z4NxUW0zM+yI2HmTkM0Z6BKwDypgdD4+21x+sfEYA==\"]",
+    "fingerprint": "a3c268694454b32685b7a64d420afd8aab68056a0905de0b3886b54afcbde253"
+  }
+}

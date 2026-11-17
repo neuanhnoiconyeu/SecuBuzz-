@@ -28,6 +28,11 @@ export const SERVER_EVENTS = {
   typingUpdate: 'typing:update',
   presenceUpdate: 'presence:update',
   conversationUpdated: 'conversation:updated',
+  /**
+   * A hint that a conversation's key state may have changed. Never proof: the client must fetch and
+   * verify the key directory. Payload `{ conversationId, currentEpoch }` (see {@link KeysChangedEvent}).
+   */
+  conversationKeysChanged: 'conversation:keys-changed',
 } as const;
 
 export type ClientEventName = (typeof CLIENT_EVENTS)[keyof typeof CLIENT_EVENTS] | CallClientEventName | 'call:media';
@@ -139,6 +144,52 @@ export interface ConversationUpdatedEvent {
   readonly conversationId: string;
   readonly displayName?: string;
   readonly updatedAt: string;
+}
+
+/** `conversation:keys-changed`. Exactly these two fields; no keys, wraps, signatures or timestamps. */
+export interface KeysChangedEvent {
+  readonly conversationId: string;
+  readonly currentEpoch: { readonly keyId: string; readonly epoch: number } | null;
+}
+
+/**
+ * What to do with a failure reported by a bound DATA store. Only an allowlisted `code` token is
+ * ever inspected (see `adapterCall.ts`); messages and details never leave the adapter.
+ *
+ * | DATA code                                  | Ack code                     | Retry the same envelope?        |
+ * | ------------------------------------------ | ---------------------------- | ------------------------------- |
+ * | VALIDATION_ERROR, PAYLOAD_TOO_LARGE        | invalid_payload              | no                              |
+ * | FORBIDDEN (senderId/senderName fields)     | actor_mismatch               | no                              |
+ * | FORBIDDEN, NOT_FOUND                       | unauthorized_conversation    | no                              |
+ * | RECIPIENT_KEYS_UNVERIFIED                  | recipient_keys_unavailable   | no: refresh keys, re-encrypt    |
+ * | RATE_LIMITED                               | rate_limited                 | later                           |
+ * | CSRF_INVALID, UNAUTHENTICATED, SESSION_*   | policy_denied + disconnect   | no: re-authenticate             |
+ * | RECIPIENT_KEYS_UNAVAILABLE, SERVICE_*, any other or timeout | unavailable | yes: infrastructure           |
+ */
+export type StoreFailureAction =
+  | { readonly ack: AckErrorCode; readonly terminate: false }
+  | { readonly ack: 'policy_denied'; readonly terminate: true };
+
+export function classifyStoreFailure(code: string | undefined, fields: readonly string[] = []): StoreFailureAction {
+  switch (code) {
+    case 'VALIDATION_ERROR':
+    case 'PAYLOAD_TOO_LARGE':
+      return { ack: 'invalid_payload', terminate: false };
+    case 'FORBIDDEN':
+      return { ack: fields.some((field) => field === 'senderId' || field === 'senderName') ? 'actor_mismatch' : 'unauthorized_conversation', terminate: false };
+    case 'NOT_FOUND':
+      return { ack: 'unauthorized_conversation', terminate: false };
+    case 'RECIPIENT_KEYS_UNVERIFIED':
+      return { ack: 'recipient_keys_unavailable', terminate: false };
+    case 'RATE_LIMITED':
+      return { ack: 'rate_limited', terminate: false };
+    case 'CSRF_INVALID':
+    case 'UNAUTHENTICATED':
+    case 'SESSION_EXPIRED':
+      return { ack: 'policy_denied', terminate: true };
+    default:
+      return { ack: 'unavailable', terminate: false };
+  }
 }
 
 export type AckCallback = (response: unknown) => void;

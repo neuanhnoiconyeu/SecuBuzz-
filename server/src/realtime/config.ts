@@ -1,4 +1,5 @@
 import type {
+  ConnectionBinder,
   MessageStore,
   RealtimeAuthorizer,
   RealtimeLogger,
@@ -10,6 +11,16 @@ import { COOKIE_NAME } from './cookies.ts';
 import { createConsoleLogger } from './logger.ts';
 import type { RateSetting } from './rateLimiter.ts';
 import type { DirectCallOptions } from '../calls/config.ts';
+
+/** What the server knows about the transport of one handshake. Header values are untrusted input. */
+export interface TransportEvidence {
+  /** The direct peer address. Behind a reverse proxy this is the proxy. */
+  readonly remoteAddress: string;
+  /** True when the HTTP connection used TLS directly. */
+  readonly encrypted: boolean;
+  /** Raw `X-Forwarded-Proto`, meaningful only when `remoteAddress` is a trusted proxy. */
+  readonly forwardedProto: string | null;
+}
 
 export interface RealtimeLimits {
   readonly maxConnections: number;
@@ -64,6 +75,19 @@ export interface RealtimeServerOptions {
   readonly namespace?: string;
   readonly sessionCookieName?: string;
   readonly sessionResolver?: SessionResolver;
+  /**
+   * Real-account mode. When set, every handshake must carry `auth: { csrfToken }`, the binder
+   * verifies it for the resolved session, and the connection gets its own `store`. Messages are
+   * then persisted and key-verified by that store (DATA), as envelope v2 only; a global
+   * `messageStore` and `recipientKeyVerifier` are not consulted for those connections.
+   */
+  readonly connectionBinder?: ConnectionBinder;
+  /**
+   * Decides whether the HTTP connection that carried a handshake counts as secure transport.
+   * Default: direct TLS only. A composition that terminates TLS in a trusted proxy supplies its
+   * own attestation here; never derive it from forwarded headers of an untrusted peer.
+   */
+  readonly resolveTransportSecurity?: (handshake: TransportEvidence) => boolean;
   readonly authorizer?: RealtimeAuthorizer;
   readonly messageStore?: MessageStore;
   readonly recipientKeyVerifier?: RecipientKeyVerifier;
@@ -80,6 +104,8 @@ export interface ResolvedRealtimeConfig {
   readonly namespace: string;
   readonly sessionCookieName: string;
   readonly sessionResolver: SessionResolver | null;
+  readonly connectionBinder: ConnectionBinder | null;
+  readonly resolveTransportSecurity: ((handshake: TransportEvidence) => boolean) | null;
   readonly authorizer: RealtimeAuthorizer | null;
   readonly messageStore: MessageStore | null;
   readonly recipientKeyVerifier: RecipientKeyVerifier | null;
@@ -276,8 +302,19 @@ export function resolveRealtimeConfig(options: RealtimeServerOptions): ResolvedR
   if (timing.handshakeTimeoutMs < timing.adapterTimeoutMs) fail('timing.handshakeTimeoutMs must be at least timing.adapterTimeoutMs.');
   if (timing.revalidationIntervalMs !== 0 && timing.revalidationIntervalMs < 20) fail('timing.revalidationIntervalMs must be 0 or at least 20.');
   if (options.sessionResolver !== undefined) hasMethods('sessionResolver', options.sessionResolver, ['resolveSession'], ['checkSession']);
+  if (options.connectionBinder !== undefined) {
+    hasMethods('connectionBinder', options.connectionBinder, ['bind']);
+    // The binder's CSRF proof is only meaningful for a resolved session, and per-connection stores need an authorizer.
+    if (options.sessionResolver === undefined || options.authorizer === undefined) {
+      fail('connectionBinder requires sessionResolver and authorizer.');
+    }
+  }
+  if (options.resolveTransportSecurity !== undefined && typeof options.resolveTransportSecurity !== 'function') {
+    fail('resolveTransportSecurity must be a function.');
+  }
   if (options.authorizer !== undefined) {
-    hasMethods('authorizer', options.authorizer, ['listConversationIds', 'listBlockedUserIds', 'filterPresenceSubjects']);
+    hasMethods('authorizer', options.authorizer, ['listConversationIds', 'listBlockedUserIds', 'filterPresenceSubjects'],
+      ['canReceive', 'currentKeyEpoch', 'presencePreference']);
   }
   if (options.messageStore !== undefined) hasMethods('messageStore', options.messageStore, ['findMessage', 'recordReceipt', 'storeMessage']);
   if (options.recipientKeyVerifier !== undefined) hasMethods('recipientKeyVerifier', options.recipientKeyVerifier, ['verifyEnvelope']);
@@ -289,6 +326,8 @@ export function resolveRealtimeConfig(options: RealtimeServerOptions): ResolvedR
     namespace: validateNamespace(options.namespace ?? DEFAULT_NAMESPACE),
     sessionCookieName: validateCookieName(options.sessionCookieName ?? DEFAULT_SESSION_COOKIE),
     sessionResolver: options.sessionResolver ?? null,
+    connectionBinder: options.connectionBinder ?? null,
+    resolveTransportSecurity: options.resolveTransportSecurity ?? null,
     authorizer: options.authorizer ?? null,
     messageStore: options.messageStore ?? null,
     recipientKeyVerifier: options.recipientKeyVerifier ?? null,

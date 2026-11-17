@@ -1,58 +1,12 @@
-
-require("dotenv").config();
-
-const express = require("express");
-
-const app = express();
-
-// Initialize database
-require("./server/database/db");
-
-// Import API routes
-const usersRouter =
-    require("./server/routes/users");
-
-const messagesRouter =
-    require("./server/routes/messages");
-
-const logsRouter =
-    require("./server/routes/logs");
-
-// Middleware
-app.use(express.json({
-    limit: "1mb"
-}));
-
-// API ROUTES
-app.use("/api/users", usersRouter);
-
-app.use("/api/messages", messagesRouter);
-
-app.use("/api/logs", logsRouter);
-
-// HEALTH CHECK
-app.get("/", (req, res) => {
-    res.json({
-        application: "Yahoo Security Messenger",
-        status: "running",
-        module: "Data Engineering API"
-    });
-});
-
-// ERROR HANDLER
-app.use((err, req, res, next) => {
-    console.error(err.message);
-
-    res.status(500).json({
-        error: "Internal server error"
-    });
-});
-
-// START SERVER
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-    console.log(
-        `Yahoo Security Messenger API running on port ${PORT}`
-    );
-});
+require('dotenv').config({path:require('node:path').join(__dirname,'.env'),quiet:true});
+const { startServer }=require('./server/start');
+if (require.main===module) {
+    startServer().then(application=>{
+        console.log('SecuBuzz API listening on port '+application.server.address().port);
+        let stopping=false;
+        const stop=()=>{if (stopping) return;stopping=true;application.close().catch(()=>{process.exitCode=1;});};
+        process.once('SIGINT',stop);
+        process.once('SIGTERM',stop);
+    }).catch(()=>{console.error('API startup failed. Check auth configuration, dependencies and database availability.');process.exitCode=1;});
+}
+module.exports={startServer};

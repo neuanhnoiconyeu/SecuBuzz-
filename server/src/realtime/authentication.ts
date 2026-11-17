@@ -1,12 +1,12 @@
 import { callAdapter } from './adapterCall.ts';
 import type { ServerClock } from './clock.ts';
 import type { ResolvedRealtimeConfig } from './config.ts';
-import type { ConnectionSecurityContext, HandshakeContext, RealtimeActor } from './contracts.ts';
+import type { BoundConnection, ConnectionSecurityContext, HandshakeContext, MessageStore, PresencePreference, RealtimeActor } from './contracts.ts';
 import { extractSessionCookie } from './cookies.ts';
 import { safeLog } from './logger.ts';
 import { connectError, type ConnectErrorCode } from './protocol.ts';
 import type { ConnectionRegistry, HandshakeGrant, RealtimeSocket } from './registry.ts';
-import { isDemoIdentity, parseIdentifierList, parseSecurityDecision, parseSessionResolution } from './validation.ts';
+import { hasOnlyKeys, isDemoIdentity, isPlainObject, parseIdentifierList, parseSecurityDecision, parseSessionResolution } from './validation.ts';
 
 export type HandshakeOutcome =
   | { readonly ok: true; readonly grant: HandshakeGrant }
@@ -27,9 +27,38 @@ export function isAllowedOrigin(config: ResolvedRealtimeConfig, origin: unknown)
 }
 
 const MAX_USER_AGENT = 512;
+const MAX_CSRF_TOKEN = 512;
 
 function reject(code: ConnectErrorCode, reason: string): HandshakeOutcome {
   return { ok: false, code, reason };
+}
+
+/**
+ * `handshake.auth` in real-account mode is exactly `{ csrfToken: string }`, or empty. Any other
+ * field (for example a client-asserted `userId`) is refused rather than silently ignored.
+ */
+function parseHandshakeAuth(auth: unknown): string | null | 'malformed' {
+  if (auth === undefined || auth === null) return null;
+  if (!isPlainObject(auth) || !hasOnlyKeys(auth, ['csrfToken'])) return 'malformed';
+  const token = auth.csrfToken;
+  if (token === undefined) return null;
+  return typeof token === 'string' && token.length > 0 && token.length <= MAX_CSRF_TOKEN && /^[\x21-\x7e]+$/.test(token) ? token : 'malformed';
+}
+
+const PREFERENCES: ReadonlySet<unknown> = new Set(['available', 'away', 'busy', 'invisible']);
+
+export function parsePresencePreference(value: unknown): PresencePreference | null | 'malformed' {
+  if (value === null || value === undefined) return null;
+  return PREFERENCES.has(value) ? value as PresencePreference : 'malformed';
+}
+
+function parseBoundConnection(value: unknown): BoundConnection | 'rejected' | 'malformed' {
+  if (value === null) return 'rejected';
+  if (!isPlainObject(value) || !hasOnlyKeys(value, ['store'])) return 'malformed';
+  const store = value.store as Record<string, unknown> | null;
+  if (store === null || typeof store !== 'object' || typeof store.storeMessage !== 'function' ||
+    typeof store.findMessage !== 'function' || typeof store.recordReceipt !== 'function') return 'malformed';
+  return { store: value.store as MessageStore };
 }
 
 /**
@@ -85,12 +114,18 @@ export class HandshakeAuthenticator {
       if (cookie.status === 'malformed') return reject('UNAUTHORIZED', 'cookie_malformed');
 
       const userAgent = headers['user-agent'];
+      const remoteAddress = typeof socket.handshake.address === 'string' ? socket.handshake.address : '';
+      const forwarded = headers['x-forwarded-proto'];
+      const encrypted = socket.handshake.secure === true;
       const context: HandshakeContext = Object.freeze({
         sessionToken: cookie.value,
         origin,
-        remoteAddress: typeof socket.handshake.address === 'string' ? socket.handshake.address : '',
+        remoteAddress,
         userAgent: typeof userAgent === 'string' ? userAgent.slice(0, MAX_USER_AGENT) : null,
-        secure: socket.handshake.secure === true,
+        // Direct TLS unless the composition attests a trusted-proxy boundary itself; never from raw headers.
+        secure: config.resolveTransportSecurity
+          ? config.resolveTransportSecurity({ remoteAddress, encrypted, forwardedProto: typeof forwarded === 'string' ? forwarded : null }) === true
+          : encrypted,
         receivedAt: new Date(started),
       });
       const resolveSession = resolver.resolveSession.bind(resolver);
@@ -118,6 +153,24 @@ export class HandshakeAuthenticator {
         displayName: session.displayName,
       });
 
+      // Real-account mode: the handshake must prove the session's CSRF token, and the connection
+      // receives its own bound store. Nothing is read from `auth` unless a binder is configured.
+      let store: MessageStore | null = null;
+      const binder = config.connectionBinder;
+      if (binder) {
+        const csrf = parseHandshakeAuth(socket.handshake.auth);
+        if (csrf === 'malformed') return reject('UNAUTHORIZED', 'handshake_auth_shape');
+        const bind = binder.bind.bind(binder);
+        const bound = await callAdapter(() => bind(actor, Object.freeze({ sessionToken: context.sessionToken, csrfToken: csrf, remoteAddress: context.remoteAddress })), budget());
+        if (!bound.ok) return reject('REALTIME_UNAVAILABLE', `binder_${bound.reason}`);
+        const connection = parseBoundConnection(bound.value);
+        if (connection === 'rejected') return reject('UNAUTHORIZED', csrf === null ? 'csrf_missing' : 'csrf_invalid');
+        if (connection === 'malformed') return reject('REALTIME_UNAVAILABLE', 'binder_malformed');
+        store = connection.store;
+        // Re-check after the adapter: a logout may have happened while the proof was verified.
+        if (this.#deps.isSessionRevoked(session.sessionId)) return reject('UNAUTHORIZED', 'session_revoked');
+      }
+
       const policy = config.securityPolicy;
       if (policy?.evaluateConnection) {
         const securityContext: ConnectionSecurityContext = Object.freeze({
@@ -135,14 +188,20 @@ export class HandshakeAuthenticator {
 
       const listConversationIds = authorizer.listConversationIds.bind(authorizer);
       const listBlockedUserIds = authorizer.listBlockedUserIds.bind(authorizer);
+      const loadPreference = authorizer.presencePreference?.bind(authorizer);
       const timeout = budget();
       const loadedSequence = this.#deps.beginAccessLoad();
-      const [conversations, blocked] = await Promise.all([
+      const [conversations, blocked, preference] = await Promise.all([
         callAdapter(() => listConversationIds(actor), timeout),
         callAdapter(() => listBlockedUserIds(actor), timeout),
+        callAdapter(() => (loadPreference ? loadPreference(actor) : null), timeout),
       ]);
       if (!conversations.ok) return reject('REALTIME_UNAVAILABLE', `conversations_${conversations.reason}`);
       if (!blocked.ok) return reject('REALTIME_UNAVAILABLE', `blocks_${blocked.reason}`);
+      // A hidden ("invisible") user must never be published as online, so an unreadable preference fails the handshake.
+      if (!preference.ok) return reject('REALTIME_UNAVAILABLE', `preference_${preference.reason}`);
+      const presencePreference = parsePresencePreference(preference.value);
+      if (presencePreference === 'malformed') return reject('REALTIME_UNAVAILABLE', 'preference_malformed');
       const conversationIds = parseIdentifierList(conversations.value, limits.maxConversationsPerUser);
       if (!conversationIds) return reject('REALTIME_UNAVAILABLE', 'conversations_malformed');
       const blockedUserIds = parseIdentifierList(blocked.value, limits.maxBlockedUsersPerUser);
@@ -161,6 +220,8 @@ export class HandshakeAuthenticator {
           conversationIds: Object.freeze(conversationIds),
           blockedUserIds: Object.freeze(blockedUserIds),
           loadedSequence,
+          store,
+          presencePreference,
         }),
       };
     } finally {

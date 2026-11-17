@@ -6,12 +6,13 @@ import { HandshakeAuthenticator, isAllowedOrigin } from './authentication.ts';
 import { rememberBounded } from './bounded.ts';
 import { ServerClock } from './clock.ts';
 import { resolveRealtimeConfig, type RealtimeServerOptions } from './config.ts';
-import type { PresencePreference } from './contracts.ts';
+import type { AnyMessageEnvelope, KeyEpochSummary, PresencePreference } from './contracts.ts';
 import { EventGate, onceAck } from './eventGate.ts';
+import { parseMessageEnvelopeV2 } from '../e2ee/envelope.ts';
 import { safeLog } from './logger.ts';
 import { MessageRouter } from './messages.ts';
 import { PresenceManager } from './presence.ts';
-import { CLIENT_EVENT_NAMES, CLIENT_EVENTS, connectError, errorAck, SERVER_EVENTS, type ClientEventName } from './protocol.ts';
+import { CLIENT_EVENT_NAMES, CLIENT_EVENTS, connectError, errorAck, SERVER_EVENTS, type ClientEventName, type KeysChangedEvent } from './protocol.ts';
 import { ReceiptRouter } from './receipts.ts';
 import {
   ConnectionRegistry,
@@ -77,6 +78,18 @@ export interface RealtimeServerHandle {
   setPresencePreference(userId: string, preference: PresencePreference): void;
   /** Emits `conversation:updated` to the conversation room. Never changes membership. */
   notifyConversationUpdated(conversationId: string, update?: { readonly displayName?: string }): number;
+  /**
+   * Re-queries the authorizer for every connected user (a social change such as a block, unfriend or
+   * new conversation). Returns the number of users whose access was refreshed. Never grants on failure.
+   */
+  refreshAllAccess(): Promise<number>;
+  /**
+   * Emits `conversation:keys-changed` to room members. Each recipient's payload comes from the
+   * authorizer's `currentKeyEpoch`, so an account the key owner would refuse receives nothing. It is
+   * a process-local hint, not a durable feed: a client that was offline learns of changes by fetching
+   * the key directory. Returns the number of sockets emitted to.
+   */
+  notifyKeysChanged(conversationId: string): Promise<number>;
   getStats(): RealtimeStats;
   /** Stops accepting handshakes and closes every transport. Leaves the HTTP server open. Idempotent. */
   close(): Promise<void>;
@@ -170,8 +183,15 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     calls.recheckUser(user.userId);
   });
   const presence = new PresenceManager(config, registry, clock);
-  const receipts = new ReceiptRouter(config, registry, clock, gate);
-  const messages = new MessageRouter(config, registry, clock, gate, receipts, nsp.adapter);
+  // A bound store said this connection's session/proof is no longer valid: close it. The client
+  // reconnects and the handshake then reports the precise authentication error.
+  const onSessionInvalid = (connection: Connection): void => terminate(connection, 'session_invalid');
+  const receipts = new ReceiptRouter(config, registry, clock, gate, onSessionInvalid);
+  const messages = new MessageRouter(config, registry, clock, gate, receipts, nsp.adapter, {
+    onSessionInvalid,
+    // Cached authority proved stale for this user: re-read it now instead of waiting for the sweep.
+    onStaleAuthority: (userId) => void refreshUserAccess(userId),
+  });
   const authenticator = new HandshakeAuthenticator({
     config, registry, clock, isClosing: () => closing, isSessionRevoked, beginAccessLoad,
   });
@@ -316,6 +336,59 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     }
   };
 
+  const refreshAllAccess = async (): Promise<number> => {
+    let refreshed = 0;
+    await forEachLimited(registry.allUsers().map((user) => user.userId), 8, async (userId) => {
+      if (await refreshUserAccess(userId)) refreshed += 1;
+    });
+    return refreshed;
+  };
+
+  /** Only a canonical epoch summary reaches the wire; anything else from the authorizer is dropped. */
+  const parseEpochSummary = (value: unknown): KeyEpochSummary | null | undefined | 'malformed' => {
+    if (value === undefined || value === null) return value;
+    if (typeof value !== 'object') return 'malformed';
+    const { keyId, epoch } = value as { keyId?: unknown; epoch?: unknown };
+    return isIdentifier(keyId) && typeof epoch === 'number' && Number.isSafeInteger(epoch) && epoch >= 1
+      ? { keyId, epoch }
+      : 'malformed';
+  };
+
+  const notifyKeysChanged = async (conversationId: string): Promise<number> => {
+    const authorizer = config.authorizer;
+    const currentKeyEpoch = authorizer?.currentKeyEpoch?.bind(authorizer);
+    const members = nsp.adapter.rooms.get(conversationRoom(conversationId));
+    if (!currentKeyEpoch || !members || members.size === 0 || closing) return 0;
+    const byUser = new Map<string, Connection[]>();
+    for (const socketId of [...members]) {
+      const connection = registry.connection(socketId);
+      if (!connection || connection.closed) continue;
+      const list = byUser.get(connection.actor.userId) ?? [];
+      list.push(connection);
+      byUser.set(connection.actor.userId, list);
+    }
+    let emitted = 0;
+    // One authorization decision per account; every socket of that account shares it.
+    await forEachLimited([...byUser.values()], 8, async (connections) => {
+      const actor = connections[0]!.actor;
+      const result = await callAdapter(() => currentKeyEpoch(actor, conversationId), timing.adapterTimeoutMs);
+      if (!result.ok || closing) {
+        if (!result.ok) safeLog(logger, 'warn', 'realtime.keys_changed.unavailable', { outcome: result.reason });
+        return;
+      }
+      const summary = parseEpochSummary(result.value);
+      // `undefined`: the key owner refuses this account. `malformed`: never forward unvalidated data.
+      if (summary === undefined || summary === 'malformed') return;
+      const event: KeysChangedEvent = { conversationId, currentEpoch: summary === null ? null : { keyId: summary.keyId, epoch: summary.epoch } };
+      for (const connection of connections) {
+        if (connection.closed || !connection.user.conversations.has(conversationId)) continue;
+        connection.socket.emit(SERVER_EVENTS.conversationKeysChanged, event);
+        emitted += 1;
+      }
+    });
+    return emitted;
+  };
+
   const reply = (ack: ((response: unknown) => void) | null, response: unknown): void => {
     if (ack) onceAck(ack)(response);
   };
@@ -384,7 +457,11 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     const parts = gate.split(connection, args, 'required');
     if (!parts) return;
     if (!gate.admit(connection, 'send')) return reply(parts.ack, errorAck('rate_limited'));
-    const envelope = parseMessageEnvelope(parts.body, limits);
+    // A connection with a bound store is a real account: only the encrypted version-2 envelope is
+    // accepted. There is no version-1 fallback on such a connection.
+    const envelope: AnyMessageEnvelope | null = connection.store
+      ? parseMessageEnvelopeV2(parts.body, limits)
+      : parseMessageEnvelope(parts.body, limits);
     if (!envelope) {
       gate.invalid(connection, 'send_body');
       return reply(parts.ack, errorAck('invalid_payload'));
@@ -444,6 +521,7 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
       user,
       connectedAt: now,
       buckets: createBuckets(config.rates, () => clock.nowMs()),
+      store: grant.store,
       expiresAt: grant.expiresAt,
       expiryTimer: null,
       closed: false,
@@ -455,6 +533,9 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
       typingChain: Promise.resolve(),
       presenceChain: Promise.resolve(),
     };
+    // The stored preference is applied before the first publish so an invisible account is never
+    // announced online. With other connections already open, the in-memory value is newer.
+    if (created && grant.presencePreference) presence.setPreference(actor.userId, grant.presencePreference);
     registry.attach(connection);
     rooms.joinConnection(connection);
 
@@ -541,6 +622,11 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
         updatedAt: clock.next(JSON.stringify(['conversation', conversationId])),
       });
       return recipients;
+    },
+    refreshAllAccess,
+    notifyKeysChanged(conversationId) {
+      if (!isIdentifier(conversationId)) invalidArgument('conversationId');
+      return notifyKeysChanged(conversationId);
     },
     getStats() {
       let conversationRooms = 0;

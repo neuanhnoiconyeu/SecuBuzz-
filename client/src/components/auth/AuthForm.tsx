@@ -163,7 +163,7 @@ export function AuthForm({ variant }: AuthFormProps) {
             <TextInput id="auth-username" ref={(node) => { fieldRefs.current.username = node; }} label="Username"
               value={fields.username} onChange={(event) => change('username', event.target.value)} autoComplete="username"
               autoCapitalize="none" spellCheck={false} required disabled={disabled} placeholder="Choose a username"
-              hint="3–30 letters, numbers, periods, underscores, or hyphens."
+              hint="3–30 characters, starting with a letter or number. Local/demo names are reserved."
               {...(errors.username ? { error: errors.username } : {})} />
             <TextInput id="auth-email" ref={(node) => { fieldRefs.current.email = node; }} label="Email" type="email"
               value={fields.email} onChange={(event) => change('email', event.target.value)} autoComplete="email"
@@ -177,6 +177,7 @@ export function AuthForm({ variant }: AuthFormProps) {
           <PasswordField id="auth-password" ref={(node) => { fieldRefs.current.password = node; }} label="Password"
             value={fields.password} onChange={(event) => change('password', event.target.value)}
             autoComplete={signup ? 'new-password' : 'current-password'} required disabled={disabled} placeholder="Enter your password"
+            {...(signup ? { hint: 'At least 15 characters, up to 1024 UTF-8 bytes. Spaces are allowed; your password is kept exactly as entered.' } : {})}
             {...(errors.password ? { error: errors.password } : {})} />
           {signup && <PasswordField id="auth-confirm-password" ref={(node) => { fieldRefs.current.confirmPassword = node; }} label="Confirm password"
             value={fields.confirmPassword} onChange={(event) => change('confirmPassword', event.target.value)}

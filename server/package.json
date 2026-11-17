@@ -10,10 +10,13 @@
     ".": "./src/index.ts",
     "./ai": "./src/ai/index.ts",
     "./calls": "./src/calls/index.ts",
-    "./livekit": "./src/livekit/index.ts"
+    "./livekit": "./src/livekit/index.ts",
+    "./e2ee": "./src/e2ee/index.ts",
+    "./data": "./src/data/index.ts"
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/main.ts",
+    "start:data": "node src/data/main.ts",
     "start:api": "node --env-file-if-exists=.env api-main.cjs",
     "dev:calls": "node --env-file-if-exists=.env --env-file-if-exists=dev/calling/.env dev/calling/main.ts",
     "test:dev-calls-proxy": "node --test --test-timeout=120000 test/manual/development-calling-proxy.check.ts",

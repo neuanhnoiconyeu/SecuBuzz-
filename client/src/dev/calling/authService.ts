@@ -1,6 +1,6 @@
 import { AuthError, type LoginInput } from '@/auth/authModel';
 import type { AuthService } from '@/auth/authService';
-import { HttpAuthService } from '@/auth/httpAuthService';
+import { DevelopmentCallingHttpAuthService } from './httpAuthService';
 import { developmentCallingEnabled } from './developmentCalling';
 
 const selector = 'meta[name="secubuzz-csrf-token"]';
@@ -28,7 +28,7 @@ export function createDevelopmentCallingAuthService(request: typeof fetch = (...
       throw error instanceof AuthError ? error : new AuthError('unavailable');
     } finally { clearTimeout(timer); }
   })().finally(() => { pending = null; });
-  const service = new HttpAuthService({ fetch: request, getCsrfToken: bootstrap });
+  const service = new DevelopmentCallingHttpAuthService({ fetch: request, getCsrfToken: bootstrap });
   return {
     mode: 'api',
     async login(input: LoginInput) {

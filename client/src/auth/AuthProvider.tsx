@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from 'react';
 import { AuthError, copyAuthUser, type AuthUser, type LoginInput, type RegisterInput, type RegisterResult } from './authModel';
 import { createConfiguredAuthService, type AuthService } from './authService';
+import type { SessionApi } from '@/api/sessionApi';
 
 export type AuthStatus = 'initializing' | 'authenticated' | 'unauthenticated';
 export type AuthPendingAction = 'login' | 'register' | 'logout' | 'restore' | 'demo' | null;
@@ -21,6 +22,7 @@ export interface AuthContextValue {
   restoreSession(): Promise<void>;
   continueAsDemo(persona: 'explorer' | 'nova'): Promise<boolean>;
   clearError(): void;
+  createSessionApi?(): SessionApi | null;
 }
 
 interface AuthState {
@@ -143,6 +145,7 @@ export function AuthProvider({ children, service: providedService }: { children:
       return result;
     } catch (failure) {
       if (active()) commit((previous) => ({ ...previous,
+        sessionVersion: previous.sessionVersion + (pending === 'logout' ? 1 : 0),
         error: pending === 'logout' ? new AuthError('logout_failed') :
           failure instanceof AuthError ? failure : new AuthError('unavailable'),
       }));
@@ -165,10 +168,17 @@ export function AuthProvider({ children, service: providedService }: { children:
   }, [acceptUser, run, service]);
 
   const register = useCallback((input: RegisterInput) => run('register', () => service.register(input), (result) => {
-    if (result.status === 'authenticated') acceptUser(result.user);
+    if (result.status === 'authenticated') {
+      if (service.mode !== 'demo') throw new AuthError('invalid_response');
+      acceptUser(result.user);
+    }
   }), [acceptUser, run, service]);
 
   const logout = useCallback(async () => {
+    if (stateRef.current.pending === 'restore') {
+      operationSequence.current += 1;
+      operationLock.current = false;
+    }
     const result = await run('logout', () => service.logout(), () => {
       commit((previous) => ({ ...previous, status: 'unauthenticated', user: null, error: null,
         sessionVersion: previous.sessionVersion + 1 }));
@@ -183,13 +193,18 @@ export function AuthProvider({ children, service: providedService }: { children:
   }, [acceptUser, run, service]);
 
   const clearError = useCallback(() => { commit((previous) => ({ ...previous, error: null })); }, [commit]);
+  const createSessionApi = useCallback(() => {
+    const current = stateRef.current;
+    return currentService.current === service && current.status === 'authenticated' && current.user && !current.user.isDemo
+      ? service.createSessionApi?.(current.user) ?? null : null;
+  }, [service]);
   // A replacement service never renders the previous actor while its effect initializes.
   const visible = state.service === service ? state : { ...state, status: 'initializing' as const, user: null, error: null, pending: 'restore' as const };
   const value = useMemo<AuthContextValue>(() => ({
     status: visible.status, user: visible.user, pending: visible.pending, error: visible.error,
     sessionVersion: visible.sessionVersion, mode: service.mode, login, register, logout, restoreSession,
-    continueAsDemo, clearError,
-  }), [clearError, continueAsDemo, login, logout, register, restoreSession, service.mode, visible.error, visible.pending, visible.sessionVersion, visible.status, visible.user]);
+    continueAsDemo, clearError, createSessionApi,
+  }), [clearError, continueAsDemo, createSessionApi, login, logout, register, restoreSession, service.mode, visible.error, visible.pending, visible.sessionVersion, visible.status, visible.user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

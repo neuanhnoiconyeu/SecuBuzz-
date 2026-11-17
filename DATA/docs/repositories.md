@@ -1,5 +1,19 @@
 # DB-1 repository and integration contract
 
+Post-DB-4B key integration adds `server/e2ee/repository.js` over the same injected
+SQLite connection: public device lookup/history/own list/active-set insertion and
+status transitions, current/selected/bounded epoch lookup and ordered wrap insertion.
+It stores public data only and supplies no authorization by itself. `application.keys`
+applies DB-2/4A policies and calls Kiro's actual registration/revocation/publication
+planners inside immediate transactions. `createSqliteKeyDirectory` reads a consistent
+snapshot and supplies Kiro's genuine verifier. DB-4B `insertAuthenticated` accepts
+key_id for v2; `submit` performs the synchronous persisted-key recheck before any
+idempotency lookup. See [the current runtime/shared-service boundary](e2ee-realtime-integration.md).
+
+DB-4A extends the existing `conversations` namespace with authenticated direct creation/activation, joined authorized lookup and bounded keyset listing. The original generic methods remain compatible and default to legacy provenance. See [the DB-4A interface and transaction contract](db4a-integration.md) for exact methods, shared write-time authorization and the DB-4B boundary. This phase does not implement the proposed message persistence service below.
+
+DB-4B now implements the shared authorized message service and extends this same `messages` namespace with `insertAuthenticated`, `getAuthenticated`, `findAuthenticatedClient`, `highWater`, bounded `history` and monotonic `tombstone`; `receipts.get` supports first-observation idempotency. Original generic/legacy methods remain compatible and are not authorization boundaries. The [current shared-service contract](db4b-realtime-integration.md) supersedes the historical proposed boundary below. Wire ID scope is resolved additively: the global PK is an independent storage UUID, and authenticated `(conversation_id,client_id)` uniqueness preserves Kiro's wire IDs/AAD without collision across conversations. Do not call trusted DAL insertion directly from REST or realtime.
+
 ```js
 const { openDatabase } = require('../server/database/connection');
 const { createRepositories } = require('../server/database/repositories');
@@ -14,6 +28,10 @@ try {
 ```
 
 All operations are synchronous and use the same injected connection. Repositories neither close connections nor open additional ones. Rows use the schema's snake_case column names; missing records return `null`; lists return arrays; status/update/remove operations return `{ changes: number }` unless stated otherwise. Insert operations return the stored row. Generated IDs are UUID strings. Optional IDs can be supplied by trusted callers, preserving shared identity. Inputs use positional identifiers or the explicit object fields below; object methods reject unknown fields.
+
+DB-2 extends this foundation with `createAuthRepository(db)` and `createAuthService(...)`; see [authentication integration](auth-integration.md) and [session architecture](auth-sessions.md). `sessions.insert` now additionally accepts optional `auth_version` (default zero, insufficient to authenticate). The historical phase handoff below describes DB-1's boundary; DB-2's implemented auth/session/CSRF contract supersedes its proposed authentication work.
+
+DB-3 adds `createSocialRepository(db)` plus the authorized social service: [API/contract](profiles-friends-api.md), [transaction/legacy rules](relationships.md) and [integration handoff](db3-integration.md). The low-level legacy methods below retain their signatures and now write legacy provenance by default. They are not a substitute for DB-3 authorization. Read-only pages use deferred transactions, mutations use immediate transactions, and domain rejections preserve fixed 4xx errors while rolling back. Only the new HTTP service confirms authenticated social consent.
 
 Repository errors are `RepositoryError` with a safe fixed message and `code`: `DUPLICATE`, `REFERENCE`, `INVALID`, `BUSY` or `DATABASE`. SQL statements/values and nested causes are not attached or logged. Raw connections and migration errors are internal operator interfaces; do not serialize them in API responses. Repositories are persistence primitives, not auth/session verifiers or public APIs.
 

@@ -19,6 +19,7 @@ export interface FriendsService {
   /** An atomic snapshot prevents mismatched request/friend lists during refresh. */
   getSnapshot(): Promise<FriendsSnapshot>;
   searchUsers(query: string): Promise<UserSearchResult[]>;
+  searchPage?(query: string, cursor?: string | null, signal?: AbortSignal): Promise<{ items: UserSearchResult[]; nextCursor: string | null }>;
   listFriends(): Promise<Friend[]>;
   listIncomingRequests(): Promise<FriendRequest[]>;
   listOutgoingRequests(): Promise<FriendRequest[]>;

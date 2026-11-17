@@ -1,0 +1,481 @@
+{
+  "phase": "DB-4A",
+  "verdict": "COMPLETE",
+  "checkedAt": "2026-11-14T23:56:29.393Z",
+  "branch": "chuong-data",
+  "head": "72f4e806e1446ce65036f705f9f7eb82275942d9",
+  "baseline": {
+    "dirtyFiles": 115,
+    "passingTests": 199
+  },
+  "tests": {
+    "command": "npm test",
+    "passed": 247,
+    "failed": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "newConversationTests": 48,
+    "durationMs": 40098.9752
+  },
+  "http": {
+    "realCookiesAndCsrf": true,
+    "realArgon2": true,
+    "isolatedSqliteOnly": true,
+    "nativeProcessRestartVerified": true,
+    "conversationAndBothMembershipsPersisted": true,
+    "unrelatedUserRejected": true,
+    "blockEnforcedAfterRestart": true
+  },
+  "concurrency": {
+    "independentNativeProcesses": 2,
+    "simultaneousReversedRequests": 6,
+    "createdResponses": 1,
+    "existingResponses": 5,
+    "conversations": 1,
+    "memberships": 2,
+    "forcedMemberAndAuditRollbackPassed": true
+  },
+  "syntax": "PASS",
+  "openApi": {
+    "version": "3.1.0",
+    "paths": 3,
+    "localReferencesResolved": 31
+  },
+  "diffCheck": "PASS",
+  "gitStatusInspected": true,
+  "appliedMigrations": [
+    {
+      "path": "DATA/server/database/migrations/0001-legacy.sql",
+      "sha256": "7AC0D3B5695135A3F8B2A2BC747E707B211899EE6651AFF63D0AEB4EA49A006F",
+      "normalizedChecksum": "7AC0D3B5695135A3F8B2A2BC747E707B211899EE6651AFF63D0AEB4EA49A006F",
+      "unchanged": true
+    },
+    {
+      "path": "DATA/server/database/migrations/0002-foundation.sql",
+      "sha256": "8F2E3B0BBDD09E59E85AB5C395518B816B9590804B42FCB0C84EF26A893C55C4",
+      "normalizedChecksum": "8F2E3B0BBDD09E59E85AB5C395518B816B9590804B42FCB0C84EF26A893C55C4",
+      "unchanged": true
+    },
+    {
+      "path": "DATA/server/database/migrations/0003-authentication.sql",
+      "sha256": "AD5B31788A95EA296A7BA908F647FBC9BC8AE91D9035A31503681A3F5199634F",
+      "normalizedChecksum": "AD5B31788A95EA296A7BA908F647FBC9BC8AE91D9035A31503681A3F5199634F",
+      "unchanged": true
+    },
+    {
+      "path": "DATA/server/database/migrations/0004-profiles-friends.sql",
+      "sha256": "CC3E1700A5EC4B83E9FD4A72A61A6AD647108D08A0E4C816CBCDCC9F99F7BD89",
+      "normalizedChecksum": "CC3E1700A5EC4B83E9FD4A72A61A6AD647108D08A0E4C816CBCDCC9F99F7BD89",
+      "unchanged": true
+    }
+  ],
+  "ownership": {
+    "allChangesUnderData": true,
+    "outsideDataUnchanged": [
+      {
+        "path": "client/.env.example",
+        "sha256": "B4243BDD10A581B8C922A4029AF2E6E3FDA366035B291320E7F12F773E81BE44",
+        "unchanged": true
+      },
+      {
+        "path": "client/AUTH_LOCAL_DEBUG.md",
+        "sha256": "A19DC95A865C0D937CABE8067839D9A3C4042EC801E791E0BD07489C1EC1581E",
+        "unchanged": true
+      },
+      {
+        "path": "client/PHASE_8_6_AUTH_INTEGRATION.md",
+        "sha256": "262CAFA282E337D4E7E49335E24127B34C1A8A93006E27C655F55DE9DB7FEDCB",
+        "unchanged": true
+      },
+      {
+        "path": "client/PHASE_8_8_PROFILES_FRIENDS_INTEGRATION.md",
+        "sha256": "4E084AC60A0F59FEE0DE445C73FB2AAEF3121CC3C1AE773361533FAAD32FA58B",
+        "unchanged": true
+      },
+      {
+        "path": "client/PHASE_8_8_PROFILE_HOTFIX.md",
+        "sha256": "6770148189404EE9C077768B719F05456508047A8441457946964A1184FF7F74",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/account-switch-profile.png",
+        "sha256": "15448E235BA8DD4B93834F204611EB5539B5921F7F2730AB13C68125446C76E9",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/after-profile-recovered.png",
+        "sha256": "20C8B7C864CBEA390CC00EF2AEF297822C33E5FE02579C61D37F6B45B3C4A7B3",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/before-profile-feature-unavailable.png",
+        "sha256": "9107E0B1AB2DF45B20CA4AB7367F9D580AB74F724E1DDACE71039CEE0CC6FDA9",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/browser-evidence.json",
+        "sha256": "C2B151F3770BAAF7471D09897B8A21248D417F1413FBCDB3CE8BA83578B510A6",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/jest-results.json",
+        "sha256": "84C73F22B8B24511D17A7A80FCF2CE1F37043D68ACF47790185DAFB3A9939D8E",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/ownership-audit.json",
+        "sha256": "AA41FAA39B70A13DF0C50BD2D26317419009CEDC510A9E1E668989E9FEFB387E",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8-hotfix/temporary-outage.png",
+        "sha256": "CC8BCD0C2D1C1695E17A1EEFE9E79CF6EEDF960875200324D4709151D11E2DD5",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/browser-evidence.json",
+        "sha256": "9884F690A38E01B07378E7DCBC22B86E4F3F429CBD02CE613EF259FC547B045A",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/desktop-discovery-light.png",
+        "sha256": "927F11AF5EFE159355A117CFF87F7AF877FDBAC7EBA299B7B9B75E90D99211C1",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/desktop-friends-light.png",
+        "sha256": "69FBA6A32C283C32E23F3202A157017E8321016F5CF78C79AD454E22EE201267",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/desktop-profile-light.png",
+        "sha256": "31E37A3D26C1E16CE239B6DE218ECD2E7AE9D12D10EF43A4CA1C9A8B92F69498",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/jest-results.json",
+        "sha256": "1A95C49793D51562499EB4C4A303C1AD04ECB8C5822ABA373A1A7E908CEB9745",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/mobile-backend-unavailable.png",
+        "sha256": "80E03720D9CC6299392617898CCA69FCA7F2F79F5F3A4637E381A25C60D0CEC0",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/mobile-discovery-dark.png",
+        "sha256": "09EFB6D243FB163E5D66CEEFDED2F09ABE3890EB516822F2C304F1DB108159B5",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/mobile-profile-dark.png",
+        "sha256": "83759E99A33C16448EAF3A49441598E54CEE1D6EA2A3947590DE60A6517B48BA",
+        "unchanged": true
+      },
+      {
+        "path": "client/artifacts/phase8-8/ownership-audit.json",
+        "sha256": "2CFE06391593CCF67A027DDFDF7B17008C436C655BC38C8CBB548E58BB6CB19E",
+        "unchanged": true
+      },
+      {
+        "path": "client/authProxy.cjs",
+        "sha256": "A3CD1C6996E52ABEFFD79B5D2D44B0B1BEF084752E063BFB4AC4B9CA71086BEB",
+        "unchanged": true
+      },
+      {
+        "path": "client/next.config.js",
+        "sha256": "2325541D0896BD040E4553F9C04CD260D48A2305B33FA919F40DBDD3DC4223AD",
+        "unchanged": true
+      },
+      {
+        "path": "client/scripts/verify-phase88.cjs",
+        "sha256": "01D058CCB1533101A48925CBCA8358B3BC7A29403D521D8CA925F10C4A3BD251",
+        "unchanged": true
+      },
+      {
+        "path": "client/scripts/verify-profile-hotfix.cjs",
+        "sha256": "5E46E5CB6BFF65767DF3D3211B40950FACC3EC70574F6510CF08C02B1679269B",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/api/__tests__/sessionApi.test.ts",
+        "sha256": "81B963FD76156BA121DAA61A575AFF3068323351391637A50BABFA35158890EB",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/api/sessionApi.ts",
+        "sha256": "62F0C43032A0B05B03687B7A6E31F67A8AC34AA07BF1EF9729AE0517458C3DBE",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/api/socialValidation.ts",
+        "sha256": "83E8EDB26F19D00E01D69E8D2CD388ED7F7487EBD9C10AD9BCBEED3E2A78100D",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/app/globals.css",
+        "sha256": "7ECA0B5F58BA4685621FB3DF690784BBC0E72CA927C9FCAF866BED7C90E6F273",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/AuthProvider.tsx",
+        "sha256": "DF3424626EB90DB2E2A9BF4E8637192CF0DF1A009C5206C0996E5BF52CD06CDB",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/AuthenticatedWorkspace.tsx",
+        "sha256": "5D0028C52619F14EDF0F94C1320A9896BFB2FFEBA9FE37AA4C400126363305C9",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/INTEGRATION.md",
+        "sha256": "94D04334AA64C8CFAD16ADF10565A59257E265B03BE73B59ABDC1E661D420DF1",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/AuthProvider.test.tsx",
+        "sha256": "89797828C48B560AE5369F80083E3A383D7B7EE0F06F520A100E8838F79767D1",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/authModel.test.ts",
+        "sha256": "14F86DE21736119D6DD48AF7628E607BE76532997C42B0A71AF9E594E3FD45AB",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/authProxy.test.ts",
+        "sha256": "0225031843A2DF1171017F2B8C83508A4C01F72BBD0C205275A6A4F535A871A2",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/authService.test.ts",
+        "sha256": "F16A58C9D25A181A784034FDA03D6DDEDD4FE29142F9EC7236802424C1FC0F48",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/db2Auth.test.ts",
+        "sha256": "FB2CD0CD4D660B0C529EB790EDEEF3E16259C3DFA5904AB77E79369B81684B55",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/developmentAuthService.test.ts",
+        "sha256": "7A2452DA61D1F06F03747BB53830EE710A9B9B6A8D2F4A8F3BCD7E6C14742FA7",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/httpAuthService.test.ts",
+        "sha256": "1844B5A0C0605D4C1045D884F5F41E62B524AB722598DED1036C9B8D158A4184",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/socialProxy.test.ts",
+        "sha256": "0701CB84B7AAEB39D992EBE20C57D2EA33908022723CC487E0F9AF0B38DC92A8",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/__tests__/workspaceIntegration.test.tsx",
+        "sha256": "A2DFE1554F3D19C0D699E7E68AFEE527CDC627A1D39FA5853E8DE3501E84C867",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/authModel.ts",
+        "sha256": "9DF588ADCD4049324A25D2677FD32DD3BAAA9A3D72024B3F8AFBFF56B41A8035",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/authService.ts",
+        "sha256": "4BEA5F7B3FD8328868627BED58176CDC4EED1EF8F1113D4B98294C2A538E5453",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/auth/httpAuthService.ts",
+        "sha256": "DDDEECB3AD4B44DD247B1D79878C53401FB0401F6B5290A0EEDA56BFBC2B6AC4",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/auth/AuthForm.tsx",
+        "sha256": "78F93A7B974E8D62E1A185154EC7E505F36E76FB8F6AE984C1C4CC1DABE3D0D9",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/auth/__tests__/AuthForm.test.tsx",
+        "sha256": "C555D72713A07417168F448AAE73E9334979B3C2F7A681779A19A176166115F6",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/friends/FriendsPage.tsx",
+        "sha256": "A02FBC500044ABA5AA4BB0B535BED3FADFB840258E42ADA0A25DD5810B159527",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/friends/__tests__/RemotePublicProfile.test.tsx",
+        "sha256": "C73DF3165260A16FF7A44E8263B2F26DD4B84F3B0ABA68D7EBF5FB9C1D7BB7CB",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/messenger/MainNavigation.tsx",
+        "sha256": "F5D4DD6739D557F0C5BA90454707BA95A85D406D9AE79AE310A3DB7247472E10",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/messenger/RealMessengerWorkspace.tsx",
+        "sha256": "E6BFFEF6FB552CBD76D24B66DE16A82072402A2824B14333DA3B0E4ED1DEE7B3",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/messenger/__tests__/MessageList.actions.test.tsx",
+        "sha256": "E5D5BE9648432AC30F83DA2F0CCA787BBE170974B5F2D49BB422C54A4E9E4308",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/components/profile/ProfileDialog.tsx",
+        "sha256": "3AA42A16D56FBE375B814248E48EA46581904FB49D7977E7CF44DF9396F6B729",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/friends/__tests__/remoteFriendsService.test.ts",
+        "sha256": "15AB824AE7F1064C7664B61830478E05B9EBFCF19B44E019E254A60258725D61",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/friends/friendsService.ts",
+        "sha256": "88A3682525C46885BCA5E929CA5DE69ED97782D9D0B8877A4AEF31F15A8BD014",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/friends/remoteFriendsService.ts",
+        "sha256": "E8FCD2DFD6EDF41723CA52DE007271B483D3BC186ABA9D1A4F6F5603891057A6",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/hooks/__tests__/useCurrentProfile.test.tsx",
+        "sha256": "33E3EAA689C2CCC6D9EA4717A7E8529E33644E6E31FDE2FCA7B2D457917346EB",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/hooks/__tests__/useRemoteFriends.test.tsx",
+        "sha256": "ED7949D7790EF46E288018FC17D762D4FB6B4FB2C41854603DEFEE2EF82EB8F5",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/hooks/useCurrentProfile.ts",
+        "sha256": "2F167778D0CB0CAB4EC52A6B67CF3D144858D17AFE978ADD681558E1A6704BF8",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/hooks/useFriends.ts",
+        "sha256": "8528356AE194579F3430801D98DE7D4D8272E2281E9B4AB9DE16D2F5067F7FF6",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/profiles/__tests__/remoteProfileService.test.ts",
+        "sha256": "61C61A7B517F48B2C29C55D92556FD139C11FA92C73FD1EA8B9F91CD78299074",
+        "unchanged": true
+      },
+      {
+        "path": "client/src/profiles/remoteProfileService.ts",
+        "sha256": "6078012B2E4E7B14CA50E6CF3496B1A93112C4C0E0A234C7C81F5B694FEC18F2",
+        "unchanged": true
+      }
+    ],
+    "developmentDatabaseUsedForFixtures": false,
+    "developmentServicesRestarted": false,
+    "gitMutationsPerformed": []
+  },
+  "files": [
+    {
+      "path": "DATA/README.md",
+      "sha256": "7394A2C3939F25CEF21CDB5768F4053F8B1D468E0803DA277846B64812A46789"
+    },
+    {
+      "path": "DATA/docs/conversations-openapi.json",
+      "sha256": "CA633073C33728AB4A01E0AFA2659442DBD7997B610630C09A8E0710BA08B07A"
+    },
+    {
+      "path": "DATA/docs/db4a-handoff.md",
+      "sha256": "4D12216CFD137289CA7AF290965AB437CBB274C4C3993C1052FFB6D30428B2DC"
+    },
+    {
+      "path": "DATA/docs/db4a-integration.md",
+      "sha256": "234D58074AD57F3EE7812EC68F6B8728F4EE65A0EFEDBE15F6B387FD30B31A90"
+    },
+    {
+      "path": "DATA/docs/migrations.md",
+      "sha256": "B17A44F44703360F133307A131504026536DE9E663251EF7A4A41219D8B9D78B"
+    },
+    {
+      "path": "DATA/docs/repositories.md",
+      "sha256": "0A197AE9B9B35D4FC95CFDC56CDDE0ECA9077BB174450EE4B2DAD31C0C62F42D"
+    },
+    {
+      "path": "DATA/docs/schema.md",
+      "sha256": "C3FC0DF18CF591289E732FDE65876028CA37149E48B8FF9A332CBA0A84E7ABEF"
+    },
+    {
+      "path": "DATA/server/app.js",
+      "sha256": "0A616B543A435FD2F6ECACCEF05CFFDE260D86CBE55BAE30E0B2118F0AB62C8F"
+    },
+    {
+      "path": "DATA/server/conversations/service.js",
+      "sha256": "7A477F41472BB06B3CCB71AD18EA7CF7A1A8ADE4C15F0265A281BB84583CD00B"
+    },
+    {
+      "path": "DATA/server/conversations/validation.js",
+      "sha256": "7C667E01295CA45E771068E9F73FBB7C7EAC3FF6DD4596A0FF5F7E11404A4684"
+    },
+    {
+      "path": "DATA/server/database/migrations/0005-conversation-provenance.sql",
+      "sha256": "E6129FAB323E2F0576F3B30B2DA3225AB0EFEDB4CC02C37307EA949EA81C1E0C"
+    },
+    {
+      "path": "DATA/server/database/repositories.js",
+      "sha256": "9B17417B2EC96F8259FDC50F9FA86B176DBD0E69C699F807CD28C0DFE6377AC5"
+    },
+    {
+      "path": "DATA/server/routes/conversations.js",
+      "sha256": "F89893C62E0411E0350EAAA5C9A5DA8762E9E66112E5658DD61F8E6C2B45182D"
+    },
+    {
+      "path": "DATA/tests/auth-migrations.test.js",
+      "sha256": "A4D48DE29411FC0DBB026DCACF03A4AE97A82977AB8D3CA8482C9ECE2B35F209"
+    },
+    {
+      "path": "DATA/tests/conversations-concurrency.test.js",
+      "sha256": "7EB044D43D7FBCA0C3B58506DF731346B41F9E1A94412AD3A5DD095D26078513"
+    },
+    {
+      "path": "DATA/tests/conversations-http.test.js",
+      "sha256": "A01FD3796A04BE23B3132CE80709FA2BE25D5727A80B6BA8F08F02C1DCE22FBF"
+    },
+    {
+      "path": "DATA/tests/conversations-migrations.test.js",
+      "sha256": "6AF57C8057AD2FE56345CEC6EEF783E17EF805D273CB6AAEB0AC7795FD6FC090"
+    },
+    {
+      "path": "DATA/tests/conversations-security.test.js",
+      "sha256": "FE026C00A449C70E35211C30F5B5B3B8D39C94D92E3B5ACBAF173F4D064974BF"
+    },
+    {
+      "path": "DATA/tests/migrations.test.js",
+      "sha256": "EF919F31E21348B915C40A588603B2CCB7E28D549642C6F4D3A6FDB7497EABE4"
+    },
+    {
+      "path": "DATA/tests/social-migrations.test.js",
+      "sha256": "86D87D20DA172C6E68FBF33439760CD529C06943E5A02716A07FC61B63D96834"
+    },
+    {
+      "path": "DATA/docs/db4a-verification.json",
+      "sha256": null,
+      "selfHashExcluded": true
+    }
+  ],
+  "scope": {
+    "messagePersistence": false,
+    "socketIntegration": false,
+    "frontendChanges": false,
+    "groups": false,
+    "attachments": false,
+    "cryptography": false,
+    "db4bStarted": false
+  }
+}

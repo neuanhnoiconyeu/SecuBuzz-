@@ -7,6 +7,7 @@ import {
   type UserProfile,
 } from '@/profiles/profileModel';
 import { LocalDemoProfileService, type ProfileService } from '@/profiles/profileService';
+import { safeApiMessage } from '@/api/sessionApi';
 
 export interface UseCurrentProfileResult {
   profile: UserProfile | null;
@@ -46,9 +47,9 @@ export function useCurrentProfile(providedService?: ProfileService): UseCurrentP
       const loaded = await service.getCurrentProfile();
       if (!mounted.current || currentService.current !== service || request !== loadSequence.current) return;
       if (revision === profileRevision.current) setProfile({ ...loaded });
-    } catch {
+    } catch (failure) {
       if (mounted.current && currentService.current === service && request === loadSequence.current) {
-        setError('Your local profile could not be loaded. Try again.');
+        setError(safeApiMessage(failure, 'Your profile could not be loaded. Try again.'));
       }
     } finally {
       if (mounted.current && currentService.current === service && request === loadSequence.current) setIsLoading(false);
@@ -91,7 +92,7 @@ export function useCurrentProfile(providedService?: ProfileService): UseCurrentP
           setFieldErrors({ ...failure.fieldErrors });
           setError('Please check the highlighted profile fields.');
         } else {
-          setError('Your profile could not be updated. Your changes have not been saved.');
+          setError(safeApiMessage(failure, 'Your profile could not be updated. Your changes have not been saved.'));
         }
       }
       return false;

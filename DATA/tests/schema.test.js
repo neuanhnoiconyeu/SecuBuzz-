@@ -14,7 +14,7 @@ test('all roadmap tables and lookup indexes exist; foreign keys and WAL are enab
         'idx_attachments_conversation','idx_audit_actor_created','idx_audit_event_created','idx_audit_created']) assert.ok(indexes.has(index),index);
     assert.equal(db.pragma('foreign_keys',{simple:true}),1);
     assert.equal(db.pragma('journal_mode',{simple:true}),'wal');
-    for (const table of [...tables].filter(name => name !== 'SchemaMigrations')) {
+    for (const table of [...tables].filter(name => !['SchemaMigrations','AuthChallenges','AuthRateLimits'].includes(name))) {
         if (table !== 'Users') assert.ok(db.prepare(`PRAGMA foreign_key_list(${table})`).all().length,table);
     }
 });

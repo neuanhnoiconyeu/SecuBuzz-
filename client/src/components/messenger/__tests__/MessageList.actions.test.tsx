@@ -13,16 +13,17 @@ const props = (overrides: Partial<MessageListProps> = {}): MessageListProps => (
   messages: [incoming, outgoing], currentUserId: 'self', ...handlers(), ...overrides,
 });
 const row = (container: HTMLElement, id: string) => within(container.querySelector<HTMLElement>(`[data-message-id="${id}"]`)!);
-
 const originalShowModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
 const originalClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
 beforeAll(() => {
-  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value: function (this: HTMLDialogElement) { this.setAttribute('open', ''); } });
-  Object.defineProperty(HTMLDialogElement.prototype, 'close', { configurable: true, value: function (this: HTMLDialogElement) { this.removeAttribute('open'); } });
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value(this: HTMLDialogElement) { this.setAttribute('open', ''); } });
+  Object.defineProperty(HTMLDialogElement.prototype, 'close', { configurable: true, value(this: HTMLDialogElement) { this.removeAttribute('open'); this.dispatchEvent(new Event('close')); } });
 });
 afterAll(() => {
-  if (originalShowModal) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', originalShowModal); else Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
-  if (originalClose) Object.defineProperty(HTMLDialogElement.prototype, 'close', originalClose); else Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
+  if (originalShowModal) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', originalShowModal);
+  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+  if (originalClose) Object.defineProperty(HTMLDialogElement.prototype, 'close', originalClose);
+  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
 });
 
 test('the active message renderer has compact icon controls and no duplicate inline toolbar', () => {
@@ -41,7 +42,7 @@ test('the active message renderer has compact icon controls and no duplicate inl
   expect(screen.queryByText('Delete', { exact: true })).not.toBeInTheDocument();
 });
 
-test('incoming messages allow local removal while editing and unsending remain owner actions', () => {
+test('incoming overflow permits local removal; only the owner can edit or open the unsend review', () => {
   const callbacks = handlers(); const { container } = render(<MessageList {...props(callbacks)} />);
   fireEvent.click(row(container, 'incoming').getByRole('button', { name: 'More actions' }));
   expect(screen.getAllByRole('menuitem').map(element => element.textContent?.trim())).toEqual(['Pin', 'Delete for me']);
@@ -54,9 +55,10 @@ test('incoming messages allow local removal while editing and unsending remain o
   expect(screen.getAllByRole('menuitem').map((element) => element.textContent?.trim())).toEqual(['Pin', 'Edit', 'Unsend']);
   fireEvent.click(screen.getByRole('menuitem', { name: 'Unsend' }));
   expect(callbacks.onDeleteMessage).not.toHaveBeenCalled();
-  expect(screen.queryByRole('radio', { name: /Unsend for everyone/ })).not.toBeInTheDocument();
-  expect(screen.getByRole('radio', { name: /Unsend for you/ })).toBeChecked();
-  fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+  const review = within(screen.getByRole('dialog'));
+  expect(review.queryByRole('radio', { name: /Unsend for everyone/ })).not.toBeInTheDocument();
+  expect(review.getByRole('radio', { name: /Unsend for you/ })).toBeChecked();
+  fireEvent.click(review.getByRole('button', { name: 'Remove' }));
   expect(callbacks.onDeleteMessage).toHaveBeenCalledWith(outgoing.id);
 });
 
@@ -130,6 +132,7 @@ test('disabled conversation controls keep toolbar and open-menu actions disabled
   // Native activation honors disabled fieldsets; dispatchEvent bypasses that browser check.
   screen.getByRole('menuitem', { name: 'Unsend' }).click();
   expect(callbacks.onDeleteMessage).not.toHaveBeenCalled();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
 
 test('external deletion, hidden conversation, scroll and resize dismiss stale popovers', () => {

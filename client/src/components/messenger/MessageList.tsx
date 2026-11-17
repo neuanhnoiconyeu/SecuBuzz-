@@ -33,6 +33,7 @@ export interface MessageListProps {
   onToggleReaction?: (messageId: string, emoji: string) => void;
   onAIMessage?: (task: AIMessageAction, messageId: string) => void;
   onForwardMessage?: (message: ChatMessage) => void;
+  verifiedMessageIds?: ReadonlySet<string>;
 }
 
 function formatTime(timestamp: string): string {
@@ -76,10 +77,12 @@ export function MessageList({
   onAIMessage,
   onForwardMessage,
   transportMode = 'local-demo',
+  verifiedMessageIds,
 }: MessageListProps) {
   const historyRef = useRef<HTMLDivElement>(null);
   const isNearBottom = useRef(true);
   const previousLength = useRef(messages.length);
+  const previousPage = useRef({ first: messages[0]?.id, last: messages.at(-1)?.id, height: 0 });
   const initialScrollHandled = useRef(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const { enteringIds, finishEntry } = useMessageEntryMotion(messages, active);
@@ -204,6 +207,7 @@ export function MessageList({
     if (!initialScrollHandled.current) {
       initialScrollHandled.current = true;
       previousLength.current = messages.length;
+      previousPage.current = { first: messages[0]?.id, last: messages.at(-1)?.id, height: history?.scrollHeight ?? 0 };
       if (messages.length > 0 && history) {
         history.scrollTop = history.scrollHeight;
         isNearBottom.current = true;
@@ -212,7 +216,10 @@ export function MessageList({
     }
 
     const addedCount = messages.length - previousLength.current;
-    if (addedCount > 0) {
+    const prepended = addedCount > 0 && previousPage.current.first && messages[0]?.id !== previousPage.current.first && messages.at(-1)?.id === previousPage.current.last;
+    if (prepended && history) {
+      history.scrollTop += Math.max(0, history.scrollHeight - previousPage.current.height);
+    } else if (addedCount > 0) {
       if (isNearBottom.current) {
         if (history) history.scrollTop = history.scrollHeight;
         setNewMessageCount(0);
@@ -221,7 +228,8 @@ export function MessageList({
       }
     }
     previousLength.current = messages.length;
-  }, [messages.length]);
+    previousPage.current = { first: messages[0]?.id, last: messages.at(-1)?.id, height: history?.scrollHeight ?? 0 };
+  }, [messages]);
 
   const updateViewportPosition = () => {
     closePopovers();
@@ -596,7 +604,7 @@ export function MessageList({
                     )}
                   </div>
 
-                  {(message.encryption || message.demoOnly || isOutgoing) && (
+                  {(message.encryption || verifiedMessageIds?.has(message.id) || message.demoOnly || isOutgoing) && (
                     <div className="message-status-line">
                       {message.encryption && (
                         <Badge status="success" aria-label="Encrypted in this browser demo">
@@ -604,6 +612,7 @@ export function MessageList({
                           Encrypted locally
                         </Badge>
                       )}
+                      {verifiedMessageIds?.has(message.id) && <Badge status="success" aria-label="End-to-end encrypted message"><LockKeyhole size={12} aria-hidden="true" />Encrypted</Badge>}
                       {message.demoOnly && <Badge status="info">Demo reply</Badge>}
                       {isOutgoing && <span className={`message-delivery message-delivery--${message.deliveryStatus}`}>
                         {deliveryLabel(message.deliveryStatus, transportMode)}

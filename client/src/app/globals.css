@@ -276,6 +276,25 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* Shared controls and profile presentation follow below. */
 
+/* Real account workspace uses the existing Messenger shell and theme tokens. */
+.real-workspace-shell { overflow: clip; }
+.real-messenger { grid-template-rows: 1.5rem auto minmax(0, 1fr) auto; overflow: clip; }
+.real-chat-section { display: grid; grid-column: 1 / -1; grid-row: 3; grid-template-columns: inherit; min-height: 0; min-width: 0; }
+.real-account-footer { grid-column: 1 / -1; grid-row: 4; display: flex; align-items: center; justify-content: flex-end; gap: 1rem; padding: .5rem 1rem; background: var(--color-surface); border-top: 1px solid var(--color-border); font-size: var(--font-size-xs); }
+.real-account-footer > p { margin: 0; color: var(--color-error); }
+.real-account-sidebar { min-width: 0; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; align-items: flex-start; gap: .75rem; background: var(--color-surface); border-right: 1px solid var(--color-border); }
+.real-account-sidebar h2, .real-account-sidebar h3, .real-account-sidebar p { margin: 0; overflow-wrap: anywhere; }
+.real-sidebar-summary { width: 100%; display: grid; gap: .75rem; padding-top: 1.5rem; margin-top: .5rem; border-top: 1px solid var(--color-border); }
+.real-conversations-empty { grid-column: 2; grid-row: 1; }
+.real-conversations-empty p { max-width: 32rem; line-height: 1.7; }
+@media (max-width: 760px) {
+  .messenger-app.real-messenger { grid-template-rows: 1.5rem auto minmax(0, 1fr) auto; }
+  .real-chat-section { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
+  .real-account-sidebar { display: none; }
+  .real-conversations-empty { grid-column: 1; min-height: 22rem; }
+  .real-account-footer { flex-wrap: wrap; }
+}
+
 /* Shared buttons */
 .ui-button {
   min-height: 2.5rem;
