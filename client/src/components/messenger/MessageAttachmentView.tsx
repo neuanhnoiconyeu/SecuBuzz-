@@ -6,6 +6,7 @@ import { formatAttachmentSize, getAttachmentRule } from '../../../../shared/atta
 import { useAttachmentSource, type AttachmentSourceOptions } from '@/hooks/useAttachmentSource';
 import { AttachmentIcon } from './AttachmentIcon';
 import { AttachmentPreviewDialog } from './AttachmentPreviewDialog';
+import { AttachmentDownloadLink } from './AttachmentDownloadLink';
 import './attachments.css';
 
 export function MessageAttachmentView({ attachment, compact = false, ...options }: AttachmentSourceOptions & { attachment: MessageAttachment; compact?: boolean }) {
@@ -40,7 +41,7 @@ export function MessageAttachmentView({ attachment, compact = false, ...options 
         </span>
         {source.downloadUrl && <div className="attachment-actions">
           {canPreview && attachment.type !== 'image' && <button type="button" className="attachment-action" onClick={() => setPreview(true)} aria-label={`Preview ${attachment.name}`}><Eye size={16} aria-hidden="true" /></button>}
-          <a className="attachment-action" href={source.downloadUrl} download={attachment.name} aria-label={`Download ${attachment.name}`}><Download size={16} aria-hidden="true" /></a>
+          <AttachmentDownloadLink attachment={attachment} url={source.downloadUrl} label={`Download ${attachment.name}`}><Download size={16} aria-hidden="true" /></AttachmentDownloadLink>
         </div>}
       </div>
       {preview && <AttachmentPreviewDialog attachment={attachment} {...options} onClose={() => setPreview(false)} />}

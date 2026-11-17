@@ -282,6 +282,10 @@ export function MessengerApp({ session, onLogout, isLoggingOut = false, logoutEr
                   conversationId={activeConversation.id}
                   contactName={activeConversation.displayName}
                   conversationType={activeConversation.type}
+                  {...(!activeConversation.isDemo && activeConversation.type === 'group'
+                    ? { attachmentTarget: { type: 'group' as const, groupId: activeConversation.id } }
+                    : !activeConversation.isDemo && activeConversation.type === 'direct' && directContact?.kind === 'person' && activeConversation.participants.length === 2
+                      ? { attachmentTarget: { type: 'direct' as const, recipientUserId: directContact.id } } : {})}
                   currentUserId={session.user.id}
                   currentUserName={profile?.displayName ?? 'You'}
                   identityReady={Boolean(profile)}

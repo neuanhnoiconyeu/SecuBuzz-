@@ -80,6 +80,11 @@ describe('standalone entry point (node src/main.ts)', () => {
     });
     assert.equal(voice.status, 503);
     assert.deepEqual(await voice.json(), { error: 'livekit_unavailable' });
+    for (const path of ['/api/attachments', '/api/attachments/550e8400-e29b-41d4-a716-446655440000/download']) {
+      const attachment = await fetch(`http://127.0.0.1:${port}${path}`);
+      assert.equal(attachment.status, 404, 'only the DB6 API host owns attachment routes');
+      await attachment.arrayBuffer();
+    }
     const missing = await fetch(`http://127.0.0.1:${port}/api/users`);
     await missing.arrayBuffer();
     assert.equal(missing.status, 404);

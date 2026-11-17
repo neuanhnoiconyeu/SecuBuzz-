@@ -4,6 +4,7 @@ import { Dialog } from '@/components/ui';
 import type { MessageAttachment } from '@/messaging/messageModel';
 import { useAttachmentSource, type AttachmentSourceOptions } from '@/hooks/useAttachmentSource';
 import { formatAttachmentSize, getAttachmentRule } from '../../../../shared/attachmentPolicy';
+import { AttachmentDownloadLink } from './AttachmentDownloadLink';
 
 export function AttachmentPreviewDialog({ attachment, onClose, ...options }: AttachmentSourceOptions & {
   attachment: MessageAttachment; onClose(): void;
@@ -17,7 +18,7 @@ export function AttachmentPreviewDialog({ attachment, onClose, ...options }: Att
       description={`${formatAttachmentSize(attachment.sizeBytes)}${attachment.storage === 'indexeddb' ? ' · Saved on this device only' : ''}`}
       footer={source.downloadUrl ? <>
         {pdf && <a className="attachment-action" href={source.previewUrl} target="_blank" rel="noopener noreferrer">Open PDF</a>}
-        <a className="attachment-action" href={source.downloadUrl} download={attachment.name}>Download original</a>
+        <AttachmentDownloadLink attachment={attachment} url={source.downloadUrl}>Download original</AttachmentDownloadLink>
       </> : undefined}>
       {source.loading ? <p role="status">Loading preview…</p> : source.error ? <p role="alert">{source.error}</p> : <>
         {mediaError && <p role="status">This browser cannot preview this file. You can download the original.</p>}

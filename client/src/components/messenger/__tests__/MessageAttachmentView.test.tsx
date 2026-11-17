@@ -59,3 +59,21 @@ test('renders video and audio players with native playback controls', () => {
   rerender(<MessageAttachmentView attachment={{ ...base, type: 'audio', name: 'track.mp3' }} />);
   expect(screen.getByLabelText('Audio: track.mp3')).toHaveAttribute('controls');
 });
+
+test('rechecks DB6 when downloading Word and preserves its original Unicode filename', async () => {
+  const blob = new Blob([new Uint8Array([80, 75, 3, 4])], { type: 'application/octet-stream' });
+  const requestFetch = jest.fn(async () => ({ ok: true, blob: async () => blob }));
+  Object.defineProperty(globalThis, 'fetch', { configurable: true, value: requestFetch });
+  let downloadedName = '';
+  const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { downloadedName = this.download; });
+  const attachment: MessageAttachment = { id: '550e8400-e29b-41d4-a716-446655440000', name: 'báo cáo.docx', type: 'file',
+    sizeBytes: blob.size, mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    url: '/api/attachments/550e8400-e29b-41d4-a716-446655440000/download' };
+  try {
+    render(<MessageAttachmentView attachment={attachment} />);
+    expect(requestFetch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('link', { name: `Download ${attachment.name}` }));
+    await waitFor(() => expect(downloadedName).toBe(attachment.name));
+    expect(requestFetch).toHaveBeenCalledWith(attachment.url, expect.objectContaining({ credentials: 'same-origin', cache: 'no-store', redirect: 'error' }));
+  } finally { click.mockRestore(); }
+});

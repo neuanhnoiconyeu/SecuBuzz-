@@ -9,6 +9,7 @@ import { ForwardDialog } from '@/components/messenger/ForwardDialog';
 import type { ChatMessage, MessageAttachment, PresenceStatus, VoiceMessageMetadata } from '@/messaging/messageModel';
 import type { MessagingTransport } from '@/messaging/transport';
 import { createAttachmentUploader } from '@/messaging/attachmentUpload';
+import type { Db6AttachmentTarget } from '@/messaging/db6Attachments';
 import { createLocalAttachmentUploader, localAttachmentStore } from '@/messaging/localAttachmentStore';
 import { useChatFileDrop } from '@/hooks/useChatFileDrop';
 import type { ConversationMessageActivity, ConversationType } from '@/conversations/conversationModel';
@@ -23,6 +24,8 @@ export interface YahooChatWindowProps {
   conversationId?: string;
   contactName?: string;
   conversationType?: ConversationType;
+  /** Authoritative DB6 group/recipient ID; required for remote uploads. */
+  attachmentTarget?: Db6AttachmentTarget;
   presenceStatus?: PresenceStatus;
   currentUserId?: string;
   currentUserName?: string;
@@ -54,6 +57,7 @@ export function YahooChatWindow({
   contactName = 'SecureBot',
   conversationId = 'securebot-demo',
   conversationType = 'bot',
+  attachmentTarget,
   currentUserId = 'local-user',
   currentUserName = 'You',
   identityReady = true,
@@ -123,8 +127,8 @@ export function YahooChatWindow({
 
   const uploadAttachment = useMemo(() => transportMode === 'local-demo'
     ? createLocalAttachmentUploader(currentUserId, conversationId)
-    : process.env.NEXT_PUBLIC_ATTACHMENT_API_READY === 'true' ? createAttachmentUploader(conversationId) : undefined,
-  [conversationId, currentUserId, transportMode]);
+    : process.env.NEXT_PUBLIC_ATTACHMENT_API_READY === 'true' && attachmentTarget ? createAttachmentUploader(attachmentTarget) : undefined,
+  [conversationId, currentUserId, transportMode, attachmentTarget]);
   const discardAttachment = useCallback((attachment: MessageAttachment) =>
     localAttachmentStore.discardUnusedFile(currentUserId, conversationId, attachment), [currentUserId, conversationId]);
   const attachmentUnavailableReason = transportMode === 'realtime' && !uploadAttachment

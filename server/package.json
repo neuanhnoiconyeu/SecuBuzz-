@@ -14,11 +14,16 @@
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/main.ts",
+    "start:api": "node --env-file-if-exists=.env api-main.cjs",
     "ai:check-config": "node --env-file-if-exists=.env src/ai/checkConfig.ts",
     "type-check": "tsc --noEmit -p tsconfig.json",
-    "test": "node --test --test-concurrency=1 --test-timeout=60000 \"test/**/*.test.ts\""
+    "test:attachments": "node --test --test-concurrency=1 --test-timeout=60000 test/integration/attachments.test.ts test/db5_db6.test.cjs",
+    "test:db5db6": "node --test --test-concurrency=1 --test-timeout=60000 test/db5_db6.test.cjs",
+    "test": "node --test --test-concurrency=1 --test-timeout=60000 \"test/**/*.test.ts\" \"test/**/*.test.cjs\""
   },
   "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "express": "^5.3.0",
     "livekit-server-sdk": "^2.19.3",
     "socket.io": "^4.8.4"
   },

@@ -1,4 +1,4 @@
-/** Shared by the file picker and upload server. Sizes use 1024 bytes per KB. */
+/** Client attachment formats and limits. DB6 also enforces its own server-side upload cap. */
 export const ATTACHMENT_LIMITS = {
   maxCount: 5,
   maxTotalSizeMb: 100,
@@ -101,9 +101,10 @@ export function parseUploadedAttachment(value: unknown): AttachmentMetadata | nu
   const item = value as Record<string, unknown>;
   if (typeof item.id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(item.id) ||
       typeof item.name !== 'string' || typeof item.mimeType !== 'string' || typeof item.sizeBytes !== 'number' ||
-      item.url !== `/api/attachments/${item.id}`) return null;
+      (item.url !== `/api/attachments/${item.id}/download` && item.url !== `/api/attachments/${item.id}`)) return null;
   const rule = getAttachmentRule(item.name);
   if (!rule || item.type !== rule.kind || item.mimeType !== rule.mimeTypes[0] ||
       validateAttachmentFile({ name: item.name, type: item.mimeType, size: item.sizeBytes })) return null;
-  return { id: item.id, name: item.name, type: rule.kind, mimeType: item.mimeType, sizeBytes: item.sizeBytes, url: `/api/attachments/${item.id}` };
+  // Normalize older message references so metadata routes are never used as file bytes.
+  return { id: item.id, name: item.name, type: rule.kind, mimeType: item.mimeType, sizeBytes: item.sizeBytes, url: `/api/attachments/${item.id}/download` };
 }
