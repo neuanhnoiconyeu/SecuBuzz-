@@ -9,6 +9,7 @@ import type {
 import { COOKIE_NAME } from './cookies.ts';
 import { createConsoleLogger } from './logger.ts';
 import type { RateSetting } from './rateLimiter.ts';
+import type { DirectCallOptions } from '../calls/config.ts';
 
 export interface RealtimeLimits {
   readonly maxConnections: number;
@@ -55,6 +56,8 @@ export interface RealtimeTiming {
 }
 
 export interface RealtimeServerOptions {
+  /** Disabled unless the host supplies its authoritative direct-conversation resolver. */
+  readonly directCalls?: DirectCallOptions;
   /** Exact browser origins allowed to connect. An empty list rejects every handshake. */
   readonly allowedOrigins: readonly string[];
   readonly path?: string;

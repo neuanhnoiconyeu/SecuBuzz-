@@ -8,7 +8,8 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./ai": "./src/ai/index.ts"
+    "./ai": "./src/ai/index.ts",
+    "./calls": "./src/calls/index.ts"
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/main.ts",

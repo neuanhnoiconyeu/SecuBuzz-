@@ -23,6 +23,12 @@ import {
 } from './registry.ts';
 import { conversationRoom, isConversationRoom, RoomManager } from './rooms.ts';
 import { TypingRouter } from './typing.ts';
+import { resolveDirectCallOptions } from '../calls/config.ts';
+import { DirectCallRouter } from '../calls/router.ts';
+import { CALL_CLIENT_EVENTS, CALL_CLIENT_EVENT_NAMES, callError, type CallClientEventName } from '../calls/protocol.ts';
+import { isCallSyncBody, parseCallAction, parseInitiateCall } from '../calls/validation.ts';
+import type { DirectCallMediaAuthorization } from '../calls/config.ts';
+import type { RealtimeActor } from './contracts.ts';
 import {
   isDisplayName,
   isIdentifier,
@@ -38,6 +44,9 @@ type RealtimeIo = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, R
 type RealtimeNamespace = Namespace<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, RealtimeSocketData>;
 
 export interface RealtimeStats {
+  readonly callSignaling: 'disabled' | 'enabled';
+  readonly activeCalls: number;
+  readonly retainedCalls: number;
   readonly mode: 'fail-closed' | 'ready';
   readonly messageDelivery: 'disabled' | 'enabled';
   readonly closing: boolean;
@@ -55,6 +64,7 @@ export interface RealtimeStats {
 
 /** In-process API for the Database Team's auth, membership and profile integrations. */
 export interface RealtimeServerHandle {
+  authorizeCallMedia(actor: RealtimeActor, callId: string, connectionId: string): Promise<DirectCallMediaAuthorization>;
   /** Disconnects every connection of a session (logout, revocation). Returns the number closed. */
   revokeSession(sessionId: string): number;
   /** Disconnects every connection of a user (suspension, deletion). */
@@ -98,6 +108,7 @@ function waitFor(predicate: () => boolean, timeoutMs: number): Promise<void> {
 export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, options: RealtimeServerOptions): RealtimeServerHandle {
   if (attachedServers.has(httpServer)) throw new Error('A realtime server is already attached to this HTTP server.');
   const config = resolveRealtimeConfig(options);
+  const directCallOptions = resolveDirectCallOptions(options.directCalls);
   const { limits, timing, logger } = config;
   const clock = new ServerClock(limits.maxTrackedTimestampKeys);
   const registry = new ConnectionRegistry();
@@ -156,6 +167,7 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
   const rooms = new RoomManager((user, conversationId) => {
     const first = user.connections.values().next();
     if (!first.done) typing.clearUserInConversation(first.value.actor, conversationId);
+    calls.recheckUser(user.userId);
   });
   const presence = new PresenceManager(config, registry, clock);
   const receipts = new ReceiptRouter(config, registry, clock, gate);
@@ -184,6 +196,7 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
 
   const applyBlocked = (user: UserState, next: ReadonlySet<string>): void => {
     const { added, removed } = registry.replaceBlocked(user, next);
+    calls.recheckUser(user.userId);
     for (const other of added) presence.revokePair(user.userId, other);
     for (const other of removed) {
       for (const connection of registry.user(other)?.connections ?? []) void presence.refilter(connection);
@@ -233,6 +246,7 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     typing.clearConnection(connection);
     presence.removeConnection(connection);
     const { lastForUser } = registry.detach(connection);
+    calls.connectionClosed(connection);
     if (lastForUser) presence.publishStatus(connection.actor.userId);
     safeLog(logger, 'info', 'realtime.connection.closed', { reason, connections: registry.connectionCount });
   }
@@ -265,6 +279,8 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     await Promise.all([...user.connections].map((connection) => presence.refilter(connection)));
     return true;
   };
+
+  const calls = new DirectCallRouter({ config, options: directCallOptions, registry, clock, gate, refreshAccess: refreshUserAccess });
 
   const revalidate = async (): Promise<void> => {
     if (revalidating || closing) return;
@@ -384,6 +400,25 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     }
   };
 
+  const onCall = async (connection: Connection, event: CallClientEventName, args: unknown[]): Promise<void> => {
+    const parts = gate.split(connection, args, 'required');
+    if (!parts) return;
+    // Reuse the existing connection-wide and send budgets, including pending callback limits.
+    if (!gate.admit(connection, 'send') || connection.pendingAcks >= limits.maxPendingAcksPerConnection) return reply(parts.ack, callError('rate_limited'));
+    const initiate = event === CALL_CLIENT_EVENTS.initiate ? parseInitiateCall(parts.body) : null;
+    const action = event !== CALL_CLIENT_EVENTS.initiate && event !== CALL_CLIENT_EVENTS.sync ? parseCallAction(parts.body) : null;
+    if (event === CALL_CLIENT_EVENTS.initiate ? !initiate : event === CALL_CLIENT_EVENTS.sync ? !isCallSyncBody(parts.body) : !action) {
+      gate.invalid(connection, 'call_body'); return reply(parts.ack, callError('invalid_payload'));
+    }
+    connection.pendingAcks += 1;
+    try {
+      const result = event === CALL_CLIENT_EVENTS.initiate ? await calls.initiate(connection, initiate!, parts.body)
+        : event === CALL_CLIENT_EVENTS.sync ? await calls.sync(connection, parts.body) : await calls.action(connection, event, action!.callId, parts.body);
+      reply(parts.ack, result);
+    } catch { reply(parts.ack, callError('unavailable')); }
+    finally { connection.pendingAcks -= 1; }
+  };
+
   const onConnection = (socket: RealtimeSocket): void => {
     const grant = socket.data.realtime;
     if (!grant || closing) {
@@ -424,13 +459,14 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     rooms.joinConnection(connection);
 
     socket.onAny((event: unknown) => {
-      if (typeof event !== 'string' || !CLIENT_EVENT_NAMES.has(event)) gate.invalid(connection, 'unknown_event');
+      if (typeof event !== 'string' || (!CLIENT_EVENT_NAMES.has(event) && !CALL_CLIENT_EVENT_NAMES.has(event))) gate.invalid(connection, 'unknown_event');
     });
     socket.on(CLIENT_EVENTS.typingStart, (...args: unknown[]) => onTyping(connection, args, true));
     socket.on(CLIENT_EVENTS.typingStop, (...args: unknown[]) => onTyping(connection, args, false));
     socket.on(CLIENT_EVENTS.presenceSubscribe, (...args: unknown[]) => onPresenceSubscribe(connection, args));
     socket.on(CLIENT_EVENTS.messageRead, (...args: unknown[]) => void onRead(connection, args));
     socket.on(CLIENT_EVENTS.messageSend, (...args: unknown[]) => void onSend(connection, args));
+    for (const event of Object.values(CALL_CLIENT_EVENTS)) socket.on(event, (...args: unknown[]) => void onCall(connection, event, args));
     socket.on('disconnect', (reason: string) => cleanup(connection, reason));
 
     scheduleExpiry(connection);
@@ -455,12 +491,14 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
   safeLog(logger, ready ? 'info' : 'warn', 'realtime.started', {
     mode: ready ? 'ready' : 'fail-closed',
     messageDelivery: messages.deliveryEnabled ? 'enabled' : 'disabled',
+    callSignaling: calls.enabled ? 'enabled' : 'disabled',
     path: config.path,
     namespace: config.namespace,
     allowedOrigins: config.allowedOrigins.size,
   });
 
   return {
+    authorizeCallMedia(actor, callId, connectionId) { return calls.authorizeMedia(actor, callId, connectionId); },
     revokeSession(sessionId) {
       if (!isIdentifier(sessionId)) invalidArgument('sessionId');
       rememberBounded(revokedSessions, sessionId, clock.nowMs(), limits.maxRevokedSessions);
@@ -514,6 +552,7 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
         pendingDeliveryAcks += connection.pendingDeliveryAcks;
       }
       return {
+        callSignaling: calls.enabled ? 'enabled' : 'disabled', activeCalls: calls.activeCount, retainedCalls: calls.retainedCount,
         mode: ready ? 'ready' : 'fail-closed',
         messageDelivery: messages.deliveryEnabled ? 'enabled' : 'disabled',
         closing,
@@ -534,6 +573,7 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
       closing = true;
       closed = (async () => {
         for (const interval of intervals) clearInterval(interval);
+        calls.close();
         // Transport close (not a server disconnect packet), so clients may reconnect to another instance.
         for (const connection of registry.allConnections()) connection.socket.conn.close();
         io.engine.close();
