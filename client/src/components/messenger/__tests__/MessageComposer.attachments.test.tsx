@@ -112,7 +112,7 @@ test.each([
 
 const uploaded: MessageAttachment = {
   id: '550e8400-e29b-41d4-a716-446655440000', name: 'document.pdf', type: 'file', sizeBytes: 64,
-  mimeType: 'application/pdf', url: '/api/attachments/550e8400-e29b-41d4-a716-446655440000',
+  mimeType: 'application/pdf', url: '/api/attachments/550e8400-e29b-41d4-a716-446655440000/download',
 };
 
 test('waits for upload before sending and reuses the uploaded file after a rejected message', async () => {

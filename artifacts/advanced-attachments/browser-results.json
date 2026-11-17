@@ -1,0 +1,22 @@
+{
+  "passed": [
+    "drag and drop",
+    "multiple files",
+    "remove draft",
+    "image lightbox",
+    "Escape and focus restoration",
+    "caption with attachments",
+    "IndexedDB reload persistence",
+    "original PNG download bytes",
+    "safe SVG",
+    "PDF preview and open link",
+    "attachment-only video message and player",
+    "corrupt file rejection",
+    "mobile overflow",
+    "dark theme"
+  ],
+  "errors": [],
+  "warnings": [
+    "Existing pixel-hand cursor asset returns 404"
+  ]
+}

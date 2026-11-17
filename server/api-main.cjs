@@ -1,5 +1,7 @@
 const path=require('node:path');
+const {createServer}=require('node:http');
 const {createApiApp}=require('./src/api-app.cjs');
+const {createDb6AttachmentTransport}=require('./src/attachments/db6Transport.ts');
 
 // Optional integration: set AUTH_MIDDLEWARE_MODULE to a CommonJS module that exports
 // Express middleware. That middleware must verify the session/JWT and set req.user.user_id.
@@ -12,4 +14,4 @@ if(process.env.AUTH_MIDDLEWARE_MODULE){
 const app=createApiApp(authenticate);
 const host=process.env.API_HOST||'127.0.0.1';
 const port=Number.parseInt(process.env.API_PORT||'3001',10);
-app.listen(port,host,()=>process.stdout.write(`DB-5/DB-6 API listening at http://${host}:${port}\n`));
+createServer(createDb6AttachmentTransport(app)).listen(port,host,()=>process.stdout.write(`DB-5/DB-6 API listening at http://${host}:${port}\n`));

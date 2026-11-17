@@ -57,6 +57,7 @@ test('incoming overflow permits local removal; only the owner can edit or open t
   expect(callbacks.onDeleteMessage).not.toHaveBeenCalled();
   const review = within(screen.getByRole('dialog'));
   expect(review.queryByRole('radio', { name: /Unsend for everyone/ })).not.toBeInTheDocument();
+  expect(review.getByRole('radio', { name: /Unsend for you/ })).toBeChecked();
   fireEvent.click(review.getByRole('button', { name: 'Remove' }));
   expect(callbacks.onDeleteMessage).toHaveBeenCalledWith(outgoing.id);
 });

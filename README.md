@@ -8,13 +8,15 @@ Kiroween Hackathon 2026 | Resurrection Track | Frankenstein Track
 
 ## Project Overview
 
-Yahoo! Security Messenger is a Yahoo Messenger-inspired frontend with a Retro Modern visual system and a local SecureBot conversation demo. The product vision includes realtime communication and security tooling, but those services are not implemented in this checkout.
+Yahoo! Security Messenger combines a Retro Modern messenger demo with implemented Socket.IO calling/realtime modules, LiveKit media adapters, and DB5/DB6 group and attachment APIs. Production identity, authorization, CSRF and messaging-key services still require integration; the local SecureBot remains a scripted demo.
 
 This is a love letter to dial-up internet culture, reimagined through the lens of contemporary cybersecurity—where retro UI meets intelligent threat intelligence.
 
 ---
 
-**Current implementation status:** The client keeps conversation state in browser memory and uses a local demo transport. Browser-side AES-GCM is a demonstration primitive; there is no multi-user key exchange, remote delivery, server persistence, live presence service, or connected Kiro agent.
+**Current implementation status:** Demo text conversations and navigation state live in browser memory; demo attachment files and their message snapshots persist separately in IndexedDB. DB5/DB6 supplies persisted group/attachment APIs. Realtime, direct-call signaling, LiveKit tokens/media ownership, and a loopback development calling harness are implemented and tested, but production authentication/membership/CSRF adapters, durable realtime messaging and recipient-key exchange are not connected. Browser AES-GCM remains a demonstration primitive, and no connected Kiro agent or production multi-user E2EE is claimed.
+
+Chat attachments support documents, images (including safe SVG previews), video, audio, ZIP, RAR, and 7Z. The browser demo persists attachment files and their message/conversation associations separately in IndexedDB. Remote uploads use the DB6 API and its existing authorization, private storage, and retention behavior; the host must supply real authentication, same-origin routing, and conversation targets before enabling them. See [attachment setup, manual tests, and limits](docs/attachments.md).
 
 ## Product Vision (Planned)
 
@@ -206,7 +208,7 @@ The current SecureBot screen uses reusable message components, a conversation-sc
 - `client/src/hooks/useConversationMessages.ts` owns per-conversation message state; `client/src/messaging/messageState.ts` contains pure append, deduplication, ID generation, and delivery-state updates.
 - `client/src/messaging/transport.ts` defines connect/disconnect, encrypted send envelope, incoming message, delivery status, presence, security alert, and connection-status hooks. `client/src/messaging/localDemoTransport.ts` is the current local adapter.
 - The demo adapter resolves an encrypted envelope locally without contacting a service, then emits a fixed mock reply labeled as a demo response. Chat content is held in the current page's React state and is lost on refresh. “Accepted by local demo” does not mean delivered to another person.
-- AES-GCM runs in this browser using a demo key. Key exchange, remote delivery, server/database persistence, authenticated sender identity, and multi-user E2EE are not implemented.
+- AES-GCM runs in this browser using a demo key. Key exchange, authenticated multi-user delivery, durable realtime message-store integration, and multi-user E2EE are not connected. The separate DB5/DB6 persistence APIs do not establish those security properties.
 - Add a Socket.IO client only after the Realtime teammate provides and confirms the event and authentication contract. The transport interface is the intended integration point; no Socket.IO dependency or server was added in Phase 2.
 
 ## Phase 3 — Client-side message protection
@@ -220,11 +222,11 @@ The current SecureBot screen uses reusable message components, a conversation-sc
 ## Phase 4 — Application navigation and conversation foundation
 
 - The client uses `client/src/conversations/conversationModel.ts` for backend-neutral conversation metadata and `client/src/hooks/useMessengerConversations.ts` for active selection, local unread counts, per-conversation drafts, and activity previews. Duplicate conversation IDs are removed when initial demo data is normalized.
-- The Chats workspace includes local examples for SecureBot (`bot`), Ava Morgan (`direct`), and Security Study Group (`group`). These are interface examples, not real users. Conversation and message state is held in React memory and is lost on refresh; there is no persistence.
+- The Chats workspace includes local examples for SecureBot (`bot`), Ava Morgan (`direct`), and Security Study Group (`group`). These are interface examples, not real users. Ordinary text conversation state is held in React memory; local attachment files and their associated message snapshots restore from IndexedDB for the same demo identity.
 - The conversation sidebar switches the active chat. The existing conversation-scoped message hook retains messages by conversation ID and subscribes to the loaded local demo conversation IDs. Drafts remain in application state while switching views. Incoming local demo messages for inactive conversations increment only that conversation's unread count; selecting it clears the count.
 - SecureBot returns a fixed scripted demo response. Direct and group demo entries accept local encrypted messages for interface testing but do not fabricate a recipient or delivery response. Their UI explains that no other user receives those messages.
 - `client/src/conversations/conversationModel.ts` defines `ConversationDataProvider` methods for loading, creating, updating, and loading messages. It also defines a domain-level realtime provider boundary for message, conversation, unread/read, and presence updates. These are interfaces only; they do not define database schemas or Socket.IO event names. Existing `MessagingTransport` remains the client message boundary.
-- Local unread counts, previews, and drafts are in-memory only. Real user presence, remote delivery, database/API persistence, complete Friends or group workflows, AI Hub workflows, and multi-user E2EE are not implemented.
+- Local unread counts, previews, and drafts are in-memory only. Separate realtime/calling modules, DB5/DB6 group/attachment APIs, and AI Hub adapters exist; production service integration and multi-user E2EE remain unavailable. See the current status above and the feature integration documents.
 
 ## Phase 5 — User profile and local identity
 
@@ -360,4 +362,4 @@ See the [Realtime/Kiro handoff contract](docs/realtime-client-contract.md) for e
 
 No production session resolver, membership authorizer, message store or recipient key verifier exists yet, so the server **fails closed**: every connection is rejected with `REALTIME_UNAVAILABLE`, read receipts answer `unavailable`, and `message:send` answers `recipient_keys_unavailable`. Real messaging, production authentication and multi-user E2EE are still not available. The client's readiness flags are unchanged.
 
-`npm test` in `server/` runs unit tests, real-socket integration tests with test-only adapters, a compatibility test that drives the actual 8.7A `SocketIoRealtimeClient` against the server, and a standalone smoke test. See the [Database Team handoff](docs/realtime-server-integration.md) for adapter contracts, error codes, idempotency, receipts and remaining blockers, and the Kiro spec in `.kiro/specs/realtime-server/`.
+`npm test` in `server/` runs unit tests, real-socket and frontend compatibility tests, calling/LiveKit/attachment integration tests, the CommonJS DB5/DB6 regression, and standalone smoke tests. The Next.js calling proxy check is opt-in with `npm run test:dev-calls-proxy`. See the [Database Team handoff](docs/realtime-server-integration.md) and [current push-readiness validation](docs/fullstack-push-readiness.md) for contracts, results and remaining deployment requirements.

@@ -2,7 +2,7 @@
 
 This document is the handoff from the Realtime/Kiro role to the Database Team (and, for message delivery, the Security Team). It describes what the Socket.IO server in `server/` does today, the adapter interfaces it needs, and the dependencies that are still missing.
 
-Specification: `.kiro/specs/realtime-server/` (requirements, design, tasks). Client contract: [realtime-client-contract.md](realtime-client-contract.md). Adapter type definitions with comments: `server/src/realtime/contracts.ts`.
+Client contract: [realtime-client-contract.md](realtime-client-contract.md). Current server adapter types: `server/src/realtime/contracts.ts`. Direct-call and media integration are documented in [direct-call-signaling.md](direct-call-signaling.md) and [direct-call-media.md](direct-call-media.md). The old `.kiro/specs/realtime-server/` directory is not present in this checkout.
 
 ## 1. Status
 
@@ -15,6 +15,7 @@ Specification: `.kiro/specs/realtime-server/` (requirements, design, tasks). Cli
 | Read-receipt and delivery-receipt routing through an injected `MessageStore` | Implemented and tested with an in-memory test store. **No durable store exists**, so production answers `unavailable`. |
 | `message:send` boundary: validation, actor binding, idempotency coordination, durable-first fan-out | Implemented and tested with test-only adapters. **Disabled in production**: no `RecipientKeyVerifier` and no `MessageStore` exist. |
 | Session expiry, `revokeSession`, `disconnectUser`, periodic revalidation, reconnect, graceful shutdown | Implemented and tested |
+| Direct-call signaling, server-owned state, multi-device synchronization, timeouts | Implemented over authenticated sockets; disabled until a host direct-conversation resolver is injected. See [direct-call-signaling.md](direct-call-signaling.md). |
 | Real Phase 8.7A `SocketIoRealtimeClient` against this server | Tested over real sockets (`server/test/integration/client-compatibility.test.ts`) |
 | Production authentication, persistence, history/replay, recipient key distribution, multi-user E2EE | **Not implemented. Not claimed.** |
 
@@ -67,7 +68,7 @@ npm start                     # node --env-file-if-exists=.env src/main.ts
 | `REALTIME_ALLOWED_ORIGINS` | empty (rejects all) | Comma-separated exact origins. HTTP only for `localhost`, `127.0.0.1`, `[::1]`. |
 | `REALTIME_SESSION_COOKIE` | `secubuzz_session` | Session cookie name. |
 
-`GET /healthz` returns `{"status":"ok"}`. Everything else outside the Socket.IO path returns 404.
+`GET /healthz` returns `{"status":"ok"}`. Attachment routes belong exclusively to the DB6 API host (`server/api-main.cjs`); the standalone realtime host returns 404 for them (see [attachments.md](attachments.md)). LiveKit routes retain their separate fail-closed configuration.
 
 ### Client configuration
 

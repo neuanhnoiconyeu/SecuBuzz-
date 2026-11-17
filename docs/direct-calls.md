@@ -1,0 +1,13 @@
+# Direct call UI
+
+The backend signaling contract is documented separately in [direct-call-signaling.md](direct-call-signaling.md). Real-call media, screen sharing and the persistent floating panel are implemented in [direct-call-media.md](direct-call-media.md); production identity/conversation adapters and LiveKit settings remain required. Demo accounts retain explicit previews.
+
+Demo one-to-one conversation headers have voice/video buttons that open a clearly labeled UI preview: no signaling request, LiveKit connection, device capture, ringtone, or remote notification occurs. Authenticated API workspaces use `DirectCallsRuntime` and the existing Socket.IO call channel, with LiveKit media only after acceptance and endpoint authorization. Missing production adapters/configuration leave real calling unavailable. Existing Voice Rooms reuse the same media service.
+
+In development, open the direct conversation's **System log → Direct call UI preview** to explicitly preview incoming voice/video notifications. Accept previews connecting; Decline shows declined. Ringing previews expire after 30 seconds as missed, connecting previews end after 15 seconds as unavailable, and Hang up shows ended. Every preview state remains labeled. No automatic incoming callers or connected previews are generated.
+
+`calls/directCallMachine.ts` owns the transitions. There is one call at a time; actions are scoped by call ID, stale events are ignored, and terminal states cannot reopen. Incoming ringing can be accepted or declined; outgoing ringing requires a transport acceptance event to enter connecting. Only a transport session in connecting can become connected after a `media-connected` confirmation. Preview sessions reject all transport events. Duration starts at media confirmation and freezes when the call ends.
+
+`DirectCallLayer`, `DirectCallWindow`, `IncomingCallNotification`, `DirectCallStatus` and `DirectCallControls` are reusable controlled React components. The preview controller lives at workspace scope, keeps a snapshot of the selected peer while browsing chats, and clears timers on session replacement or unmount.
+
+`useDirectCallPreview` remains the explicit demo controller. The implemented authenticated path uses `useLiveDirectCalls`, confirmed signaling revisions and the existing LiveKit connection/media services; it does not replace demo behavior or create another media transport. Only actual media/peer readiness starts connected duration. See [direct-call-media.md](direct-call-media.md) for implemented screen sharing, floating UI, cleanup and the remaining deployment requirements. No Database or Security business logic is replaced.

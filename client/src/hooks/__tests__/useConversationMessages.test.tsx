@@ -75,7 +75,7 @@ describe('useConversationMessages', () => {
     await waitFor(() => expect(result.current.securityStatus?.localEncryptionAvailable).toBe(true));
     const attachment = {
       id: '550e8400-e29b-41d4-a716-446655440000', name: 'report.pdf', type: 'file' as const,
-      mimeType: 'application/pdf', sizeBytes: 100, url: '/api/attachments/550e8400-e29b-41d4-a716-446655440000',
+      mimeType: 'application/pdf', sizeBytes: 100, url: '/api/attachments/550e8400-e29b-41d4-a716-446655440000/download',
     };
     await act(async () => { expect(await result.current.sendMessage('Read this', { attachments: [attachment] })).toBe(true); });
     const outbound = transport.sendMessage.mock.calls[0]![0];

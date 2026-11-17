@@ -9,20 +9,28 @@
   "exports": {
     ".": "./src/index.ts",
     "./ai": "./src/ai/index.ts",
+    "./calls": "./src/calls/index.ts",
+    "./livekit": "./src/livekit/index.ts",
     "./e2ee": "./src/e2ee/index.ts",
     "./data": "./src/data/index.ts"
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/main.ts",
     "start:data": "node src/data/main.ts",
+    "start:api": "node --env-file-if-exists=.env api-main.cjs",
+    "dev:calls": "node --env-file-if-exists=.env --env-file-if-exists=dev/calling/.env dev/calling/main.ts",
+    "test:dev-calls-proxy": "node --test --test-timeout=120000 test/manual/development-calling-proxy.check.ts",
     "ai:check-config": "node --env-file-if-exists=.env src/ai/checkConfig.ts",
     "type-check": "tsc --noEmit -p tsconfig.json",
-    "test": "node --test --test-concurrency=1 --test-timeout=60000 \"test/**/*.test.ts\""
+    "test:attachments": "node --test --test-concurrency=1 --test-timeout=60000 test/integration/attachments.test.ts test/db5_db6.test.cjs",
+    "test:db5db6": "node --test --test-concurrency=1 --test-timeout=60000 test/db5_db6.test.cjs",
+    "test": "node --test --test-concurrency=1 --test-timeout=60000 \"test/**/*.test.ts\" \"test/**/*.test.cjs\""
   },
   "dependencies": {
-    "socket.io": "^4.8.4",
+    "better-sqlite3": "^13.0.3",
     "express": "^5.3.0",
-    "better-sqlite3": "^13.0.3"
+    "livekit-server-sdk": "^2.19.3",
+    "socket.io": "^4.8.4"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

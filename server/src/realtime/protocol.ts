@@ -6,6 +6,8 @@
  * handlers and emitters must import these constants instead of repeating string literals.
  */
 
+import type { CallClientEventName } from '../calls/protocol.ts';
+
 export const CLIENT_EVENTS = {
   messageSend: 'message:send',
   messageRead: 'message:read',
@@ -33,7 +35,7 @@ export const SERVER_EVENTS = {
   conversationKeysChanged: 'conversation:keys-changed',
 } as const;
 
-export type ClientEventName = (typeof CLIENT_EVENTS)[keyof typeof CLIENT_EVENTS];
+export type ClientEventName = (typeof CLIENT_EVENTS)[keyof typeof CLIENT_EVENTS] | CallClientEventName | 'call:media';
 export type ServerEventName = (typeof SERVER_EVENTS)[keyof typeof SERVER_EVENTS];
 
 export const CLIENT_EVENT_NAMES: ReadonlySet<string> = new Set<string>(Object.values(CLIENT_EVENTS));
