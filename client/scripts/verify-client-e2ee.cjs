@@ -8,7 +8,7 @@ const { once } = require('node:events');
 const { chromium, expect } = require('@playwright/test');
 const root = path.resolve(__dirname, '..'), suffix = randomUUID().slice(0, 8);
 const temporary = path.join(root, 'tmp', 'client-e2ee-' + suffix), artifacts = path.join(temporary, 'artifacts');
-const children = [], pages = [], secretTexts = ['Alice browser E2EE ' + suffix, 'Bob browser reply ' + suffix, 'New device epoch ' + suffix];
+const children = [], pages = [], secretTexts = ['Alice browser E2EE ', 'Bob browser reply ', 'New device epoch ', 'Later device reply ', 'Shared profile reply ', 'Restored account reply '].map(text => text + suffix);
 const evidence = { startedAt: new Date().toISOString(), checks: [], network: [], plaintextLeaks: 0, runtimeErrors: 0, browser: 'Chrome, separate isolated contexts', screenshots: [] };
 const delay = ms => new Promise(r => setTimeout(r, ms));
 function check(name, condition) { evidence.checks.push({ name, passed: Boolean(condition) }); console.log(`${condition ? 'PASS' : 'FAIL'} ${name}`); if (!condition) throw new Error('Check failed: ' + name); }
@@ -32,12 +32,23 @@ async function login(page, origin, username, password) {
   await page.goto(origin + '/login'); await page.getByLabel('Username or email').fill(username); await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Sign In', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Your conversations', exact: true })).toBeVisible({ timeout: 60000 });
 }
+async function logout(page) {
+  await page.getByRole('button', { name: 'Sign Out', exact: true }).click();
+  // Wait for the authenticated logout lifecycle, rather than navigating away
+  // while its CSRF/logout requests and resource disposal are still pending.
+  await expect(page.getByLabel('Username or email')).toBeVisible({ timeout: 30000 });
+}
 async function device(page, id) { return page.evaluate(async id => {
   const db = await new Promise((resolve, reject) => { const r = indexedDB.open('secubuzz-e2ee-v1', 1); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(Error('storage')); });
   try { const d = await new Promise((resolve, reject) => { const r = db.transaction('records').objectStore('records').get(JSON.stringify([id, 'device', ''])); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(Error('storage')); });
     return { deviceId: d.deviceId, nonExtractable: d.signing.privateKey.extractable === false && d.agreement.privateKey.extractable === false };
   } finally { db.close(); }
 }, id); }
+async function peerTrust(page, owner, peer) { return page.evaluate(async ({ owner, peer }) => {
+  const db = await new Promise((resolve, reject) => { const r = indexedDB.open('secubuzz-e2ee-v1'); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(Error('storage')); });
+  try { return await new Promise((resolve, reject) => { const r = db.transaction('records', 'readonly').objectStore('records').get(JSON.stringify([owner, 'trust', peer])); r.onsuccess = () => resolve(r.result?.ids ?? null); r.onerror = () => reject(Error('storage')); }); }
+  finally { db.close(); }
+}, { owner, peer }); }
 async function enroll(page) {
   const button = page.getByRole('button', { name: /^Enroll this browser/ });
   await expect(button).toBeVisible();
@@ -61,7 +72,14 @@ async function ready(page) {
   await expect(page.getByRole('textbox', { name: /^Message to / })).toBeEnabled();
 }
 async function select(page, name) { if (!await page.getByRole('navigation', { name: 'Direct conversations' }).isVisible()) await page.getByRole('button', { name: 'Back to conversations', exact: true }).click(); await page.getByRole('button', { name: 'Refresh conversations', exact: true }).click(); await page.getByRole('navigation', { name: 'Direct conversations' }).getByRole('button', { name: new RegExp('^' + name + ',') }).click(); await ready(page); }
-async function send(page, text) { await page.getByRole('textbox', { name: /^Message to / }).fill(text); await page.getByRole('button', { name: 'Send', exact: true }).click(); await expect(page.getByRole('log').getByText(text, { exact: true })).toBeVisible({ timeout: 30000 }); }
+async function send(page, text) {
+  const input = page.getByRole('textbox', { name: /^Message to / }), button = page.getByRole('button', { name: 'Send', exact: true });
+  const attempt = { fixtureMessage: secretTexts.indexOf(text), submitted: false, rendered: false }; (evidence.sendAttempts ??= []).push(attempt);
+  await input.fill(text); await expect(input).toHaveValue(text); await expect(button).toBeEnabled();
+  await button.click(); attempt.submitted = true;
+  try { await expect(page.getByRole('log').getByText(text, { exact: true })).toBeVisible({ timeout: 30000 }); await expect(page.locator('.message-composer')).toHaveAttribute('aria-busy', 'false'); attempt.rendered = true; }
+  finally { attempt.ui = { draftLength: (await input.inputValue().catch(() => '')).length, sendEnabled: await button.isEnabled().catch(() => false), composerBusy: await page.locator('.message-composer').getAttribute('aria-busy').catch(() => null), transport: await page.getByLabel('Message transport', { exact: true }).inputValue().catch(() => null), unconfirmed: await page.getByText('Your message was not confirmed. Your draft is still here.', { exact: true }).isVisible().catch(() => false) }; }
+}
 (async () => {
   fs.mkdirSync(temporary, { recursive: true }); fs.mkdirSync(artifacts, { recursive: true }); let host;
   try {
@@ -79,7 +97,7 @@ async function send(page, text) { await page.getByRole('textbox', { name: /^Mess
       await login(page, origin, usernames[i], password); check('startup does not register device keys', (await api(page, '/api/keys/devices')).body.items.length === 0); await enroll(page);
       accounts.push((await api(page, '/api/auth/me')).body.user);
     }
-    const before = await device(alice, accounts[0].id); check('persistent private keys are non-extractable', before.nonExtractable);
+    const before = await device(alice, accounts[0].id), originalBob = await device(bob, accounts[1].id); check('persistent private keys are non-extractable', before.nonExtractable && originalBob.nonExtractable);
     const friendship = await api(alice, '/api/friends/requests', 'POST', { userId: accounts[1].id }); check('request real friendship', friendship.status === 201);
     check('accept real friendship', (await api(bob, '/api/friends/requests/' + friendship.body.request.id + '/accept', 'POST')).status === 200);
     await alice.reload(); await expect(alice.getByText('Secure device ready', { exact: true })).toBeVisible();
@@ -95,6 +113,13 @@ async function send(page, text) { await page.getByRole('textbox', { name: /^Mess
     await advanced(alice); await alice.getByRole('button', { name: 'Refresh secure conversation', exact: true }).click(); await expect(alice.getByText('Contact device keys changed', { exact: true })).toBeVisible(); await expect(alice.getByRole('button', { name: 'Send', exact: true })).toBeDisabled(); check('peer key change blocks send and warns before trust', true);
     await alice.getByRole('button', { name: 'Trust these device changes', exact: true }).click(); await ready(alice); await send(alice, secretTexts[2]); await select(bob2, 'Alice');
     await expect(bob2.getByRole('log').getByText(secretTexts[2], { exact: true })).toBeVisible(); await expect(bob2.getByRole('log').getByText(secretTexts[0], { exact: true })).toHaveCount(0); check('new epoch includes new device without pretending old-key recovery', true);
+    await expect(bob2.getByRole('status', { name: 'Historical message keys' })).toBeVisible();
+    check('later device sees the historical-key explanation', true);
+    await expect(bob2.getByRole('log').getByText('Unable to decrypt: this browser does not have the required historical key.', { exact: true })).toHaveCount(2);
+    check('both original messages remain explicitly undecryptable on the later device', true);
+    await expect(bob2.getByRole('textbox', { name: /^Message to / })).toBeEnabled();
+    await send(bob2, secretTexts[3]); await refresh(alice); await expect(alice.getByRole('log').getByText(secretTexts[3], { exact: true })).toBeVisible();
+    check('later device cannot decrypt old ciphertext but can send and decrypt new bidirectional messages', true);
     await advanced(bob2); bob2.once('dialog', d => d.accept()); await bob2.getByText('This browser and key recovery', { exact: true }).click(); await bob2.getByRole('button', { name: 'Revoke this browser', exact: true }).click(); await expect(bob2.getByText('Device revoked', { exact: true })).toBeVisible(); check('device revocation blocks new secure sends', true);
     await alice.setViewportSize({ width: 390, height: 844 }); check('mobile layout has no horizontal overflow', await alice.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
     await alice.addStyleTag({ content: '.message-bubble, .conversation-list-preview, .composer-input { filter:blur(8px); }' }); await alice.screenshot({ path: path.join(artifacts, 'mobile-redacted.png'), fullPage: true }); evidence.screenshots.push('mobile-redacted.png');
@@ -102,12 +127,56 @@ async function send(page, text) { await page.getByRole('textbox', { name: /^Mess
     await alice.screenshot({ path: path.join(artifacts, 'midnight-mobile-redacted.png'), fullPage: true }); evidence.screenshots.push('midnight-mobile-redacted.png');
     await alice.emulateMedia({ colorScheme: 'light' }); await expect(alice.locator('html')).toHaveAttribute('data-theme', 'light'); check('new panel preserves System appearance in light and Midnight dark', true);
     check('Bungee and Space Grotesk remain active', await alice.evaluate(async () => { await document.fonts.ready; return /bungee/i.test(getComputedStyle(document.querySelector('.chat-title-heading')).fontFamily) && /space.?grotesk/i.test(getComputedStyle(document.body).fontFamily); }));
-    await alice.getByRole('button', { name: 'Sign Out', exact: true }).click(); await expect(alice.getByLabel('Username or email')).toBeVisible();
+    // All disposable contexts share one loopback source bucket. The full UI tour
+    // plus the separate account-switch scenario can exceed DATA's real 60/minute
+    // CSRF limit (including failed live reconnects in this HTTP-only fixture).
+    // Respect its window; never bypass the limiter or replace its CSRF service.
+    evidence.accountSwitchCooldownMs = 60000; await delay(evidence.accountSwitchCooldownMs);
+    await logout(alice);
     await login(alice, origin, usernames[2], password); await expect(alice.getByRole('button', { name: 'Enroll this browser — older history may be unavailable', exact: true })).toBeVisible();
     await expect(alice.getByRole('log')).toHaveCount(0); check('same-browser account switch clears plaintext and isolates device enrollment', true);
+    await logout(alice);
+    await login(alice, origin, usernames[1], password);
+    const enrollSwitched = alice.getByRole('button', { name: 'Enroll this browser — older history may be unavailable', exact: true });
+    await expect(enrollSwitched).toBeVisible(); await expect(alice.getByRole('log')).toHaveCount(0);
+    const priorDevices = (await api(alice, '/api/keys/devices')).body.items;
+    alice.once('dialog', dialog => dialog.dismiss()); await enrollSwitched.click();
+    check('cancelled same-profile enrollment leaves all device records unchanged', JSON.stringify((await api(alice, '/api/keys/devices')).body.items) === JSON.stringify(priorDevices));
+    await enroll(alice);
+    const switchedBob = await device(alice, accounts[1].id);
+    check('same profile enrolls a distinct account-scoped non-extractable identity', switchedBob.nonExtractable && switchedBob.deviceId !== before.deviceId && switchedBob.deviceId !== originalBob.deviceId);
+    await select(alice, 'Alice');
+    await expect(alice.getByRole('status', { name: 'Historical message keys' })).toBeVisible();
+    await expect(alice.getByRole('log').getByText(secretTexts[0], { exact: true })).toHaveCount(0);
+    await send(alice, secretTexts[4]);
+    await logout(alice);
+    await login(alice, origin, usernames[0], password);
+    await expect(alice.getByText('Secure device ready', { exact: true })).toBeVisible();
+    check('sign-out and sign-in restores the original account identity without enrollment', (await device(alice, accounts[0].id)).deviceId === before.deviceId && (await api(alice, '/api/keys/devices')).body.items.length === 1);
+    evidence.restoredTrust = { rememberedDeviceKeyIds: await peerTrust(alice, accounts[0].id, accounts[1].id), currentPeerDeviceKeyIds: (await api(alice, `/api/conversations/${cid}/keys`)).body.devices.filter(d => d.userId === accounts[1].id).map(d => d.deviceKeyId) };
+    await alice.getByRole('navigation', { name: 'Direct conversations' }).getByRole('button', { name: /^Bob,/ }).click();
+    await expect(alice.getByText('Contact device keys changed', { exact: true })).toBeVisible();
+    await expect(alice.getByRole('button', { name: 'Send', exact: true })).toBeDisabled();
+    check('restored account still requires review of changed recipient identities', true);
+    await alice.getByRole('button', { name: 'Trust these device changes', exact: true }).click(); await ready(alice);
+    await expect(alice.getByRole('log').getByText(secretTexts[4], { exact: true })).toBeVisible();
+    await expect(alice.getByRole('log').getByText(secretTexts[0], { exact: true })).toBeVisible();
+    check('restored account decrypts the switched-account reply and retains its historical keys', true);
+    await send(alice, secretTexts[5]);
+    await logout(alice);
+    await login(alice, origin, usernames[1], password);
+    check('returning to the second account restores its own identity without enrolling again', (await device(alice, accounts[1].id)).deviceId === switchedBob.deviceId);
+    await select(alice, 'Alice');
+    await expect(alice.getByRole('log').getByText(secretTexts[5], { exact: true })).toBeVisible();
+    check('same-profile account switching preserves bidirectional decryption and keeps historical failures scoped', true);
+    const remainingDevices = (await api(alice, '/api/keys/devices')).body.items;
+    check('account switching neither revokes old active devices nor reactivates the explicitly revoked device', remainingDevices.filter(d => d.status === 'active').length === 2 && remainingDevices.filter(d => d.status === 'revoked').length === 1 && remainingDevices.some(d => d.deviceId === originalBob.deviceId && d.status === 'active'));
     check('no plaintext in any captured network request', evidence.plaintextLeaks === 0); check('no browser runtime exceptions', evidence.runtimeErrors === 0);
     evidence.passed = true; evidence.nextStartupHealthy = next.exitCode === null; evidence.backendHealthy = backend.exitCode === null;
-  } catch (e) { evidence.passed = false; evidence.failure = e instanceof Error ? secretTexts.reduce((s, t) => s.replaceAll(t, '[redacted]'), e.message.split('\n')[0]).slice(0, 200) : 'Browser verification failed'; process.exitCode = 1; console.error('Browser verification failed; sanitized evidence saved.'); }
+  } catch (e) { evidence.passed = false; evidence.failure = e instanceof Error ? secretTexts.reduce((s, t) => s.replaceAll(t, '[redacted]'), e.message.split('\n')[0]).slice(0, 200) : 'Browser verification failed';
+    if (e instanceof Error) evidence.failureLocator = secretTexts.reduce((s, t) => s.replaceAll(t, '[redacted]'), e.message.split('\n').filter(line => /^(Locator:|Expected:|Error:)/.test(line)).join('\n')).slice(0, 1000);
+    evidence.securityStatuses = await Promise.all(pages.map(async page => ({ ready: await page.getByText('Secure message ready', { exact: true }).isVisible().catch(() => false), review: await page.getByText('Contact device keys changed', { exact: true }).isVisible().catch(() => false), revoked: await page.getByText('Device revoked', { exact: true }).isVisible().catch(() => false) })));
+    process.exitCode = 1; console.error('Browser verification failed; sanitized evidence saved.'); }
   finally {
     await host?.close().catch(() => {});
     for (const p of children.reverse()) if (p.exitCode === null) { const exited = once(p, 'exit'); if (process.platform === 'win32') { try { execFileSync('taskkill.exe', ['/PID', String(p.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' }); } catch {} } else p.kill(); await Promise.race([exited, delay(5000)]); }

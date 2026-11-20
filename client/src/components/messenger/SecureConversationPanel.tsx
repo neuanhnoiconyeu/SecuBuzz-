@@ -161,6 +161,7 @@ export function SecureConversationPanel({ session, live, active = true, selected
   };
   const sidebar = presentConversations(conversations, actorId, liveState, selectedId, localRows);
   const presented = presentMessages(rows, live ? (cid, id) => live.receiptFor(cid, id) : undefined);
+  const missingHistoricalKeys = rows.some(row => row.text === null && row.errorCode === 'missing_key');
   const name = selected ? conversationName(selected, actorId) : 'Secure conversation';
   const peer = selected?.participants.find(p => p.id !== actorId);
   const presence = peer ? liveState.presence[peer.id]?.status : undefined;
@@ -170,7 +171,7 @@ export function SecureConversationPanel({ session, live, active = true, selected
     <div className={deviceReady && !messageError ? 'sr-only' : styles.notice} role="status" aria-live="polite">{status}</div>
     {!deviceReady && <div className={styles.notice}>
       <Button disabled={initializing} onClick={() => explicitEnrollment ? enroll() : void initialize()}>{explicitEnrollment ? 'Enroll this browser — older history may be unavailable' : 'Retry secure device'}</Button>
-      {explicitEnrollment && <p>Enrollment creates new non-extractable private keys in this browser profile. It does not recover keys from another device or make older messages decryptable.</p>}
+      {explicitEnrollment && <p>Enrollment creates new non-extractable private keys in this browser profile. It does not recover keys from another device or make older messages decryptable. Private browsing has separate temporary storage; closing all private windows can lose access to those keys.</p>}
       {revoked && <p>This profile keeps its revoked identity and historical keys. To enroll a different device, open this same application address in a fresh browser profile, sign in, and confirm “Enroll this browser”. Keep this profile and its browser storage for any history it can still decrypt.</p>}
     </div>}
     {messageError && <p role="alert" className={styles.warning}>{messageError}</p>}
@@ -195,12 +196,16 @@ export function SecureConversationPanel({ session, live, active = true, selected
           {...(presence && presence !== 'unknown' ? { presence } : {})}
           securePresentation={{ ready, label: ready ? 'End-to-end encrypted' : revoked ? 'Secure messaging locked' : keyReview ? 'Review contact keys' : 'Checking conversation keys', details: <>
             <p>Messages use E2EE v2. Device keys are authenticated by the service and remembered on this browser. Compare your safety number with your contact through another channel.</p>
+            <p>Conversation readiness applies to new messages. Earlier messages still require the device keys they were encrypted for.</p>
             <p>This is trust on first use, not independent verification against a malicious server.</p>
             {safety && ready && <code className={styles.safety}>{safety}</code>}
           </> }} />}
         {(!narrow || !mobileListOpen) && deviceNotice}
         {keyReview && <div role="alert" className={styles.warning}><strong>Contact device keys changed</strong><p>Check with your contact before trusting new device keys.</p><details><summary>Compare device identities</summary><p>Previously trusted: {keyReview.oldIds.join(', ')}</p><p>Current devices: {keyReview.newIds.join(', ')}</p></details><Button disabled={busy} onClick={() => void review()}>Trust these device changes</Button></div>}
         {selectedId ? <>
+          {missingHistoricalKeys && <div role="status" aria-label="Historical message keys" className={styles.notice}>
+            <p>Some earlier messages cannot be decrypted in this browser. Use the original browser profile if it still has their keys. Enrolling another device does not recover earlier messages. New messages can still work once your current device and contact keys are verified.</p>
+          </div>}
           {cursor && <Button size="sm" variant="ghost" disabled={busy} onClick={() => void older()}>Load older messages</Button>}
           <MessageList key={selectedId} messages={presented.messages} verifiedMessageIds={presented.verifiedIds} currentUserId={actorId}
             currentUserName={displayName} active={visible} transportMode="realtime" canEditMessage={false} onRetryMessage={() => void retry()} canRetryMessage={() => pending && !busy && !revoked} />
@@ -218,7 +223,7 @@ export function SecureConversationPanel({ session, live, active = true, selected
             <Button size="sm" variant="outline" disabled={busy || !selectedId} onClick={() => void refresh()}>Refresh secure conversation</Button>
             {live && <><Button size="sm" variant="outline" onClick={() => live.reconnect()}>Reconnect live</Button><label>Message transport <select aria-label="Message transport" value={mode} disabled={busy} onChange={e => setMode(e.target.value === 'rest' ? 'rest' : 'live')}><option value="live">Live Socket.IO</option><option value="rest">REST persistence</option></select></label></>}
             <p>Group messaging, attachments, voice messages and direct calls remain separate until their authenticated encrypted contracts are verified.</p>
-            <details><summary>This browser and key recovery</summary><p>Device keys stay in this browser’s IndexedDB after refresh and sign-out. They are not recoverable from your password. Clearing browser data may make older messages unavailable. IndexedDB does not protect keys against malicious same-origin JavaScript.</p>
+            <details><summary>This browser and key recovery</summary><p>Device keys stay in this browser’s IndexedDB after refresh and sign-out. They are not recoverable from your password. Another browser, a different application address, or a private window has separate key storage. Closing all private windows or clearing browser data may make older messages unavailable. IndexedDB does not protect keys against malicious same-origin JavaScript.</p>
               {deviceReady && <Button size="sm" variant="outline" onClick={() => { if (window.confirm('Permanently revoke this browser for future messages? Previously received keys and history are not erased.')) void session.revokeCurrentDevice().catch(e => { if (alive.current) { setRevoked(e instanceof E2eeError && e.code === 'device_revoked'); setDeviceReady(false); setReadyId(null); setStatus('Device revoked'); setError(securityMessage(e)); } }); }}>Revoke this browser</Button>}
             </details>
           </div>
