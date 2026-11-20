@@ -85,7 +85,7 @@ export function deleteMessageById(
     ...messagesByConversation,
     [conversationId]: messages.map((message) =>
       message.id === messageId
-        ? { ...message, content: 'This message was deleted.', isDeleted: true, reactions: [], attachments: [] }
+        ? { ...message, content: 'This message was deleted.', isDeleted: true, isPinned: false, reactions: [], attachments: [], voice: undefined, forwardedFrom: undefined, replyTo: undefined }
         : message
     ),
   };
@@ -102,7 +102,8 @@ export function toggleMessagePin(
   return {
     ...messagesByConversation,
     [conversationId]: messages.map((message) =>
-      message.id === messageId
+      message.id === messageId && !message.isDeleted && (message.isPinned || (['text', 'voice'].includes(message.type) &&
+        message.deliveryStatus !== 'sending' && message.deliveryStatus !== 'failed'))
         ? { ...message, isPinned: !message.isPinned }
         : message
     ),
@@ -117,29 +118,24 @@ export function toggleMessageReaction(
   userId: string
 ): ConversationMessages {
   const messages = messagesByConversation[conversationId];
-  if (!messages) return messagesByConversation;
+  if (!messages || !emoji) return messagesByConversation;
 
   return {
     ...messagesByConversation,
     [conversationId]: messages.map((message) => {
-      if (message.id !== messageId || message.isDeleted) return message;
+      if (message.id !== messageId || message.isDeleted || !['text', 'voice'].includes(message.type) ||
+        message.deliveryStatus === 'sending' || message.deliveryStatus === 'failed') return message;
 
       const existingReactions = message.reactions ?? [];
-      const targetReaction = existingReactions.find((r) => r.emoji === emoji);
-
-      let updatedReactions;
-
-      if (!targetReaction) {
-        updatedReactions = [...existingReactions, { emoji, userIds: [userId] }];
-      } else {
-        const hasReacted = targetReaction.userIds.includes(userId);
-        const nextUserIds = hasReacted
-          ? targetReaction.userIds.filter((id) => id !== userId)
-          : [...targetReaction.userIds, userId];
-
-        updatedReactions = existingReactions
-          .map((r) => (r.emoji === emoji ? { ...r, userIds: nextUserIds } : r))
-          .filter((r) => r.userIds.length > 0);
+      const selected = existingReactions.some(r => r.emoji === emoji && r.userIds.includes(userId));
+      // Remove this user's previous choice, including older local snapshots with multiple choices.
+      const updatedReactions = existingReactions.map(r => ({
+        emoji: r.emoji, userIds: [...new Set(r.userIds)].filter(id => id !== userId),
+      })).filter(r => r.userIds.length > 0);
+      if (!selected) {
+        const target = updatedReactions.find(r => r.emoji === emoji);
+        if (target) target.userIds.push(userId);
+        else updatedReactions.push({ emoji, userIds: [userId] });
       }
 
       return { ...message, reactions: updatedReactions };
@@ -182,9 +178,8 @@ export function editMessageBySender(
   editedAt: string
 ): ConversationMessages {
   const messages = messagesByConversation[conversationId];
-  const trimmed = content.trim();
   const target = messages?.find((m) => m.id === messageId);
-  if (!messages || !target || !trimmed) return messagesByConversation;
+  if (!messages || !target || !content.trim()) return messagesByConversation;
   if (target.senderId !== senderId || target.isDeleted) return messagesByConversation;
   if (target.editedAt && Date.parse(editedAt) < Date.parse(target.editedAt)) return messagesByConversation;
 
@@ -192,7 +187,7 @@ export function editMessageBySender(
     ...messagesByConversation,
     [conversationId]: messages.map((m) =>
       m.id === messageId
-        ? { ...m, content: trimmed, isEdited: true, editedAt, ...(encryption ? { encryption } : {}) }
+        ? { ...m, content, isEdited: true, editedAt, ...(encryption ? { encryption } : {}) }
         : m
     ),
   };
