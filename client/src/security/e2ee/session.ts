@@ -5,12 +5,12 @@ import { generateDevice, matchesDevice, registration, safetyNumber, validateLoca
 import { decryptV2, encryptV2 } from './messages';
 import { openKey, sealKey } from './hpke';
 import { base64url, digest, epochStatement, importPoint, parseEnvelope, parseEpoch, recipientOrder, sign, verifyDevice, verifySignature, wrapInfo } from './protocol';
-import { E2eeError, type DeviceIdentity, type DeviceRecord, type DirectConversation, type EnvelopeV2, type KeyEpoch, type KeyState, type StoredMessage } from './model';
+import { E2eeError, type DeviceIdentity, type DeviceRecord, type DirectConversation, type EnvelopeV2, type KeyEpoch, type KeyState, type SecurityErrorCode, type StoredMessage } from './model';
 
 interface CachedEpoch { epoch: KeyEpoch; creator: DeviceRecord; key: CryptoKey }
 interface TrustedPeer { ids: string[] }
 export interface PreparedConversation { conversation: DirectConversation; keyId: string; key: CryptoKey; safetyNumber: string }
-export interface DecryptedRow { message: StoredMessage; text: string | null; error: string | null }
+export interface DecryptedRow { message: StoredMessage; text: string | null; error: string | null; errorCode?: SecurityErrorCode }
 export interface PersistenceAck { conversationId: string; messageId: string; status: 'sent'; timestamp: string }
 export type EncryptedSubmit = (envelope: EnvelopeV2) => Promise<PersistenceAck>;
 export type SendProgress = (state: 'Encrypting' | 'Sending' | 'Awaiting persistence acknowledgment' | 'Persisted — delivery pending') => void;
@@ -218,7 +218,7 @@ export class SecureMessagingSession {
         if (!keys.has(keyId)) keys.set(keyId, this.historyKey(conversation, keyId));
         const wire = { id: message.id, conversationId: cid, senderId: message.senderId, senderName: message.senderName, timestamp: message.timestamp, type: message.type, encryption: message.encryption };
         const text = await decryptV2(await keys.get(keyId)!, wire); return { message, text, error: null };
-      } catch (e) { return { message, text: null, error: e instanceof E2eeError ? e.message : 'Unable to decrypt this message.' }; }
+      } catch (e) { return { message, text: null, error: e instanceof E2eeError ? e.message : 'Unable to decrypt this message.', ...(e instanceof E2eeError ? { errorCode: e.code } : {}) }; }
     }));
     this.assert(); return { items, nextCursor: result.nextCursor };
   }

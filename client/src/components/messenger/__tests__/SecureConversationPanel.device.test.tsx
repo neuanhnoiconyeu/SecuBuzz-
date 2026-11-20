@@ -184,3 +184,34 @@ test('a later successful initialization clears the earlier revoked UI flag and a
   await waitFor(() => expect(screen.getByLabelText('Message to Bob', { exact: true })).toBeEnabled());
   expect(f.prepare).toHaveBeenCalled(); expect(f.initialize.mock.calls).toEqual([[false], [false]]);
 });
+
+test('missing historical keys are explained without marking ciphertext verified or disabling new secure messages', async () => {
+  const f = await fixture(); f.initialize.mockResolvedValue(f.device);
+  const message: StoredMessage = { ...envelope, conversationId: conversation.id, encryption: { ...envelope.encryption, version: 2, keyId: 'epoch' },
+    storageId: 'historical-storage', sequence: 1, revision: 0, state: 'active', deletedAt: null,
+    storedAt: envelope.timestamp, updatedAt: envelope.timestamp };
+  const missing = { message, text: null, error: new E2eeError('missing_key').message, errorCode: 'missing_key' as const };
+  jest.spyOn(f.session, 'history').mockResolvedValue({ items: [missing], nextCursor: null });
+  render(<SecureConversationPanel session={f.session} selectedId="conversation" onSelect={jest.fn()} displayName="Alice" />);
+  await screen.findByText('Secure message ready', { exact: true });
+  const notice = await screen.findByRole('status', { name: 'Historical message keys' });
+  expect(notice).toHaveTextContent('original browser profile');
+  expect(notice).toHaveTextContent('New messages');
+  expect(screen.getByRole('log')).toHaveTextContent(missing.error);
+  expect(presentMessages([missing]).verifiedIds.has(message.id)).toBe(false);
+  await waitFor(() => expect(screen.getByLabelText('Message to Bob')).toBeEnabled());
+});
+
+test('ciphertext verification failures are not mislabeled as missing historical keys', async () => {
+  const f = await fixture(); f.initialize.mockResolvedValue(f.device);
+  const message: StoredMessage = { ...envelope, conversationId: conversation.id, encryption: { ...envelope.encryption, version: 2, keyId: 'epoch' },
+    storageId: 'invalid-storage', sequence: 1, revision: 0, state: 'active', deletedAt: null,
+    storedAt: envelope.timestamp, updatedAt: envelope.timestamp };
+  const invalid = { message, text: null, error: new E2eeError('decryption_failed').message, errorCode: 'decryption_failed' as const };
+  jest.spyOn(f.session, 'history').mockResolvedValue({ items: [invalid], nextCursor: null });
+  render(<SecureConversationPanel session={f.session} selectedId="conversation" onSelect={jest.fn()} displayName="Alice" />);
+  await screen.findByText('Secure message ready', { exact: true });
+  await waitFor(() => expect(screen.getByRole('log')).toHaveTextContent(invalid.error));
+  expect(screen.queryByRole('status', { name: 'Historical message keys' })).not.toBeInTheDocument();
+  expect(presentMessages([invalid]).verifiedIds.has(message.id)).toBe(false);
+});
