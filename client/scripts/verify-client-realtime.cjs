@@ -181,6 +181,12 @@ async function websocketProbe(origin) {
     await alice.setViewportSize({ width: 390, height: 844 }); check('mobile layout has no horizontal overflow', await alice.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
     await alice.addStyleTag({ content: '.message-bubble, .conversation-list-preview, .composer-input { filter:blur(8px); }' }); await alice.screenshot({ path: path.join(artifacts, 'mobile-redacted.png'), fullPage: true }); evidence.screenshots.push('mobile-redacted.png');
     await alice.emulateMedia({ colorScheme: 'dark' }); await expect(alice.locator('html')).toHaveAttribute('data-theme', 'dark');
+    // The theme attribute updates before the existing background transition finishes.
+    await expect.poll(() => alice.locator('.conversation-security-summary').evaluate(element => {
+      const channels = getComputedStyle(element).backgroundColor.match(/\d+/g)?.slice(0, 3).map(Number);
+      return element.getAnimations().every(animation => animation.playState === 'finished') &&
+        channels?.length === 3 && channels.reduce((a, b) => a + b, 0) < 500;
+    }), { timeout: 5000, message: 'Dark security disclosure completes its transition' }).toBe(true);
     check('dark security disclosure uses a readable dark surface', await alice.locator('.conversation-security-summary').evaluate(element => { const channels = getComputedStyle(element).backgroundColor.match(/\d+/g)?.slice(0, 3).map(Number); return channels?.length === 3 && channels.reduce((a, b) => a + b, 0) < 500; }));
     await alice.screenshot({ path: path.join(artifacts, 'midnight-mobile-redacted.png'), fullPage: true }); evidence.screenshots.push('midnight-mobile-redacted.png');
     await alice.emulateMedia({ colorScheme: 'light' }); await expect(alice.locator('html')).toHaveAttribute('data-theme', 'light'); check('new panel preserves System appearance in light and Midnight dark', true);

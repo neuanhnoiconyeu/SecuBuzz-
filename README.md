@@ -4,6 +4,23 @@
 
 Kiroween Hackathon 2026 | Resurrection Track | Frankenstein Track
 
+For the Docker development environment, use Docker Desktop with Linux containers:
+
+```powershell
+git clone https://github.com/neuanhnoiconyeu/SecuBuzz-.git
+cd SecuBuzz-
+docker compose config --quiet
+docker compose up --build -d --wait --wait-timeout 180
+docker compose ps
+```
+
+Open **http://localhost:3001** when both services are healthy. No host Node/npm
+installation or environment-file copy is required. Docker creates its own fresh,
+persistent database; existing non-Docker commands remain available. This is a
+local development configuration, not a production deployment. See
+[Docker setup and operations](docs/docker-development.md) for Windows/WSL2,
+storage relocation, backups, port conflicts and container replacement recovery.
+
 ---
 
 ## Project Overview

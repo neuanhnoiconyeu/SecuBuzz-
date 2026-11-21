@@ -1,0 +1,121 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    init: true
+    user: node
+    working_dir: /workspace
+    stop_grace_period: 30s
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      NODE_ENV: development
+      DATA_ROOT: /workspace/DATA
+      HOST: 127.0.0.1
+      PORT: "5000"
+      DB_PATH: /var/lib/secubuzz/sqlite/database.sqlite
+      DB_BUSY_TIMEOUT_MS: "5000"
+      AUTH_ALLOW_HTTP_LOCAL: "true"
+      AUTH_ALLOWED_ORIGINS: http://localhost:3001
+      AUTH_SESSION_TTL_SECONDS: "28800"
+      AUTH_TRUST_PROXY_IPS: ""
+      # Reserved path only: no DB-6 API or feature gate is activated.
+      ATTACHMENT_STORAGE_DIR: /var/lib/secubuzz/attachments
+    ports:
+      # This service owns the shared namespace; Next listens on its port 3001.
+      - "127.0.0.1:3001:3001"
+    networks: [app]
+    volumes:
+      - sqlite-data:/var/lib/secubuzz/sqlite
+      - private-storage:/var/lib/secubuzz/attachments
+    healthcheck:
+      test: [CMD, node, /workspace/docker/healthcheck.cjs, backend]
+      interval: 10s
+      timeout: 5s
+      start_period: 40s
+      retries: 6
+    # Optional Windows-friendly backend reload: docker compose watch backend.
+    # Sync copies source into the container; it never bind-mounts DATA's database.
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./server/src
+          target: /workspace/server/src
+          initial_sync: true
+        - action: sync+restart
+          path: ./DATA/server
+          target: /workspace/DATA/server
+          initial_sync: true
+          ignore:
+            - "**/*.sqlite*"
+            - "**/*.db*"
+            - "**/*.part"
+        - action: sync+restart
+          path: ./shared
+          target: /workspace/shared
+          initial_sync: true
+
+  frontend:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    init: true
+    user: node
+    working_dir: /workspace
+    stop_grace_period: 30s
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    network_mode: service:backend
+    depends_on:
+      backend:
+        condition: service_healthy
+        restart: true
+    environment:
+      NODE_ENV: development
+      NEXT_TELEMETRY_DISABLED: "1"
+      WATCHPACK_POLLING: "true"
+      AUTH_BACKEND_URL: http://127.0.0.1:5000
+      NEXT_PUBLIC_AUTH_MODE: api
+      NEXT_PUBLIC_AUTH_API_READY: "true"
+      NEXT_PUBLIC_AUTH_API_BASE_PATH: /api/auth
+      NEXT_PUBLIC_SECURE_CONTEXT_REQUIRED: "true"
+      # The authenticated DM workspace uses window.location.origin directly.
+      # Keep these independent, disabled feature gates disabled.
+      NEXT_PUBLIC_REALTIME_CONTRACT_READY: "false"
+      NEXT_PUBLIC_ATTACHMENT_API_READY: "false"
+      NEXT_PUBLIC_LIVEKIT_ENABLED: "false"
+      NEXT_PUBLIC_AI_REMOTE_READY: "false"
+    volumes:
+      - type: bind
+        source: ./client/src
+        target: /workspace/client/src
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./client/public
+        target: /workspace/client/public
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./shared
+        target: /workspace/shared
+        read_only: true
+        bind:
+          create_host_path: false
+    healthcheck:
+      test: [CMD, node, /workspace/docker/healthcheck.cjs, frontend]
+      interval: 10s
+      timeout: 10s
+      start_period: 90s
+      retries: 6
+
+networks:
+  app:
+    driver: bridge
+
+volumes:
+  sqlite-data:
+  private-storage:
