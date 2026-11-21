@@ -14,7 +14,18 @@ async function messagingFixture(t,{messageOptions={},...options}={}){
     return {...f,conversationId:created.body.conversation.id};
 }
 let cryptoModule;
-async function loadTypeScript(source){const javascript=stripTypeScriptTypes(fs.readFileSync(source,'utf8'),{mode:'transform',sourceUrl:source});return import('data:text/javascript;base64,'+Buffer.from(javascript).toString('base64'));}
+async function loadTypeScript(source){
+    const input=fs.readFileSync(source,'utf8');let javascript;
+    try{javascript=stripTypeScriptTypes(input,{mode:'transform',sourceUrl:source});}
+    catch(error){
+        if(error.code!=='ERR_INVALID_ARG_VALUE'||!error.message.includes('options.mode'))throw error;
+        // Some Node runtimes provide only strip mode, which cannot erase constructor parameter properties.
+        // Keep native loading where supported; otherwise reuse the installed frontend compiler in tests only.
+        const typescript=require('../../../client/node_modules/typescript');
+        javascript=typescript.transpileModule(input,{fileName:source,compilerOptions:{target:typescript.ScriptTarget.ES2020,module:typescript.ModuleKind.ESNext}}).outputText;
+    }
+    return import('data:text/javascript;base64,'+Buffer.from(javascript).toString('base64'));
+}
 async function encrypted(actor,conversationId,id='client-message-1',text='Isolated encrypted fixture'){
     if(!cryptoModule){
         const source=path.resolve(__dirname,'../../../client/src/utils/crypto.ts');

@@ -9,7 +9,7 @@ const { chromium, expect } = require('@playwright/test');
 const { io } = require('socket.io-client');
 const root = path.resolve(__dirname, '..'), suffix = randomUUID().slice(0, 8);
 const temporary = path.join(root, 'tmp', 'client-realtime-' + suffix), artifacts = path.join(temporary, 'artifacts');
-const children = [], pages = [], secretTexts = ['Alice live E2EE ', 'Bob live reply ', 'New device epoch ', 'Offline gap ', 'Restart live ', 'REST fallback ', 'Same account device ', 'Background delivered ', 'Draft to Bob ', 'Draft to Charlie ', 'While in Meeting Rooms ', 'Mobile draft '].map(t => t + suffix);
+const children = [], pages = [], secretTexts = ['Alice live E2EE 👩🏽‍💻\nMultiline ', 'Bob live reply ', 'New device epoch ', 'Offline gap ', 'Restart live ', 'REST fallback ', 'Same account device ', 'Background delivered ', 'Draft to Bob ', 'Draft to Charlie ', 'While in Meeting Rooms ', 'Mobile draft '].map(t => t + suffix);
 const evidence = { startedAt: new Date().toISOString(), checks: [], network: [], plaintextLeaks: 0, runtimeErrors: 0, browser: 'Chrome, separate isolated contexts', screenshots: [], handshakes: 0, invalidAuthShapes: 0, socketSends: 0, v2Sends: 0, restSends: 0, persistenceAcks: 0, receivedMessages: 0 };
 const delay = ms => new Promise(r => setTimeout(r, ms));
 function check(name, condition) { evidence.checks.push({ name, passed: Boolean(condition) }); console.log(`${condition ? 'PASS' : 'FAIL'} ${name}`); if (!condition) throw new Error('Check failed: ' + name); }
@@ -24,20 +24,21 @@ async function api(page, route, method = 'GET', body) {
     return { status: r.status, body: r.status === 204 ? null : await r.json() };
   }, { route, method, body });
 }
+const containsPlaintext = value => secretTexts.some(text => value.includes(text) || value.includes(JSON.stringify(text).slice(1, -1)));
 function monitor(page) {
   pages.push(page); page.on('pageerror', () => { evidence.runtimeErrors++; });
   page.on('requestfailed', request => { if (new URL(request.url()).pathname.startsWith('/socket.io')) { evidence.socketFailures ??= []; evidence.socketFailures.push(request.failure()?.errorText ?? 'transport failure'); } });
-  page.on('request', request => { const body = request.postData() || ''; if (secretTexts.some(t => body.includes(t))) evidence.plaintextLeaks++;
+  page.on('request', request => { const body = request.postData() || ''; if (containsPlaintext(body)) evidence.plaintextLeaks++;
     if (/\/api\/conversations\/[^/]+\/messages$/.test(new URL(request.url()).pathname) && request.method() === 'POST') evidence.restSends++;
   });
   page.on('websocket', socket => {
     socket.on('framesent', ({ payload }) => {
-      const value = String(payload); if (secretTexts.some(t => value.includes(t))) evidence.plaintextLeaks++;
+      const value = String(payload); if (containsPlaintext(value)) evidence.plaintextLeaks++;
       if (value.startsWith('40{')) { try { const auth = JSON.parse(value.slice(2)); evidence.handshakes++; if (Object.keys(auth).join(',') !== 'csrfToken' || !/^[A-Za-z0-9_-]{43}$/.test(auth.csrfToken)) evidence.invalidAuthShapes++; } catch { evidence.invalidAuthShapes++; } }
       if (/^42\d*\[/.test(value)) { try { const data = JSON.parse(value.slice(value.indexOf('['))); if (data[0] === 'message:send') { evidence.socketSends++; if (data[1]?.encryption?.version === 2 && !('text' in data[1])) evidence.v2Sends++; } } catch {} }
     });
     socket.on('framereceived', ({ payload }) => {
-      const value = String(payload); if (secretTexts.some(t => value.includes(t))) evidence.plaintextLeaks++;
+      const value = String(payload); if (containsPlaintext(value)) evidence.plaintextLeaks++;
       try { const data = JSON.parse(value.slice(value.indexOf('['))); if (data[0] === 'message:new') evidence.receivedMessages++;
         if (/^43\d+\[/.test(value) && data[0]?.status === 'sent') evidence.persistenceAcks++;
       } catch {}
@@ -116,7 +117,16 @@ async function websocketProbe(origin) {
     await alice.getByRole('button', { name: /^Friends(?:,|$)/ }).click(); await alice.getByRole('button', { name: 'Message Bob', exact: true }).click(); await ready(alice); check('real DM and signed HPKE epoch prepared through UI', true);
     await select(bob, 'Alice'); await connected(alice); await connected(bob);
     await alice.getByRole('textbox', { name: /^Message to / }).fill(secretTexts[0]); await expect(bob.getByText('Alice is typing…', { exact: true })).toBeVisible({ timeout: 10000 }); check('authorized typing arrives without content', true);
-    await send(alice, secretTexts[0]); await expect(bob.getByRole('log').getByText(secretTexts[0], { exact: true })).toBeVisible({ timeout: 30000 }); check('Bob receives and locally decrypts Alice live message without Refresh', true);
+    const emojiDraft = alice.getByRole('textbox', { name: /^Message to / });
+    await emojiDraft.fill('Keep middle text'); await emojiDraft.evaluate(node => node.setSelectionRange(5, 11));
+    await alice.getByRole('button', { name: 'Insert emoji', exact: true }).click();
+    await alice.getByRole('searchbox', { name: 'Search emoji' }).fill('pizza');
+    await alice.getByRole('searchbox', { name: 'Search emoji' }).press('ArrowDown'); await alice.keyboard.press('Enter');
+    await expect(emojiDraft).toHaveValue('Keep 🍕 text'); await expect(emojiDraft).toBeFocused();
+    check('real-account composer preserves cursor selection through the advanced emoji picker', true);
+    await send(alice, secretTexts[0]); await expect(bob.getByRole('log').getByText(secretTexts[0], { exact: true })).toBeVisible({ timeout: 30000 }); check('Bob receives and locally decrypts Alice live multiline Unicode message without Refresh', true);
+    check('unsupported real-account reply, forward, edit, delete, pin and reaction actions remain hidden',
+      await alice.locator('.msg-toolbar button').count() === 0 && await alice.getByRole('button', { name: 'View pinned messages', exact: true }).count() === 0);
     await send(bob, secretTexts[1]); await expect(alice.getByRole('log').getByText(secretTexts[1], { exact: true })).toBeVisible({ timeout: 30000 }); check('Alice receives and locally decrypts Bob live reply without Refresh', true);
     await expect(alice.getByRole('log').getByText('Read', { exact: true })).toBeVisible({ timeout: 15000 }); check('DATA-backed read receipt is distinct from persistence', true);
     check('real accounts use the original sidebar, header, bubbles and composer', await alice.locator('.conversation-sidebar').count() === 1 && await alice.locator('.chat-toolbar').count() === 1 && await alice.locator('.message-bubble').count() >= 1 && await alice.locator('.composer-dock').count() === 1);
@@ -181,7 +191,9 @@ async function websocketProbe(origin) {
     await alice.setViewportSize({ width: 390, height: 844 }); check('mobile layout has no horizontal overflow', await alice.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
     await alice.addStyleTag({ content: '.message-bubble, .conversation-list-preview, .composer-input { filter:blur(8px); }' }); await alice.screenshot({ path: path.join(artifacts, 'mobile-redacted.png'), fullPage: true }); evidence.screenshots.push('mobile-redacted.png');
     await alice.emulateMedia({ colorScheme: 'dark' }); await expect(alice.locator('html')).toHaveAttribute('data-theme', 'dark');
-    check('dark security disclosure uses a readable dark surface', await alice.locator('.conversation-security-summary').evaluate(element => { const channels = getComputedStyle(element).backgroundColor.match(/\d+/g)?.slice(0, 3).map(Number); return channels?.length === 3 && channels.reduce((a, b) => a + b, 0) < 500; }));
+    // Theme attributes update before the existing background transition has finished.
+    await expect.poll(() => alice.locator('.conversation-security-summary').evaluate(element => { const channels = getComputedStyle(element).backgroundColor.match(/\d+/g)?.slice(0, 3).map(Number); return channels?.length === 3 && channels.reduce((a, b) => a + b, 0) < 500; })).toBe(true);
+    check('dark security disclosure uses a readable dark surface', true);
     await alice.screenshot({ path: path.join(artifacts, 'midnight-mobile-redacted.png'), fullPage: true }); evidence.screenshots.push('midnight-mobile-redacted.png');
     await alice.emulateMedia({ colorScheme: 'light' }); await expect(alice.locator('html')).toHaveAttribute('data-theme', 'light'); check('new panel preserves System appearance in light and Midnight dark', true);
     check('Bungee and Space Grotesk remain active', await alice.evaluate(async () => { await document.fonts.ready; return /bungee/i.test(getComputedStyle(document.querySelector('.chat-title-heading')).fontFamily) && /space.?grotesk/i.test(getComputedStyle(document.body).fontFamily); }));
