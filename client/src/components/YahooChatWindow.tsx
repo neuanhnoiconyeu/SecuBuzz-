@@ -223,9 +223,9 @@ const handleSendMessage = useCallback(async (
   }, [onBuzz, playBuzzSound]);
 
   const handleForwardConfirm = useCallback(
-  (targetIds: string[], note: string) =>
+  (targetIds: string[], note: string, operationId: string) =>
     forwardingMessage
-      ? forwardMessage(forwardingMessage, targetIds, note)
+      ? forwardMessage(forwardingMessage, targetIds, note, operationId)
       : Promise.resolve({ succeeded: [] as string[], failed: targetIds }),
   [forwardMessage, forwardingMessage],
   );
@@ -269,10 +269,8 @@ const handleSendMessage = useCallback(async (
         onReplyMessage={(message) => setReplyingTo(message)}
         onEditMessage={editMessage}
         canEditMessage={canEdit}
-        onDeleteMessage={removeMessage}
-        {...(canUnsend ? { onUnsendMessage: (messageId: string) => void unsendMessage(messageId) } : {})}
-        onTogglePin={togglePin}
-        onToggleReaction={toggleReaction}
+        {...(transportMode === 'local-demo' ? { onDeleteMessage: removeMessage, onTogglePin: togglePin, onToggleReaction: toggleReaction } : {})}
+        {...(canUnsend ? { onUnsendMessage: unsendMessage } : {})}
         {...((forwardTargets?.length ?? 0) > 0 ? { onForwardMessage: setForwardingMessage } : {})}
       />
 
@@ -316,6 +314,7 @@ const handleSendMessage = useCallback(async (
 
       <MessageComposer
         key={`composer:${conversationId}`}
+        active={presentationActive}
         conversationName={contactName}
         messageCount={messages.length}
         disabled={!identityReady || !securityStatus?.localEncryptionAvailable || transport?.canSendMessages === false}

@@ -1,5 +1,8 @@
-import { UnsendDialog } from './UnsendDialog';
-import { EMOJI_CATEGORIES, QUICK_EMOJIS } from './emojiData';
+import { UnsendDialog, type UnsendScope } from './UnsendDialog';
+import { QUICK_EMOJIS, emojiName, emojiOnlyCount } from './emojiData';
+import { EmojiPicker } from './EmojiPicker';
+import { rememberEmoji } from './recentEmojis';
+import { useAnchoredMessagePopover } from '@/hooks/useAnchoredMessagePopover';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import {
@@ -27,8 +30,8 @@ export interface MessageListProps {
   onReplyMessage?: (message: ChatMessage) => void;
   onEditMessage?: (messageId: string, newContent: string) => Promise<boolean> | boolean | void;
   canEditMessage?: boolean;
-  onDeleteMessage?: (messageId: string) => void;
-  onUnsendMessage?: (messageId: string) => void;
+  onDeleteMessage?: (messageId: string) => Promise<boolean | void> | boolean | void;
+  onUnsendMessage?: (messageId: string) => Promise<boolean> | boolean;
   onTogglePin?: (messageId: string) => void;
   onToggleReaction?: (messageId: string, emoji: string) => void;
   onAIMessage?: (task: AIMessageAction, messageId: string) => void;
@@ -59,6 +62,9 @@ function deliveryLabel(status: ChatMessage['deliveryStatus'], transportMode: Tra
   }
 }
 
+function isAcceptedMessage(message: ChatMessage): boolean {
+  return !message.isDeleted && ['text', 'voice'].includes(message.type) && message.deliveryStatus !== 'sending' && message.deliveryStatus !== 'failed';
+}
 
 export function MessageList({
   messages,
@@ -89,23 +95,77 @@ export function MessageList({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState('');
   const [editError, setEditError] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+  const editLock = useRef(false);
   const saveEdit = async (messageId: string) => {
-    const text = editDraft.trim();
-    if (!text) return;
-    const ok = await onEditMessage?.(messageId, text);
-    if (ok === false) {
-      setEditError('Could not edit this message. Your original message is unchanged.');
-      return;
-    }
+    if (!editDraft.trim() || editLock.current || !canEditMessage || !onEditMessage) return;
+    editLock.current = true;
+    setSavingEdit(true);
     setEditError('');
-    setEditingId(null);
+    try {
+      if (await onEditMessage(messageId, editDraft) === false) {
+        setEditError('Could not edit this message. Your original message is unchanged.');
+        return;
+      }
+      setEditingId(null);
+    } catch {
+      setEditError('Could not edit this message. Your original message is unchanged.');
+    } finally {
+      editLock.current = false;
+      setSavingEdit(false);
+    }
   };
   const [unsendingMessage, setUnsendingMessage] = useState<ChatMessage | null>(null);
+  const [removing, setRemoving] = useState(false);
+  const removalLock = useRef(false);
+  const [actionFeedback, setActionFeedback] = useState<{ text: string; error: boolean } | null>(null);
+  const remove = async (messageId: string, scope: UnsendScope): Promise<boolean> => {
+    const message = messages.find(candidate => candidate.id === messageId);
+    const handler = scope === 'everyone' ? onUnsendMessage : onDeleteMessage;
+    if (removalLock.current || !message || !handler || (scope === 'everyone' && (message.senderId !== currentUserId || !isAcceptedMessage(message)))) return false;
+    removalLock.current = true; setRemoving(true); setActionFeedback(null);
+    try {
+      if (await handler(messageId) === false) return false;
+      setActionFeedback({ error: false, text: scope === 'me' ? 'Message deleted for you on this device.'
+        : transportMode === 'local-demo' ? 'Message unsent in this local demo only.' : 'Message unsent for everyone.' });
+      return true;
+    } catch {
+      return false;
+    } finally {
+      removalLock.current = false; setRemoving(false);
+    }
+  };
+  const deleteIncoming = async (messageId: string) => {
+    if (!await remove(messageId, 'me')) setActionFeedback({ error: true, text: 'Could not delete this message for you. Your message is unchanged. Try again.' });
+  };
+  const [pinsOpen, setPinsOpen] = useState(false);
+  const pinsButton = useRef<HTMLButtonElement>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [replyNotice, setReplyNotice] = useState('');
+  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (highlightTimer.current !== null) clearTimeout(highlightTimer.current);
+  }, []);
+  const navigateToMessage = (messageId: string, conversationId: string, kind = 'original') => {
+    const original = messages.find(candidate => candidate.id === messageId && candidate.conversationId === conversationId);
+    const row = Array.from(historyRef.current?.querySelectorAll<HTMLElement>('[data-message-id]') ?? [])
+      .find(element => element.dataset.messageId === original?.id);
+    if (!original || original.isDeleted || !row) {
+      setHighlightedId(null);
+      setReplyNotice(original?.isDeleted ? `The ${kind} message was deleted.` : `The ${kind} message is unavailable in the loaded history.`);
+      return;
+    }
+    setReplyNotice('');
+    row.scrollIntoView?.({ block: 'center', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    row.focus({ preventScroll: true });
+    setHighlightedId(original.id);
+    if (highlightTimer.current !== null) clearTimeout(highlightTimer.current);
+    highlightTimer.current = setTimeout(() => setHighlightedId(null), 2000);
+  };
 
   // Reaction picker (quick bar -> expanded grid) and "more" menu: only one open at a time.
   const [pickerOpenId, setPickerOpenId] = useState<string | null>(null);
   const [pickerExpanded, setPickerExpanded] = useState(false);
-  const [pickerCategory, setPickerCategory] = useState(0);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const popoverTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -113,6 +173,12 @@ export function MessageList({
   const popoverId = useId();
 
   const pinnedMessages = messages.filter((m) => m.isPinned && !m.isDeleted);
+  useEffect(() => {
+    if (!active || pinnedMessages.length === 0) {
+      setPinsOpen(false);
+      if (active && pinsOpen) historyRef.current?.focus({ preventScroll: true });
+    }
+  }, [active, pinnedMessages.length, pinsOpen]);
 
   const closePopovers = useCallback((restoreFocus = false) => {
     restorePopoverFocus.current = restoreFocus;
@@ -121,8 +187,9 @@ export function MessageList({
     setMenuOpenId(null);
   }, []);
 
-  // Keep the teammate's popovers inside the visible message scroller, including
-  // the first/last message and narrow screens. They stay in the disabled fieldset.
+  const openPopover = pickerOpenId ? `reaction:${pickerOpenId}:${pickerExpanded}` : menuOpenId ? `menu:${menuOpenId}` : null;
+  useAnchoredMessagePopover(popoverRef, popoverTriggerRef, openPopover, closePopovers, pickerExpanded, historyRef);
+
   useEffect(() => {
     if (!pickerOpenId && !menuOpenId) {
       if (restorePopoverFocus.current) {
@@ -133,24 +200,7 @@ export function MessageList({
     }
     if (!active) { closePopovers(); return; }
     const panel = popoverRef.current;
-    const trigger = popoverTriggerRef.current;
-    const history = historyRef.current;
-    if (!panel || !trigger || !history) return;
-    const bounds = history.getBoundingClientRect();
-    const anchor = trigger.getBoundingClientRect();
-    const origin = panel.offsetParent?.getBoundingClientRect();
-    if (origin && bounds.width && bounds.height) {
-      panel.style.maxWidth = `${Math.max(1, bounds.width - 16)}px`;
-      panel.style.maxHeight = `${Math.max(1, bounds.height - 16)}px`;
-      const width = Math.min(panel.offsetWidth, bounds.width - 16);
-      const height = Math.min(panel.offsetHeight, bounds.height - 16);
-      const left = Math.max(bounds.left + 8, Math.min(anchor.left, bounds.right - width - 8));
-      const preferredTop = anchor.top - height - 8 >= bounds.top + 8 ? anchor.top - height - 8 : anchor.bottom + 8;
-      const top = Math.max(bounds.top + 8, Math.min(preferredTop, bounds.bottom - height - 8));
-      Object.assign(panel.style, { left: `${left - origin.left}px`, top: `${top - origin.top}px`, right: 'auto', bottom: 'auto',
-        maxWidth: `${Math.max(1, bounds.width - 16)}px`, maxHeight: `${Math.max(1, bounds.height - 16)}px`, overflowY: 'auto' });
-    }
-    panel.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus({ preventScroll: true });
+    panel?.querySelector<HTMLElement>('input[type="search"], button:not(:disabled)')?.focus({ preventScroll: true });
   }, [active, pickerOpenId, menuOpenId, pickerExpanded, closePopovers]);
 
   useEffect(() => {
@@ -158,27 +208,8 @@ export function MessageList({
     if (id && !messages.some((message) => message.id === id && !message.isDeleted)) closePopovers(true);
   }, [messages, pickerOpenId, menuOpenId, closePopovers]);
 
-  // Pointer events cover mouse, touch and pen. Menus never outlive navigation.
-  useEffect(() => {
-    if (!pickerOpenId && !menuOpenId) return;
-    const onPointerDown = (e: PointerEvent) => {
-      if (e.target instanceof Node && !popoverRef.current?.contains(e.target) && !popoverTriggerRef.current?.contains(e.target)) closePopovers();
-    };
-    const onKeyDown = (e: globalThis.KeyboardEvent) => {
-      if (e.key === 'Escape') { e.preventDefault(); closePopovers(true); }
-    };
-    const onResize = () => closePopovers();
-    window.addEventListener('resize', onResize);
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [pickerOpenId, menuOpenId, closePopovers]);
-
   const handlePopoverKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target instanceof HTMLElement && event.target.closest('.emoji-picker')) return;
     const panel = event.currentTarget;
     if (event.key === 'Tab') {
       event.preventDefault();
@@ -246,7 +277,8 @@ export function MessageList({
     setNewMessageCount(0);
   };
 
-  const react = (messageId: string, emoji: string) => {
+  const react = (messageId: string, emoji: string, remember = true) => {
+    if (remember) rememberEmoji(emoji);
     onToggleReaction?.(messageId, emoji);
     closePopovers(true);
   };
@@ -255,18 +287,40 @@ export function MessageList({
     <div className="chat-history-wrap">
       {pinnedMessages.length > 0 && (
         <div className="pinned-messages-bar" style={{ padding: '6px 12px', background: 'rgba(139, 92, 246, 0.12)', borderBottom: '1px solid rgba(139, 92, 246, 0.25)', fontSize: '0.82rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+          <div className="pinned-message-summary">
             <Pin size={14} aria-hidden="true" />
             <strong>Pinned ({pinnedMessages.length}):</strong>
-            <span>{pinnedMessages[pinnedMessages.length - 1]?.content}</span>
+            <button type="button" className="pinned-message-preview" aria-label="Go to latest pinned message"
+              onClick={() => { const message = pinnedMessages[pinnedMessages.length - 1]!; navigateToMessage(message.id, message.conversationId, 'pinned'); }}>
+              {pinnedMessages[pinnedMessages.length - 1]?.content}
+            </button>
           </div>
+          <Button ref={pinsButton} size="sm" variant="ghost" aria-expanded={pinsOpen} aria-controls={`${popoverId}-pins`} onClick={() => setPinsOpen(open => !open)}>
+            View pinned messages
+          </Button>
           {onTogglePin && (
-            <Button size="sm" variant="outline" onClick={() => onTogglePin(pinnedMessages[pinnedMessages.length - 1]!.id)}>
+            <Button size="sm" variant="outline" onClick={() => {
+              onTogglePin(pinnedMessages[pinnedMessages.length - 1]!.id);
+              if (pinnedMessages.length === 1) historyRef.current?.focus({ preventScroll: true });
+            }}>
               Unpin
             </Button>
           )}
         </div>
       )}
+      {pinsOpen && pinnedMessages.length > 0 && <section id={`${popoverId}-pins`} className="pinned-messages-panel" aria-label="Pinned messages"
+        onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); setPinsOpen(false); pinsButton.current?.focus(); } }}>
+        {transportMode === 'local-demo' && <p className="pinned-messages-notice">Pins apply only to this local demo.</p>}
+        <ul className="pinned-messages-list">
+          {pinnedMessages.map(message => <li key={message.id}>
+            <button type="button" className="pinned-message-link" onClick={() => { setPinsOpen(false); navigateToMessage(message.id, message.conversationId, 'pinned'); }}>
+              <strong>{message.senderId === currentUserId ? currentUserName : message.senderName}</strong>
+              <span>{message.content}</span>
+            </button>
+            {onTogglePin && <Button size="sm" variant="outline" aria-label={`Unpin message: ${message.content.slice(0, 60)}`} onClick={() => onTogglePin(message.id)}>Unpin</Button>}
+          </li>)}
+        </ul>
+      </section>}
       <Surface
         ref={historyRef}
         variant="default"
@@ -328,13 +382,24 @@ export function MessageList({
                 (message.reactions ?? []).filter((r) => r.userIds.includes(currentUserId)).map((r) => r.emoji),
               );
               const canShareWithAI = Boolean(onAIMessage && message.type === 'text' && !message.isDeleted && message.content.trim() && message.content.length <= AI_MAX_INPUT);
-              const canShowMenu = !!(canShareWithAI || onForwardMessage || onTogglePin || (isOutgoing && ((onEditMessage && canEditMessage) || onDeleteMessage)));
+              const emojiCount = message.type === 'text' && !message.isDeleted && !message.attachments?.length && !message.voice ? emojiOnlyCount(message.content) : 0;
+              const accepted = isAcceptedMessage(message);
+              const canEdit = Boolean(isOutgoing && onEditMessage && canEditMessage && message.type === 'text' && accepted);
+              const canUnsend = Boolean(isOutgoing && onUnsendMessage && accepted);
+              const canDelete = Boolean(onDeleteMessage && !message.isDeleted);
+              const canForward = Boolean(onForwardMessage && accepted);
+              const canPin = Boolean(onTogglePin && (accepted || message.isPinned));
+              const canReact = Boolean(onToggleReaction && accepted);
+              const canShowMenu = !!(canShareWithAI || canForward || canPin || canEdit || canDelete || canUnsend);
+              const originalReply = message.replyTo && messages.find(candidate => candidate.id === message.replyTo?.messageId && candidate.conversationId === message.conversationId);
 
               return (
                 <article
                   className={`message-row ${isOutgoing ? 'message-row-outgoing' : ''} ${grouped ? 'message-row-grouped' : ''}`}
                   key={message.id}
                   data-message-id={message.id}
+                  data-message-highlighted={highlightedId === message.id && !message.isDeleted ? 'true' : undefined}
+                  tabIndex={-1}
                   data-message-enter={active && enteringIds.has(message.id) ? 'true' : undefined}
                   onAnimationEnd={(event) => {
                     if (event.target === event.currentTarget) finishEntry(message.id);
@@ -350,31 +415,34 @@ export function MessageList({
                   </div>
 
                   {message.replyTo && !message.isDeleted && (
-                    <div className="message-reply-quote" style={{ fontSize: '0.78rem', padding: '4px 8px', marginBottom: '4px', borderLeft: '3px solid #8b5cf6', background: 'rgba(255,255,255,0.04)', borderRadius: '4px', opacity: 0.85 }}>
+                    <button type="button" className="message-reply-quote" onClick={() => navigateToMessage(message.replyTo!.messageId, message.conversationId)}
+                      aria-label={`Go to original message from ${message.replyTo.senderName}`}>
                       <strong>Replying to {message.replyTo.senderName}: </strong>
-                      <span>{message.replyTo.contentSnippet}</span>
-                    </div>
+                      <span>{originalReply?.isDeleted ? 'Original message deleted.' : !originalReply ? 'Original message unavailable.' : message.replyTo.contentSnippet}</span>
+                    </button>
                   )}
 
                   <div className="message-content-row">
-                    {editingId === message.id ? (
+                    {editingId === message.id && canEdit ? (
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%' }}>
-                        <input
+                        <textarea
                           aria-label="Edit message"
-                          type="text"
+                          rows={3}
                           value={editDraft}
+                          disabled={savingEdit}
                           onChange={(e) => setEditDraft(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter' && editDraft.trim()) void saveEdit(message.id);
-                            else if (e.key === 'Escape') { setEditingId(null); setEditError(''); }
+                            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.nativeEvent.isComposing) {
+                              e.preventDefault(); void saveEdit(message.id);
+                            } else if (e.key === 'Escape' && !editLock.current) { setEditingId(null); setEditError(''); }
                           }}
-                          style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(139,92,246,0.5)', background: 'rgba(0,0,0,0.25)', color: 'inherit' }}
+                          style={{ flex: 1, minWidth: 0, maxHeight: '14rem', resize: 'vertical', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(139,92,246,0.5)', background: 'rgba(0,0,0,0.25)', color: 'inherit', font: 'inherit' }}
                           autoFocus
                         />
-                        <Button size="sm" variant="primary" aria-label="Save edit" onClick={() => void saveEdit(message.id)}>
+                        <Button size="sm" variant="primary" aria-label="Save edit" loading={savingEdit} disabled={!editDraft.trim()} onClick={() => void saveEdit(message.id)}>
                           <Check size={14} />
                         </Button>
-                        <Button size="sm" variant="outline" aria-label="Cancel edit" onClick={() => { setEditingId(null); setEditError(''); }}>
+                        <Button size="sm" variant="outline" aria-label="Cancel edit" disabled={savingEdit} onClick={() => { setEditingId(null); setEditError(''); }}>
                           <X size={14} />
                         </Button>
                         {editError && <span role="alert" style={{ color: 'var(--color-error)', fontSize: '0.75rem' }}>{editError}</span>}
@@ -387,7 +455,7 @@ export function MessageList({
                               <Forward size={12} aria-hidden="true" /> Forwarded from {message.forwardedFrom}
                             </span>
                           )}
-                          {message.content}
+                          <span className={emojiCount ? 'message-text message-text--emoji' : 'message-text'} data-emoji-count={emojiCount || undefined}>{message.content}</span>
 
                           {!message.isDeleted && message.attachments && message.attachments.length > 0 && (
                             <div className="message-attachments">
@@ -397,9 +465,9 @@ export function MessageList({
 
                           {!message.isDeleted && message.voice && (
                             <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <Mic size={14} />
-                              <audio controls src={message.voice.audioUrl} style={{ height: '28px', maxWidth: '200px' }} />
-                              <span style={{ fontSize: '0.75rem' }}>{message.voice.durationSeconds}s</span>
+                              <Mic size={14} style={{ flexShrink: 0 }} />
+                              <audio controls preload="metadata" aria-label={`Voice message from ${isOutgoing ? currentUserName : message.senderName}`} src={message.voice.audioUrl} style={{ height: '28px', maxWidth: '200px', minWidth: 0 }} />
+                              <span style={{ fontSize: '0.75rem', whiteSpace: 'nowrap', flexShrink: 0 }}>{message.voice.durationSeconds}s</span>
                             </div>
                           )}
                         </div>
@@ -415,10 +483,14 @@ export function MessageList({
                                   className="rx-pill"
                                   aria-pressed={reactedByMe}
                                   aria-label={`${reaction.emoji} ${reaction.userIds.length}`}
-                                  disabled={!onToggleReaction}
-                                  onClick={() => onToggleReaction?.(message.id, reaction.emoji)}
+                                  aria-describedby={`${popoverId}-${message.id}-${encodeURIComponent(reaction.emoji)}-description`}
+                                  disabled={!canReact}
+                                  onClick={() => { rememberEmoji(reaction.emoji); onToggleReaction?.(message.id, reaction.emoji); }}
                                 >
                                   <span>{reaction.emoji}</span>
+                                  <span className="sr-only" id={`${popoverId}-${message.id}-${encodeURIComponent(reaction.emoji)}-description`}>
+                                    {emojiName(reaction.emoji)}. {reactedByMe ? 'Your reaction; activate to remove it.' : 'Activate to use this reaction.'}
+                                  </span>
                                   {reaction.userIds.length > 1 && (
                                     <span className="rx-pill-count">{reaction.userIds.length}</span>
                                   )}
@@ -430,14 +502,14 @@ export function MessageList({
 
                         {!message.isDeleted && (
                           <div className="msg-toolbar" data-popover data-open={isPickerOpen || isMenuOpen}>
-                            {onToggleReaction && (
+                            {canReact && (
                               <div style={{ position: 'relative' }}>
                                 <button
                                   type="button"
                                   className="msg-icon-btn"
                                   title="React"
                                   aria-label="React to message"
-                                  aria-haspopup="menu"
+                                  aria-haspopup={isPickerOpen && pickerExpanded ? 'dialog' : 'menu'}
                                   aria-expanded={isPickerOpen}
                                   aria-controls={isPickerOpen ? `${popoverId}-${message.id}-reactions` : undefined}
                                   onClick={(event) => {
@@ -451,42 +523,9 @@ export function MessageList({
                                 </button>
 
                                 {isPickerOpen && (
-                                  <div id={`${popoverId}-${message.id}-reactions`} ref={popoverRef} onKeyDown={handlePopoverKeyDown} className={`rx-popover ${pickerExpanded ? 'rx-grid-panel' : 'rx-bar'}`} role="menu" aria-label="Choose a reaction">
+                                  <div id={`${popoverId}-${message.id}-reactions`} ref={popoverRef} onKeyDown={handlePopoverKeyDown} className={`rx-popover ${pickerExpanded ? 'emoji-picker-panel' : 'rx-bar'}`} role={pickerExpanded ? 'dialog' : 'menu'} aria-label="Choose a reaction">
                                     {pickerExpanded ? (
-                                <>
-                                  <div className="rx-tabs" role="tablist" aria-label="Emoji categories">
-                                    {EMOJI_CATEGORIES.map((category, index) => (
-                                      <button
-                                        key={category.id}
-                                        type="button"
-                                        role="tab"
-                                        className="rx-tab"
-                                        aria-selected={index === pickerCategory}
-                                        aria-label={category.label}
-                                        title={category.label}
-                                        onClick={() => setPickerCategory(index)}
-                                      >
-                                        {category.icon}
-                                      </button>
-                                    ))}
-                                  </div>
-                                  <div className="rx-grid">
-                                    {EMOJI_CATEGORIES[pickerCategory]!.emojis.map((emoji) => (
-                                      <button
-                                        key={emoji}
-                                        type="button"
-                                        className="rx-emoji-btn"
-                                        role="menuitemcheckbox"
-                                        aria-checked={myReactions.has(emoji)}
-                                        aria-label={`React ${emoji}`}
-                                        onClick={() => react(message.id, emoji)}
-                                        title={`React ${emoji}`}
-                                      >
-                                        {emoji}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </>
+                                      <EmojiPicker reaction selected={myReactions} onSelect={emoji => react(message.id, emoji, false)} onClose={() => closePopovers(true)} />
                                     ) : (
                                       <>
                                         {QUICK_EMOJIS.map((emoji) => (
@@ -498,7 +537,7 @@ export function MessageList({
                                             aria-checked={myReactions.has(emoji)}
                                             aria-label={`React ${emoji}`}
                                             onClick={() => react(message.id, emoji)}
-                                            title={`React ${emoji}`}
+                                            title={`React with ${emojiName(emoji)} ${emoji}`}
                                           >
                                             {emoji}
                                           </button>
@@ -520,7 +559,7 @@ export function MessageList({
                               </div>
                             )}
 
-                            {onReplyMessage && (
+                            {onReplyMessage && accepted && (
                               <button type="button" className="msg-icon-btn" title="Reply" aria-label="Reply" onClick={() => onReplyMessage(message)}>
                                 <Reply size={16} aria-hidden="true" />
                               </button>
@@ -553,36 +592,41 @@ export function MessageList({
                                         <Sparkles size={14} aria-hidden="true" />{task === 'chat' ? 'Ask @Secu' : `${task === 'summarize' ? 'Summarize' : task === 'translate' ? 'Translate' : 'Explain'} selected message`}
                                       </button>
                                     ))}
-                                    {onForwardMessage && (
-                                      <button type="button" role="menuitem" className="msg-menu-item" onClick={() => { onForwardMessage(message); closePopovers(true); }}>
+                                    {canForward && (
+                                      <button type="button" role="menuitem" className="msg-menu-item" onClick={() => { onForwardMessage?.(message); closePopovers(true); }}>
                                         <Forward size={14} aria-hidden="true" /> Forward
                                       </button>
                                     )}
-                                    {onTogglePin && (
-                                      <button type="button" role="menuitem" className="msg-menu-item" onClick={() => { onTogglePin(message.id); closePopovers(true); }}>
+                                    {canPin && (
+                                      <button type="button" role="menuitem" className="msg-menu-item" onClick={() => { onTogglePin?.(message.id); closePopovers(true); }}>
                                         <Pin size={14} aria-hidden="true" /> {message.isPinned ? 'Unpin' : 'Pin'}
                                       </button>
                                     )}
-                                    {isOutgoing && onEditMessage && canEditMessage && (
+                                    {canEdit && (
                                       <button
                                         type="button"
                                         role="menuitem"
                                         className="msg-menu-item"
-                                        onClick={() => { setEditingId(message.id); setEditDraft(message.content); closePopovers(); }}
+                                        disabled={savingEdit}
+                                        onClick={() => { setEditingId(message.id); setEditDraft(message.content); setEditError(''); closePopovers(); }}
                                       >
                                         <Edit2 size={14} aria-hidden="true" /> Edit
                                       </button>
                                     )}
-                                    {!isOutgoing && onDeleteMessage && (
-                                      <button type="button" role="menuitem" className="msg-menu-item" onClick={() => { onDeleteMessage(message.id); closePopovers(true); }}>
+                                    {canDelete && (!isOutgoing || !canUnsend) && (
+                                      <button type="button" role="menuitem" className="msg-menu-item" disabled={removing} onClick={() => {
+                                        closePopovers(true);
+                                        if (isOutgoing) setUnsendingMessage(message); else void deleteIncoming(message.id);
+                                      }}>
                                         <Trash2 size={14} aria-hidden="true" /> Delete for me
                                       </button>
                                     )}
-                                    {isOutgoing && (onUnsendMessage || onDeleteMessage) && (
+                                    {canUnsend && (
                                       <button
                                         type="button"
                                         role="menuitem"
                                         className="msg-menu-item msg-menu-item--danger"
+                                        disabled={removing}
                                         onClick={() => { closePopovers(); setUnsendingMessage(message); }}
                                       >
                                         <Undo2 size={14} aria-hidden="true" /> Unsend
@@ -625,6 +669,8 @@ export function MessageList({
           </div>
         )}
       </Surface>
+      {actionFeedback && <p className={actionFeedback.error ? 'composer-error' : 'message-action-feedback'} role={actionFeedback.error ? 'alert' : 'status'}>{actionFeedback.text}</p>}
+      {replyNotice && <p className="composer-error" role="status">{replyNotice}</p>}
       {newMessageCount > 0 && (
         <div className="chat-scroll-notice">
           <Button size="sm" variant="secondary" onClick={jumpToLatest} trailingIcon={<ArrowDown size={14} aria-hidden="true" />}>
@@ -634,15 +680,11 @@ export function MessageList({
       )}
         <UnsendDialog
           message={unsendingMessage}
-          canUnsendEveryone={Boolean(onUnsendMessage)}
+          canUnsendEveryone={Boolean(onUnsendMessage && unsendingMessage && unsendingMessage.senderId === currentUserId && isAcceptedMessage(unsendingMessage))}
+          canDeleteForMe={Boolean(onDeleteMessage)}
+          localOnly={transportMode === 'local-demo'}
           onClose={() => setUnsendingMessage(null)}
-          onConfirm={(scope) => {
-            if (unsendingMessage) {
-              if (scope === 'everyone') onUnsendMessage?.(unsendingMessage.id);
-              else onDeleteMessage?.(unsendingMessage.id);
-            }
-            setUnsendingMessage(null);
-        }}
+          onConfirm={scope => unsendingMessage ? remove(unsendingMessage.id, scope) : Promise.resolve(false)}
       />
     </div>
   );

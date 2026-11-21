@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MessageList } from '../MessageList';
 import type { MessageListProps } from '../MessageList';
 import type { ChatMessage } from '@/messaging/messageModel';
@@ -42,7 +42,7 @@ test('the active message renderer has compact icon controls and no duplicate inl
   expect(screen.queryByText('Delete', { exact: true })).not.toBeInTheDocument();
 });
 
-test('incoming overflow permits local removal; only the owner can edit or open the unsend review', () => {
+test('incoming overflow permits local removal; only the owner can edit or open the unsend review', async () => {
   const callbacks = handlers(); const { container } = render(<MessageList {...props(callbacks)} />);
   fireEvent.click(row(container, 'incoming').getByRole('button', { name: 'More actions' }));
   expect(screen.getAllByRole('menuitem').map(element => element.textContent?.trim())).toEqual(['Pin', 'Delete for me']);
@@ -52,14 +52,15 @@ test('incoming overflow permits local removal; only the owner can edit or open t
   expect(callbacks.onTogglePin).toHaveBeenCalledWith(incoming.id);
   expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   fireEvent.click(row(container, 'outgoing').getByRole('button', { name: 'More actions' }));
-  expect(screen.getAllByRole('menuitem').map((element) => element.textContent?.trim())).toEqual(['Pin', 'Edit', 'Unsend']);
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Unsend' }));
+  expect(screen.getAllByRole('menuitem').map((element) => element.textContent?.trim())).toEqual(['Pin', 'Edit', 'Delete for me']);
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Delete for me' }));
   expect(callbacks.onDeleteMessage).not.toHaveBeenCalled();
   const review = within(screen.getByRole('dialog'));
   expect(review.queryByRole('radio', { name: /Unsend for everyone/ })).not.toBeInTheDocument();
-  expect(review.getByRole('radio', { name: /Unsend for you/ })).toBeChecked();
+  expect(review.getByRole('radio', { name: /Delete for me/ })).toBeChecked();
   fireEvent.click(review.getByRole('button', { name: 'Remove' }));
   expect(callbacks.onDeleteMessage).toHaveBeenCalledWith(outgoing.id);
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 });
 
 test('reaction picker retains selection state, supports expanded reactions and forwards the original ID', () => {
@@ -69,7 +70,8 @@ test('reaction picker retains selection state, supports expanded reactions and f
   fireEvent.click(trigger);
   expect(screen.getByRole('menuitemcheckbox', { name: 'React 👍' })).toBeChecked();
   fireEvent.click(screen.getByRole('menuitem', { name: 'More reactions' }));
-  fireEvent.click(screen.getByRole('menuitemcheckbox', { name: 'React 🔥' }));
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Search emoji' }), { target: { value: 'fire' } });
+  fireEvent.click(screen.getByRole('button', { name: 'React with fire 🔥' }));
   expect(callbacks.onToggleReaction).toHaveBeenCalledWith(incoming.id, '🔥');
   expect(screen.queryByRole('menu')).not.toBeInTheDocument(); expect(trigger).toHaveFocus();
   fireEvent.click(screen.getByRole('button', { name: '👍 1' }));
@@ -84,7 +86,7 @@ test('only one popover is open; Escape restores focus and touch pointer outside 
   fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
   expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveFocus();
   fireEvent.keyDown(document.activeElement!, { key: 'End' });
-  expect(screen.getByRole('menuitem', { name: 'Unsend' })).toHaveFocus();
+  expect(screen.getByRole('menuitem', { name: 'Delete for me' })).toHaveFocus();
   fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
   expect(screen.queryByRole('menu')).not.toBeInTheDocument(); expect(more).toHaveFocus();
   fireEvent.click(more);
@@ -128,9 +130,9 @@ test('disabled conversation controls keep toolbar and open-menu actions disabled
   const { rerender } = render(element(false));
   fireEvent.click(screen.getAllByRole('button', { name: 'More actions' })[1]!);
   rerender(element(true));
-  expect(screen.getByRole('menuitem', { name: 'Unsend' })).toBeDisabled();
+  expect(screen.getByRole('menuitem', { name: 'Delete for me' })).toBeDisabled();
   // Native activation honors disabled fieldsets; dispatchEvent bypasses that browser check.
-  screen.getByRole('menuitem', { name: 'Unsend' }).click();
+  screen.getByRole('menuitem', { name: 'Delete for me' }).click();
   expect(callbacks.onDeleteMessage).not.toHaveBeenCalled();
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
@@ -145,4 +147,166 @@ test('external deletion, hidden conversation, scroll and resize dismiss stale po
   rerender(<MessageList {...initial} />);
   open(); rerender(<MessageList {...initial} messages={[{ ...outgoing, isDeleted: true }]} />);
   expect(screen.queryByRole('menu')).not.toBeInTheDocument(); expect(screen.getByRole('log')).toHaveFocus();
+});
+
+test('reply preview scrolls to, focuses and temporarily highlights the original message', () => {
+  jest.useFakeTimers();
+  const reply: ChatMessage = { ...outgoing, id: 'reply', replyTo: {
+    messageId: incoming.id, senderName: incoming.senderName, contentSnippet: incoming.content,
+  } };
+  const { container, unmount } = render(<MessageList {...props({ messages: [incoming, reply] })} />);
+  try {
+    const original = container.querySelector<HTMLElement>('[data-message-id="incoming"]')!;
+    const scroll = jest.fn(); original.scrollIntoView = scroll;
+    fireEvent.click(screen.getByRole('button', { name: 'Go to original message from Peer' }));
+    expect(scroll).toHaveBeenCalledWith(expect.objectContaining({ block: 'center' }));
+    expect(original).toHaveFocus(); expect(original).toHaveAttribute('data-message-highlighted', 'true');
+    act(() => jest.advanceTimersByTime(2000));
+    expect(original).not.toHaveAttribute('data-message-highlighted');
+  } finally { unmount(); jest.useRealTimers(); }
+});
+
+test.each(['deleted', 'unavailable'] as const)('reply handles an %s original without showing its stale snippet', state => {
+  const reply: ChatMessage = { ...outgoing, id: 'reply', replyTo: {
+    messageId: incoming.id, senderName: incoming.senderName, contentSnippet: 'Old private snippet',
+  } };
+  const { container } = render(<MessageList {...props({ messages: state === 'deleted' ? [{ ...incoming, isDeleted: true }, reply] : [reply] })} />);
+  expect(screen.queryByText('Old private snippet')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Go to original message from Peer' }));
+  expect(screen.getByRole('status')).toHaveTextContent(state === 'deleted' ? 'The original message was deleted.' : 'unavailable in the loaded history');
+  expect(container.querySelector('[data-message-highlighted]')).not.toBeInTheDocument();
+});
+
+test('multiline editing retains blank lines and uses explicit Save or Ctrl+Enter', async () => {
+  const original = { ...outgoing, content: '\nFirst line\n\nLast line\n' };
+  const edited = '\nUpdated first line\n\nLast line\n';
+  const edit = jest.fn(async () => true);
+  const { container, rerender } = render(<MessageList {...props({ messages: [original], onEditMessage: edit })} />);
+  fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
+  const editor = screen.getByRole('textbox', { name: 'Edit message' });
+  expect(editor.tagName).toBe('TEXTAREA'); expect(editor).toHaveValue(original.content);
+  fireEvent.change(editor, { target: { value: edited } });
+  fireEvent.keyDown(editor, { key: 'Enter' }); expect(edit).not.toHaveBeenCalled();
+  fireEvent.keyDown(editor, { key: 'Enter', ctrlKey: true });
+  await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Edit message' })).not.toBeInTheDocument());
+  expect(edit).toHaveBeenCalledWith(original.id, edited);
+  rerender(<MessageList {...props({ messages: [{ ...original, content: edited, isEdited: true }], onEditMessage: edit })} />);
+  expect(container.querySelector('[data-message-id="outgoing"] .message-bubble')?.textContent).toBe(edited);
+  expect(screen.getByText('(edited)')).toBeInTheDocument();
+});
+
+test('Cancel discards multiline edits and failed Save preserves the editor draft', async () => {
+  const edit = jest.fn(async () => false);
+  render(<MessageList {...props({ onEditMessage: edit })} />);
+  const open = () => {
+    fireEvent.click(screen.getAllByRole('button', { name: 'More actions' })[1]!);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
+  };
+  open(); fireEvent.change(screen.getByRole('textbox', { name: 'Edit message' }), { target: { value: 'New\nlines' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel edit' }));
+  expect(edit).not.toHaveBeenCalled(); expect(screen.getByText(outgoing.content)).toBeInTheDocument();
+  open(); const editor = screen.getByRole('textbox', { name: 'Edit message' });
+  expect(editor).toHaveValue(outgoing.content);
+  fireEvent.change(editor, { target: { value: 'Keep\nthis draft' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save edit' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('original message is unchanged');
+  expect(editor).toHaveValue('Keep\nthis draft');
+});
+
+test('pending edits cannot be submitted twice and rejected saves show a safe error', async () => {
+  let reject!: (error: Error) => void;
+  const edit = jest.fn(() => new Promise<boolean>((_resolve, fail) => { reject = fail; }));
+  render(<MessageList {...props({ messages: [outgoing], onEditMessage: edit })} />);
+  fireEvent.click(screen.getByRole('button', { name: 'More actions' })); fireEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
+  const editor = screen.getByRole('textbox', { name: 'Edit message' });
+  fireEvent.change(editor, { target: { value: 'Changed\nmessage' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save edit' }));
+  fireEvent.keyDown(editor, { key: 'Enter', ctrlKey: true }); expect(edit).toHaveBeenCalledTimes(1);
+  await act(async () => reject(new Error('Raw transport error')));
+  expect(screen.getByRole('alert')).toHaveTextContent('original message is unchanged');
+  expect(screen.queryByText('Raw transport error')).not.toBeInTheDocument(); expect(editor).toHaveValue('Changed\nmessage');
+});
+
+test.each(['unsupported', 'sending', 'failed'] as const)('Edit remains unavailable when %s', state => {
+  render(<MessageList {...props({ messages: [{ ...outgoing, ...(state !== 'unsupported' ? { deliveryStatus: state } : {}) }], canEditMessage: state !== 'unsupported' })} />);
+  fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+  expect(screen.queryByRole('menuitem', { name: 'Edit' })).not.toBeInTheDocument();
+});
+
+test('Unsend awaits confirmation, prevents duplicate submissions and preserves the message on failure', async () => {
+  let finish!: (success: boolean) => void;
+  const unsend = jest.fn(() => new Promise<boolean>(resolve => { finish = resolve; }));
+  render(<MessageList {...props({ messages: [outgoing], onUnsendMessage: unsend })} />);
+  fireEvent.click(screen.getByRole('button', { name: 'More actions' })); fireEvent.click(screen.getByRole('menuitem', { name: 'Unsend' }));
+  const review = within(screen.getByRole('dialog'));
+  expect(review.getByRole('radio', { name: /Unsend for everyone/ })).toBeChecked();
+  fireEvent.click(review.getByRole('button', { name: 'Remove' })); fireEvent.click(review.getByRole('button', { name: 'Remove' }));
+  expect(unsend).toHaveBeenCalledTimes(1); expect(screen.getByText(outgoing.content)).toBeInTheDocument();
+  expect(review.getByRole('button', { name: 'Cancel' })).toBeDisabled(); expect(review.getByRole('radio', { name: /Delete for me/ })).toBeDisabled();
+  const cancel = new Event('cancel', { cancelable: true }); fireEvent(screen.getByRole('dialog'), cancel); expect(cancel.defaultPrevented).toBe(true);
+  expect(screen.queryByText('Message unsent in this local demo only.')).not.toBeInTheDocument();
+  await act(async () => finish(false));
+  expect(review.getByRole('alert')).toHaveTextContent('Your message is unchanged. Try again.');
+  expect(screen.getByText(outgoing.content)).toBeInTheDocument();
+  fireEvent.click(review.getByRole('button', { name: 'Remove' })); await act(async () => finish(true));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument(); expect(screen.getByRole('status')).toHaveTextContent('local demo only');
+});
+
+test('an incoming message exposes Delete for me when it is its only capability, and reports asynchronous failure safely', async () => {
+  const remove = jest.fn(async () => { throw new Error('Private backend details'); });
+  render(<MessageList messages={[incoming]} currentUserId="self" onRetryMessage={jest.fn()} onDeleteMessage={remove} />);
+  fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+  expect(screen.getAllByRole('menuitem')).toHaveLength(1);
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Delete for me' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Your message is unchanged');
+  expect(screen.getByText(incoming.content)).toBeInTheDocument(); expect(screen.queryByText('Private backend details')).not.toBeInTheDocument();
+});
+
+test('an outgoing message with only Unsend support has a menu and no unsupported Delete-for-me option', async () => {
+  render(<MessageList messages={[outgoing]} currentUserId="self" onRetryMessage={jest.fn()} onUnsendMessage={async () => false} />);
+  fireEvent.click(screen.getByRole('button', { name: 'More actions' })); fireEvent.click(screen.getByRole('menuitem', { name: 'Unsend' }));
+  expect(screen.getByRole('radio', { name: /Unsend for everyone/ })).toBeChecked(); expect(screen.queryByRole('radio', { name: /Delete for me/ })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Remove' })); expect(await screen.findByRole('alert')).toHaveTextContent('Could not unsend');
+});
+
+test.each(['sending', 'failed', 'voice', 'incoming'] as const)('message actions reflect support and ownership for %s messages', state => {
+  const message: ChatMessage = state === 'incoming' ? incoming : { ...outgoing, ...(state === 'voice' ? { type: 'voice' } : { deliveryStatus: state }) };
+  render(<MessageList {...props({ messages: [message], onUnsendMessage: async () => true })} />);
+  fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+  const names = screen.getAllByRole('menuitem').map(element => element.textContent?.trim());
+  expect(names).toEqual(state === 'voice' ? ['Pin', 'Unsend'] : state === 'incoming' ? ['Pin', 'Delete for me'] : ['Delete for me']);
+  expect(screen.queryByRole('menuitem', { name: 'Edit' })).not.toBeInTheDocument();
+  if (state === 'sending' || state === 'failed') expect(screen.queryByRole('button', { name: 'React to message' })).not.toBeInTheDocument();
+});
+
+test('all pinned messages are discoverable, navigable, and reflect updates, unpinning and deletion', () => {
+  const pin = jest.fn();
+  const initial = props({ messages: [{ ...incoming, isPinned: true }, { ...outgoing, isPinned: true }], onTogglePin: pin });
+  const { container, rerender } = render(<MessageList {...initial} />);
+  const original = container.querySelector<HTMLElement>('[data-message-id="incoming"]')!; original.scrollIntoView = jest.fn();
+  fireEvent.click(screen.getByRole('button', { name: 'View pinned messages' }));
+  expect(screen.getByRole('region', { name: 'Pinned messages' })).toHaveTextContent('Pins apply only to this local demo.');
+  expect(within(screen.getByRole('region', { name: 'Pinned messages' })).getAllByRole('listitem')).toHaveLength(2);
+  fireEvent.click(screen.getByRole('button', { name: 'Peer Incoming message' }));
+  expect(original).toHaveFocus(); expect(original).toHaveAttribute('data-message-highlighted', 'true'); expect(original.scrollIntoView).toHaveBeenCalled();
+  expect(screen.queryByRole('region', { name: 'Pinned messages' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'View pinned messages' }));
+  rerender(<MessageList {...initial} messages={[{ ...incoming, content: 'Updated pin', isPinned: true }, { ...outgoing, isPinned: true }]} />);
+  expect(screen.getByRole('button', { name: 'Peer Updated pin' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Unpin message: Updated pin' })); expect(pin).toHaveBeenCalledWith(incoming.id);
+  rerender(<MessageList {...initial} messages={[incoming, { ...outgoing, isPinned: true }]} />);
+  expect(within(screen.getByRole('region', { name: 'Pinned messages' })).getAllByRole('listitem')).toHaveLength(1);
+  rerender(<MessageList {...initial} messages={[incoming, { ...outgoing, isPinned: true, isDeleted: true }]} />);
+  expect(screen.queryByRole('button', { name: 'View pinned messages' })).not.toBeInTheDocument(); expect(screen.queryByRole('region', { name: 'Pinned messages' })).not.toBeInTheDocument();
+  expect(screen.getByRole('log')).toHaveFocus();
+});
+
+test('Escape closes the pinned list and restores keyboard focus; the existing banner navigates directly', () => {
+  const { container } = render(<MessageList {...props({ messages: [{ ...incoming, isPinned: true }] })} />);
+  const original = container.querySelector<HTMLElement>('[data-message-id="incoming"]')!; original.scrollIntoView = jest.fn();
+  const view = screen.getByRole('button', { name: 'View pinned messages' }); fireEvent.click(view);
+  fireEvent.keyDown(screen.getByRole('button', { name: 'Peer Incoming message' }), { key: 'Escape' });
+  expect(view).toHaveFocus(); expect(view).toHaveAttribute('aria-expanded', 'false');
+  fireEvent.click(screen.getByRole('button', { name: 'Go to latest pinned message' })); expect(original).toHaveFocus();
 });

@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { BellRing, Check, Mic, Paperclip, Send, Smile, Sparkles, Square, X } from 'lucide-react';
-import { EMOJI_CATEGORIES } from './emojiData';
+import { EmojiPicker } from './EmojiPicker';
+import { useAnchoredMessagePopover } from '@/hooks/useAnchoredMessagePopover';
 import { Button } from '@/components/ui';
 import type { MessageAttachment, VoiceMessageMetadata } from '@/messaging/messageModel';
 import { AttachmentUploadError, type AttachmentUploader } from '@/messaging/attachmentUpload';
 import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT } from '../../../../shared/attachmentPolicy';
 import { useAttachmentDrafts } from '@/hooks/useAttachmentDrafts';
+import { useVoiceRecording } from '@/hooks/useVoiceRecording';
 import { MessageAttachmentView } from './MessageAttachmentView';
 import { validAIInput } from '@/ai/aiModel';
 
@@ -40,6 +42,7 @@ export interface MessageComposerProps {
   onSend(content: string, extras?: MessageComposerSendExtras): Promise<boolean>;
   onBuzz?(): void;
   textOnly?: boolean;
+  active?: boolean;
   onTypingActivity?(): void;
   onTypingStop?(): void;
   onRewriteDraft?(draft: string): void;
@@ -66,6 +69,7 @@ export function MessageComposer({
   droppedFiles,
   onRewriteDraft,
   textOnly = false,
+  active = true,
 }: MessageComposerProps) {
   const [internalValue, setInternalValue] = useState('');
   const value = draftValue ?? internalValue;
@@ -77,28 +81,24 @@ export function MessageComposer({
   const attachments = attachmentDrafts.drafts.map((draft) => draft.attachment);
   const uploadProgress = attachmentDrafts.progress;
   const processingAttachments = attachmentDrafts.processing;
-  const displayedError = setupError || sendError || attachmentDrafts.error;
   const addAttachmentFiles = attachmentDrafts.addFiles;
   const mounted = useRef(true);
   const previousDrop = useRef<readonly File[] | undefined>();
-  const [voiceDraft, setVoiceDraft] = useState<VoiceMessageMetadata | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const voice = useVoiceRecording(active, disabled || isSending || textOnly);
+  const { draft: voiceDraft, recording: isRecording, requesting: requestingMicrophone, seconds: recordingSeconds } = voice;
+  const displayedError = setupError || sendError || voice.error || attachmentDrafts.error;
   const [emojiOpen, setEmojiOpen] = useState(false);
-  const [emojiCategory, setEmojiCategory] = useState(0);
-  const emojiWrapRef = useRef<HTMLDivElement>(null);
+  const emojiPanel = useRef<HTMLDivElement>(null), emojiTrigger = useRef<HTMLButtonElement>(null);
+  const emojiId = useId();
+  const selection = useRef<{ start: number; end: number } | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const recordingTimerRef = useRef<number | null>(null);
-  const recordingStartRef = useRef<number>(0);
   const submitLock = useRef(false);
   const latestValue = useRef(value);
   latestValue.current = value;
   const hasContent = Boolean(value.trim()) || attachments.length > 0 || Boolean(voiceDraft);
   const isUploading = uploadProgress !== null;
-  const canSend = hasContent && !disabled && !isSending && !isRecording && !isUploading && !processingAttachments && !isSubmitting;
+  const canSend = hasContent && !disabled && !isSending && !isRecording && !requestingMicrophone && !isUploading && !processingAttachments && !isSubmitting;
 
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   useEffect(() => { if (textOnly && draftValue === '') setSendError(''); }, [textOnly, draftValue]);
@@ -119,33 +119,15 @@ export function MessageComposer({
     return () => window.removeEventListener('resize', resizeInput);
   }, []);
 
+  const closeEmoji = useCallback((restoreFocus = false) => {
+    setEmojiOpen(false);
+    if (restoreFocus) inputRef.current?.focus();
+  }, []);
+  useAnchoredMessagePopover(emojiPanel, emojiTrigger, emojiOpen ? 'composer-emoji' : null, closeEmoji, true);
   useEffect(() => {
-    if (!emojiOpen) return;
-    const onPointerDown = (event: MouseEvent) => {
-      if (!emojiWrapRef.current?.contains(event.target as Node)) setEmojiOpen(false);
-    };
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setEmojiOpen(false);
-        inputRef.current?.focus();
-      }
-    };
-    document.addEventListener('mousedown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
+    if (emojiOpen) emojiPanel.current?.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
   }, [emojiOpen]);
-
-  useEffect(() => {
-      return () => {
-        if (recordingTimerRef.current !== null) window.clearInterval(recordingTimerRef.current);
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-          mediaRecorderRef.current.stop();
-        }
-      };
-    }, []);
+  useEffect(() => { if (!active || disabled || isSending || isSubmitting) closeEmoji(); }, [active, disabled, isSending, isSubmitting, closeEmoji]);
 
   const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.currentTarget.files ?? []);
@@ -156,65 +138,20 @@ export function MessageComposer({
     void attachmentDrafts.addFiles(files);
   };
 
-  const startRecording = async () => {
+  const startRecording = () => {
     if (disabled || isSending || submitLock.current) return;
     setSendError('');
-    setVoiceDraft(null);
-
-    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-      setSendError('This browser cannot record audio. Open the app in Chrome or Edge.');
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
-        .find((type) => MediaRecorder.isTypeSupported(type));
-      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-      audioChunksRef.current = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunksRef.current.push(e.data);
-      };
-      recorder.onstop = () => {
-        stream.getTracks().forEach((track) => track.stop());
-        const duration = Math.max(1, Math.round((Date.now() - recordingStartRef.current) / 1000));
-        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
-        if (blob.size === 0) {
-          setSendError('No audio was captured. Check your microphone.');
-          return;
-        }
-        setVoiceDraft({ audioUrl: URL.createObjectURL(blob), durationSeconds: duration });
-      };
-      mediaRecorderRef.current = recorder;
-      recordingStartRef.current = Date.now();
-      setRecordingSeconds(0);
-      recordingTimerRef.current = window.setInterval(() => {
-        setRecordingSeconds(Math.max(1, Math.round((Date.now() - recordingStartRef.current) / 1000)));
-      }, 500);
-      recorder.start();
-      setIsRecording(true);
-    } catch {
-      setSendError('Microphone access was blocked. Allow the microphone and try again.');
-    }
-  };
-
-  const stopRecording = () => {
-    if (recordingTimerRef.current !== null) {
-      window.clearInterval(recordingTimerRef.current);
-      recordingTimerRef.current = null;
-    }
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-    }
-    setIsRecording(false);
+    void voice.start();
   };
 
   const insertEmoji = (emoji: string) => {
     const input = inputRef.current;
-    const start = input?.selectionStart ?? value.length;
-    const end = input?.selectionEnd ?? value.length;
-    const next = value.slice(0, start) + emoji + value.slice(end);
+    const text = latestValue.current;
+    const start = Math.min(selection.current?.start ?? input?.selectionStart ?? text.length, text.length);
+    const end = Math.min(selection.current?.end ?? input?.selectionEnd ?? text.length, text.length);
+    const next = text.slice(0, start) + emoji + text.slice(end);
     setValue(next);
+    setEmojiOpen(false);
     setSendFeedback(false);
     onTypingActivity?.();
     const caret = start + emoji.length;
@@ -227,7 +164,7 @@ export function MessageComposer({
   const submit = async () => {
     const content = value.trim();
     const hasExtras = attachments.length > 0 || Boolean(voiceDraft);
-    if ((!content && !hasExtras) || disabled || isSending || isRecording || processingAttachments || submitLock.current) return;
+    if ((!content && !hasExtras) || disabled || isSending || isRecording || requestingMicrophone || processingAttachments || submitLock.current) return;
     submitLock.current = true;
     setIsSubmitting(true);
     setSendError('');
@@ -245,7 +182,7 @@ export function MessageComposer({
       if (accepted) {
         attachmentDrafts.clearAccepted();
         if (latestValue.current === value) setValue('');
-        setVoiceDraft(null);
+        voice.clearDraft();
         setSendFeedback(true);
       } else setSendError(textOnly ? 'Your message was not confirmed. Your draft is still here.' : 'The message was not accepted. Your draft is still here.');
     } catch (failure) {
@@ -275,7 +212,7 @@ export function MessageComposer({
         void submit();
       }}
     >
-      {(attachments.length > 0 || voiceDraft || isRecording) && (
+      {(attachments.length > 0 || voiceDraft || isRecording || requestingMicrophone) && (
         <div
           className="composer-attachments-preview"
           style={{
@@ -301,12 +238,12 @@ export function MessageComposer({
             </div>
           ))}
 
-          {isRecording && (
+          {(isRecording || requestingMicrophone) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#dc2626', fontSize: '0.82rem', fontWeight: 600 }}>
-              <span>● Recording voice... {recordingSeconds}s</span>
+              <span>{requestingMicrophone ? 'Waiting for microphone permission…' : `● Recording voice... ${recordingSeconds}s`}</span>
               <button
                 type="button"
-                onClick={stopRecording}
+                onClick={requestingMicrophone ? voice.cancel : voice.stop}
                 style={{
                   padding: '2px 8px',
                   borderRadius: '4px',
@@ -317,8 +254,9 @@ export function MessageComposer({
                   fontSize: '0.75rem',
                 }}
               >
-                Stop
+                {requestingMicrophone ? 'Cancel' : 'Stop'}
               </button>
+              {isRecording && <Button size="sm" variant="ghost" aria-label="Cancel voice recording" onClick={voice.cancel}>Cancel</Button>}
             </div>
           )}
 
@@ -330,22 +268,25 @@ export function MessageComposer({
                 gap: '8px',
                 padding: '4px 8px',
                 borderRadius: '6px',
-                background: 'rgba(255, 255, 255, 0.9)',
+                background: 'var(--color-surface)',
                 border: '1px solid rgba(139, 92, 246, 0.3)',
                 fontSize: '0.78rem',
-                color: '#1f2937',
+                color: 'var(--color-text)',
               }}
             >
               <span>🎤 Voice ({voiceDraft.durationSeconds}s)</span>
               <audio
                 src={voiceDraft.audioUrl}
                 controls
+                preload="metadata"
+                aria-label="Recorded voice preview"
                 style={{ height: '28px', maxWidth: '180px' }}
                 onError={(e) => setSendError(`Audio failed to load (error code ${e.currentTarget.error?.code ?? 'unknown'}).`)}
               />
               <button
                 type="button"
-                onClick={() => setVoiceDraft(null)}
+                disabled={disabled || isSending || isSubmitting}
+                onClick={() => { voice.clearDraft(); setSendError(''); }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', display: 'flex' }}
                 aria-label="Remove recorded voice"
               >
@@ -402,58 +343,36 @@ export function MessageComposer({
           variant="ghost"
           className="composer-icon-button composer-voice"
           data-recording={isRecording}
-          disabled={disabled || isSending || isSubmitting || isUploading}
-          onClick={isRecording ? stopRecording : () => void startRecording()}
+          disabled={disabled || isSending || isSubmitting || isUploading || requestingMicrophone}
+          onClick={isRecording ? voice.stop : startRecording}
           aria-label={isRecording ? 'Stop voice recording' : 'Record voice message'}
           title={isRecording ? 'Stop recording' : 'Record voice message'}
           leadingIcon={isRecording ? <Square size={18} aria-hidden="true" /> : <Mic size={18} aria-hidden="true" />}
         />
         </>}
-                <div className="composer-emoji-wrap" ref={emojiWrapRef}>
+                <div className="composer-emoji-wrap">
           <Button
+            ref={emojiTrigger}
             type="button"
             variant="ghost"
             className="composer-icon-button"
             disabled={disabled || isSending || isSubmitting || isUploading}
-            onClick={() => setEmojiOpen((open) => !open)}
+            onClick={() => {
+              const input = inputRef.current;
+              selection.current = input ? { start: input.selectionStart, end: input.selectionEnd } : null;
+              setEmojiOpen(open => !open);
+            }}
             aria-label="Insert emoji"
-            aria-haspopup="true"
+            aria-haspopup="dialog"
             aria-expanded={emojiOpen}
+            aria-controls={emojiOpen ? emojiId : undefined}
             title="Insert emoji"
             leadingIcon={<Smile size={18} aria-hidden="true" />}
           />
 
           {emojiOpen && (
-            <div className="composer-emoji-popover" role="dialog" aria-label="Emoji picker">
-              <div className="rx-tabs" role="tablist" aria-label="Emoji categories">
-                {EMOJI_CATEGORIES.map((category, index) => (
-                  <button
-                    key={category.id}
-                    type="button"
-                    role="tab"
-                    className="rx-tab"
-                    aria-selected={index === emojiCategory}
-                    aria-label={category.label}
-                    title={category.label}
-                    onClick={() => setEmojiCategory(index)}
-                  >
-                    {category.icon}
-                  </button>
-                ))}
-              </div>
-              <div className="composer-emoji-grid">
-                {EMOJI_CATEGORIES[emojiCategory]!.emojis.map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    className="composer-emoji-btn"
-                    onClick={() => insertEmoji(emoji)}
-                    title={emoji}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
+            <div ref={emojiPanel} id={emojiId} className="composer-emoji-popover emoji-picker-panel" role="dialog" aria-label="Emoji picker">
+              <EmojiPicker onSelect={insertEmoji} onClose={() => closeEmoji(true)} />
             </div>
           )}
         </div>
