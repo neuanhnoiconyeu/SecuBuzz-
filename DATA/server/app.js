@@ -14,8 +14,11 @@ const { createMessageService }=require('./messaging/service');
 const { createMessageRouters }=require('./routes/messaging');
 const { createKeyService }=require('./e2ee/service');
 const { createKeyRouters }=require('./routes/keys');
+const { createGroupService }=require('./groups/service');
+const { createGroupRouter }=require('./routes/groups');
+const { DISABLED_FEATURES }=require('./features/config');
 
-function createApp({db,config=loadAuthConfig(),messageOptions={},...dependencies}) {
+function createApp({db,config=loadAuthConfig(),messageOptions={},features=DISABLED_FEATURES,...dependencies}) {
     const app=express();
     app.disable('x-powered-by');
     app.set('trust proxy',false); // Rate limits always use the direct peer, never forwarded user input.
@@ -46,6 +49,9 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},...dependencies
     app.use('/api/conversations',messageRouters.history);
     app.use('/api/conversations',createConversationRouter(conversations,middleware));
     app.use('/api/messages',messageRouters.lifecycle);
+    // DB5-R16.2: mounted while every switch is off, so a disabled function answers 503 and not 404.
+    const groups=createGroupService({db,auth,features,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
+    app.use('/api/groups',createGroupRouter({groups,features:groups.features},middleware));
     // The legacy APIs have no object-level authorization. Do not expose them merely because
     // authentication now exists. DB-3/4/7 must replace/adapt them before mounting real data routes.
     app.use(['/api/messages','/api/logs'],middleware.requireAuth,(req,res,next)=>{
@@ -69,6 +75,6 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},...dependencies
         // Never log raw errors, bodies, cookies, SQL, password hashes or session/CSRF material.
         return sendError(res,'INTERNAL_ERROR',500);
     });
-    return {app,auth,social,conversations,keys,messaging,adapters:createAuthAdapters(auth),middleware};
+    return {app,auth,social,conversations,keys,messaging,groups,features:groups.features,adapters:createAuthAdapters(auth),middleware};
 }
 module.exports={createApp};

@@ -196,13 +196,18 @@ function envelope(actor, id, run) {
         encryption:{ version:1, algorithm:'AES-256-GCM', encoding:'base64', iv:Buffer.alloc(12).toString('base64'), ciphertext:Buffer.alloc(32).toString('base64') } };
 }
 
+// Keyed to file existence, so the check follows the router: absent in DB-5B, present from T-5C-04.
+const GROUP_ROUTER_EXISTS = fs.existsSync(path.join(__dirname,'../server/routes/groups.js'));
 async function isolation(f, data, run, keys) {
     const unchanged = allTables(f.db), domain = snapshot(f.db);
     for (const name of ['Sessions','AccountCredentials','AuthRateLimits','SchemaMigrations']) assert.ok(Object.hasOwn(unchanged,name));
     const request = async (actor, method, url, body) => {
         const result = await actor.browser.request(url,{ method, body, headers:['GET','HEAD'].includes(method) ? {} : { 'X-CSRF-Token':actor.token } });
-        assert.equal(result.status,404,`${method} ${url}: ${JSON.stringify(result.body)}`);
-        assert.deepEqual(result.body,{ code:'NOT_FOUND', fields:[] });
+        // Group paths: 404 while routes/groups.js is absent (DB-5B). Once the router exists (T-5C-04) every switch is off here, so the
+        // answer is the 503 of DB5-R16.2. Every other path keeps the 404 of an identifier that is not the route's kind.
+        const [status,code] = GROUP_ROUTER_EXISTS && url.startsWith('/api/groups') ? [503,'FEATURE_UNAVAILABLE'] : [404,'NOT_FOUND'];
+        assert.equal(result.status,status,`${method} ${url}: ${JSON.stringify(result.body)}`);
+        assert.deepEqual(result.body,{ code, fields:[] });
         assert.deepEqual(allTables(f.db),unchanged,`${method} ${url} changed a table`);
     };
     for (const name of ['alice','bob','carol']) {
@@ -256,7 +261,7 @@ async function isolation(f, data, run, keys) {
 test('P-19: seeded populated groups cannot enter direct routes or change the frozen fixture replay', async t => {
     const beforeDigest = digest(), keys = clientKeys(), scenarios = new Set();
     let populations = 0, replayedEntries = 0;
-    assert.equal(fs.existsSync(path.join(__dirname,'../server/routes/groups.js')),false,'DB-5B group router remains unmounted');
+    t.diagnostic(GROUP_ROUTER_EXISTS ? 'routes/groups.js exists: group paths answer 503 FEATURE_UNAVAILABLE while every switch is off' : 'routes/groups.js is absent: group paths answer 404');
     const summary = await forAll('P-19',{ seed:P19_SEED, runs:P19_RUNS, onRun:line => t.diagnostic(line) },generatePopulation,async (model,info) => {
         let failure;
         await t.test(info.line,async child => {
