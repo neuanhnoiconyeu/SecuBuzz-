@@ -4,7 +4,7 @@
 // Two kinds of test. The real createApp runs on loopback over a temporary database (support/auth.js), with real sessions and
 // real CSRF tokens, to show the HTTP behavior. A small express app around createGroupRouter, with fake middleware and a fake
 // service that record their calls, shows the exact order of the chain. T-5C-07 to T-5C-10 mount G01 to G05 (create, list, read,
-// update, member list) beside feature-status. T-5C-11/12 add G12-G15 and G17; G16 acceptance remains unmounted.
+// update, member list) beside feature-status. T-5C-11/12 add G12-G15 and G17; T-5C-13 adds G16 (accept).
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -92,7 +92,7 @@ const fakeGroups = (extra = {}) => ({
     rate() {}, createGroup: () => ({ created: true, group: {} }), listGroups: () => ({ items: [], nextCursor: null }), getGroup: () => ({}),
     updateGroup: () => ({}), listMembers: () => ({ items: [], nextCursor: null }),
     createInvitation: () => ({ invitation: {} }), listInvitations: () => ({ items: [], nextCursor: null }),
-    cancelInvitation: () => ({}), listOwnInvitations: () => ({ items: [], nextCursor: null }), declineInvitation: () => ({}), ...extra
+    cancelInvitation: () => ({}), listOwnInvitations: () => ({ items: [], nextCursor: null }), declineInvitation: () => ({}), acceptInvitation: () => ({ group: {} }), ...extra
 });
 
 test('Batch 2A adapters: exact session/proof/target/query calls, socket source, projections and empty 204 bodies', async t => {
@@ -105,7 +105,8 @@ test('Batch 2A adapters: exact session/proof/target/query calls, socket source, 
         listInvitations: record('listInvitations', { items: [{ id: 'manager-invitation' }], nextCursor: null }),
         cancelInvitation: record('cancelInvitation', { mustNeverBeSerialized: SENTINEL }),
         listOwnInvitations: record('listOwnInvitations', { items: [{ id: 'own-invitation' }], nextCursor: null }),
-        declineInvitation: record('declineInvitation', { mustNeverBeSerialized: SENTINEL }) });
+        declineInvitation: record('declineInvitation', { mustNeverBeSerialized: SENTINEL }),
+        acceptInvitation: record('acceptInvitation', { group: { id: 'accepted-group' } }) });
     const app = express();
     app.use('/api/groups', createGroupRouter({ groups, features: ON }, {
         requireAuth(req, res, next) { req.auth = actor; next(); },
@@ -120,7 +121,8 @@ test('Batch 2A adapters: exact session/proof/target/query calls, socket source, 
         ['GET', '/g/invitations?limit=2', undefined, 'listInvitations', 200, { items: [{ id: 'manager-invitation' }], nextCursor: null }],
         ['DELETE', '/g/invitations/i', undefined, 'cancelInvitation', 204, null],
         ['GET', '/invitations?limit=2', undefined, 'listOwnInvitations', 200, { items: [{ id: 'own-invitation' }], nextCursor: null }],
-        ['POST', '/invitations/i/decline', undefined, 'declineInvitation', 204, null]
+        ['POST', '/invitations/i/decline', undefined, 'declineInvitation', 204, null],
+        ['POST', '/invitations/i/accept', undefined, 'acceptInvitation', 200, { group: { id: 'accepted-group' } }]
     ];
     for (const [method, route, body, name, status, expected] of cases) {
         const response = await fetch(origin + '/api/groups' + route, { method,
@@ -135,9 +137,9 @@ test('Batch 2A adapters: exact session/proof/target/query calls, socket source, 
         if (name === 'listInvitations') assert.deepEqual([...call.args.slice(0, 2), { ...call.args[2] }], [actor, 'g', { limit: '2' }]);
         if (name === 'cancelInvitation') assert.deepEqual(call.args, [actor, proof, 'g', 'i']);
         if (name === 'listOwnInvitations') assert.deepEqual([call.args[0], { ...call.args[1] }], [actor, { limit: '2' }]);
-        if (name === 'declineInvitation') assert.deepEqual(call.args, [actor, proof, 'i']);
+        if (name === 'declineInvitation' || name === 'acceptInvitation') assert.deepEqual(call.args, [actor, proof, 'i']);
     }
-    assert.equal(calls.length, 5); assert.equal(rates.length, 5, 'one generic rate call per request');
+    assert.equal(calls.length, 6); assert.equal(rates.length, 6, 'one generic rate call per request');
 });
 
 test('the route table is frozen, and holds only the routes that are mounted', () => {
@@ -146,6 +148,7 @@ test('the route table is frozen, and holds only the routes that are mounted', ()
     assert.deepEqual(GROUP_ROUTES.map(row => ({ ...row })), [
         { id: 'G26', method: 'GET', path: '/feature-status', gated: false },
         { id: 'G15', method: 'GET', path: '/invitations', gated: true },
+        { id: 'G16', method: 'POST', path: '/invitations/:invitationId/accept', gated: true },
         { id: 'G17', method: 'POST', path: '/invitations/:invitationId/decline', gated: true },
         { id: 'G01', method: 'POST', path: '/', gated: true },
         { id: 'G02', method: 'GET', path: '/', gated: true },
@@ -160,7 +163,7 @@ test('the route table is frozen, and holds only the routes that are mounted', ()
     assert.equal(MAX_BODY_BYTES, 8192);
     const router = createGroupRouter({ groups: fakeGroups(), features: OFF_SHAPE }, { requireAuth() {}, requireCsrf() {} });
     const mounted = router.stack.filter(layer => layer.route).map(layer => `${Object.keys(layer.route.methods).map(method => method.toUpperCase()).sort().join('+')} ${layer.route.path}`);
-    assert.deepEqual(mounted, ['GET /feature-status', 'GET /invitations', 'POST /invitations/:invitationId/decline',
+    assert.deepEqual(mounted, ['GET /feature-status', 'GET /invitations', 'POST /invitations/:invitationId/accept', 'POST /invitations/:invitationId/decline',
         'POST /', 'GET /', 'GET /:id', 'PATCH /:id', 'GET /:id/members', 'POST /:id/invitations',
         'GET /:id/invitations', 'DELETE /:id/invitations/:invitationId'], 'the mounted layer stack equals the table');
     assert.ok(!GROUP_ROUTES.some(row => row.method === 'DELETE' && /^\/:[^/]+$/.test(row.path)), 'no group deletion route');
@@ -489,7 +492,8 @@ test('a malformed features object stops the application from being built, and ne
 
 test('switch on: a method and path with no route, and every request that names no visible group, end in the one 404', async t => {
     const limiter = recordingLimiter();
-    const { actors, db } = await application(t, { features: ON, limiter, users: ['grp-http-alice'] });
+    // G16 is mounted: a valid member maximum lets unknown invitation ids reach its uniform 404 check.
+    const { actors, db } = await application(t, { features: { ...ON, groups: { maxMembers: 50 } }, limiter, users: ['grp-http-alice'] });
     const alice = actors['grp-http-alice'];
     const before = snapshot(db).total;
     // Newly mounted GET /invitations is a private collection, not a group id; its empty page is 200.
@@ -1640,9 +1644,11 @@ test('Batch 2A privacy: uniform 404s and unauthorized cancellation never reveal 
     }
     assertError(await send(owner, 'DELETE', '/api/groups/unknown-group/invitations/' + f.invitationId), 404, error404);
     assertError(await send(owner, 'DELETE', invitationPath(f) + '/unknown-invitation'), 404, error404);
-    for (const id of [f.invitationId, 'unknown-invitation']) assertError(await send(pendingInvitee, 'POST', '/api/groups/invitations/' + id + '/accept'), 404, error404);
-    assert.ok(!GROUP_ROUTES.some(row => row.id === 'G16' || row.path.endsWith('/accept')));
-    assert.equal(snapshot(f.db).total, before, 'no unauthorized request or unmounted G16 changes state');
+    for (const actor of [owner, member, nonMember]) for (const id of [f.invitationId, 'unknown-invitation']) {
+        assertError(await send(actor, 'POST', '/api/groups/invitations/' + id + '/accept'), 404, error404);
+    }
+    assertError(await send(pendingInvitee, 'POST', '/api/groups/invitations/unknown-invitation/accept'), 404, error404);
+    assert.equal(snapshot(f.db).total, before, 'no unauthorized request changes state');
 });
 
 test('Batch 2A protection: real authentication, session-bound CSRF and gate-before-body on all five endpoints', async t => {

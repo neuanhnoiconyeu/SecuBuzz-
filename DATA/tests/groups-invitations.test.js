@@ -1,4 +1,4 @@
-// T-5C-11 and T-5C-12: the Invitation operations of the Group_Service (DB5-R04.1 to R04.7, R04.13 to R04.22, R12.4, R12.8).
+// T-5C-11 to T-5C-13: Invitation operations, including G16 acceptance and DC-09 committed refusals.
 // Service level: createInvitation (G12), listInvitations (G13), cancelInvitation (G14), listOwnInvitations (G15) and
 // declineInvitation (G17) are called directly with real sessions and real CSRF proofs from the loopback application of
 // support/groups.js. The HTTP adapters and their tests belong to the router tasks. Temporary databases only.
@@ -6,8 +6,12 @@
 // so Invitations age without logging anybody out.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { httpGroupFixture, snapshot, changedTables, createClock, openLimiter, INVITATION_EXPIRY_MS } = require('./support/groups');
+const { spawn } = require('node:child_process');
+const path = require('node:path');
+const { httpGroupFixture, snapshot, changedTables, createClock, openLimiter, actorRequest, assertSecurityHeaders, INVITATION_EXPIRY_MS } = require('./support/groups');
+const { Browser, envDefaults } = require('./support/auth');
 const { createRepositories } = require('../server/database/repositories');
+const { createGroupRepository, withMembershipTransaction } = require('../server/database/groupRepository');
 const { AuthError } = require('../server/auth/errors');
 const { INVITATION_EXPIRY_SECONDS, roleMatrix } = require('../server/groups/policy');
 const codec = require('../server/groups/cursor');
@@ -700,3 +704,505 @@ test('invitations: the group invariants and the Membership_Revision hold through
     assert.ok(!/Group Owner|Group Admin|grp-/.test(text), 'no name appears in an audit row');
 });
 function createGroupRepositoryFor(w) { return require('../server/database/groupRepository').createGroupRepository(w.db); }
+
+// ---------------------------------------------------------------------------------------------------------------
+// T-5C-13: acceptInvitation (G16)
+// ---------------------------------------------------------------------------------------------------------------
+const accept = (w, actor, invitationId, svc = w.svc) => svc.acceptInvitation(actor.context, actor.proof, invitationId);
+const ACCEPT_GROUP_KEYS = ['archived', 'createdAt', 'description', 'historyPolicy', 'id', 'memberCount', 'membershipRevision', 'name', 'role', 'updatedAt'];
+const YEAR_MS = 366 * 86400000; // the fixture removes members at the wall-clock time, so a service clock must be later than that
+const MEMBERSHIP_TABLES = ['AuditLogs', 'ConversationInvitations', 'ConversationMembers', 'GroupExtensions', 'GroupMembershipIntervals'];
+const invariants = w => createGroupRepository(w.db).invariantReport(w.groupId);
+const eventsOf = (db, groupId) => inviteAudit(db, groupId).map(row => row.event_type);
+// A refusal of the re-validation commits the Invitation state and its audit row, changes nothing else, and then answers 409.
+function assertCommittedRefusal(w, actor, invitationId, state, event, groupId = w.groupId, svc = w.svc) {
+    const members = memberState(w.db, groupId);
+    const audits = inviteAudit(w.db, groupId).length;
+    const others = snapshot(w.db);
+    refusal(thrown(() => accept(w, actor, invitationId, svc)), 'CONFLICT', 409);
+    const row = invitationRow(w.db, invitationId);
+    assert.deepEqual([row.state, row.resolved_at], [state, w.clock.iso()]);
+    const trail = inviteAudit(w.db, groupId);
+    assert.equal(trail.length, audits + 1, 'exactly one audit row');
+    assert.deepEqual([trail.at(-1).event_type, trail.at(-1).actor_user_id, trail.at(-1).subject_id], [event, actor.id, groupId]);
+    assert.deepEqual(Object.keys(JSON.parse(trail.at(-1).metadata_json)).sort(), ['operation', 'outcome']);
+    assert.deepEqual(memberState(w.db, groupId), members, 'membership, role, revision and intervals are unchanged');
+    assert.deepEqual(changedTables(others, snapshot(w.db)).sort(), ['AuditLogs', 'ConversationInvitations'], 'only the Invitation state and its audit row were committed');
+}
+
+test('G16: the invitee accepts a pending Invitation: member added, interval opened, revision up by one, one audit row, {group}', async t => {
+    const w = await world(t);
+    const before = memberState(w.db, w.groupId);
+    const tables = snapshot(w.db);
+    w.clock.advance(3000);
+    const result = accept(w, w.who.pendingInvitee, w.invitationId);
+    assert.deepEqual(Object.keys(result), ['group']);
+    assert.deepEqual(Object.keys(result.group).sort(), ACCEPT_GROUP_KEYS);
+    assert.deepEqual([result.group.id, result.group.name, result.group.role, result.group.memberCount, result.group.membershipRevision, result.group.archived],
+        [w.groupId, 'Fixture group', 'member', 4, before.revision + 1, false]);
+    const invitation = invitationRow(w.db, w.invitationId);
+    assert.deepEqual([invitation.state, invitation.resolved_at], ['accepted', w.clock.iso()]);
+    const member = memberState(w.db, w.groupId).members.find(row => row.user_id === w.who.pendingInvitee.id);
+    assert.deepEqual([member.role, member.left_at], ['member', null]);
+    const intervals = memberState(w.db, w.groupId).intervals.filter(row => row.user_id === w.who.pendingInvitee.id);
+    assert.deepEqual(intervals.map(row => [row.interval_no, row.first_seq, row.last_seq, row.joined_at, row.left_at]), [[1, 1, null, member.joined_at, null]]);
+    assert.equal(memberState(w.db, w.groupId).revision, before.revision + 1, 'the revision rose by exactly one');
+    const audit = inviteAudit(w.db, w.groupId).at(-1);
+    assert.deepEqual([audit.event_type, audit.actor_user_id, audit.source, audit.subject_id], ['group.invitation.accepted', w.who.pendingInvitee.id, 'groups', w.groupId]);
+    assert.deepEqual(JSON.parse(audit.metadata_json), { operation: 'invitation.accepted', outcome: 'confirmed', role: 'member' });
+    assert.equal(inviteAudit(w.db, w.groupId).filter(row => row.event_type === 'group.invitation.accepted').length, 1);
+    assert.deepEqual(changedTables(tables, snapshot(w.db)).sort(), MEMBERSHIP_TABLES);
+    assert.equal(w.svc.getGroup(w.who.pendingInvitee.context, w.groupId).role, 'member', 'the invitee is a member now');
+    assert.deepEqual(w.svc.listOwnInvitations(w.who.pendingInvitee.context, {}).items, []);
+    assert.deepEqual(invariants(w), { activeOwners: 1, activeMembers: 4, openIntervals: 4, mismatches: 0 });
+});
+
+test('G16: a former member is reactivated with the role member, keeping the first join time and opening a second interval', async t => {
+    const w = await world(t);
+    const first = memberState(w.db, w.groupId);
+    const wasRemoved = first.members.find(row => row.user_id === w.who.removedMember.id);
+    w.clock.advance(YEAR_MS);
+    const sent = invite(w, w.who.owner, { userId: w.who.removedMember.id }).invitation;
+    w.clock.advance(5000);
+    const result = accept(w, w.who.removedMember, sent.id);
+    assert.deepEqual([result.group.role, result.group.memberCount, result.group.membershipRevision], ['member', 4, first.revision + 1]);
+    const after = memberState(w.db, w.groupId);
+    const row = after.members.find(member => member.user_id === w.who.removedMember.id);
+    assert.deepEqual([row.role, row.left_at, row.joined_at], ['member', null, wasRemoved.joined_at], 'one row, reactivated; the first joined_at is kept');
+    assert.equal(after.members.filter(member => member.user_id === w.who.removedMember.id).length, 1, 'no duplicate member row');
+    const intervals = after.intervals.filter(interval => interval.user_id === w.who.removedMember.id);
+    assert.deepEqual(intervals.map(interval => [interval.interval_no, interval.left_at === null]), [[1, false], [2, true]]);
+    assert.deepEqual(intervals[0], first.intervals.find(interval => interval.user_id === w.who.removedMember.id), 'the closed interval is untouched');
+    assert.equal(intervals[1].joined_at, w.clock.iso());
+    assert.deepEqual(invariants(w), { activeOwners: 1, activeMembers: 4, openIntervals: 4, mismatches: 0 });
+});
+
+test('G16: an invitee removed since the Invitation was created cannot rejoin through it (AF-03), but a new Invitation works', async t => {
+    const w = await world(t);
+    // A removal after creation: the invitee left at or after the Invitation was created (AF-03).
+    const removedAfter = seed(w.db, { id: 'seed-removed-after', groupId: w.groupId, invitee: w.who.removedMember.id, inviter: w.who.owner.id, createdAt: isoPlus(w.clock.iso(), -10000), expiresAt: isoPlus(w.clock.iso(), INVITATION_EXPIRY_MS) });
+    w.clock.advance(1000);
+    assertCommittedRefusal(w, w.who.removedMember, removedAfter, 'cancelled', 'group.invitation.cancelled');
+    // The same user may be invited again, after the removal, and then joins.
+    w.clock.advance(YEAR_MS);
+    const again = invite(w, w.who.owner, { userId: w.who.removedMember.id }).invitation;
+    w.clock.advance(1000);
+    assert.equal(accept(w, w.who.removedMember, again.id).group.role, 'member');
+});
+
+test('G16: an invitee who is already an Active_Member leaves the member row untouched, and a stale Invitation cannot demote the owner', async t => {
+    const w = await world(t);
+    const stale = seed(w.db, { id: 'seed-active-member', groupId: w.groupId, invitee: w.who.member.id, inviter: w.who.owner.id, createdAt: w.clock.iso(), expiresAt: isoPlus(w.clock.iso(), INVITATION_EXPIRY_MS) });
+    w.clock.advance(1000);
+    assertCommittedRefusal(w, w.who.member, stale, 'cancelled', 'group.invitation.cancelled');
+    const admin = seed(w.db, { id: 'seed-active-admin', groupId: w.groupId, invitee: w.who.admin.id, inviter: w.who.owner.id, createdAt: w.clock.iso(), expiresAt: isoPlus(w.clock.iso(), INVITATION_EXPIRY_MS) });
+    assertCommittedRefusal(w, w.who.admin, admin, 'cancelled', 'group.invitation.cancelled');
+    // AF-04: an Invitation addressed to the current owner, accepted, leaves exactly one owner and the owner role.
+    const ownerRow = seed(w.db, { id: 'seed-active-owner', groupId: w.groupId, invitee: w.who.owner.id, inviter: w.who.admin.id, createdAt: w.clock.iso(), expiresAt: isoPlus(w.clock.iso(), INVITATION_EXPIRY_MS) });
+    assertCommittedRefusal(w, w.who.owner, ownerRow, 'cancelled', 'group.invitation.cancelled');
+    const state = memberState(w.db, w.groupId);
+    assert.deepEqual(state.members.filter(row => row.role === 'owner' && row.left_at === null).map(row => row.user_id), [w.who.owner.id]);
+    assert.deepEqual(invariants(w), { activeOwners: 1, activeMembers: 3, openIntervals: 3, mismatches: 0 });
+});
+
+test('G16: expiry is decided by the server time: one second before it the Invitation is accepted, at exactly expires_at it is expired', async t => {
+    const early = await world(t);
+    early.clock.advance(INVITATION_EXPIRY_MS - 1000);
+    assert.equal(accept(early, early.who.pendingInvitee, early.invitationId).group.role, 'member');
+    const late = await world(t);
+    late.clock.advance(INVITATION_EXPIRY_MS);
+    assertCommittedRefusal(late, late.who.pendingInvitee, late.invitationId, 'expired', 'group.invitation.expired');
+    // An expired Invitation is expired whatever else fails: the archived group does not turn it into a cancellation.
+    const both = await world(t);
+    both.db.prepare("UPDATE Conversations SET archived_at = '2026-01-01T00:00:00.000Z' WHERE conversation_id = ?").run(both.groupId);
+    both.clock.advance(INVITATION_EXPIRY_MS + 1);
+    assertCommittedRefusal(both, both.who.pendingInvitee, both.invitationId, 'expired', 'group.invitation.expired');
+    // After the refusal the row never moves again.
+    refusal(thrown(() => accept(both, both.who.pendingInvitee, both.invitationId)), 'CONFLICT', 409);
+    assert.equal(invitationRow(both.db, both.invitationId).state, 'expired');
+});
+
+test('G16: an archived group, an inviter who left or may not invite, and a block in either direction cancel the Invitation', async t => {
+    const archived = await world(t);
+    archived.db.prepare("UPDATE Conversations SET archived_at = '2026-01-01T00:00:00.000Z' WHERE conversation_id = ?").run(archived.groupId);
+    archived.clock.advance(1000);
+    assertCommittedRefusal(archived, archived.who.pendingInvitee, archived.invitationId, 'cancelled', 'group.invitation.cancelled');
+    const w = await world(t);
+    w.db.prepare("UPDATE ConversationInvitations SET state = 'cancelled', resolved_at = ? WHERE invitation_id = ?").run(w.clock.iso(), w.invitationId);
+    const formerInviter = seed(w.db, { id: 'seed-former-inviter', groupId: w.groupId, invitee: w.who.nonMember.id, inviter: w.who.removedMember.id, createdAt: w.clock.iso(), expiresAt: isoPlus(w.clock.iso(), INVITATION_EXPIRY_MS) });
+    const memberInviter = seed(w.db, { id: 'seed-member-inviter', groupId: w.groupId, invitee: w.who.pendingInvitee.id, inviter: w.who.member.id, createdAt: w.clock.iso(), expiresAt: isoPlus(w.clock.iso(), INVITATION_EXPIRY_MS) });
+    w.clock.advance(1000);
+    assertCommittedRefusal(w, w.who.nonMember, formerInviter, 'cancelled', 'group.invitation.cancelled');
+    assertCommittedRefusal(w, w.who.pendingInvitee, memberInviter, 'cancelled', 'group.invitation.cancelled');
+
+    for (const [label, blocker, blocked] of [['the inviter blocks the invitee', 'owner', 'nonMember'], ['the invitee blocks the inviter', 'nonMember', 'owner']]) {
+        const b = await world(t);
+        const sent = invite(b, b.who.owner, { userId: b.who.nonMember.id }).invitation;
+        b.base.blocks.insert(b.who[blocker].id, b.who[blocked].id);
+        b.clock.advance(1000);
+        assertCommittedRefusal(b, b.who.nonMember, sent.id, 'cancelled', 'group.invitation.cancelled');
+        assert.equal(invitationRow(b.db, sent.id).state, 'cancelled', label);
+    }
+});
+
+test('G16: the member maximum comes from the configuration, is checked inside the transaction, and the last free slot goes to one invitee only', async t => {
+    const w = await world(t);
+    const maxima = count => w.service({ groupApi: true, groups: { maxMembers: count } });
+    const second = seed(w.db, { id: 'seed-second-invitee', groupId: w.groupId, invitee: w.who.nonMember.id, inviter: w.who.owner.id, createdAt: w.clock.iso(), expiresAt: isoPlus(w.clock.iso(), INVITATION_EXPIRY_MS) });
+    w.clock.advance(1000);
+    // Three Active_Members and a maximum of three: acceptance would exceed it.
+    assertCommittedRefusal(w, w.who.pendingInvitee, w.invitationId, 'cancelled', 'group.invitation.cancelled', w.groupId, maxima(3));
+    // A maximum of four leaves one slot, and the first acceptance takes it.
+    assert.equal(accept(w, w.who.nonMember, second, maxima(4)).group.memberCount, 4);
+    const third = seed(w.db, { id: 'seed-third-invitee', groupId: w.groupId, invitee: w.who.pendingInvitee.id, inviter: w.who.owner.id, createdAt: w.clock.iso(), expiresAt: isoPlus(w.clock.iso(), INVITATION_EXPIRY_MS) });
+    assertCommittedRefusal(w, w.who.pendingInvitee, third, 'cancelled', 'group.invitation.cancelled', w.groupId, maxima(4));
+    // The number is the configured one and no constant: 50 admits the same acceptance that 3 refused.
+    const roomy = await world(t);
+    roomy.clock.advance(1000);
+    assert.equal(accept(roomy, roomy.who.pendingInvitee, roomy.invitationId, roomy.service({ groupApi: true, groups: { maxMembers: 50 } })).group.memberCount, 4);
+    assert.deepEqual(invariants(w), { activeOwners: 1, activeMembers: 4, openIntervals: 4, mismatches: 0 });
+});
+test('G16: an unset or invalid member maximum answers 503 before any read or change, and never cancels an Invitation', async t => {
+    const w = await world(t);
+    const before = snapshot(w.db);
+    for (const features of [{ groupApi: true }, { groupApi: true, groups: {} }, { groupApi: true, groups: { maxMembers: 0 } }, { groupApi: true, groups: { maxMembers: -1 } },
+        { groupApi: true, groups: { maxMembers: 1.5 } }, { groupApi: true, groups: { maxMembers: '50' } }, { groupApi: true, groups: { maxMembers: null } }, { groupApi: true, groups: { maxMembers: Infinity } }]) {
+        const svc = w.service(features);
+        for (const actor of [w.who.pendingInvitee, w.who.owner, w.who.nonMember]) refusal(thrown(() => accept(w, actor, w.invitationId, svc)), 'FEATURE_UNAVAILABLE', 503);
+        refusal(thrown(() => accept(w, w.who.pendingInvitee, 'no-such-invitation', svc)), 'FEATURE_UNAVAILABLE', 503);
+    }
+    assert.deepEqual(changedTables(before, snapshot(w.db)), []);
+    assert.equal(invitationRow(w.db, w.invitationId).state, 'pending');
+});
+
+test('G16: a user who is not the invitee, an unknown id and a malformed id get the identical 404 and change nothing', async t => {
+    const w = await world(t);
+    const before = snapshot(w.db);
+    const answers = [];
+    for (const actor of [w.who.owner, w.who.admin, w.who.member, w.who.nonMember, w.who.removedMember]) answers.push(refusal(thrown(() => accept(w, actor, w.invitationId)), 'NOT_FOUND', 404));
+    for (const id of ['no-such-invitation', 'a b', 'x'.repeat(2000), '', undefined, null]) answers.push(refusal(thrown(() => accept(w, w.who.pendingInvitee, id)), 'NOT_FOUND', 404));
+    for (const error of answers) assert.equal(signature(error), signature(answers[0]));
+    assert.deepEqual(changedTables(before, snapshot(w.db)), []);
+    assert.equal(invitationRow(w.db, w.invitationId).state, 'pending');
+});
+
+test('G16: an Invitation that is not pending answers 409 with no change, and a second accept never repeats the first', async t => {
+    const w = await world(t);
+    const resolved = ['accepted', 'declined', 'cancelled', 'expired'].map((state, index) => seed(w.db, { id: `seed-acc-${state}`, groupId: w.groupId, invitee: w.who.nonMember.id, inviter: w.who.owner.id,
+        createdAt: isoPlus(w.clock.iso(), -(index + 20) * 1000), expiresAt: isoPlus(w.clock.iso(), INVITATION_EXPIRY_MS), state, resolvedAt: isoPlus(w.clock.iso(), -(index + 10) * 1000) }));
+    const before = snapshot(w.db);
+    const rowsBefore = resolved.map(id => invitationRow(w.db, id));
+    for (const id of resolved) refusal(thrown(() => accept(w, w.who.nonMember, id)), 'CONFLICT', 409);
+    assert.deepEqual(changedTables(before, snapshot(w.db)), []);
+    assert.deepEqual(resolved.map(id => invitationRow(w.db, id)), rowsBefore);
+    accept(w, w.who.pendingInvitee, w.invitationId);
+    const afterFirst = snapshot(w.db);
+    refusal(thrown(() => accept(w, w.who.pendingInvitee, w.invitationId)), 'CONFLICT', 409);
+    assert.deepEqual(changedTables(afterFirst, snapshot(w.db)), [], 'the second accept changes nothing, not even a revision or an audit row');
+    assert.equal(memberState(w.db, w.groupId).intervals.filter(row => row.user_id === w.who.pendingInvitee.id).length, 1, 'no duplicate interval');
+    refusal(thrown(() => decline(w, w.who.pendingInvitee, w.invitationId)), 'CONFLICT', 409);
+    refusal(thrown(() => cancel(w, w.who.owner, w.groupId, w.invitationId)), 'CONFLICT', 409);
+});
+
+test('G16: a failed audit write rolls back the acceptance and also the committed refusal that would have preceded the 409', async t => {
+    const success = await world(t);
+    const before = snapshot(success.db);
+    success.db.exec("CREATE TRIGGER test_refuse_accept_audit BEFORE INSERT ON AuditLogs WHEN NEW.event_type = 'group.invitation.accepted' BEGIN SELECT RAISE(ABORT, 'refused by the test'); END");
+    try {
+        const error = assertAuth(thrown(() => accept(success, success.who.pendingInvitee, success.invitationId)), 'INTERNAL_ERROR', 500);
+        assert.deepEqual(error.fields, []);
+        assert.ok(!JSON.stringify(error).includes('refused by the test') && !error.stack.includes('refused by the test'));
+    } finally { success.db.exec('DROP TRIGGER test_refuse_accept_audit'); }
+    assert.deepEqual(changedTables(before, snapshot(success.db)), [], 'no member row, interval, revision, state or audit row survived');
+    assert.equal(invitationRow(success.db, success.invitationId).state, 'pending');
+    assert.equal(accept(success, success.who.pendingInvitee, success.invitationId).group.role, 'member', 'and the Invitation is still acceptable');
+
+    for (const [event, setup] of [['group.invitation.cancelled', w => w.db.prepare("UPDATE Conversations SET archived_at = '2026-01-01T00:00:00.000Z' WHERE conversation_id = ?").run(w.groupId)],
+        ['group.invitation.expired', w => w.clock.advance(INVITATION_EXPIRY_MS)]]) {
+        const w = await world(t);
+        setup(w);
+        const snap = snapshot(w.db);
+        w.db.exec(`CREATE TRIGGER test_refuse_refusal_audit BEFORE INSERT ON AuditLogs WHEN NEW.event_type = '${event}' BEGIN SELECT RAISE(ABORT, 'refused by the test'); END`);
+        try {
+            assertAuth(thrown(() => accept(w, w.who.pendingInvitee, w.invitationId)), 'INTERNAL_ERROR', 500);
+        } finally { w.db.exec('DROP TRIGGER test_refuse_refusal_audit'); }
+        assert.deepEqual(changedTables(snap, snapshot(w.db)), [], `${event}: the state change rolled back with the audit failure`);
+        assert.equal(invitationRow(w.db, w.invitationId).state, 'pending');
+    }
+});
+
+test('G16: a session and a CSRF proof of the same session are required, and the invitee is the session user', async t => {
+    const w = await world(t);
+    const before = snapshot(w.db);
+    assertAuth(thrown(() => w.svc.acceptInvitation(w.who.pendingInvitee.context, undefined, w.invitationId)), 'CSRF_INVALID', 403);
+    assertAuth(thrown(() => w.svc.acceptInvitation(w.who.pendingInvitee.context, w.who.owner.proof, w.invitationId)), 'CSRF_INVALID', 403);
+    assertAuth(thrown(() => accept(w, { context: { userId: w.who.pendingInvitee.id, sessionId: w.who.owner.context.sessionId }, proof: w.who.pendingInvitee.proof }, w.invitationId)), 'UNAUTHENTICATED', 401);
+    assertAuth(thrown(() => accept(w, { context: undefined, proof: w.who.pendingInvitee.proof }, w.invitationId)), 'UNAUTHENTICATED', 401);
+    assertAuth(thrown(() => accept(w, { context: { userId: w.who.owner.id, sessionId: w.who.owner.context.sessionId }, proof: w.who.owner.proof }, w.invitationId)), 'NOT_FOUND', 404);
+    assert.deepEqual(changedTables(before, snapshot(w.db)), []);
+});
+
+test('G16: the re-validation uses the policy function and its order, and the audit trail records one event per accepted or refused request', async t => {
+    const w = await world(t);
+    w.clock.advance(1000);
+    accept(w, w.who.pendingInvitee, w.invitationId);
+    assert.deepEqual(eventsOf(w.db, w.groupId), ['group.invitation.accepted']);
+    const sent = invite(w, w.who.owner, { userId: w.who.nonMember.id }).invitation;
+    w.db.prepare("UPDATE Conversations SET archived_at = '2026-01-01T00:00:00.000Z' WHERE conversation_id = ?").run(w.groupId);
+    refusal(thrown(() => accept(w, w.who.nonMember, sent.id)), 'CONFLICT', 409);
+    assert.deepEqual(eventsOf(w.db, w.groupId), ['group.invitation.accepted', 'group.invitation.created', 'group.invitation.cancelled']);
+    assert.ok(!JSON.stringify(inviteAudit(w.db, w.groupId).map(row => row.metadata_json)).match(/Group Owner|Fixture group|grp-/));
+});
+
+// ---------------------------------------------------------------------------------------------------------------
+// T-5C-13 over HTTP: the real application with the Group_API switched on, real sessions and real CSRF proofs.
+// ---------------------------------------------------------------------------------------------------------------
+test('G16: populated histories open at high-water plus one for both policies, including an empty interval and rejoin', async t => {
+    const w = await world(t);
+    const repository = createGroupRepository(w.db);
+    const periods = groupId => memberState(w.db, groupId).intervals.filter(row => row.user_id === w.who.nonMember.id);
+    function message(groupId) {
+        const seq = w.base.messages.highWater(groupId) + 1;
+        w.base.messages.insertAuthenticated({ message_id: `g16-${groupId}-${seq}`, conversation_id: groupId, sender_id: w.who.owner.id,
+            receiver_id: null, ciphertext: 'synthetic ciphertext', iv: 'synthetic-iv', envelope_version: 1, encoding: 'base64',
+            sender_name: 'Synthetic sender', client_timestamp: w.clock.iso(), message_type: 'text', fingerprint: 'a'.repeat(64),
+            client_id: `g16-client-${seq}`, message_seq: seq, created_at: w.clock.iso() });
+    }
+    for (const historyPolicy of ['all', 'from_joined']) {
+        const groupId = w.f.builder.createGroup({ ownerId: w.who.owner.id, historyPolicy, idempotencyKey: null });
+        w.db.transaction(() => { message(groupId); message(groupId); }).immediate();
+        const first = invite(w, w.who.owner, { userId: w.who.nonMember.id }, groupId).invitation;
+        const before = snapshot(w.db);
+        assert.equal(accept(w, w.who.nonMember, first.id).group.historyPolicy, historyPolicy);
+        assert.deepEqual(changedTables(before, snapshot(w.db)).sort(), MEMBERSHIP_TABLES, 'acceptance changes no messages or read positions');
+        assert.deepEqual(periods(groupId).map(row => [row.first_seq, row.last_seq]), [[3, null]]);
+        const joinedAt = repository.getMember(groupId, w.who.nonMember.id).joined_at;
+        w.clock.advance(1000);
+        withMembershipTransaction(w.db, () => {
+            repository.endMembership(groupId, w.who.nonMember.id, w.clock.iso());
+            repository.closeInterval(groupId, w.who.nonMember.id, w.clock.iso());
+            repository.bumpRevision(groupId);
+        });
+        const closed = periods(groupId)[0];
+        assert.deepEqual([closed.first_seq, closed.last_seq], [3, 2], 'no messages during membership: a valid empty interval');
+        w.db.transaction(() => message(groupId)).immediate();
+        w.clock.advance(1000);
+        const again = invite(w, w.who.owner, { userId: w.who.nonMember.id }, groupId).invitation;
+        const revision = repository.getVisibleGroup(groupId).membership_revision;
+        assert.equal(accept(w, w.who.nonMember, again.id).group.membershipRevision, revision + 1);
+        assert.equal(repository.getMember(groupId, w.who.nonMember.id).joined_at, joinedAt);
+        const intervals = periods(groupId);
+        assert.deepEqual(intervals[0], closed, 'the historical interval stays intact');
+        assert.deepEqual(intervals.map(row => [row.interval_no, row.first_seq, row.last_seq]), [[1, 3, 2], [2, 4, null]]);
+        assert.deepEqual(repository.invariantReport(groupId), { activeOwners: 1, activeMembers: 2, openIntervals: 2, mismatches: 0 });
+    }
+});
+
+test('G16: inviter role and active membership are re-read after invitation creation', async t => {
+    for (const revoke of ['demote', 'leave']) {
+        const w = await world(t);
+        const repository = createGroupRepository(w.db);
+        const inviter = repository.getMember(w.groupId, w.who.admin.id);
+        w.clock.advance(Math.max(1000, Date.parse(inviter.joined_at) - w.clock.now() + 1000));
+        const sent = invite(w, w.who.admin, { userId: w.who.nonMember.id }).invitation;
+        w.clock.advance(1000);
+        const at = w.clock.iso();
+        withMembershipTransaction(w.db, () => {
+            if (revoke === 'demote') repository.changeRole(w.groupId, w.who.admin.id, 'admin', 'member');
+            else {
+                repository.endMembership(w.groupId, w.who.admin.id, at);
+                repository.closeInterval(w.groupId, w.who.admin.id, at);
+            }
+            repository.bumpRevision(w.groupId);
+        });
+        assert.equal(invitationRow(w.db, sent.id).state, 'pending');
+        assertCommittedRefusal(w, w.who.nonMember, sent.id, 'cancelled', 'group.invitation.cancelled');
+    }
+});
+
+const HTTP_FEATURES = Object.freeze({ groupApi: true, groups: Object.freeze({ maxMembers: 50, maxPendingInvitationsPerGroup: 50, maxPendingInvitationsPerInvitee: 50 }) });
+const acceptUrl = id => `/api/groups/invitations/${id}/accept`;
+const accepting = (actor, id, options = {}) => actorRequest(actor, 'POST', acceptUrl(id), options);
+const httpWorld = (t, features = HTTP_FEATURES) => httpGroupFixture(t, { clock: createClock(), features });
+const error409 = { code: 'CONFLICT', fields: [] };
+const error404 = { code: 'NOT_FOUND', fields: [] };
+
+test('G16 HTTP: the invitee accepts and gets 200 {group}; the body and any identity claim in it change nothing', async t => {
+    const f = await httpWorld(t);
+    const before = memberState(f.db, f.groupId);
+    const response = await accepting(f.actors.pendingInvitee, f.invitationId, { body: { userId: f.actors.owner.id, role: 'owner', groupId: 'other', inviterId: f.actors.owner.id } });
+    assert.equal(response.status, 200);
+    assertSecurityHeaders(response, 'G16');
+    assert.deepEqual(Object.keys(response.body), ['group']);
+    assert.deepEqual(Object.keys(response.body.group).sort(), ACCEPT_GROUP_KEYS);
+    assert.deepEqual([response.body.group.id, response.body.group.role, response.body.group.memberCount, response.body.group.membershipRevision], [f.groupId, 'member', 4, before.revision + 1]);
+    const state = memberState(f.db, f.groupId);
+    assert.deepEqual(state.members.filter(row => row.role === 'owner').map(row => row.user_id), [f.actors.owner.id], 'the body role was ignored');
+    assert.equal(state.members.find(row => row.user_id === f.actors.pendingInvitee.id).role, 'member');
+    assert.equal(invitationRow(f.db, f.invitationId).state, 'accepted');
+    assert.equal((await actorRequest(f.actors.pendingInvitee, 'GET', `/api/groups/${f.groupId}`)).body.group.role, 'member', 'the new member reads the group');
+    assert.equal((await accepting(f.actors.pendingInvitee, f.invitationId)).status, 409, 'a second accept');
+    assert.equal(rows(f.db, "SELECT * FROM AuditLogs WHERE event_type = 'group.invitation.accepted' AND subject_id = ?", f.groupId).length, 1);
+});
+
+test('G16 HTTP: a refused re-validation is committed first and answers 409 afterwards, with the state and audit row visible on another connection', async t => {
+    const f = await httpWorld(t);
+    createRepositories(f.db).blocks.insert(f.actors.owner.id, f.actors.pendingInvitee.id);
+    const before = memberState(f.db, f.groupId);
+    const response = await accepting(f.actors.pendingInvitee, f.invitationId);
+    assert.deepEqual([response.status, response.body], [409, error409]);
+    assertSecurityHeaders(response, 'G16 409');
+    // Read through a second connection to the same file: the refusal was committed, not held in the first transaction.
+    const Database = require('better-sqlite3');
+    const other = new Database(f.filename, { readonly: true });
+    f.connections.push(other); // The fixture closes all connections before unlinking its database (also on Windows).
+    assert.equal(other.prepare('SELECT state FROM ConversationInvitations WHERE invitation_id = ?').get(f.invitationId).state, 'cancelled');
+    assert.equal(other.prepare("SELECT count(*) AS n FROM AuditLogs WHERE event_type = 'group.invitation.cancelled' AND subject_id = ? AND actor_user_id = ?").get(f.groupId, f.actors.pendingInvitee.id).n, 1);
+    assert.deepEqual(memberState(f.db, f.groupId), before, 'no membership, role, revision or interval changed');
+    assert.equal((await accepting(f.actors.pendingInvitee, f.invitationId)).status, 409);
+    assert.equal(other.prepare("SELECT count(*) AS n FROM AuditLogs WHERE event_type LIKE 'group.invitation.%' AND subject_id = ?").get(f.groupId).n, 1, 'the second request wrote nothing');
+});
+
+test('G16 HTTP: unauthenticated, CSRF-less, foreign-CSRF and non-invitee requests are refused without a change, and a switched-off group API answers 503', async t => {
+    const f = await httpWorld(t);
+    const before = snapshot(f.db);
+    assert.equal((await accepting(f.actors.unauthenticated, f.invitationId)).status, 401);
+    const noProof = await accepting(f.actors.pendingInvitee, f.invitationId, { csrf: false });
+    assert.deepEqual([noProof.status, noProof.body], [403, { code: 'CSRF_INVALID', fields: [] }]);
+    const foreign = await accepting(f.actors.pendingInvitee, f.invitationId, { csrf: false, headers: { 'X-CSRF-Token': f.actors.owner.token } });
+    assert.deepEqual([foreign.status, foreign.body.code], [403, 'CSRF_INVALID']);
+    const answers = [];
+    for (const name of ['owner', 'admin', 'member', 'nonMember', 'removedMember']) answers.push(await accepting(f.actors[name], f.invitationId));
+    for (const id of ['no-such-invitation', 'a%20b', 'x'.repeat(2000)]) answers.push(await accepting(f.actors.pendingInvitee, id));
+    for (const response of answers) assert.deepEqual([response.status, response.text], [404, JSON.stringify(error404)]);
+    assert.deepEqual(changedTables(before, snapshot(f.db)), []);
+    assert.equal(invitationRow(f.db, f.invitationId).state, 'pending');
+    const off = await httpGroupFixture(t, { clock: createClock() });
+    const gated = await accepting(off.actors.pendingInvitee, off.invitationId);
+    assert.deepEqual([gated.status, gated.body], [503, { code: 'FEATURE_UNAVAILABLE', fields: [] }]);
+    assert.equal(invitationRow(off.db, off.invitationId).state, 'pending');
+});
+
+test('G16 HTTP: a failed audit write answers a bare 500 and leaves the Invitation pending and the membership untouched', async t => {
+    const f = await httpWorld(t);
+    const before = snapshot(f.db);
+    f.db.exec("CREATE TRIGGER test_refuse_http_accept_audit BEFORE INSERT ON AuditLogs WHEN NEW.event_type = 'group.invitation.accepted' BEGIN SELECT RAISE(ABORT, 'refused by the test'); END");
+    try {
+        const response = await accepting(f.actors.pendingInvitee, f.invitationId);
+        assert.deepEqual([response.status, response.body], [500, { code: 'INTERNAL_ERROR', fields: [] }]);
+        assert.ok(!response.text.includes('refused by the test'));
+    } finally { f.db.exec('DROP TRIGGER test_refuse_http_accept_audit'); }
+    assert.deepEqual(changedTables(before, snapshot(f.db)), []);
+    assert.equal((await accepting(f.actors.pendingInvitee, f.invitationId)).status, 200, 'the Invitation is still acceptable');
+});
+
+test('G16 HTTP: two simultaneous accepts of one Invitation give one 200 and one 409 and one membership', async t => {
+    const f = await httpWorld(t);
+    const results = await Promise.all([accepting(f.actors.pendingInvitee, f.invitationId), accepting(f.actors.pendingInvitee, f.invitationId), accepting(f.actors.pendingInvitee, f.invitationId)]);
+    assert.deepEqual(results.map(response => response.status).sort(), [200, 409, 409]);
+    const state = memberState(f.db, f.groupId);
+    assert.equal(state.members.filter(row => row.user_id === f.actors.pendingInvitee.id).length, 1);
+    assert.equal(state.intervals.filter(row => row.user_id === f.actors.pendingInvitee.id).length, 1);
+    assert.equal(rows(f.db, "SELECT * FROM AuditLogs WHERE event_type = 'group.invitation.accepted' AND subject_id = ?", f.groupId).length, 1);
+});
+
+// ---------------------------------------------------------------------------------------------------------------
+// T-5C-13 across processes: two server.js processes on one database file, started from the environment configuration
+// (GROUPS_API_ENABLED and the GROUP_MAX_* settings), so each request runs in its own process and SQLite connection and the
+// two transactions contend for the one write lock. The fixture clock is the wall clock at the start and is never advanced,
+// because the child processes read the real time for sessions and Invitations.
+// ---------------------------------------------------------------------------------------------------------------
+const REPEATS = 20; // DB5-R15.5: twenty repeats per concurrent operation pair.
+async function childServer(f, maxMembers) {
+    const child = spawn(process.execPath, ['server.js'], { cwd: path.join(__dirname, '..'), stdio: ['ignore', 'pipe', 'pipe'],
+        env: { ...process.env, ...envDefaults, DB_PATH: f.filename, GROUPS_API_ENABLED: 'true', GROUP_MESSAGING_ENABLED: 'false', ATTACHMENTS_API_ENABLED: 'false',
+            GROUP_MAX_MEMBERS: String(maxMembers), GROUP_MAX_PENDING_INVITATIONS_PER_GROUP: '50', GROUP_MAX_PENDING_INVITATIONS_PER_INVITEE: '50' } });
+    f.children.push(child);
+    const port = await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => { child.kill(); reject(new Error('the child server did not start')); }, 20000);
+        let output = '';
+        child.stdout.on('data', chunk => { output += chunk; const match = /listening on port (\d+)/.exec(output); if (match) { clearTimeout(timeout); resolve(Number(match[1])); } });
+        child.stderr.on('data', () => {});
+        child.once('exit', code => { clearTimeout(timeout); reject(new Error(`the child server exited with ${code}`)); });
+    });
+    return port;
+}
+// The same session on another server: the cookies and the CSRF token of the fixture actor, sent to that port.
+function through(port, actor) {
+    const browser = new Browser(`http://127.0.0.1:${port}`);
+    browser.cookies = new Map(actor.browser.cookies);
+    return Object.freeze({ browser, token: actor.token });
+}
+async function twoServers(t, maxMembers) {
+    const f = await httpGroupFixture(t, { clock: createClock(new Date().toISOString()) });
+    const ports = [await childServer(f, maxMembers), await childServer(f, maxMembers)];
+    const as = (index, name) => through(ports[index], f.actors[name]);
+    for (const index of [0, 1]) assert.equal((await actorRequest(as(index, 'owner'), 'GET', '/api/groups/feature-status')).status, 200, 'the child is up and the session works');
+    return { f, as, repository: createGroupRepository(f.db) };
+}
+const sorted = values => [...values].sort((a, b) => a - b);
+
+test('G16 across processes: two simultaneous accepts of one Invitation commit exactly one acceptance', async t => {
+    const { f, as, repository } = await twoServers(t, 50);
+    for (let repeat = 0; repeat < REPEATS; repeat++) {
+        const group = f.builder.createGroup({ ownerId: f.actors.owner.id, title: `Accept race ${repeat}`, idempotencyKey: null });
+        const invitation = f.builder.invite(group, f.actors.owner.id, f.actors.pendingInvitee.id);
+        const before = memberState(f.db, group);
+        const results = await Promise.all([accepting(as(0, 'pendingInvitee'), invitation), accepting(as(1, 'pendingInvitee'), invitation)]);
+        assert.deepEqual(sorted(results.map(response => response.status)), [200, 409], `repeat ${repeat}: ${results.map(response => response.status)}`);
+        assert.deepEqual(results.find(response => response.status === 409).body, error409);
+        assert.equal(invitationRow(f.db, invitation).state, 'accepted');
+        const state = memberState(f.db, group);
+        assert.equal(state.revision, before.revision + 1, 'the revision rose exactly once');
+        assert.equal(state.members.filter(row => row.user_id === f.actors.pendingInvitee.id && row.left_at === null).length, 1);
+        assert.equal(state.intervals.filter(row => row.user_id === f.actors.pendingInvitee.id).length, 1, 'one interval');
+        assert.deepEqual(eventsOf(f.db, group), ['group.invitation.accepted']);
+        assert.deepEqual(repository.invariantReport(group), { activeOwners: 1, activeMembers: 2, openIntervals: 2, mismatches: 0 });
+    }
+});
+
+test('G16 across processes: an accept and a cancel of the same Invitation end in one of the two legal serial outcomes', async t => {
+    const { f, as, repository } = await twoServers(t, 50);
+    const outcomes = new Set();
+    for (let repeat = 0; repeat < REPEATS; repeat++) {
+        const group = f.builder.createGroup({ ownerId: f.actors.owner.id, title: `Accept or cancel ${repeat}`, idempotencyKey: null });
+        const invitation = f.builder.invite(group, f.actors.owner.id, f.actors.pendingInvitee.id);
+        const before = memberState(f.db, group);
+        const [accepted, cancelled] = await Promise.all([accepting(as(0, 'pendingInvitee'), invitation),
+            actorRequest(as(1, 'owner'), 'DELETE', `/api/groups/${group}/invitations/${invitation}`)]);
+        const state = memberState(f.db, group);
+        const joined = state.members.some(row => row.user_id === f.actors.pendingInvitee.id && row.left_at === null);
+        if (accepted.status === 200) {
+            assert.equal(cancelled.status, 409, `repeat ${repeat}: accept first`);
+            assert.deepEqual([invitationRow(f.db, invitation).state, joined, state.revision], ['accepted', true, before.revision + 1]);
+            assert.deepEqual(eventsOf(f.db, group), ['group.invitation.accepted']);
+            outcomes.add('accept first');
+        } else {
+            assert.deepEqual([accepted.status, cancelled.status], [409, 204], `repeat ${repeat}: cancel first`);
+            assert.deepEqual([invitationRow(f.db, invitation).state, joined, state.revision], ['cancelled', false, before.revision]);
+            assert.deepEqual(eventsOf(f.db, group), ['group.invitation.cancelled']);
+            outcomes.add('cancel first');
+        }
+        assert.deepEqual(repository.invariantReport(group), { activeOwners: 1, activeMembers: joined ? 2 : 1, openIntervals: joined ? 2 : 1, mismatches: 0 });
+    }
+    assert.ok(outcomes.size >= 1);
+});
+
+test('G16 across processes: two invitees racing for the last free slot commit one acceptance, and the other Invitation is cancelled', async t => {
+    const { f, as, repository } = await twoServers(t, 2);
+    for (let repeat = 0; repeat < REPEATS; repeat++) {
+        const group = f.builder.createGroup({ ownerId: f.actors.owner.id, title: `Last slot ${repeat}`, idempotencyKey: null });
+        const first = f.builder.invite(group, f.actors.owner.id, f.actors.pendingInvitee.id);
+        const second = f.builder.invite(group, f.actors.owner.id, f.actors.nonMember.id);
+        const before = memberState(f.db, group);
+        const results = await Promise.all([accepting(as(0, 'pendingInvitee'), first), accepting(as(1, 'nonMember'), second)]);
+        assert.deepEqual(sorted(results.map(response => response.status)), [200, 409], `repeat ${repeat}: ${results.map(response => response.status)}`);
+        const states = [invitationRow(f.db, first).state, invitationRow(f.db, second).state].sort();
+        assert.deepEqual(states, ['accepted', 'cancelled']);
+        const state = memberState(f.db, group);
+        assert.equal(state.members.filter(row => row.left_at === null).length, 2, 'the maximum of 2 was not exceeded');
+        assert.equal(state.revision, before.revision + 1);
+        assert.deepEqual(eventsOf(f.db, group).sort(), ['group.invitation.accepted', 'group.invitation.cancelled']);
+        assert.deepEqual(repository.invariantReport(group), { activeOwners: 1, activeMembers: 2, openIntervals: 2, mismatches: 0 });
+    }
+});

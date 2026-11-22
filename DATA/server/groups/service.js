@@ -24,7 +24,7 @@ const { createGroupRepository, withMembershipTransaction, normaliseError, Reposi
 const { createSqliteRateLimiter } = require('../auth/rateLimiter');
 const { AuthError } = require('../auth/errors');
 const { DISABLED_FEATURES } = require('../features/config');
-const { ROLES } = require('./policy');
+const { ROLES, invitationRevalidation } = require('./policy');
 const { pathId, createBody, patchBody, listQuery, membersQuery, invitationBody } = require('./validation');
 const codec = require('./cursor');
 
@@ -619,6 +619,57 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
                 service.audit(actor, 'group.invitation.declined', invitation.conversation_id);
                 return { id: invitation.invitation_id, state: 'declined' };
             });
+        },
+
+        // G16 POST /api/groups/invitations/:invitationId/accept (T-5C-13; DB5-R04.8 to R04.11, R04.15, R04.16, R04.22, R03.12 to
+        // R03.14). One immediate transaction, decided from rows read inside it. 404 for an unknown id and for any user but the
+        // invitee (one answer); 409 with no change when the Invitation is no longer pending. The checks of policy.js
+        // invitationRevalidation then run in their fixed order. A failed check is a committed refusal (DC-09): the Invitation
+        // becomes expired (the expiry time has passed) or cancelled (every other check, an invitee who is already an Active_Member
+        // included, whose member row is left alone), one audit row is written, the transaction commits, and only then the 409 is
+        // thrown. Membership, role, revision and intervals stay as they were. On success the Invitation becomes accepted, the invitee
+        // is added (or the former member row reactivated with the role member), a new interval opens, the revision goes up by 1 and
+        // one audit row is written; the answer is {group}. An audit failure rolls everything back (500). The member maximum comes
+        // from the configuration (features.groups.maxMembers); when it is not a positive whole number nothing is read or changed
+        // and the answer is 503 FEATURE_UNAVAILABLE, so a configuration fault never cancels an Invitation.
+        acceptInvitation(context, proof, invitationId) {
+            const maxMembers = settings.groups.maxMembers;
+            if (!positiveInteger(maxMembers)) throw new AuthError('FEATURE_UNAVAILABLE', 503, []);
+            const result = service.groupWrite(context, proof, (actor, at) => {
+                const key = pathId(invitationId);
+                const invitation = key === null ? null : groups.getInvitation(key);
+                if (!invitation || invitation.invitee_id !== actor) notFound();
+                const groupId = invitation.conversation_id;
+                const group = groups.getVisibleGroup(groupId);
+                const inviter = groups.getMember(groupId, invitation.inviter_id);
+                const mine = groups.getMember(groupId, actor);
+                const verdict = invitationRevalidation({
+                    now: at,
+                    invitation: { state: invitation.state, createdAt: invitation.created_at, expiresAt: invitation.expires_at },
+                    group: group ? { archived: group.archived_at !== null && group.archived_at !== undefined } : null,
+                    inviter: inviter && inviter.left_at === null ? { role: inviter.role } : null,
+                    invitee: { active: Boolean(mine && mine.left_at === null), leftAt: mine ? mine.left_at : null },
+                    blocked: social.isBlocked(invitation.inviter_id, actor),
+                    activeMembers: groups.countActiveMembers(groupId),
+                    maxMembers
+                });
+                if (verdict.outcome === 'unchanged') throw new AuthError('CONFLICT', 409, []);
+                if (!verdict.ok) {
+                    groups.resolveInvitation(invitation.invitation_id, verdict.outcome, at);
+                    service.audit(actor, verdict.outcome === 'expired' ? 'group.invitation.expired' : 'group.invitation.cancelled', groupId);
+                    return { refused: true };
+                }
+                groups.resolveInvitation(invitation.invitation_id, 'accepted', at);
+                if (mine) groups.reactivateMember(groupId, actor, at); else groups.addMember(groupId, actor, at);
+                groups.openIntervalAt(groupId, actor, at);
+                groups.bumpRevision(groupId);
+                service.audit(actor, 'group.invitation.accepted', groupId, { role: 'member' });
+                // visibleGroup also registers the group for the commit-time invariant check.
+                const seen = service.visibleGroup(actor, groupId);
+                return { group: projectGroup(seen.group, seen.member.role, groups.countActiveMembers(groupId)) };
+            });
+            if (result.refused) throw new AuthError('CONFLICT', 409, []);
+            return result;
         }
     });
     return service;

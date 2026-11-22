@@ -43,6 +43,7 @@ const route = (id, method, path, gated) => Object.freeze({ id, method, path, gat
 const GROUP_ROUTES = Object.freeze([
     route('G26', 'GET', '/feature-status', false),
     route('G15', 'GET', '/invitations', true),
+    route('G16', 'POST', '/invitations/:invitationId/accept', true),
     route('G17', 'POST', '/invitations/:invitationId/decline', true),
     route('G01', 'POST', '/', true),
     route('G02', 'GET', '/', true),
@@ -120,7 +121,7 @@ function requireFunction(value, label) {
 function createGroupRouter({ groups, features } = {}, middleware) {
     if (!groups || typeof groups !== 'object') throw new TypeError('createGroupRouter needs the Group_Service.');
     for (const name of ['rate', 'createGroup', 'listGroups', 'getGroup', 'updateGroup', 'listMembers',
-        'createInvitation', 'listInvitations', 'cancelInvitation', 'listOwnInvitations', 'declineInvitation']) requireFunction(groups[name], `groups.${name}`);
+        'createInvitation', 'listInvitations', 'cancelInvitation', 'listOwnInvitations', 'declineInvitation', 'acceptInvitation']) requireFunction(groups[name], `groups.${name}`);
     if (!middleware || typeof middleware !== 'object') throw new TypeError('createGroupRouter needs the authentication middleware.');
     requireFunction(middleware.requireAuth, 'requireAuth');
     requireFunction(middleware.requireCsrf, 'requireCsrf');
@@ -146,6 +147,7 @@ function createGroupRouter({ groups, features } = {}, middleware) {
             response.status(204).end();
         },
         G15: (request, response) => response.json(groups.listOwnInvitations(request.auth, request.query)),
+        G16: (request, response) => response.json(groups.acceptInvitation(request.auth, request.csrfProof, request.params.invitationId)),
         G17: (request, response) => {
             groups.declineInvitation(request.auth, request.csrfProof, request.params.invitationId);
             response.status(204).end();
