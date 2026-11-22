@@ -24,8 +24,8 @@ const { createGroupRepository, withMembershipTransaction, normaliseError, Reposi
 const { createSqliteRateLimiter } = require('../auth/rateLimiter');
 const { AuthError } = require('../auth/errors');
 const { DISABLED_FEATURES } = require('../features/config');
-const { ROLES, invitationRevalidation } = require('./policy');
-const { pathId, createBody, patchBody, listQuery, membersQuery, invitationBody } = require('./validation');
+const { ROLES, invitationRevalidation, removalDecision } = require('./policy');
+const { pathId, createBody, patchBody, listQuery, membersQuery, invitationBody, memberBody } = require('./validation');
 const codec = require('./cursor');
 
 // ASM-03: operational defaults copied from the existing services, not product policy. The per-source numbers are
@@ -509,6 +509,67 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
                     ? codec.encode({ last: [page.former ? last.left_at : last.joined_at, last.user_id] }, { route, userId: actor, conversationId: groupId })
                     : null;
                 return { items, nextCursor };
+            });
+        },
+
+        // G06 is disabled by the approved OD-01 decision in every real configuration. The directAdd
+        // switch is accepted only through injected service features for focused tests.
+        addMember(context, proof, id, body) {
+            if (settings.groups.directAdd !== true) throw new AuthError('FEATURE_UNAVAILABLE', 503, []);
+            const maximum = settings.groups.maxMembers;
+            if (!positiveInteger(maximum)) throw new AuthError('FEATURE_UNAVAILABLE', 503, []);
+            return service.groupWrite(context, proof, (actor, at) => {
+                const seen = service.visibleGroup(actor, id);
+                service.requireRole(seen.member, ['owner', 'admin']);
+                const { userId: target } = memberBody(body);
+                if (!social.active(target)) notFound();
+                if (social.isBlocked(actor, target)) notFound();
+                const old = groups.getMember(seen.group.conversation_id, target);
+                if (old && old.left_at === null) throw new AuthError('CONFLICT', 409, []);
+                if (groups.countActiveMembers(seen.group.conversation_id) >= maximum) throw new AuthError('CONFLICT', 409, []);
+                if (old) groups.reactivateMember(seen.group.conversation_id, target, at);
+                else groups.addMember(seen.group.conversation_id, target, at);
+                groups.openIntervalAt(seen.group.conversation_id, target, at);
+                groups.bumpRevision(seen.group.conversation_id);
+                service.audit(actor, 'group.member.added', seen.group.conversation_id, { targetId: target, role: 'member' });
+                const member = groups.getMember(seen.group.conversation_id, target);
+                const profile = groups.repositories.profiles.get(target);
+                const user = groups.repositories.users.get(target);
+                if (!member || !user) throw internalError();
+                return { member: { id: target, username: user.username, displayName: profile?.display_name ?? user.display_name ?? null,
+                    avatar: profile?.avatar ?? null, role: member.role, joinedAt: member.joined_at } };
+            });
+        },
+
+        // G07 removes another active member; G09 lets a non-owner leave. All four writes
+        // and the audit row share groupWrite's immediate transaction and commit guard.
+        removeMember(context, proof, id, targetId) {
+            return service.groupWrite(context, proof, (actor, at) => {
+                const seen = service.visibleGroup(actor, id);
+                const target = pathId(targetId);
+                if (target === null) notFound();
+                const targetMember = groups.getMember(seen.group.conversation_id, target);
+                if (!targetMember || targetMember.left_at !== null) notFound();
+                const decision = removalDecision(seen.member.role, targetMember.role);
+                if (decision === 'forbidden') forbidden();
+                if (decision === 'conflict') throw new AuthError('CONFLICT', 409, []);
+                groups.endMembership(seen.group.conversation_id, target, at);
+                groups.closeInterval(seen.group.conversation_id, target, at);
+                groups.cancelPendingFor(seen.group.conversation_id, target, at);
+                groups.bumpRevision(seen.group.conversation_id);
+                service.audit(actor, 'group.member.removed', seen.group.conversation_id, { targetId: target });
+            });
+        },
+
+        leaveGroup(context, proof, id) {
+            return service.groupWrite(context, proof, (actor, at) => {
+                const seen = service.visibleGroup(actor, id);
+                if (seen.member.role === 'owner') throw new AuthError('CONFLICT', 409, []);
+                groups.endMembership(seen.group.conversation_id, actor, at);
+                groups.closeInterval(seen.group.conversation_id, actor, at);
+                groups.cancelPendingFor(seen.group.conversation_id, actor, at);
+                groups.bumpRevision(seen.group.conversation_id);
+                service.audit(actor, 'group.member.left', seen.group.conversation_id);
             });
         },
 

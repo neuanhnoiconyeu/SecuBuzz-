@@ -72,10 +72,10 @@ test('Group_Service infrastructure (T-5C-03)', async t => {
         assert.ok(createGroupService({ db: f.db, auth, now: f.clock.now }), 'the limiter defaults to the SQLite limiter');
     });
 
-    await t.test('the service offers the Task 2.3 infrastructure and exactly the operations of the tasks done so far (2.7 to 2.12)', () => {
+    await t.test('the service offers the Task 2.3 infrastructure and exactly the operations implemented so far', () => {
         assert.deepEqual(Object.keys(svc).sort(),
-            ['acceptInvitation', 'assertGroupInvariants', 'audit', 'cancelInvitation', 'createGroup', 'createInvitation', 'declineInvitation', 'features', 'getGroup', 'groupRead',
-                'groupWrite', 'listGroups', 'listInvitations', 'listMembers', 'listOwnInvitations', 'rate', 'rates', 'requireRole', 'updateGroup', 'visibleGroup']);
+            ['acceptInvitation', 'addMember', 'assertGroupInvariants', 'audit', 'cancelInvitation', 'createGroup', 'createInvitation', 'declineInvitation', 'features', 'getGroup', 'groupRead',
+                'groupWrite', 'leaveGroup', 'listGroups', 'listInvitations', 'listMembers', 'listOwnInvitations', 'rate', 'rates', 'removeMember', 'requireRole', 'updateGroup', 'visibleGroup']);
         assert.ok(Object.isFrozen(svc));
         assert.deepEqual(Object.keys(service).sort(), ['AUDIT_EVENTS', 'DEFAULT_RATE_LIMITS', 'createGroupService', 'notFound', 'toAuthError']);
         assert.deepEqual(svc.features, DISABLED_FEATURES);

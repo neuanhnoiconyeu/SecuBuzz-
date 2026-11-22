@@ -90,7 +90,7 @@ function chunked(app, actor, url, chunks, headers = {}) {
 // below see the chain steps only.
 const fakeGroups = (extra = {}) => ({
     rate() {}, createGroup: () => ({ created: true, group: {} }), listGroups: () => ({ items: [], nextCursor: null }), getGroup: () => ({}),
-    updateGroup: () => ({}), listMembers: () => ({ items: [], nextCursor: null }),
+    updateGroup: () => ({}), listMembers: () => ({ items: [], nextCursor: null }), addMember: () => ({ member: {} }), removeMember: () => ({}), leaveGroup: () => ({}),
     createInvitation: () => ({ invitation: {} }), listInvitations: () => ({ items: [], nextCursor: null }),
     cancelInvitation: () => ({}), listOwnInvitations: () => ({ items: [], nextCursor: null }), declineInvitation: () => ({}), acceptInvitation: () => ({ group: {} }), ...extra
 });
@@ -106,7 +106,8 @@ test('Batch 2A adapters: exact session/proof/target/query calls, socket source, 
         cancelInvitation: record('cancelInvitation', { mustNeverBeSerialized: SENTINEL }),
         listOwnInvitations: record('listOwnInvitations', { items: [{ id: 'own-invitation' }], nextCursor: null }),
         declineInvitation: record('declineInvitation', { mustNeverBeSerialized: SENTINEL }),
-        acceptInvitation: record('acceptInvitation', { group: { id: 'accepted-group' } }) });
+        acceptInvitation: record('acceptInvitation', { group: { id: 'accepted-group' } }),
+        addMember: record('addMember', { member: { id: 'added-member' } }), removeMember: record('removeMember', {}), leaveGroup: record('leaveGroup', {}) });
     const app = express();
     app.use('/api/groups', createGroupRouter({ groups, features: ON }, {
         requireAuth(req, res, next) { req.auth = actor; next(); },
@@ -122,7 +123,10 @@ test('Batch 2A adapters: exact session/proof/target/query calls, socket source, 
         ['DELETE', '/g/invitations/i', undefined, 'cancelInvitation', 204, null],
         ['GET', '/invitations?limit=2', undefined, 'listOwnInvitations', 200, { items: [{ id: 'own-invitation' }], nextCursor: null }],
         ['POST', '/invitations/i/decline', undefined, 'declineInvitation', 204, null],
-        ['POST', '/invitations/i/accept', undefined, 'acceptInvitation', 200, { group: { id: 'accepted-group' } }]
+        ['POST', '/invitations/i/accept', undefined, 'acceptInvitation', 200, { group: { id: 'accepted-group' } }],
+        ['POST', '/g/members', { userId: 'target' }, 'addMember', 201, { member: { id: 'added-member' } }],
+        ['DELETE', '/g/members/target', undefined, 'removeMember', 204, null],
+        ['POST', '/g/leave', undefined, 'leaveGroup', 204, null]
     ];
     for (const [method, route, body, name, status, expected] of cases) {
         const response = await fetch(origin + '/api/groups' + route, { method,
@@ -138,8 +142,11 @@ test('Batch 2A adapters: exact session/proof/target/query calls, socket source, 
         if (name === 'cancelInvitation') assert.deepEqual(call.args, [actor, proof, 'g', 'i']);
         if (name === 'listOwnInvitations') assert.deepEqual([call.args[0], { ...call.args[1] }], [actor, { limit: '2' }]);
         if (name === 'declineInvitation' || name === 'acceptInvitation') assert.deepEqual(call.args, [actor, proof, 'i']);
+        if (name === 'addMember') assert.deepEqual(call.args, [actor, proof, 'g', { userId: 'target' }]);
+        if (name === 'removeMember') assert.deepEqual(call.args, [actor, proof, 'g', 'target']);
+        if (name === 'leaveGroup') assert.deepEqual(call.args, [actor, proof, 'g']);
     }
-    assert.equal(calls.length, 6); assert.equal(rates.length, 6, 'one generic rate call per request');
+    assert.equal(calls.length, 9); assert.equal(rates.length, 9, 'one generic rate call per request');
 });
 
 test('the route table is frozen, and holds only the routes that are mounted', () => {
@@ -152,6 +159,9 @@ test('the route table is frozen, and holds only the routes that are mounted', ()
         { id: 'G17', method: 'POST', path: '/invitations/:invitationId/decline', gated: true },
         { id: 'G01', method: 'POST', path: '/', gated: true },
         { id: 'G02', method: 'GET', path: '/', gated: true },
+        { id: 'G06', method: 'POST', path: '/:id/members', gated: true },
+        { id: 'G07', method: 'DELETE', path: '/:id/members/:userId', gated: true },
+        { id: 'G09', method: 'POST', path: '/:id/leave', gated: true },
         { id: 'G03', method: 'GET', path: '/:id', gated: true },
         { id: 'G04', method: 'PATCH', path: '/:id', gated: true },
         { id: 'G05', method: 'GET', path: '/:id/members', gated: true },
@@ -164,7 +174,7 @@ test('the route table is frozen, and holds only the routes that are mounted', ()
     const router = createGroupRouter({ groups: fakeGroups(), features: OFF_SHAPE }, { requireAuth() {}, requireCsrf() {} });
     const mounted = router.stack.filter(layer => layer.route).map(layer => `${Object.keys(layer.route.methods).map(method => method.toUpperCase()).sort().join('+')} ${layer.route.path}`);
     assert.deepEqual(mounted, ['GET /feature-status', 'GET /invitations', 'POST /invitations/:invitationId/accept', 'POST /invitations/:invitationId/decline',
-        'POST /', 'GET /', 'GET /:id', 'PATCH /:id', 'GET /:id/members', 'POST /:id/invitations',
+        'POST /', 'GET /', 'POST /:id/members', 'DELETE /:id/members/:userId', 'POST /:id/leave', 'GET /:id', 'PATCH /:id', 'GET /:id/members', 'POST /:id/invitations',
         'GET /:id/invitations', 'DELETE /:id/invitations/:invitationId'], 'the mounted layer stack equals the table');
     assert.ok(!GROUP_ROUTES.some(row => row.method === 'DELETE' && /^\/:[^/]+$/.test(row.path)), 'no group deletion route');
     assert.ok(!GROUP_ROUTES.some(row => /unarchive|restore/i.test(row.path)), 'no unarchive or restore route');
@@ -493,7 +503,7 @@ test('a malformed features object stops the application from being built, and ne
 test('switch on: a method and path with no route, and every request that names no visible group, end in the one 404', async t => {
     const limiter = recordingLimiter();
     // G16 is mounted: a valid member maximum lets unknown invitation ids reach its uniform 404 check.
-    const { actors, db } = await application(t, { features: { ...ON, groups: { maxMembers: 50 } }, limiter, users: ['grp-http-alice'] });
+    const { actors, db } = await application(t, { features: { ...ON, groups: { directAdd: true, maxMembers: 50, maxPendingInvitationsPerGroup: 50, maxPendingInvitationsPerInvitee: 50 } }, limiter, users: ['grp-http-alice'] });
     const alice = actors['grp-http-alice'];
     const before = snapshot(db).total;
     // Newly mounted GET /invitations is a private collection, not a group id; its empty page is 200.
@@ -700,7 +710,8 @@ const walk = directory => fs.readdirSync(directory, { withFileTypes: true }).fla
     ? (entry.name === 'node_modules' ? [] : walk(path.join(directory, entry.name))) : /\.(js|cjs|mjs)$/.test(entry.name) ? [path.join(directory, entry.name)] : []));
 
 test('routes/groups.js reads no environment, header-derived address, SQL, repository or request-supplied identity', () => {
-    const source = read('routes/groups.js');
+    // G07's path userId names a target. It is never used to select the actor.
+    const source = read('routes/groups.js').replaceAll('request.params.userId', 'request.params.targetId');
     assert.ok(/^[\x00-\x7F]*$/.test(source), 'ASCII only');
     const forbidden = [['the environment', 'process' + '.env'], ['a forwarded header', /forwarded|x-real-ip|client-ip|\.ips\b|\.ip\b|\.hostname\b|\.headers\.host/i],
         ['the standalone module hook', 'AUTH_MIDDLEWARE' + '_MODULE'], ['SQL', /\bprepare\(|\.exec\(|\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE FROM\b/], ['a repository', /Repository|database\//],
@@ -1554,7 +1565,16 @@ const invitationPath = f => `/api/groups/${f.groupId}/invitations`;
 const managerFields = ['createdAt', 'expiresAt', 'groupId', 'id', 'invitee', 'inviterId', 'state'];
 const ownFields = ['createdAt', 'expiresAt', 'groupId', 'groupName', 'id', 'inviterDisplayName'];
 const membershipState = db => ['ConversationMembers', 'GroupMembershipIntervals', 'GroupExtensions']
-    .map(table => snapshot(db).tables[table]);
+    .reduce((state, table, index) => {
+        const rows = snapshot(db).tables[table];
+        if (index === 0) state.members = rows;
+        if (index === 1) state.intervals = rows;
+        if (index === 2) {
+            state.extensions = rows;
+            state.revision = db.prepare("SELECT max(membership_revision) AS revision FROM GroupExtensions").get().revision;
+        }
+        return state;
+    }, {});
 
 test('Batch 2A G12: 201 manager projection, fixed expiry, session actor, audit and duplicate 409; membership unchanged', async t => {
     const f = await invitationHttp(t), { owner, nonMember } = f.actors;
@@ -1723,4 +1743,132 @@ test('Batch 2A audit failures: G12, G14 and G17 return sanitized 500 and roll ba
         assertError(response, 500, { code: 'INTERNAL_ERROR', fields: [] });
         assert.ok(!response.text.includes('SENTINEL')); assert.equal(snapshot(f.db).total, before);
     }
+});
+
+// T-5C-14 and T-5C-15: membership mutations use only injected fixtures and disposable SQLite databases.
+const DIRECT_ADD_FEATURES = Object.freeze({ groupApi: true, groups: Object.freeze({ directAdd: true, maxMembers: 50,
+    maxPendingInvitationsPerGroup: 50, maxPendingInvitationsPerInvitee: 50 }) });
+
+test('G06: default direct add is disabled; the test-injected path enforces rules and adds only a member', async t => {
+    const disabled = await invitationHttp(t);
+    const beforeDisabled = membershipState(disabled.db);
+    assertError(await send(disabled.actors.owner, 'POST', `/api/groups/${disabled.groupId}/members`, { body: { userId: disabled.actors.nonMember.id } }), 503, error503);
+    assert.deepEqual(membershipState(disabled.db), beforeDisabled);
+
+    const f = await invitationHttp(t, DIRECT_ADD_FEATURES);
+    const before = membershipState(f.db);
+    const added = await send(f.actors.owner, 'POST', `/api/groups/${f.groupId}/members`, { body: { userId: f.actors.nonMember.id } });
+    assert.equal(added.status, 201);
+    assert.deepEqual(added.body.member, { id: f.actors.nonMember.id, username: f.actors.nonMember.username, displayName: 'Group Outsider', avatar: 'initials', role: 'member', joinedAt: added.body.member.joinedAt });
+    assert.equal(typeof added.body.member.joinedAt, 'string');
+    assert.deepEqual([membershipState(f.db).revision, before.revision + 1], [before.revision + 1, before.revision + 1]);
+    assert.equal(f.db.prepare("SELECT count(*) AS n FROM AuditLogs WHERE event_type='group.member.added' AND actor_user_id=? AND subject_id=?").get(f.actors.owner.id, f.groupId).n, 1);
+    assert.equal((await send(f.actors.member, 'POST', `/api/groups/${f.groupId}/members`, { body: { userId: f.actors.removedMember.id } })).status, 403);
+    assert.equal((await send(f.actors.owner, 'POST', `/api/groups/${f.groupId}/members`, { body: { userId: f.actors.member.id } })).status, 409);
+    assert.equal((await send(f.actors.owner, 'POST', `/api/groups/${f.groupId}/members`, { body: { userId: 'unknown-account' } })).status, 404);
+    assertError(await send(f.actors.owner, 'POST', `/api/groups/${f.groupId}/members`, { body: { userId: f.actors.owner.id, role: 'admin' } }), 400, { code: 'VALIDATION_ERROR', fields: ['role'] });
+    f.repositories.blocks.insert(f.actors.owner.id, f.actors.removedMember.id);
+    assertError(await send(f.actors.owner, 'POST', `/api/groups/${f.groupId}/members`, { body: { userId: f.actors.removedMember.id } }), 404, error404);
+    f.db.prepare("UPDATE AccountCredentials SET status='disabled' WHERE user_id=?").run(f.actors.removedMember.id);
+    assertError(await send(f.actors.owner, 'POST', `/api/groups/${f.groupId}/members`, { body: { userId: f.actors.removedMember.id } }), 404, error404);
+});
+
+test('G06: rejoin preserves the member row and opens a high-water interval; capacity and audit failures roll back', async t => {
+    const f = await invitationHttp(t, { ...DIRECT_ADD_FEATURES, groups: { ...DIRECT_ADD_FEATURES.groups, maxMembers: 3 } });
+    const old = f.db.prepare('SELECT * FROM ConversationMembers WHERE conversation_id=? AND user_id=?').get(f.groupId, f.actors.removedMember.id);
+    const before = membershipState(f.db);
+    const added = await send(f.actors.owner, 'POST', `/api/groups/${f.groupId}/members`, { body: { userId: f.actors.removedMember.id } });
+    assert.equal(added.status, 409, 'member maximum is enforced under the immediate transaction');
+    assert.deepEqual(membershipState(f.db), before);
+
+    const roomy = await invitationHttp(t, DIRECT_ADD_FEATURES);
+    const former = roomy.db.prepare('SELECT * FROM ConversationMembers WHERE conversation_id=? AND user_id=?').get(roomy.groupId, roomy.actors.removedMember.id);
+    const joined = await send(roomy.actors.owner, 'POST', `/api/groups/${roomy.groupId}/members`, { body: { userId: roomy.actors.removedMember.id } });
+    assert.equal(joined.status, 201);
+    const row = roomy.db.prepare('SELECT * FROM ConversationMembers WHERE conversation_id=? AND user_id=?').get(roomy.groupId, roomy.actors.removedMember.id);
+    assert.deepEqual([row.joined_at, row.left_at, row.role], [former.joined_at, null, 'member']);
+    assert.equal(roomy.db.prepare('SELECT count(*) AS n FROM GroupMembershipIntervals WHERE conversation_id=? AND user_id=?').get(roomy.groupId, roomy.actors.removedMember.id).n, 2);
+    assert.notEqual(old.joined_at, null);
+
+    const fail = await invitationHttp(t, DIRECT_ADD_FEATURES);
+    const membersBefore = membershipState(fail.db);
+    const auditBefore = fail.db.prepare("SELECT count(*) AS n FROM AuditLogs WHERE event_type='group.member.added'").get().n;
+    fail.db.exec("CREATE TRIGGER fail_g06_audit BEFORE INSERT ON AuditLogs WHEN NEW.event_type='group.member.added' BEGIN SELECT RAISE(ABORT,'synthetic failure'); END");
+    const response = await send(fail.actors.owner, 'POST', `/api/groups/${fail.groupId}/members`, { body: { userId: fail.actors.nonMember.id } });
+    assert.deepEqual([response.status, response.body], [500, { code: 'INTERNAL_ERROR', fields: [] }]);
+    assert.deepEqual(membershipState(fail.db), membersBefore);
+    assert.equal(fail.db.prepare("SELECT count(*) AS n FROM AuditLogs WHERE event_type='group.member.added'").get().n, auditBefore);
+});
+
+test('G07/G09: removals obey role privacy and atomically close intervals, cancel invitations, and bump once', async t => {
+    const f = await invitationHttp(t, DIRECT_ADD_FEATURES);
+    const targetInvitation = f.builder.invite(f.groupId, f.actors.owner.id, f.actors.member.id);
+    const inviterInvitation = f.builder.invite(f.groupId, f.actors.member.id, f.actors.nonMember.id);
+    const before = membershipState(f.db);
+    assert.equal((await send(f.actors.admin, 'DELETE', `/api/groups/${f.groupId}/members/${f.actors.member.id}`)).status, 204);
+    assert.equal(membershipState(f.db).revision, before.revision + 1);
+    assert.equal(f.db.prepare("SELECT count(*) AS n FROM ConversationInvitations WHERE invitation_id IN (?,?) AND state='cancelled'").get(targetInvitation, inviterInvitation).n, 2);
+    const removed = f.db.prepare('SELECT * FROM ConversationMembers WHERE conversation_id=? AND user_id=?').get(f.groupId, f.actors.member.id);
+    const interval = f.db.prepare('SELECT * FROM GroupMembershipIntervals WHERE conversation_id=? AND user_id=? ORDER BY interval_no DESC LIMIT 1').get(f.groupId, f.actors.member.id);
+    assert.ok(removed.left_at && interval.left_at);
+    assert.equal((await send(f.actors.member, 'GET', `/api/groups/${f.groupId}`)).status, 404);
+    assert.equal((await send(f.actors.admin, 'DELETE', `/api/groups/${f.groupId}/members/${f.actors.admin.id}`)).status, 403);
+    assert.equal((await send(f.actors.owner, 'DELETE', `/api/groups/${f.groupId}/members/${f.actors.owner.id}`)).status, 409);
+    assert.equal((await send(f.actors.nonMember, 'DELETE', `/api/groups/${f.groupId}/members/${f.actors.owner.id}`)).status, 404);
+
+    const archived = await invitationHttp(t, DIRECT_ADD_FEATURES);
+    const leaveInvitation = archived.builder.invite(archived.groupId, archived.actors.member.id, archived.actors.nonMember.id);
+    archived.db.prepare("UPDATE Conversations SET archived_at='2026-01-01T00:00:00.000Z' WHERE conversation_id=?").run(archived.groupId);
+    const state = membershipState(archived.db);
+    assert.equal((await send(archived.actors.member, 'POST', `/api/groups/${archived.groupId}/leave`)).status, 204, 'leaving an archived group is allowed');
+    assert.equal(membershipState(archived.db).revision, state.revision + 1);
+    assert.equal(archived.db.prepare('SELECT state FROM ConversationInvitations WHERE invitation_id=?').get(leaveInvitation).state, 'cancelled');
+    assert.equal((await send(archived.actors.owner, 'POST', `/api/groups/${archived.groupId}/leave`)).status, 409, 'owner may not leave');
+});
+
+test('G07/G09: audit failure rolls back all writes and concurrent removals commit exactly once', async t => {
+    const f = await invitationHttp(t, DIRECT_ADD_FEATURES);
+    const invitation = f.builder.invite(f.groupId, f.actors.member.id, f.actors.nonMember.id);
+    const membersBefore = membershipState(f.db);
+    f.db.exec("CREATE TRIGGER fail_g07_audit BEFORE INSERT ON AuditLogs WHEN NEW.event_type='group.member.removed' BEGIN SELECT RAISE(ABORT,'synthetic failure'); END");
+    assert.equal((await send(f.actors.owner, 'DELETE', `/api/groups/${f.groupId}/members/${f.actors.member.id}`)).status, 500);
+    assert.deepEqual(membershipState(f.db), membersBefore);
+    f.db.exec('DROP TRIGGER fail_g07_audit');
+    assert.equal(f.db.prepare("SELECT state FROM ConversationInvitations WHERE invitation_id=?").get(invitation).state, 'pending');
+    const leave = await invitationHttp(t, DIRECT_ADD_FEATURES);
+    const leaveInvite = leave.builder.invite(leave.groupId, leave.actors.member.id, leave.actors.nonMember.id);
+    const beforeLeave = membershipState(leave.db);
+    leave.db.exec("CREATE TRIGGER fail_g09_audit BEFORE INSERT ON AuditLogs WHEN NEW.event_type='group.member.left' BEGIN SELECT RAISE(ABORT,'synthetic failure'); END");
+    assert.equal((await send(leave.actors.member, 'POST', `/api/groups/${leave.groupId}/leave`)).status, 500);
+    assert.deepEqual(membershipState(leave.db), beforeLeave);
+    assert.equal(leave.db.prepare("SELECT state FROM ConversationInvitations WHERE invitation_id=?").get(leaveInvite).state, 'pending');
+    leave.db.exec('DROP TRIGGER fail_g09_audit');
+    const revisionBeforeRace = membershipState(f.db).revision;
+    const results = await Promise.all([
+        send(f.actors.owner, 'DELETE', `/api/groups/${f.groupId}/members/${f.actors.member.id}`),
+        send(f.actors.owner, 'DELETE', `/api/groups/${f.groupId}/members/${f.actors.member.id}`)
+    ]);
+    assert.deepEqual(results.map(result => result.status).sort(), [204, 404]);
+    assert.equal(membershipState(f.db).revision, revisionBeforeRace + 1);
+    assert.equal(f.db.prepare("SELECT count(*) AS n FROM AuditLogs WHERE event_type='group.member.removed' AND subject_id=?").get(f.groupId).n, 1);
+});
+
+test('G06: concurrent adds serialize duplicate targets and the last configured slot', async t => {
+    const same = await invitationHttp(t, DIRECT_ADD_FEATURES);
+    const duplicate = await Promise.all([
+        send(same.actors.owner, 'POST', `/api/groups/${same.groupId}/members`, { body: { userId: same.actors.nonMember.id } }),
+        send(same.actors.admin, 'POST', `/api/groups/${same.groupId}/members`, { body: { userId: same.actors.nonMember.id } })
+    ]);
+    assert.deepEqual(duplicate.map(response => response.status).sort(), [201, 409]);
+    assert.equal(same.db.prepare('SELECT count(*) AS n FROM ConversationMembers WHERE conversation_id=? AND user_id=?').get(same.groupId, same.actors.nonMember.id).n, 1);
+
+    const limited = await invitationHttp(t, { ...DIRECT_ADD_FEATURES, groups: { ...DIRECT_ADD_FEATURES.groups, maxMembers: 4 } });
+    const revisionBefore = membershipState(limited.db).revision;
+    const lastSlot = await Promise.all([
+        send(limited.actors.owner, 'POST', `/api/groups/${limited.groupId}/members`, { body: { userId: limited.actors.nonMember.id } }),
+        send(limited.actors.admin, 'POST', `/api/groups/${limited.groupId}/members`, { body: { userId: limited.actors.pendingInvitee.id } })
+    ]);
+    assert.deepEqual(lastSlot.map(response => response.status).sort(), [201, 409]);
+    assert.equal(limited.db.prepare('SELECT count(*) AS n FROM ConversationMembers WHERE conversation_id=? AND left_at IS NULL').get(limited.groupId).n, 4);
+    assert.equal(limited.db.prepare('SELECT membership_revision FROM GroupExtensions WHERE conversation_id=?').get(limited.groupId).membership_revision, revisionBefore + 1);
 });

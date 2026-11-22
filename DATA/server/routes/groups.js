@@ -47,6 +47,9 @@ const GROUP_ROUTES = Object.freeze([
     route('G17', 'POST', '/invitations/:invitationId/decline', true),
     route('G01', 'POST', '/', true),
     route('G02', 'GET', '/', true),
+    route('G06', 'POST', '/:id/members', true),
+    route('G07', 'DELETE', '/:id/members/:userId', true),
+    route('G09', 'POST', '/:id/leave', true),
     route('G03', 'GET', '/:id', true),
     route('G04', 'PATCH', '/:id', true),
     route('G05', 'GET', '/:id/members', true),
@@ -121,7 +124,7 @@ function requireFunction(value, label) {
 function createGroupRouter({ groups, features } = {}, middleware) {
     if (!groups || typeof groups !== 'object') throw new TypeError('createGroupRouter needs the Group_Service.');
     for (const name of ['rate', 'createGroup', 'listGroups', 'getGroup', 'updateGroup', 'listMembers',
-        'createInvitation', 'listInvitations', 'cancelInvitation', 'listOwnInvitations', 'declineInvitation', 'acceptInvitation']) requireFunction(groups[name], `groups.${name}`);
+        'createInvitation', 'listInvitations', 'cancelInvitation', 'listOwnInvitations', 'declineInvitation', 'acceptInvitation', 'addMember', 'removeMember', 'leaveGroup']) requireFunction(groups[name], `groups.${name}`);
     if (!middleware || typeof middleware !== 'object') throw new TypeError('createGroupRouter needs the authentication middleware.');
     requireFunction(middleware.requireAuth, 'requireAuth');
     requireFunction(middleware.requireCsrf, 'requireCsrf');
@@ -137,6 +140,9 @@ function createGroupRouter({ groups, features } = {}, middleware) {
             response.status(result.created ? 201 : 200).json({ group: result.group });
         },
         G02: (request, response) => response.json(groups.listGroups(request.auth, request.query)),
+        G06: (request, response) => response.status(201).json(groups.addMember(request.auth, request.csrfProof, request.params.id, request.body)),
+        G07: (request, response) => { groups.removeMember(request.auth, request.csrfProof, request.params.id, request.params.userId); response.status(204).end(); },
+        G09: (request, response) => { groups.leaveGroup(request.auth, request.csrfProof, request.params.id); response.status(204).end(); },
         G03: (request, response) => response.json({ group: groups.getGroup(request.auth, request.params.id) }),
         G04: (request, response) => response.json({ group: groups.updateGroup(request.auth, request.csrfProof, request.params.id, request.body) }),
         G05: (request, response) => response.json(groups.listMembers(request.auth, request.params.id, request.query)),
