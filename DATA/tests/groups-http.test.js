@@ -3,8 +3,9 @@
 // T-5C-04: the group router skeleton (DB5-R12.1 to R12.4, R12.10 to R12.12, R12.14, R13.2, R16.2, R16.13, R07.5, NFR-08).
 // Two kinds of test. The real createApp runs on loopback over a temporary database (support/auth.js), with real sessions and
 // real CSRF tokens, to show the HTTP behavior. A small express app around createGroupRouter, with fake middleware and a fake
-// service that record their calls, shows the exact order of the chain. Only feature-status exists yet, so an enabled switch
-// reaches no operation: every other path ends in the final 404.
+// service that record their calls, shows the exact order of the chain. T-5C-07 to T-5C-10 mount G01 to G05 (create, list, read,
+// update, member list) beside feature-status: every other path ends in the final 404, and the tests of those five operations
+// follow the chain tests.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -12,7 +13,7 @@ const path = require('node:path');
 const http = require('node:http');
 const express = require('express');
 const { setup } = require('./support/auth');
-const { snapshot, createClock, assertSecurityHeaders } = require('./support/groups');
+const { snapshot, createClock, assertSecurityHeaders, createGroupBuilder } = require('./support/groups');
 const { createGroupRouter, GROUP_ROUTES, assertRouteTable, MAX_BODY_BYTES } = require('../server/routes/groups');
 const { AuthError, sendError } = require('../server/auth/errors');
 const { DISABLED_FEATURES } = require('../server/features/config');
@@ -27,6 +28,7 @@ const PATHS = Object.freeze(['/api/groups', '/api/groups/', '/api/groups/some-gr
     '/api/groups/invitations', '/api/groups/invitations/some-invitation/accept', '/api/groups/some-group/unarchive', '/api/groups/some/deep/unknown/path']);
 const error503 = { code: 'FEATURE_UNAVAILABLE', fields: [] };
 const error404 = { code: 'NOT_FOUND', fields: [] };
+const error415 = { code: 'UNSUPPORTED_MEDIA_TYPE', fields: [] };
 
 // A limiter that records every bucket list it is asked about, and answers allowed unless told to deny.
 function recordingLimiter() {
@@ -44,8 +46,7 @@ const keysOf = limiter => limiter.calls.flatMap(call => call.buckets.map(bucket 
 const authRateRows = db => db.prepare('SELECT count(*) AS n FROM AuthRateLimits').get().n;
 
 // A real application with one registered, logged-in user per name, over a recording limiter.
-async function application(t, { features, limiter = recordingLimiter(), users = ['grp-http-alice'] } = {}) {
-    const clock = createClock();
+async function application(t, { features, limiter = recordingLimiter(), users = ['grp-http-alice'], clock = createClock() } = {}) {
     const f = await setup(t, { now: clock.now, limiter, ...(features === undefined ? {} : { features }) });
     const actors = {};
     for (const name of users) {
@@ -86,15 +87,31 @@ function chunked(app, actor, url, chunks, headers = {}) {
 // ---------------------------------------------------------------------------------------------------------------
 // The frozen route table and the order of the chain, without a database.
 // ---------------------------------------------------------------------------------------------------------------
+// A service with every method the router calls. The methods answer a fixed value and record nothing, so the order tests
+// below see the chain steps only.
+const fakeGroups = (extra = {}) => ({
+    rate() {}, createGroup: () => ({ created: true, group: {} }), listGroups: () => ({ items: [], nextCursor: null }), getGroup: () => ({}),
+    updateGroup: () => ({}), listMembers: () => ({ items: [], nextCursor: null }), ...extra
+});
+
 test('the route table is frozen, and holds only the routes that are mounted', () => {
     assert.ok(Object.isFrozen(GROUP_ROUTES));
     for (const row of GROUP_ROUTES) assert.ok(Object.isFrozen(row));
-    assert.deepEqual(GROUP_ROUTES.map(row => ({ ...row })), [{ id: 'G26', method: 'GET', path: '/feature-status', gated: false }]);
+    assert.deepEqual(GROUP_ROUTES.map(row => ({ ...row })), [
+        { id: 'G26', method: 'GET', path: '/feature-status', gated: false },
+        { id: 'G01', method: 'POST', path: '/', gated: true },
+        { id: 'G02', method: 'GET', path: '/', gated: true },
+        { id: 'G03', method: 'GET', path: '/:id', gated: true },
+        { id: 'G04', method: 'PATCH', path: '/:id', gated: true },
+        { id: 'G05', method: 'GET', path: '/:id/members', gated: true }
+    ]);
     assert.equal(assertRouteTable(GROUP_ROUTES), GROUP_ROUTES);
     assert.equal(MAX_BODY_BYTES, 8192);
-    const router = createGroupRouter({ groups: { rate() {} }, features: OFF_SHAPE }, { requireAuth() {}, requireCsrf() {} });
+    const router = createGroupRouter({ groups: fakeGroups(), features: OFF_SHAPE }, { requireAuth() {}, requireCsrf() {} });
     const mounted = router.stack.filter(layer => layer.route).map(layer => `${Object.keys(layer.route.methods).map(method => method.toUpperCase()).sort().join('+')} ${layer.route.path}`);
-    assert.deepEqual(mounted, ['GET /feature-status'], 'the mounted layer stack equals the table');
+    assert.deepEqual(mounted, ['GET /feature-status', 'POST /', 'GET /', 'GET /:id', 'PATCH /:id', 'GET /:id/members'], 'the mounted layer stack equals the table');
+    assert.ok(!GROUP_ROUTES.some(row => row.method === 'DELETE' && /^\/:[^/]+$/.test(row.path)), 'no group deletion route');
+    assert.ok(!GROUP_ROUTES.some(row => /unarchive|restore/i.test(row.path)), 'no unarchive or restore route');
 });
 
 test('a route table that could expose an operation by accident is refused', () => {
@@ -111,7 +128,7 @@ test('a route table that could expose an operation by accident is refused', () =
         ['duplicate id', frozen(row('G03', 'GET', '/a'), row('G03', 'GET', '/b'))],
         ['duplicate pair', frozen(row('G03', 'GET', '/a'), row('G04', 'GET', '/a'))],
         ['bad id', frozen(row('g3', 'GET', '/a'))], ['bad method', frozen(row('G03', 'TRACE', '/a'))], ['lower-case method', frozen(row('G03', 'get', '/a'))],
-        ['relative path', frozen(row('G03', 'GET', 'a'))], ['root path', frozen(row('G03', 'GET', '/'))], ['trailing slash', frozen(row('G03', 'GET', '/a/'))],
+        ['relative path', frozen(row('G03', 'GET', 'a'))], ['empty path', frozen(row('G03', 'GET', ''))], ['trailing slash', frozen(row('G03', 'GET', '/a/'))],
         ['empty segment', frozen(row('G03', 'GET', '/a//b'))], ['bad character', frozen(row('G03', 'GET', '/a*'))], ['unnamed parameter', frozen(row('G03', 'GET', '/:'))],
         ['ungated POST', frozen(row('G01', 'POST', '/a', false))], ['ungated non-boolean', frozen(row('G03', 'GET', '/a', 'no'))],
         ['group deletion', frozen(row('G99', 'DELETE', '/:id'))], ['group deletion with slash name', frozen(row('G99', 'DELETE', '/:groupId'))],
@@ -121,11 +138,16 @@ test('a route table that could expose an operation by accident is refused', () =
     ];
     for (const [label, table] of bad) assert.ok(thrown(() => assertRouteTable(table)) instanceof TypeError, label);
     assert.doesNotThrow(() => assertRouteTable(frozen(row('G07', 'DELETE', '/:id/members/:userId'))), 'a member removal is not a group deletion');
+    assert.doesNotThrow(() => assertRouteTable(frozen(row('G01', 'POST', '/'), row('G02', 'GET', '/'), row('G03', 'GET', '/:id'))), 'the collection root is a route of its own');
+    assert.ok(thrown(() => assertRouteTable(frozen(row('G01', 'POST', '/'), row('G09', 'POST', '/')))) instanceof TypeError, 'the root appears once per method');
 });
 
 test('createGroupRouter refuses missing dependencies and a handler that does not match the table', () => {
     const middleware = { requireAuth() {}, requireCsrf() {} };
-    const groups = { rate() {} };
+    const groups = fakeGroups();
+    for (const method of ['rate', 'createGroup', 'listGroups', 'getGroup', 'updateGroup', 'listMembers']) {
+        assert.ok(thrown(() => createGroupRouter({ groups: { ...groups, [method]: undefined }, features: OFF_SHAPE }, middleware)) instanceof TypeError, `no ${method}`);
+    }
     for (const [label, args] of [['no arguments', []], ['no service', [{ features: OFF_SHAPE }, middleware]], ['service without rate', [{ groups: {}, features: OFF_SHAPE }, middleware]],
         ['no middleware', [{ groups, features: OFF_SHAPE }]], ['no requireAuth', [{ groups, features: OFF_SHAPE }, { requireCsrf() {} }]],
         ['no requireCsrf', [{ groups, features: OFF_SHAPE }, { requireAuth() {} }]],
@@ -141,7 +163,7 @@ test('a router built without features is fully disabled, as the default of the s
     const middleware = { requireAuth(request, response, next) { order.push('auth'); Object.defineProperty(request, 'auth', { value: { userId: 'u' } }); next(); },
         requireCsrf(request, response, next) { order.push('csrf'); next(); } };
     const app = express();
-    app.use('/api/groups', createGroupRouter({ groups: { rate() { order.push('rate'); } } }, middleware));
+    app.use('/api/groups', createGroupRouter({ groups: fakeGroups({ rate() { order.push('rate'); } }) }, middleware));
     app.use((error, request, response, next) => sendError(response, error.code, error.status, error.fields));
     const server = http.createServer(app);
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -174,12 +196,12 @@ async function isolated(t, features) {
             return next();
         }
     };
-    const groups = { rate(operation, context, source) {
+    const groups = fakeGroups({ rate(operation, context, source) {
         order.push(`rate:${operation}`);
         order.push(`actor:${context.userId}`);
         order.push(`source:${source}`);
         if (isolated.failRate) throw isolated.failRate;
-    } };
+    } });
     const app = express();
     app.use('/api/groups', createGroupRouter({ groups, features }, middleware));
     app.use((error, request, response, next) => {
@@ -412,16 +434,23 @@ test('a malformed features object stops the application from being built, and ne
     assert.equal((await send(lenient.actors['grp-http-alice'], 'GET', '/api/groups/anything')).status, 503);
 });
 
-test('switch on: the skeleton exposes no group operation, so every method on every path ends in the one 404', async t => {
+test('switch on: a method and path with no route, and every request that names no visible group, end in the one 404', async t => {
     const limiter = recordingLimiter();
     const { actors, db } = await application(t, { features: ON, limiter, users: ['grp-http-alice'] });
     const alice = actors['grp-http-alice'];
     const before = snapshot(db).total;
+    // The only requests that reach an operation: POST and GET on the collection, GET and PATCH on one segment, GET on members.
+    // Here they carry a body with identity claims and unknown fields (400 for the POST) or name no group the user can see (404).
+    const answered = (method, url) => {
+        const clean = url.replace(/\/$/, '');
+        if (clean === '/api/groups') return method === 'POST' ? 400 : ['GET', 'HEAD'].includes(method) ? 200 : 404;
+        return 404;
+    };
     for (const method of EVERY_METHOD) {
         for (const url of PATHS) {
             const response = await send(alice, method, url, ['GET', 'HEAD'].includes(method) ? {} : { body: { name: 'Group', userId: alice.id, role: 'owner' } });
-            assert.equal(response.status, 404, `${method} ${url}`);
-            if (method !== 'HEAD') assert.deepEqual(response.body, error404, `${method} ${url}`);
+            assert.equal(response.status, answered(method, url), `${method} ${url}`);
+            if (response.status === 404 && method !== 'HEAD') assert.deepEqual(response.body, error404, `${method} ${url}`);
             assertSecurityHeaders(response, `${method} ${url}`);
         }
     }
@@ -483,8 +512,8 @@ test('switch on: a limiter that fails becomes a bare 500 that carries none of it
     }
 });
 // ---------------------------------------------------------------------------------------------------------------
-// Body handling (DB5-R12.11, R12.14, R13.4; DC-05). The route table has no operation yet, so a request that passes every
-// body rule ends in the 404, and a refusal is the status of its own step.
+// Body handling (DB5-R12.11, R12.14, R13.4; DC-05). The requests below go to POST, PUT, PATCH and DELETE on one group path
+// that names no visible group, so a request that passes every body rule ends in the 404, and a refusal is the status of its own step.
 // ---------------------------------------------------------------------------------------------------------------
 test('switch on: the body rules answer 413, 400 and 415 in the order of the design, and a valid body reaches the 404', async t => {
     const { actors, db } = await application(t, { features: ON, users: ['grp-http-alice'] });
@@ -516,10 +545,24 @@ test('switch on: the body rules answer 413, 400 and 415 in the order of the desi
         ['a latin1 charset', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=latin1' } }, 415, { code: 'UNSUPPORTED_MEDIA_TYPE', fields: [] }],
         ['an iso-8859-1 charset', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=iso-8859-1' } }, 415, { code: 'UNSUPPORTED_MEDIA_TYPE', fields: [] }],
         ['an unknown charset', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=bogus' } }, 415, { code: 'UNSUPPORTED_MEDIA_TYPE', fields: [] }],
-        // Measured with body-parser 2.4.0: it accepts utf-7 (the body is read as UTF-8 JSON) and answers 400 for utf-16. The
-        // task text names utf-7 as a 415 example; the router adds no charset rule of its own. This pin fails if an upgrade changes it.
-        ['a utf-7 charset is accepted by the installed parser', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=utf-7' } }, 404, error404],
-        ['a utf-16 charset is a parse failure', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=utf-16' } }, 400, { code: 'VALIDATION_ERROR', fields: [] }],
+        // T-5C-04 names charset=utf-7 as a 415 example. body-parser 2.4.0 reads utf-7 without complaint and answers 400 for utf-16,
+        // so the router refuses every declared charset other than UTF-8 itself, before the parser runs (DB5-R12.11).
+        ['a utf-7 charset', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=utf-7' } }, 415, error415],
+        ['an upper-case UTF-7 charset', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=UTF-7' } }, 415, error415],
+        ['a quoted utf-7 charset', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset="utf-7"' } }, 415, error415],
+        ['a utf-7 charset without spaces', { rawBody: '{}', headers: { 'Content-Type': 'application/json;charset=utf-7' } }, 415, error415],
+        ['a spaced charset parameter', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset = utf-7' } }, 415, error415],
+        ['an upper-case parameter name', { rawBody: '{}', headers: { 'Content-Type': 'application/json; CHARSET=utf-7' } }, 415, error415],
+        ['a utf-7 charset after another parameter', { rawBody: '{}', headers: { 'Content-Type': 'application/json; a=b; charset=utf-7' } }, 415, error415],
+        ['a utf-7 charset that follows a utf-8 one', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=utf-8; charset=utf-7' } }, 415, error415],
+        ['a utf-16 charset', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=utf-16' } }, 415, error415],
+        ['a utf-16le charset', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=utf-16le' } }, 415, error415],
+        ['a utf-32 charset', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=utf-32' } }, 415, error415],
+        ['an empty charset', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=' } }, 415, error415],
+        ['an upper-case UTF-8 charset', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=UTF-8' } }, 404, error404],
+        ['a quoted utf-8 charset', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset="utf-8"' } }, 404, error404],
+        ['the utf8 spelling the parser has always refused', { rawBody: '{}', headers: { 'Content-Type': 'application/json; charset=utf8' } }, 415, error415],
+        ['a non-JSON type is 400 before the charset is read', { rawBody: '{}', headers: { 'Content-Type': 'text/plain; charset=utf-7' } }, 400, { code: 'VALIDATION_ERROR', fields: [] }],
         ['a gzip content encoding', { rawBody: '{}', headers: { ...json, 'Content-Encoding': 'gzip' } }, 415, { code: 'UNSUPPORTED_MEDIA_TYPE', fields: [] }],
         ['a deflate content encoding', { rawBody: '{}', headers: { ...json, 'Content-Encoding': 'deflate' } }, 415, { code: 'UNSUPPORTED_MEDIA_TYPE', fields: [] }],
         ['a gzip encoding on a non-JSON type is 400 first', { rawBody: 'x', headers: { 'Content-Type': 'text/plain', 'Content-Encoding': 'gzip' } }, 400, { code: 'VALIDATION_ERROR', fields: [] }]
@@ -633,4 +676,811 @@ test('app.js mounts the group router after /api/messages and before the legacy s
     assert.ok(source.includes('features=DISABLED_FEATURES'), 'features default to everything disabled');
     assert.ok(source.includes('groups,features:groups.features'), 'groups and features are returned');
     assert.ok(!/require\('\.\/routes\/attachments'\)/.test(source), 'no attachment router yet');
+});
+
+// ===============================================================================================================
+// T-5C-07: G01 POST /api/groups (DB5-R01). The real application, switch on, real sessions and CSRF proofs.
+// ===============================================================================================================
+const { createHash } = require('node:crypto');
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+const SINCE = '2027-03-01T00:00:00.000Z'; // after every wall-clock time a fixture row can carry, so updated_at moves forward only
+const GROUP_KEYS = ['archived', 'createdAt', 'description', 'historyPolicy', 'id', 'memberCount', 'membershipRevision', 'name', 'role', 'updatedAt'];
+const error400 = fields => ({ code: 'VALIDATION_ERROR', fields });
+const create = (actor, body, headers = {}) => send(actor, 'POST', '/api/groups', { body, headers });
+const tableCount = (db, table) => db.prepare(`SELECT count(*) AS n FROM ${table}`).get().n;
+const groupTables = ['Conversations', 'ConversationMembers', 'GroupExtensions', 'GroupMembershipIntervals', 'GroupCreationKeys', 'AuditLogs'];
+const rowCounts = db => Object.fromEntries(groupTables.map(table => [table, tableCount(db, table)]));
+const auditOf = (db, id) => db.prepare("SELECT * FROM AuditLogs WHERE source = 'groups' AND subject_id = ? ORDER BY audit_id").all(id);
+// The fingerprint of DB5-R01.10 as the requirement states it, so a change of the label or the order is caught.
+const fingerprintOf = (name, description, policy) => createHash('sha256').update(JSON.stringify(['secubuzz-group-create-v2', name, description, policy]), 'utf8').digest('hex');
+
+test('G01: one request writes the conversation, the owner, the extension, the first interval and one audit row, and answers 201', async t => {
+    const { actors, db } = await application(t, { features: ON, users: ['grp-http-alice'], clock: createClock(SINCE) });
+    const alice = actors['grp-http-alice'];
+    const before = rowCounts(db);
+    const response = await create(alice, { name: '  Weekend plans  ', description: 'Where and when', historyPolicy: 'all' });
+    assert.equal(response.status, 201);
+    assertSecurityHeaders(response, 'G01');
+    assert.deepEqual(Object.keys(response.body), ['group']);
+    const { group } = response.body;
+    assert.deepEqual(Object.keys(group).sort(), GROUP_KEYS);
+    assert.deepEqual({ ...group, id: 'x', createdAt: 'x', updatedAt: 'x' }, { id: 'x', name: 'Weekend plans', description: 'Where and when', historyPolicy: 'all',
+        membershipRevision: 1, archived: false, createdAt: 'x', updatedAt: 'x', memberCount: 1, role: 'owner' });
+    const after = rowCounts(db);
+    for (const table of groupTables) assert.equal(after[table], before[table] + (table === 'GroupCreationKeys' ? 0 : 1), `${table} gained ${table === 'GroupCreationKeys' ? 'no' : 'one'} row`);
+    const conversation = db.prepare('SELECT * FROM Conversations WHERE conversation_id = ?').get(group.id);
+    assert.deepEqual([conversation.kind, conversation.origin, conversation.title, conversation.created_by, conversation.archived_at], ['group', 'authenticated', 'Weekend plans', alice.id, null]);
+    assert.equal(conversation.dm_user_low, null);
+    const members = db.prepare('SELECT * FROM ConversationMembers WHERE conversation_id = ?').all(group.id);
+    assert.deepEqual(members.map(row => [row.user_id, row.role, row.left_at]), [[alice.id, 'owner', null]]);
+    const extension = db.prepare('SELECT * FROM GroupExtensions WHERE conversation_id = ?').get(group.id);
+    assert.deepEqual([extension.description, extension.history_policy, extension.membership_revision], ['Where and when', 'all', 1]);
+    const intervals = db.prepare('SELECT * FROM GroupMembershipIntervals WHERE conversation_id = ?').all(group.id);
+    assert.deepEqual(intervals.map(row => [row.user_id, row.interval_no, row.left_at]), [[alice.id, 1, null]]);
+    const audit = auditOf(db, group.id);
+    assert.equal(audit.length, 1);
+    assert.deepEqual([audit[0].event_type, audit[0].actor_user_id, audit[0].source], ['group.created', alice.id, 'groups']);
+    assert.deepEqual(Object.keys(JSON.parse(audit[0].metadata_json)).sort(), ['operation', 'outcome']);
+    for (const secret of ['Weekend plans', 'Where and when', 'all']) assert.ok(!audit[0].metadata_json.includes(secret), `the audit row never holds "${secret}"`);
+    const listed = await send(alice, 'GET', '/api/conversations');
+    assert.ok(!JSON.stringify(listed.body).includes(group.id), 'a group is never listed with the direct conversations');
+});
+
+test('G01: the defaults are from_joined, a null description and a trimmed name; the policy is stored in the extension record only', async t => {
+    const { actors, db } = await application(t, { features: ON, users: ['grp-http-alice'], clock: createClock(SINCE) });
+    const alice = actors['grp-http-alice'];
+    const response = await create(alice, { name: '\t Plain \n' });
+    assert.equal(response.status, 201);
+    assert.deepEqual([response.body.group.name, response.body.group.description, response.body.group.historyPolicy, response.body.group.membershipRevision], ['Plain', null, 'from_joined', 1]);
+    const explicit = await create(alice, { name: 'Explicit', historyPolicy: 'from_joined', description: null });
+    assert.deepEqual([explicit.status, explicit.body.group.historyPolicy, explicit.body.group.description], [201, 'from_joined', null]);
+    const columns = table => db.prepare(`PRAGMA table_info(${table})`).all().map(column => column.name);
+    for (const column of ['description', 'history_policy', 'membership_revision']) {
+        assert.ok(!columns('Conversations').includes(column), `Conversations has no ${column}`);
+        assert.ok(columns('GroupExtensions').includes(column), `GroupExtensions holds ${column}`);
+    }
+    const hundred = '\u{1F600}'.repeat(100);
+    assert.equal((await create(alice, { name: hundred })).status, 201, '100 code points are accepted, counted as code points and not as UTF-16 units');
+    assert.equal((await create(alice, { name: hundred + 'x' })).status, 400);
+    assert.equal((await create(alice, { name: 'd', description: 'z'.repeat(1000) })).status, 201);
+    assert.equal((await create(alice, { name: 'd', description: 'a\tb\nc\rd' })).status, 201, 'tab, line feed and carriage return are allowed in a description');
+});
+
+test('G01: a bad body, name, description, policy or key is a 400 that names the fields, never a 500, and creates nothing', async t => {
+    const { actors, db } = await application(t, { features: ON, users: ['grp-http-alice', 'grp-http-bob'], clock: createClock(SINCE) });
+    const alice = actors['grp-http-alice'];
+    const bob = actors['grp-http-bob'];
+    const before = rowCounts(db);
+    const json = { 'Content-Type': 'application/json' };
+    const cases = [
+        ['no body', {}, []], ['empty object', { rawBody: '{}', headers: json }, ['name']], ['an array', { rawBody: '[]', headers: json }, []],
+        ['a string', { rawBody: '"name"', headers: json }, []], ['null', { rawBody: 'null', headers: json }, []], ['a number', { rawBody: '7', headers: json }, []],
+        ['a name that is a number', { body: { name: 7 } }, ['name']], ['a null name', { body: { name: null } }, ['name']], ['an object name', { body: { name: { a: 1 } } }, ['name']],
+        ['an array name', { body: { name: ['a'] } }, ['name']], ['an empty name', { body: { name: '' } }, ['name']], ['a blank name', { body: { name: ' \t\n ' } }, ['name']],
+        ['a long name', { body: { name: 'n'.repeat(101) } }, ['name']], ['a control in the name', { body: { name: 'a\u0000b' } }, ['name']],
+        ['a newline in the name', { body: { name: 'a\nb' } }, ['name']], ['a C1 control in the name', { body: { name: 'a\u0085b' } }, ['name']],
+        ['a description that is a number', { body: { name: 'n', description: 5 } }, ['description']], ['a description that is too long', { body: { name: 'n', description: 'd'.repeat(1001) } }, ['description']],
+        ['a control in the description', { body: { name: 'n', description: 'a\u0000b' } }, ['description']],
+        ['an unknown field', { body: { name: 'n', owner: 'x' } }, ['owner']], ['an identity claim', { body: { name: 'n', userId: bob.id, role: 'owner', createdBy: bob.id } }, ['userId', 'role', 'createdBy']],
+        ['an unknown field with a bad name', { body: { name: '', extra: 1 } }, ['name', 'extra']],
+        ['an empty key', { body: { name: 'n', idempotencyKey: '' } }, ['idempotencyKey']], ['a long key', { body: { name: 'n', idempotencyKey: 'k'.repeat(257) } }, ['idempotencyKey']],
+        ['a number key', { body: { name: 'n', idempotencyKey: 5 } }, ['idempotencyKey']], ['a null key', { body: { name: 'n', idempotencyKey: null } }, ['idempotencyKey']]
+    ];
+    for (const [label, options, fields] of cases) {
+        const response = await send(alice, 'POST', '/api/groups', options);
+        assert.deepEqual([response.status, response.body], [400, error400(fields)], label);
+        assertSecurityHeaders(response, label);
+    }
+    for (const policy of ['ALL', 'All', 'From_Joined', 'from-joined', 'fromJoined', '', ' all', 'all ', 'none', null, 1, true, false, [], ['all'], {}]) {
+        const response = await create(alice, { name: 'n', historyPolicy: policy });
+        assert.deepEqual([response.status, response.body], [400, error400(['historyPolicy'])], JSON.stringify(policy));
+    }
+    const several = await create(alice, { name: '', historyPolicy: 'x', description: 5 });
+    assert.deepEqual(several.body.fields, ['name', 'description', 'historyPolicy'], 'every offending field is named, in the documented order');
+    assert.deepEqual(rowCounts(db), before, 'no refusal created a record');
+});
+
+test('G01: a missing session answers 401 before the body is read, and a missing or foreign CSRF proof answers 403 and creates nothing', async t => {
+    const { actors, db, f } = await application(t, { features: ON, users: ['grp-http-alice', 'grp-http-bob'], clock: createClock(SINCE) });
+    const alice = actors['grp-http-alice'];
+    const bob = actors['grp-http-bob'];
+    const before = rowCounts(db);
+    const anonymous = f.browser();
+    for (const body of [{ name: 'valid' }, { name: '' }, undefined]) {
+        const response = await anonymous.request('/api/groups', { method: 'POST', body });
+        assert.deepEqual([response.status, response.body.code], [401, 'UNAUTHENTICATED'], JSON.stringify(body));
+    }
+    assertError(await send(alice, 'POST', '/api/groups', { body: { name: 'valid' }, csrf: false }), 403, { code: 'CSRF_INVALID', fields: [] });
+    assertError(await send(alice, 'POST', '/api/groups', { body: { name: '' }, csrf: false }), 403, { code: 'CSRF_INVALID', fields: [] });
+    assertError(await send(alice, 'POST', '/api/groups', { body: { name: 'valid' }, csrf: false, headers: { 'X-CSRF-Token': bob.token } }), 403, { code: 'CSRF_INVALID', fields: [] });
+    assertError(await send(alice, 'POST', '/api/groups', { body: { name: 'valid' }, csrf: false, headers: { 'X-CSRF-Token': 'a'.repeat(64) } }), 403, { code: 'CSRF_INVALID', fields: [] });
+    assert.deepEqual(rowCounts(db), before);
+});
+
+test('G01: the owner is the session user whatever a header, a cookie or the body claims', async t => {
+    const { actors, db } = await application(t, { features: ON, users: ['grp-http-alice', 'grp-http-bob'], clock: createClock(SINCE) });
+    const alice = actors['grp-http-alice'];
+    const bob = actors['grp-http-bob'];
+    const response = await create(alice, { name: 'Mine' }, { 'X-User-Id': bob.id, 'X-Actor': bob.id, 'X-Role': 'owner', 'X-Forwarded-User': bob.id, 'X-Owner-Id': bob.id });
+    assert.equal(response.status, 201);
+    const owner = db.prepare("SELECT user_id, role FROM ConversationMembers WHERE conversation_id = ?").all(response.body.group.id);
+    assert.deepEqual(owner.map(row => [row.user_id, row.role]), [[alice.id, 'owner']]);
+    assert.equal(db.prepare('SELECT created_by FROM Conversations WHERE conversation_id = ?').get(response.body.group.id).created_by, alice.id);
+    assert.equal(auditOf(db, response.body.group.id)[0].actor_user_id, alice.id);
+    assert.equal((await send(bob, 'GET', `/api/groups/${response.body.group.id}`)).status, 404, 'bob sees nothing of it');
+});
+
+test('G01: an idempotency key replays the original group within 24 hours, conflicts with another payload and is replaced after 24 hours', async t => {
+    const clock = createClock(SINCE);
+    const { actors, db, f } = await application(t, { features: ON, users: ['grp-http-alice', 'grp-http-bob'], clock });
+    const alice = actors['grp-http-alice'];
+    const bob = actors['grp-http-bob'];
+    const payload = { name: 'Idempotent', description: 'once', historyPolicy: 'all', idempotencyKey: 'key-1' };
+    const first = await create(alice, payload);
+    assert.equal(first.status, 201);
+    const groupsBefore = tableCount(db, 'Conversations');
+    const replay = await create(alice, payload);
+    assert.equal(replay.status, 200);
+    assert.deepEqual(replay.body, first.body, 'the original group, unchanged');
+    assert.equal(tableCount(db, 'Conversations'), groupsBefore, 'no second group');
+    assert.equal(auditOf(db, first.body.group.id).length, 1, 'no second audit row');
+    // The same payload in another spelling: an omitted policy counts as from_joined, and the name is compared trimmed.
+    const key2 = { name: 'Spelling', historyPolicy: 'from_joined', idempotencyKey: 'key-2' };
+    const created = await create(alice, key2);
+    const sameMeaning = await create(alice, { name: '  Spelling  ', idempotencyKey: 'key-2', description: null });
+    assert.deepEqual([created.status, sameMeaning.status, sameMeaning.body.group.id], [201, 200, created.body.group.id]);
+    // Any different part of the payload, the policy included, is a conflict that changes nothing.
+    const counts = rowCounts(db);
+    for (const changed of [{ ...payload, name: 'Other' }, { ...payload, description: 'twice' }, { ...payload, description: null }, { ...payload, historyPolicy: 'from_joined' },
+        { name: payload.name, description: 'once', idempotencyKey: 'key-1' }]) {
+        const response = await create(alice, changed);
+        assert.deepEqual([response.status, response.body], [409, { code: 'IDEMPOTENCY_CONFLICT', fields: [] }], JSON.stringify(changed));
+    }
+    assert.deepEqual(rowCounts(db), counts);
+    // A key belongs to its user.
+    const other = await create(bob, payload);
+    assert.deepEqual([other.status, other.body.group.id === first.body.group.id], [201, false]);
+    // The key of a request without it is not claimed.
+    assert.equal((await create(alice, { name: 'No key' })).status, 201);
+    assert.equal((await create(alice, { name: 'No key' })).status, 201, 'two requests without a key create two groups');
+    // After 24 hours the key is replaced, with the same or another payload. The user logs in again because the session ages too.
+    clock.advance(DAY_MS + 1000);
+    const alice2 = { browser: f.browser() };
+    assert.equal((await alice2.browser.login('grp-http-alice')).status, 200);
+    alice2.token = await alice2.browser.csrf();
+    const replaced = await create(alice2, payload);
+    assert.deepEqual([replaced.status, replaced.body.group.id === first.body.group.id], [201, false], 'an old key is replaced by a new group');
+    const again = await create(alice2, payload);
+    assert.deepEqual([again.status, again.body.group.id], [200, replaced.body.group.id], 'and the new claim is a replay again');
+    const differentNow = await create(alice2, { ...key2, name: 'Spelling changed' });
+    assert.equal(differentNow.status, 201, 'a key older than 24 hours accepts another payload');
+    assert.equal(db.prepare('SELECT count(*) AS n FROM GroupCreationKeys WHERE user_id = ? AND idempotency_key = ?').get(alice.id, 'key-1').n, 1);
+});
+
+test('G01: a key claimed before the v2 fingerprint never matches, and the fingerprint is the documented one', async t => {
+    const clock = createClock(SINCE);
+    const { actors, db } = await application(t, { features: ON, users: ['grp-http-alice', 'grp-http-bob'], clock });
+    const alice = actors['grp-http-alice'];
+    const bob = actors['grp-http-bob'];
+    const builder = createGroupBuilder({ db, clock });
+    // The fixture claims its key with the v1 shape (no label): the same payload must not replay it.
+    builder.createGroup({ ownerId: alice.id, title: 'Old', idempotencyKey: 'old-key' });
+    const stale = await create(alice, { name: 'Old', idempotencyKey: 'old-key' });
+    assert.deepEqual([stale.status, stale.body], [409, { code: 'IDEMPOTENCY_CONFLICT', fields: [] }]);
+    const made = await create(alice, { name: 'Fresh', description: 'd', historyPolicy: 'all', idempotencyKey: 'fresh-key' });
+    const stored = db.prepare('SELECT * FROM GroupCreationKeys WHERE user_id = ? AND idempotency_key = ?').get(alice.id, 'fresh-key');
+    assert.equal(stored.fingerprint, fingerprintOf('Fresh', 'd', 'all'));
+    assert.equal(stored.conversation_id, made.body.group.id);
+    assert.equal(stored.created_at, clock.iso(), 'the claim time is the injected clock');
+    const absent = await create(alice, { name: 'Absent', idempotencyKey: 'absent-key' });
+    assert.equal(db.prepare('SELECT fingerprint FROM GroupCreationKeys WHERE idempotency_key = ?').get('absent-key').fingerprint, fingerprintOf('Absent', null, 'from_joined'));
+    assert.equal(absent.status, 201);
+    // A key whose group the user can no longer see answers as a conflict and shows nothing of that group.
+    db.prepare('INSERT INTO GroupCreationKeys(user_id, idempotency_key, fingerprint, conversation_id, created_at) VALUES(?, ?, ?, ?, ?)')
+        .run(bob.id, 'borrowed', fingerprintOf('Fresh', 'd', 'all'), made.body.group.id, clock.iso());
+    const borrowed = await create(bob, { name: 'Fresh', description: 'd', historyPolicy: 'all', idempotencyKey: 'borrowed' });
+    assert.deepEqual([borrowed.status, borrowed.body], [409, { code: 'IDEMPOTENCY_CONFLICT', fields: [] }]);
+    assert.ok(!borrowed.text.includes(made.body.group.id) && !borrowed.text.includes('Fresh'));
+});
+
+test('G01: concurrent requests with one key create exactly one group', async t => {
+    const { actors, db } = await application(t, { features: ON, users: ['grp-http-alice'], clock: createClock(SINCE) });
+    const alice = actors['grp-http-alice'];
+    const before = tableCount(db, 'Conversations');
+    const same = await Promise.all(Array.from({ length: 6 }, () => create(alice, { name: 'Race', idempotencyKey: 'race-key' })));
+    assert.deepEqual(same.map(response => response.status).sort(), [200, 200, 200, 200, 200, 201]);
+    assert.equal(new Set(same.map(response => response.body.group.id)).size, 1);
+    assert.equal(tableCount(db, 'Conversations'), before + 1);
+    const different = await Promise.all(['a', 'b', 'c', 'd'].map(name => create(alice, { name, idempotencyKey: 'race-key-2' })));
+    assert.deepEqual(different.map(response => response.status).sort(), [201, 409, 409, 409]);
+    assert.equal(tableCount(db, 'Conversations'), before + 2);
+    assert.equal(db.prepare("SELECT count(*) AS n FROM GroupCreationKeys WHERE idempotency_key = 'race-key-2'").get().n, 1);
+});
+
+test('G01: a failed audit write rolls back the group, the owner, the extension, the interval and the key', async t => {
+    const { actors, db } = await application(t, { features: ON, users: ['grp-http-alice'], clock: createClock(SINCE) });
+    const alice = actors['grp-http-alice'];
+    const before = rowCounts(db);
+    db.exec("CREATE TRIGGER test_refuse_group_audit BEFORE INSERT ON AuditLogs WHEN NEW.source = 'groups' BEGIN SELECT RAISE(ABORT, 'refused by the test'); END");
+    try {
+        const response = await create(alice, { name: 'Doomed', idempotencyKey: 'doomed-key' });
+        assert.deepEqual([response.status, response.body], [500, { code: 'INTERNAL_ERROR', fields: [] }]);
+        assert.ok(!response.text.includes('refused by the test'));
+    } finally { db.exec('DROP TRIGGER test_refuse_group_audit'); }
+    assert.deepEqual(rowCounts(db), before, 'none of the six tables changed');
+    assert.equal((await create(alice, { name: 'Doomed', idempotencyKey: 'doomed-key' })).status, 201, 'the key was not claimed by the failed attempt');
+});
+
+// A limiter that counts like the real one: a bucket is refused once its limit is used up inside its window.
+function countingLimiter() {
+    const used = new Map();
+    return { calls: [], deny: false, consume(buckets, at) {
+        this.calls.push({ buckets: buckets.map(bucket => ({ ...bucket })), at });
+        for (const bucket of buckets) if ((used.get(bucket.key) ?? 0) + 1 > bucket.limit) return { allowed: false, retryAfterSeconds: Math.ceil(bucket.windowMs / 1000) };
+        for (const bucket of buckets) used.set(bucket.key, (used.get(bucket.key) ?? 0) + 1);
+        return { allowed: true };
+    } };
+}
+
+test('G01: creation is limited to 20 per hour per user and 60 per hour per source, with Retry-After, and a refusal creates nothing', async t => {
+    const limiter = countingLimiter();
+    const names = ['grp-http-alice', 'grp-http-bob', 'grp-http-carol', 'grp-http-dave'];
+    const { actors, db } = await application(t, { features: ON, limiter, users: names, clock: createClock(SINCE) });
+    const [alice, bob, carol, dave] = names.map(name => actors[name]);
+    limiter.calls.length = 0;
+    const first = await create(alice, { name: 'n0' });
+    assert.equal(first.status, 201);
+    const creation = limiter.calls.flatMap(call => call.buckets).filter(bucket => bucket.key.startsWith('groups:create'));
+    assert.deepEqual(creation.map(bucket => [bucket.key, bucket.limit, bucket.windowMs]), [[`groups:create:${alice.id}`, 20, HOUR_MS], ['groups:create-source:127.0.0.1', 60, HOUR_MS]]);
+    for (let index = 1; index < 20; index++) assert.equal((await create(alice, { name: `n${index}` })).status, 201);
+    const before = rowCounts(db);
+    const refused = await create(alice, { name: 'one too many' });
+    assert.deepEqual([refused.status, refused.body], [429, { code: 'RATE_LIMITED', fields: [] }]);
+    assert.equal(refused.headers.get('retry-after'), String(HOUR_MS / 1000));
+    assertSecurityHeaders(refused, 'create limit');
+    assert.deepEqual(rowCounts(db), before);
+    assert.equal((await create(bob, { name: 'bob can still create' })).status, 201, 'the user bucket belongs to the user');
+    for (let index = 1; index < 20; index++) assert.equal((await create(bob, { name: `b${index}` })).status, 201);
+    for (let index = 0; index < 20; index++) assert.equal((await create(carol, { name: `c${index}` })).status, 201);
+    const bySource = await create(dave, { name: 'sixty-first' });
+    assert.deepEqual([bySource.status, bySource.body.code], [429, 'RATE_LIMITED'], 'the 61st creation of the source is refused although dave used none');
+    assert.ok(bySource.headers.get('retry-after'));
+    assert.equal(tableCount(db, 'Conversations'), before.Conversations + 40);
+});
+
+test('G01: a malformed limiter answer is a bare 500 and creates nothing', async t => {
+    const limiter = recordingLimiter();
+    const { actors, db } = await application(t, { features: ON, limiter, users: ['grp-http-alice'], clock: createClock(SINCE) });
+    const alice = actors['grp-http-alice'];
+    const before = rowCounts(db);
+    for (const answer of [undefined, null, 'allowed']) {
+        limiter.consume = () => answer;
+        const response = await create(alice, { name: 'x' });
+        assert.deepEqual([response.status, response.body], [500, { code: 'INTERNAL_ERROR', fields: [] }], String(answer));
+    }
+    limiter.consume = () => ({ allowed: 'yes' });
+    assert.equal((await create(alice, { name: 'x' })).status, 429, 'only allowed === true passes');
+    assert.deepEqual(rowCounts(db), before);
+});
+// ===============================================================================================================
+// T-5C-08: G02 GET /api/groups and G03 GET /api/groups/:id (DB5-R02.1 to R02.8, R10.5, R14.18).
+// ===============================================================================================================
+const codec = require('../server/groups/cursor');
+const { createRepositories } = require('../server/database/repositories');
+const USERS3 = ['grp-http-alice', 'grp-http-bob', 'grp-http-carol'];
+const stamp = (db, id, at) => db.prepare('UPDATE Conversations SET updated_at = ? WHERE conversation_id = ?').run(at, id);
+const headersOf = response => [...response.headers.entries()].filter(([name]) => name !== 'date').sort();
+const orderOf = rows => [...rows].sort((a, b) => (a.updated_at === b.updated_at ? (a.id < b.id ? 1 : -1) : (a.updated_at < b.updated_at ? 1 : -1)));
+const pageOf = async (actor, query) => send(actor, 'GET', `/api/groups${query}`);
+
+// alice owns three (one archived), is a member of carol's, was removed from another of carol's; bob owns one; there is a direct
+// conversation of alice and bob and a group of legacy origin that alice belongs to.
+function seed(db, clock, alice, bob, carol) {
+    const builder = createGroupBuilder({ db, clock });
+    const make = (ownerId, title, at) => { const id = builder.createGroup({ ownerId, title, idempotencyKey: null }); stamp(db, id, at); return id; };
+    const ids = {
+        a1: make(alice.id, 'A one', '2027-02-01T00:00:00.000Z'),
+        a2: make(alice.id, 'A two', '2027-02-01T00:00:00.000Z'),
+        a3: make(alice.id, 'A three archived', '2027-02-03T00:00:00.000Z'),
+        c1: make(carol.id, 'C one', '2027-02-02T00:00:00.000Z'),
+        c2: make(carol.id, 'C removed', '2027-02-05T00:00:00.000Z'),
+        b1: make(bob.id, 'B one', '2027-02-06T00:00:00.000Z')
+    };
+    db.prepare("UPDATE Conversations SET archived_at = '2027-02-03T00:00:00.000Z' WHERE conversation_id = ?").run(ids.a3);
+    builder.addMember(ids.c1, alice.id);
+    builder.addMember(ids.c2, alice.id, { role: 'admin' });
+    builder.removeMember(ids.c2, alice.id);
+    stamp(db, ids.c1, '2027-02-02T00:00:00.000Z');
+    stamp(db, ids.c2, '2027-02-05T00:00:00.000Z');
+    const repositories = createRepositories(db);
+    const [low, high] = [alice.id, bob.id].sort();
+    const direct = repositories.conversations.create({ kind: 'direct', dm_user_low: low, dm_user_high: high, origin: 'authenticated', created_by: alice.id });
+    ids.direct = direct.conversation_id;
+    db.prepare("INSERT INTO Conversations(conversation_id, kind, title, created_by, origin) VALUES('legacy-group-1', 'group', 'Legacy', ?, 'legacy')").run(alice.id);
+    db.prepare("INSERT INTO ConversationMembers(conversation_id, user_id, role) VALUES('legacy-group-1', ?, 'owner')").run(alice.id);
+    ids.legacy = 'legacy-group-1';
+    db.prepare("INSERT INTO Conversations(conversation_id, kind, title, created_by, origin) VALUES('no-extension-1', 'group', 'No extension', ?, 'authenticated')").run(alice.id);
+    db.prepare("INSERT INTO ConversationMembers(conversation_id, user_id, role) VALUES('no-extension-1', ?, 'owner')").run(alice.id);
+    ids.bare = 'no-extension-1';
+    return { builder, ids };
+}
+
+test('G02: lists only the groups of which the requester is an Active_Member, archived included, newest update first, with the id as tie break', async t => {
+    const clock = createClock(SINCE);
+    const { actors, db } = await application(t, { features: ON, users: USERS3, clock });
+    const [alice, bob, carol] = USERS3.map(name => actors[name]);
+    const { ids } = seed(db, clock, alice, bob, carol);
+    const response = await pageOf(alice, '');
+    assert.equal(response.status, 200);
+    assertSecurityHeaders(response, 'G02');
+    assert.deepEqual(Object.keys(response.body), ['items', 'nextCursor']);
+    const expected = orderOf([ids.a1, ids.a2, ids.a3, ids.c1].map(id => ({ id, updated_at: db.prepare('SELECT updated_at FROM Conversations WHERE conversation_id = ?').get(id).updated_at })));
+    assert.deepEqual(response.body.items.map(item => item.id), expected.map(row => row.id), 'updated_at DESC, then conversation_id DESC');
+    assert.equal(response.body.nextCursor, null, 'the last page has no cursor');
+    for (const item of response.body.items) {
+        assert.deepEqual(Object.keys(item).sort(), [...GROUP_KEYS, 'unreadCount'].sort());
+        assert.ok(Number.isInteger(item.unreadCount) && item.unreadCount >= 0);
+    }
+    const byId = Object.fromEntries(response.body.items.map(item => [item.id, item]));
+    assert.deepEqual([byId[ids.a1].role, byId[ids.c1].role, byId[ids.a3].archived, byId[ids.a1].archived], ['owner', 'member', true, false]);
+    assert.deepEqual([byId[ids.a1].memberCount, byId[ids.c1].memberCount, byId[ids.a1].name, byId[ids.c1].updatedAt], [1, 2, 'A one', '2027-02-02T00:00:00.000Z']);
+    for (const hidden of [ids.b1, ids.c2, ids.direct, ids.legacy, ids.bare]) assert.ok(!(hidden in byId), `${hidden} is not listed`);
+    const bobs = await pageOf(bob, '');
+    assert.deepEqual(bobs.body.items.map(item => item.id), [ids.b1], 'bob sees his own group only (the direct conversation is not a group)');
+    assert.equal((await send(alice, 'HEAD', '/api/groups')).status, 200);
+    const conversations = await send(alice, 'GET', '/api/conversations');
+    for (const id of Object.values(ids)) if (id !== ids.direct) assert.ok(!conversations.text.includes(id), 'GET /api/conversations lists no group');
+});
+
+test('G02: pages by limit and an opaque cursor that covers every group once, and the last page has no cursor', async t => {
+    const clock = createClock(SINCE);
+    const { actors, db } = await application(t, { features: ON, users: USERS3, clock });
+    const [alice, bob, carol] = USERS3.map(name => actors[name]);
+    const { ids } = seed(db, clock, alice, bob, carol);
+    const everything = (await pageOf(alice, '')).body.items.map(item => item.id);
+    for (const limit of [1, 2, 3, 4, 5, 50]) {
+        const seen = [];
+        let cursor = null;
+        let pages = 0;
+        do {
+            const response = await pageOf(alice, `?limit=${limit}${cursor === null ? '' : `&cursor=${cursor}`}`);
+            assert.equal(response.status, 200, `limit ${limit}`);
+            assert.ok(response.body.items.length <= limit);
+            seen.push(...response.body.items.map(item => item.id));
+            cursor = response.body.nextCursor;
+            pages += 1;
+            assert.ok(pages < 20);
+        } while (cursor !== null);
+        assert.deepEqual(seen, everything, `limit ${limit} returns every group once, in order`);
+        assert.equal(pages, Math.ceil(everything.length / limit), `limit ${limit}: the page count`);
+    }
+    assert.equal((await pageOf(alice, `?limit=${everything.length}`)).body.nextCursor, null, 'a page that ends exactly at the last group has no cursor');
+    const first = await pageOf(alice, '?limit=2');
+    assert.equal(typeof first.body.nextCursor, 'string');
+    assert.ok(first.body.nextCursor.length <= 2048 && /^[A-Za-z0-9_-]+$/.test(first.body.nextCursor));
+    assert.equal((await pageOf(alice, `?limit=2&cursor=${first.body.nextCursor}`)).status, 200, 'a later page may use another limit and the cursor stays valid');
+    const changed = await pageOf(alice, `?limit=3&cursor=${first.body.nextCursor}`);
+    assert.equal(changed.status, 200);
+});
+
+test('G02: a bad limit, an unknown parameter or a bad cursor is a 400 that names it, and nothing leaks through a crafted cursor', async t => {
+    const clock = createClock(SINCE);
+    const { actors, db } = await application(t, { features: ON, users: USERS3, clock });
+    const [alice, bob, carol] = USERS3.map(name => actors[name]);
+    const { ids } = seed(db, clock, alice, bob, carol);
+    for (const index of [0, 1, 2]) builderGroups(db, clock, bob, `bob extra ${index}`);
+    const before = snapshot(db).total;
+    for (const query of ['limit=0', 'limit=51', 'limit=abc', 'limit=1.5', 'limit=01', 'limit=-1', 'limit=1e1', 'limit=%201', 'limit=', 'limit=1&limit=2', 'limit=%2B5', 'limit=0x10', 'limit=1000000']) {
+        const response = await pageOf(alice, `?${query}`);
+        assert.deepEqual([response.status, response.body], [400, error400(['limit'])], query);
+    }
+    assert.deepEqual((await pageOf(alice, '?foo=1')).body, error400(['foo']));
+    assert.deepEqual((await pageOf(alice, '?limit=0&foo=1&bar=2')).body, error400(['limit', 'foo', 'bar']));
+    assert.deepEqual((await pageOf(alice, '?userId=x&role=owner')).body, error400(['userId', 'role']), 'an identity claim in the query is an unknown parameter');
+    for (const cursor of ['zzz', '!!!!', 'a'.repeat(2049), 'a'.repeat(2048), '', 'e30', 'bm90IGpzb24', encodeURIComponent('a b')]) {
+        const response = await pageOf(alice, `?cursor=${cursor}`);
+        assert.deepEqual([response.status, response.body], [400, error400(['cursor'])], cursor.slice(0, 20));
+    }
+    assert.deepEqual((await pageOf(alice, '?limit=0&cursor=zzz')).body, error400(['limit', 'cursor']));
+    // Another user's cursor, another route's cursor, and a well-formed cursor of the wrong shape.
+    const bobsCursor = (await pageOf(bob, '?limit=1')).body.nextCursor;
+    assert.equal(typeof bobsCursor, 'string');
+    assert.deepEqual((await pageOf(alice, `?cursor=${bobsCursor}`)).body, error400(['cursor']), 'a cursor issued to another user');
+    const membersRoute = codec.encode({ last: ['2027-02-01T00:00:00.000Z', 'x'] }, { route: 'group-members', userId: alice.id, conversationId: ids.a1 });
+    assert.deepEqual((await pageOf(alice, `?cursor=${membersRoute}`)).body, error400(['cursor']), 'a cursor of another route');
+    for (const payload of [{ last: ['x'] }, { last: ['not-a-time', 'id'] }, { last: ['2027-02-01T00:00:00.000Z', 'id', 'extra'] }, { last: ['2027-02-01T00:00:00.000Z', 5] },
+        { last: ['2027-02-01T00:00:00.000Z', 'id'], highWater: 4 }]) {
+        const crafted = codec.encode(payload, { route: 'groups', userId: alice.id });
+        assert.deepEqual((await pageOf(alice, `?cursor=${crafted}`)).body, error400(['cursor']), JSON.stringify(payload));
+    }
+    // A well-formed cursor can only move inside the groups the requester may see.
+    const wide = codec.encode({ last: ['2999-01-01T00:00:00.000Z', 'zzzz'] }, { route: 'groups', userId: alice.id });
+    const wideResponse = await pageOf(alice, `?cursor=${wide}`);
+    assert.equal(wideResponse.status, 200);
+    assert.ok(wideResponse.body.items.every(item => [ids.a1, ids.a2, ids.a3, ids.c1].includes(item.id)));
+    const narrow = codec.encode({ last: ['2000-01-01T00:00:00.000Z', 'a'] }, { route: 'groups', userId: alice.id });
+    assert.deepEqual((await pageOf(alice, `?cursor=${narrow}`)).body.items, []);
+    assert.equal(snapshot(db).total, before, 'no read changed a table');
+});
+function builderGroups(db, clock, owner, title) {
+    const id = createGroupBuilder({ db, clock }).createGroup({ ownerId: owner.id, title, idempotencyKey: null });
+    stamp(db, id, '2027-02-07T00:00:00.000Z');
+    return id;
+}
+
+test('G02: a session is needed, and a read changes no table', async t => {
+    const clock = createClock(SINCE);
+    const { actors, db, f } = await application(t, { features: ON, users: USERS3, clock });
+    const [alice, bob, carol] = USERS3.map(name => actors[name]);
+    seed(db, clock, alice, bob, carol);
+    const before = snapshot(db).total;
+    assertError(await f.browser().request('/api/groups'), 401, { code: 'UNAUTHENTICATED', fields: [] });
+    await pageOf(alice, '?limit=2');
+    assert.equal(snapshot(db).total, before);
+});
+
+test('G03: returns the projection with the name from Conversations.title and the other fields only from the extension record', async t => {
+    const clock = createClock(SINCE);
+    const { actors, db } = await application(t, { features: ON, users: USERS3, clock });
+    const [alice, bob, carol] = USERS3.map(name => actors[name]);
+    const { builder, ids } = seed(db, clock, alice, bob, carol);
+    builder.addMember(ids.a1, bob.id);
+    const detail = await send(alice, 'GET', `/api/groups/${ids.a1}`);
+    assert.equal(detail.status, 200);
+    assertSecurityHeaders(detail, 'G03');
+    assert.deepEqual(Object.keys(detail.body), ['group']);
+    assert.deepEqual(Object.keys(detail.body.group).sort(), GROUP_KEYS, 'no unreadCount in the detail');
+    const row = db.prepare('SELECT * FROM Conversations WHERE conversation_id = ?').get(ids.a1);
+    assert.deepEqual(detail.body.group, { id: ids.a1, name: 'A one', description: null, historyPolicy: 'from_joined', membershipRevision: 2, archived: false,
+        createdAt: row.created_at, updatedAt: row.updated_at, memberCount: 2, role: 'owner' });
+    // Each field follows its one source: change the source and only that field follows.
+    db.prepare("UPDATE Conversations SET title = 'Renamed in Conversations' WHERE conversation_id = ?").run(ids.a1);
+    db.prepare("UPDATE GroupExtensions SET description = 'Described in the extension', membership_revision = membership_revision + 1 WHERE conversation_id = ?").run(ids.a1);
+    stamp(db, ids.a1, '2027-05-05T05:05:05.000Z');
+    const changed = (await send(alice, 'GET', `/api/groups/${ids.a1}`)).body.group;
+    assert.deepEqual([changed.name, changed.description, changed.membershipRevision, changed.updatedAt, changed.historyPolicy], ['Renamed in Conversations', 'Described in the extension', 3, '2027-05-05T05:05:05.000Z', 'from_joined']);
+    const asMember = (await send(bob, 'GET', `/api/groups/${ids.a1}`)).body.group;
+    assert.deepEqual([asMember.role, asMember.memberCount], ['member', 2]);
+    const archived = (await send(alice, 'GET', `/api/groups/${ids.a3}`)).body.group;
+    assert.deepEqual([archived.archived, archived.role], [true, 'owner']);
+    const columns = table => db.prepare(`PRAGMA table_info(${table})`).all().map(column => column.name);
+    assert.ok(!columns('Conversations').some(name => /description|history|revision/.test(name)), 'Conversations holds none of the extension fields');
+    const source = fs.readFileSync(path.join(SERVER_ROOT, 'groups', 'service.js'), 'utf8');
+    assert.ok(/name: row\.title/.test(source) && /description: row\.description/.test(source) && /historyPolicy: row\.history_policy/.test(source) && /membershipRevision: row\.membership_revision/.test(source));
+});
+
+test('G03: an unknown id, a direct conversation, a legacy group, a group without an extension record and a non-member get the identical 404', async t => {
+    const clock = createClock(SINCE);
+    const { actors, db, f } = await application(t, { features: ON, users: USERS3, clock });
+    const [alice, bob, carol] = USERS3.map(name => actors[name]);
+    const { builder, ids } = seed(db, clock, alice, bob, carol);
+    const pending = builder.invite(ids.b1, bob.id, carol.id);
+    assert.ok(pending);
+    const cases = [['unknown id', alice, 'no-such-group'], ['malformed id', alice, 'a%20b'], ['dot segments', alice, '..%2Fx'], ['overlong id', alice, 'x'.repeat(2000)],
+        ['direct conversation', alice, ids.direct], ['legacy group', alice, ids.legacy], ['group without an extension', alice, ids.bare],
+        ['non-member', alice, ids.b1], ['removed member', alice, ids.c2], ['pending invitee', carol, ids.b1], ['control character', alice, 'a%00b'], ['unicode id', alice, '%E2%82%AC']];
+    const answers = [];
+    for (const [label, actor, id] of cases) {
+        const response = await send(actor, 'GET', `/api/groups/${id}`);
+        assert.equal(response.status, 404, label);
+        answers.push([label, response.text, JSON.stringify(headersOf(response))]);
+    }
+    assert.equal(answers[0][1], JSON.stringify(error404));
+    for (const answer of answers) assert.deepEqual([answer[1], answer[2]], [answers[0][1], answers[0][2]], `${answer[0]} is identical to the unknown id`);
+    assert.equal((await f.browser().request(`/api/groups/${ids.a1}`)).status, 401);
+    // A visible group still answers for its members, so the 404 above is not a blanket refusal.
+    assert.equal((await send(alice, 'GET', `/api/groups/${ids.a1}`)).status, 200);
+    assert.equal((await send(carol, 'GET', `/api/groups/${ids.c1}`)).status, 200);
+    // The direct routes keep refusing a group id.
+    assert.equal((await send(alice, 'GET', `/api/conversations/${ids.a1}`)).status, 404);
+});
+// ===============================================================================================================
+// T-5C-09: G04 PATCH /api/groups/:id (DB5-R02.9 to R02.15, R07.2).
+// ===============================================================================================================
+const USERS4 = [...USERS3, 'grp-http-dave'];
+const patchGroup = (actor, id, body, headers = {}) => send(actor, 'PATCH', `/api/groups/${id}`, { body, headers });
+const stateOf = (db, id) => ({ conversation: db.prepare('SELECT * FROM Conversations WHERE conversation_id = ?').get(id),
+    extension: db.prepare('SELECT * FROM GroupExtensions WHERE conversation_id = ?').get(id), audit: auditOf(db, id).length });
+
+// alice owns the group, bob is an admin, carol a member, dave belongs to no group.
+async function ownedGroup(t, { archived = false } = {}) {
+    const clock = createClock(SINCE);
+    const app = await application(t, { features: ON, users: USERS4, clock });
+    const [alice, bob, carol, dave] = USERS4.map(name => app.actors[name]);
+    const builder = createGroupBuilder({ db: app.db, clock });
+    const id = builder.createGroup({ ownerId: alice.id, title: 'Original', description: 'Original description', idempotencyKey: null });
+    builder.addMember(id, bob.id, { role: 'admin' });
+    builder.addMember(id, carol.id);
+    stamp(app.db, id, '2027-02-01T00:00:00.000Z');
+    if (archived) app.db.prepare("UPDATE Conversations SET archived_at = '2027-02-01T00:00:00.000Z' WHERE conversation_id = ?").run(id);
+    return { ...app, clock, builder, alice, bob, carol, dave, id };
+}
+
+test('G04: the owner updates name and description in one transaction with one audit row and gets the updated group', async t => {
+    const { db, clock, alice, id } = await ownedGroup(t);
+    const before = stateOf(db, id);
+    const response = await patchGroup(alice, id, { name: '  Renamed  ', description: 'New description' });
+    assert.equal(response.status, 200);
+    assertSecurityHeaders(response, 'G04');
+    assert.deepEqual(Object.keys(response.body), ['group']);
+    assert.deepEqual(response.body.group, { id, name: 'Renamed', description: 'New description', historyPolicy: 'from_joined', membershipRevision: 4, archived: false,
+        createdAt: before.conversation.created_at, updatedAt: clock.iso(), memberCount: 3, role: 'owner' });
+    const after = stateOf(db, id);
+    assert.deepEqual([after.conversation.title, after.extension.description, after.conversation.updated_at], ['Renamed', 'New description', clock.iso()]);
+    assert.deepEqual([after.extension.history_policy, after.extension.membership_revision, after.conversation.archived_at], [before.extension.history_policy, before.extension.membership_revision, null]);
+    assert.equal(after.audit, before.audit + 1);
+    const audit = auditOf(db, id).at(-1);
+    assert.deepEqual([audit.event_type, audit.actor_user_id, audit.source], ['group.updated', alice.id, 'groups']);
+    assert.deepEqual(Object.keys(JSON.parse(audit.metadata_json)).sort(), ['operation', 'outcome']);
+    assert.ok(!audit.metadata_json.includes('Renamed') && !audit.metadata_json.includes('New description'));
+    // One field at a time, and null clears the description.
+    clock.advance(1000);
+    assert.equal((await patchGroup(alice, id, { name: 'Only the name' })).body.group.description, 'New description');
+    assert.equal((await patchGroup(alice, id, { description: 'Only the description' })).body.group.name, 'Only the name');
+    const cleared = await patchGroup(alice, id, { description: null });
+    assert.deepEqual([cleared.status, cleared.body.group.description, cleared.body.group.name], [200, null, 'Only the name']);
+    assert.equal(stateOf(db, id).extension.description, null);
+    assert.equal((await send(alice, 'GET', `/api/groups/${id}/`)).body.group.description, null, 'a later read shows the stored value');
+});
+
+test('G04: a repeated patch with the same values changes nothing, writes no audit row and bumps no revision', async t => {
+    const { db, clock, alice, id } = await ownedGroup(t);
+    const first = await patchGroup(alice, id, { name: 'Same', description: 'Same description' });
+    clock.advance(5000);
+    const state = stateOf(db, id);
+    for (const body of [{ name: 'Same', description: 'Same description' }, { name: ' Same ' }, { description: 'Same description' }, { name: 'Same', membershipRevision: 4 }]) {
+        const repeated = await patchGroup(alice, id, body);
+        assert.deepEqual([repeated.status, repeated.body], [200, first.body], JSON.stringify(body));
+    }
+    assert.deepEqual(stateOf(db, id), state, 'no column, no audit row and no revision moved');
+});
+
+test('G04: refusals come in the order 404, 403, archived 409, body 400, historyPolicy 400, stale 409, and each leaves every record unchanged', async t => {
+    const { db, alice, bob, carol, dave, id, builder } = await ownedGroup(t);
+    const state = stateOf(db, id);
+    const invalid = { name: '' };
+    assertError(await patchGroup(carol, id, { name: 'x' }), 403, { code: 'FORBIDDEN', fields: [] });
+    assertError(await patchGroup(bob, id, { name: 'x' }), 403, { code: 'FORBIDDEN', fields: [] });
+    assertError(await patchGroup(dave, id, { name: 'x' }), 404, error404);
+    assertError(await patchGroup(carol, id, invalid), 403, { code: 'FORBIDDEN', fields: [] });
+    assertError(await patchGroup(dave, id, invalid), 404, error404);
+    assertError(await patchGroup(carol, id, { historyPolicy: 'all' }), 403, { code: 'FORBIDDEN', fields: [] });
+    assertError(await patchGroup(dave, id, { historyPolicy: 'all' }), 404, error404);
+    assertError(await patchGroup(bob, id, { name: 'x', historyPolicy: 'all', membershipRevision: 99 }), 403, { code: 'FORBIDDEN', fields: [] });
+    assertError(await patchGroup(alice, 'no-such-group', { name: 'x' }), 404, error404);
+    builder.removeMember(id, carol.id);
+    assertError(await patchGroup(carol, id, { name: 'x' }), 404, error404);
+    assert.deepEqual(stateOf(db, id).conversation, state.conversation);
+    assert.equal(stateOf(db, id).audit, state.audit);
+    // Archived: the owner meets 409 before any body check; a member still meets 403 and a non-member 404.
+    const archived = await ownedGroup(t, { archived: true });
+    const before = stateOf(archived.db, archived.id);
+    for (const body of [{ name: 'x' }, { name: '' }, undefined, { historyPolicy: 'all' }, { name: 'x', membershipRevision: 99 }]) {
+        assertError(await patchGroup(archived.alice, archived.id, body), 409, { code: 'CONFLICT', fields: [] });
+    }
+    assertError(await patchGroup(archived.carol, archived.id, { name: 'x' }), 403, { code: 'FORBIDDEN', fields: [] });
+    assertError(await patchGroup(archived.dave, archived.id, { name: 'x' }), 404, error404);
+    assert.deepEqual(stateOf(archived.db, archived.id), before);
+});
+
+test('G04: a body that is missing, not an object, empty, or holds a bad or unknown field is a 400 that names the fields', async t => {
+    const { db, alice, id } = await ownedGroup(t);
+    const state = stateOf(db, id);
+    const json = { 'Content-Type': 'application/json' };
+    const raw = rawBody => send(alice, 'PATCH', `/api/groups/${id}`, { rawBody, headers: json });
+    assert.deepEqual((await send(alice, 'PATCH', `/api/groups/${id}`)).body, error400([]), 'no body');
+    for (const rawBody of ['{}', '[]', '"x"', 'null', '7', 'true']) assert.deepEqual((await raw(rawBody)).body, error400([]), rawBody);
+    const cases = [[{ name: '' }, ['name']], [{ name: ' ' }, ['name']], [{ name: 5 }, ['name']], [{ name: null }, ['name']], [{ name: 'n'.repeat(101) }, ['name']],
+        [{ name: 'a\u0000b' }, ['name']], [{ description: 5 }, ['description']], [{ description: 'd'.repeat(1001) }, ['description']], [{ description: ['x'] }, ['description']],
+        [{ name: 'ok', foo: 1 }, ['foo']], [{ foo: 1 }, ['foo']], [{ name: '', description: 5, foo: 1 }, ['name', 'description', 'foo']],
+        [{ name: 'ok', userId: 'someone', role: 'owner', ownerId: 'x' }, ['userId', 'role', 'ownerId']],
+        [{ name: 'ok', membershipRevision: 0 }, ['membershipRevision']], [{ name: 'ok', membershipRevision: '3' }, ['membershipRevision']],
+        [{ name: 'ok', membershipRevision: null }, ['membershipRevision']], [{ name: 'ok', membershipRevision: 1.5 }, ['membershipRevision']],
+        [{ name: 'ok', membershipRevision: -1 }, ['membershipRevision']], [{ membershipRevision: 3 }, []]];
+    for (const [body, fields] of cases) {
+        const response = await patchGroup(alice, id, body);
+        assert.deepEqual([response.status, response.body], [400, error400(fields)], JSON.stringify(body));
+        assertSecurityHeaders(response, JSON.stringify(body));
+    }
+    assert.deepEqual(stateOf(db, id), state);
+});
+
+test('G04: historyPolicy is never accepted, whatever its value, and a body fault is reported before it', async t => {
+    const { db, alice, id } = await ownedGroup(t);
+    const state = stateOf(db, id);
+    for (const policy of ['all', 'from_joined', 'bogus', '', null, 1, true, [], {}, 'ALL']) {
+        const alone = await patchGroup(alice, id, { historyPolicy: policy });
+        assert.deepEqual([alone.status, alone.body], [400, error400(['historyPolicy'])], JSON.stringify(policy));
+        const beside = await patchGroup(alice, id, { name: 'A valid new name', description: 'and description', historyPolicy: policy });
+        assert.deepEqual([beside.status, beside.body], [400, error400(['historyPolicy'])], `beside a valid body: ${JSON.stringify(policy)}`);
+    }
+    assert.deepEqual((await patchGroup(alice, id, { name: '', historyPolicy: 'all' })).body, error400(['name']), 'a bad name is reported first');
+    assert.deepEqual((await patchGroup(alice, id, { name: 'ok', historyPolicy: 'all', extra: 1 })).body, error400(['extra']), 'an unknown field is reported first');
+    assert.deepEqual((await patchGroup(alice, id, { historyPolicy: 'all', membershipRevision: 99 })).body, error400(['historyPolicy']), 'the policy is reported before a stale revision');
+    assert.deepEqual((await patchGroup(alice, id, { historyPolicy: 'all', membershipRevision: 0 })).body, error400(['membershipRevision']));
+    assert.deepEqual(stateOf(db, id), state, 'no record changed');
+    assert.equal(stateOf(db, id).extension.history_policy, 'from_joined');
+});
+
+test('G04: a stale Membership_Revision is a 409 STALE_STATE that changes nothing, and a matching one is applied', async t => {
+    const { db, alice, id } = await ownedGroup(t);
+    const state = stateOf(db, id);
+    for (const revision of [1, 2, 3, 5, 99]) assertError(await patchGroup(alice, id, { name: 'Stale', membershipRevision: revision }), 409, { code: 'STALE_STATE', fields: [] });
+    assert.deepEqual(stateOf(db, id), state);
+    assert.deepEqual((await patchGroup(alice, id, { name: '', membershipRevision: 99 })).body, error400(['name']), 'the body is checked before the revision');
+    const applied = await patchGroup(alice, id, { name: 'Fresh', membershipRevision: 4 });
+    assert.deepEqual([applied.status, applied.body.group.name, applied.body.group.membershipRevision], [200, 'Fresh', 4]);
+});
+
+test('G04: a failed audit write rolls back the update', async t => {
+    const { db, alice, id } = await ownedGroup(t);
+    const state = stateOf(db, id);
+    db.exec("CREATE TRIGGER test_refuse_group_audit BEFORE INSERT ON AuditLogs WHEN NEW.source = 'groups' BEGIN SELECT RAISE(ABORT, 'refused by the test'); END");
+    try {
+        const response = await patchGroup(alice, id, { name: 'Doomed', description: 'Doomed too' });
+        assert.deepEqual([response.status, response.body], [500, { code: 'INTERNAL_ERROR', fields: [] }]);
+        assert.ok(!response.text.includes('refused by the test'));
+    } finally { db.exec('DROP TRIGGER test_refuse_group_audit'); }
+    assert.deepEqual(stateOf(db, id), state);
+});
+
+test('G04: a session and a CSRF proof of the same session are required, and the actor is the session user', async t => {
+    const { db, f, alice, bob, carol, id } = await ownedGroup(t);
+    const state = stateOf(db, id);
+    assert.equal((await f.browser().request(`/api/groups/${id}`, { method: 'PATCH', body: { name: 'x' } })).status, 401);
+    assertError(await send(alice, 'PATCH', `/api/groups/${id}`, { body: { name: 'x' }, csrf: false }), 403, { code: 'CSRF_INVALID', fields: [] });
+    assertError(await send(alice, 'PATCH', `/api/groups/${id}`, { body: { name: 'x' }, csrf: false, headers: { 'X-CSRF-Token': bob.token } }), 403, { code: 'CSRF_INVALID', fields: [] });
+    // A member who claims to be the owner by header or body stays a member.
+    assertError(await patchGroup(carol, id, { name: 'x' }, { 'X-User-Id': alice.id, 'X-Actor': alice.id, 'X-Role': 'owner', 'X-Owner-Id': alice.id }), 403, { code: 'FORBIDDEN', fields: [] });
+    assert.deepEqual((await patchGroup(carol, id, { name: 'x', userId: alice.id, role: 'owner' })).body, { code: 'FORBIDDEN', fields: [] }, 'the role check comes before the body check');
+    assert.deepEqual(stateOf(db, id), state);
+});
+
+test('G04: no route deletes, unarchives or restores a group, and the owner meets the final 404', async t => {
+    const { db, alice, id } = await ownedGroup(t);
+    const state = stateOf(db, id);
+    for (const [method, url] of [['DELETE', `/api/groups/${id}`], ['DELETE', `/api/groups/${id}/`], ['PUT', `/api/groups/${id}`], ['POST', `/api/groups/${id}`],
+        ['POST', `/api/groups/${id}/unarchive`], ['POST', `/api/groups/${id}/restore`], ['PATCH', `/api/groups/${id}/archive`], ['DELETE', '/api/groups']]) {
+        assertError(await send(alice, method, url, { body: { name: 'x' } }), 404, error404);
+    }
+    assert.deepEqual(stateOf(db, id), state);
+    assert.equal((await send(alice, 'GET', `/api/groups/${id}`)).status, 200, 'the group is still there');
+});
+
+// ===============================================================================================================
+// T-5C-10: G05 GET /api/groups/:id/members (DB5-R03.1 to R03.4, R03.15).
+// ===============================================================================================================
+const USERS6 = [...USERS4, 'grp-http-erin', 'grp-http-frank'];
+const membersOf = (actor, id, query = '') => send(actor, 'GET', `/api/groups/${id}/members${query}`);
+
+// alice owns, bob is admin, carol a member; dave and erin were members and were removed (dave first); frank belongs to nothing.
+async function memberGroup(t) {
+    const clock = createClock(SINCE);
+    const app = await application(t, { features: ON, users: USERS6, clock });
+    const [alice, bob, carol, dave, erin, frank] = USERS6.map(name => app.actors[name]);
+    const builder = createGroupBuilder({ db: app.db, clock });
+    const id = builder.createGroup({ ownerId: alice.id, title: 'Members', idempotencyKey: null });
+    for (const [user, role] of [[bob, 'admin'], [carol, 'member'], [dave, 'member'], [erin, 'member']]) builder.addMember(id, user.id, { role });
+    builder.removeMember(id, dave.id);
+    clock.advance(1000);
+    builder.removeMember(id, erin.id);
+    return { ...app, clock, builder, alice, bob, carol, dave, erin, frank, id };
+}
+
+test('G05: lists the Active_Members with the documented fields, in joined order, and no private data', async t => {
+    const { db, alice, bob, carol, dave, id } = await memberGroup(t);
+    const expected = db.prepare('SELECT user_id, joined_at FROM GroupMembershipIntervals WHERE conversation_id = ? AND left_at IS NULL ORDER BY joined_at, user_id').all(id);
+    assert.equal(expected.length, 3);
+    for (const actor of [alice, bob, carol]) {
+        const response = await membersOf(actor, id);
+        assert.equal(response.status, 200);
+        assertSecurityHeaders(response, 'G05');
+        assert.deepEqual(Object.keys(response.body), ['items', 'nextCursor']);
+        assert.equal(response.body.nextCursor, null);
+        assert.deepEqual(response.body.items.map(item => item.id), expected.map(row => row.user_id), 'joined time, then user id, ascending');
+        assert.deepEqual(response.body.items.map(item => item.joinedAt), expected.map(row => row.joined_at));
+        for (const item of response.body.items) {
+            assert.deepEqual(Object.keys(item).sort(), ['avatar', 'displayName', 'id', 'joinedAt', 'role', 'username']);
+            assert.ok(typeof item.username === 'string' && typeof item.displayName === 'string' && (item.avatar === null || typeof item.avatar === 'string'));
+        }
+        assert.ok(!/email|@example|password|passphrase|session|csrf|device|credential|hash|secret|"left/i.test(response.text), 'no private data');
+        assert.ok(!response.text.includes(dave.id), 'a removed member is not listed');
+    }
+    const roles = Object.fromEntries((await membersOf(alice, id)).body.items.map(item => [item.id, item.role]));
+    assert.deepEqual(roles, { [alice.id]: 'owner', [bob.id]: 'admin', [carol.id]: 'member' });
+    assert.equal((await send(alice, 'HEAD', `/api/groups/${id}/members`)).status, 200);
+});
+
+test('G05: pages with a cursor bound to the user, the group and the list kind, and refuses a bad query by name', async t => {
+    const { alice, bob, id, builder } = await memberGroup(t);
+    const everything = (await membersOf(alice, id)).body.items.map(item => item.id);
+    for (const limit of [1, 2, 3, 50]) {
+        const seen = [];
+        let cursor = null;
+        let pages = 0;
+        do {
+            const response = await membersOf(alice, id, `?limit=${limit}${cursor === null ? '' : `&cursor=${cursor}`}`);
+            assert.equal(response.status, 200, `limit ${limit}`);
+            seen.push(...response.body.items.map(item => item.id));
+            cursor = response.body.nextCursor;
+            pages += 1;
+            assert.ok(pages < 10);
+        } while (cursor !== null);
+        assert.deepEqual(seen, everything, `limit ${limit}`);
+        assert.equal(pages, Math.ceil(everything.length / limit));
+    }
+    for (const query of ['limit=0', 'limit=51', 'limit=x', 'limit=1&limit=2', 'limit=']) assert.deepEqual((await membersOf(alice, id, `?${query}`)).body, error400(['limit']), query);
+    assert.deepEqual((await membersOf(alice, id, '?foo=1')).body, error400(['foo']));
+    assert.deepEqual((await membersOf(alice, id, '?former=maybe')).body, error400(['former']));
+    assert.deepEqual((await membersOf(alice, id, '?former=TRUE')).body, error400(['former']));
+    assert.deepEqual((await membersOf(alice, id, '?former=true&former=true')).body, error400(['former']));
+    assert.deepEqual((await membersOf(alice, id, '?userId=x')).body, error400(['userId']));
+    assert.deepEqual((await membersOf(alice, id, '?cursor=zzz')).body, error400(['cursor']));
+    const first = (await membersOf(alice, id, '?limit=1')).body.nextCursor;
+    assert.equal(typeof first, 'string');
+    assert.deepEqual((await membersOf(bob, id, `?cursor=${first}`)).body, error400(['cursor']), 'a cursor of another user');
+    const other = builder.createGroup({ ownerId: alice.id, title: 'Other', idempotencyKey: null });
+    builder.addMember(other, bob.id);
+    assert.deepEqual((await membersOf(alice, other, `?cursor=${first}`)).body, error400(['cursor']), 'a cursor of another group');
+    assert.deepEqual((await membersOf(alice, id, `?former=true&cursor=${first}`)).body, error400(['cursor']), 'a cursor of the other list kind');
+    assert.deepEqual((await send(alice, 'GET', `/api/groups?cursor=${first}`)).body, error400(['cursor']), 'a cursor of another route');
+    for (const last of [['x'], ['2027-02-01T00:00:00.000Z'], [5, 'x'], ['2027-02-01T00:00:00.000Z', 'x', 'y']]) {
+        const crafted = codec.encode({ last }, { route: 'group-members', userId: alice.id, conversationId: id });
+        assert.equal((await membersOf(alice, id, `?cursor=${crafted}`)).status, 400, JSON.stringify(last));
+    }
+    const wide = codec.encode({ last: ['2000-01-01T00:00:00.000Z', 'a'] }, { route: 'group-members', userId: alice.id, conversationId: id });
+    assert.deepEqual((await membersOf(alice, id, `?cursor=${wide}`)).body.items.map(item => item.id), everything, 'a crafted position can only move inside the visible members');
+});
+
+test('G05: former=true gives the former members with leftAt to an owner or admin only; a member gets 403 and no member data', async t => {
+    const { db, alice, bob, carol, dave, erin, id } = await memberGroup(t);
+    const expected = db.prepare('SELECT user_id, left_at FROM ConversationMembers WHERE conversation_id = ? AND left_at IS NOT NULL ORDER BY left_at, user_id').all(id);
+    assert.deepEqual(expected.map(row => row.user_id), [dave.id, erin.id]);
+    for (const actor of [alice, bob]) {
+        const response = await membersOf(actor, id, '?former=true');
+        assert.equal(response.status, 200);
+        assert.deepEqual(response.body.items.map(item => item.id), [dave.id, erin.id]);
+        assert.deepEqual(response.body.items.map(item => item.leftAt), expected.map(row => row.left_at));
+        for (const item of response.body.items) {
+            assert.deepEqual(Object.keys(item).sort(), ['avatar', 'displayName', 'id', 'joinedAt', 'leftAt', 'role', 'username']);
+            assert.ok(typeof item.leftAt === 'string' && typeof item.joinedAt === 'string');
+        }
+        assert.ok(!/email|@example|password|session|csrf|device|credential/i.test(response.text));
+        assert.ok(!response.text.includes(carol.id) && !response.text.includes(alice.id), 'only former members');
+    }
+    const paged = [];
+    let cursor = null;
+    do {
+        const response = await membersOf(alice, id, `?former=true&limit=1${cursor === null ? '' : `&cursor=${cursor}`}`);
+        assert.equal(response.status, 200);
+        paged.push(...response.body.items.map(item => item.id));
+        cursor = response.body.nextCursor;
+    } while (cursor !== null);
+    assert.deepEqual(paged, [dave.id, erin.id]);
+    const refused = await membersOf(carol, id, '?former=true');
+    assert.deepEqual([refused.status, refused.body, refused.text], [403, { code: 'FORBIDDEN', fields: [] }, JSON.stringify({ code: 'FORBIDDEN', fields: [] })]);
+    assert.ok(!refused.text.includes(dave.id) && !refused.text.includes('items'));
+    assert.deepEqual((await membersOf(carol, id, '?former=true&limit=0')).body, { code: 'FORBIDDEN', fields: [] }, 'the role check comes before the query check');
+    assert.equal((await membersOf(carol, id, '?former=false')).status, 200, 'a member may ask for the active list explicitly');
+    assert.deepEqual((await membersOf(carol, id, '?former=maybe')).body, error400(['former']));
+});
+
+test('G05: a non-member, a removed member, a pending invitee, a direct id and an unknown id get the identical 404', async t => {
+    const { db, alice, carol, dave, frank, id, builder, f } = await memberGroup(t);
+    const direct = createRepositories(db).conversations.create({ kind: 'direct', dm_user_low: [alice.id, frank.id].sort()[0], dm_user_high: [alice.id, frank.id].sort()[1], origin: 'authenticated', created_by: alice.id });
+    const invited = builder.invite(id, alice.id, frank.id);
+    assert.ok(invited);
+    const cases = [['non-member', frank, id, ''], ['non-member asking for former', frank, id, '?former=true'], ['removed member', dave, id, ''], ['removed member asking for former', dave, id, '?former=true'],
+        ['pending invitee', frank, id, '?limit=1'], ['bad query by a non-member', frank, id, '?limit=0&foo=1'], ['direct conversation', alice, direct.conversation_id, ''],
+        ['unknown id', alice, 'no-such-group', ''], ['malformed id', alice, 'a%20b', '']];
+    const answers = [];
+    for (const [label, actor, target, query] of cases) {
+        const response = await membersOf(actor, target, query);
+        assert.equal(response.status, 404, label);
+        answers.push([label, response.text, JSON.stringify(headersOf(response))]);
+    }
+    for (const answer of answers) assert.deepEqual([answer[1], answer[2]], [JSON.stringify(error404), answers[0][2]], answer[0]);
+    assert.equal((await f.browser().request(`/api/groups/${id}/members`)).status, 401);
+    assert.equal((await membersOf(carol, id)).status, 200);
 });

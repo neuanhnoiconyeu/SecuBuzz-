@@ -1,10 +1,9 @@
 'use strict';
 
-// Group_Service infrastructure (T-5C-03; DB5-R12.1, R12.5, R12.6, R12.8, R12.9, R13.5, DB5-R02.3, DB5-R06.2, NFR-01).
-// This module holds the shared machinery only: sessions, CSRF proofs, transactions, the commit-time invariant check,
-// the uniform 404, the repository error mapping, the audit helper and the rate-limit numbers. It has no operation
-// (create, invite, remove ...), no route and no SQL. Those arrive in the tasks that follow, and each of them must go
-// through groupRead or groupWrite below.
+// Group_Service (T-5C-03 infrastructure; DB5-R12.1, R12.5, R12.6, R12.8, R12.9, R13.5, DB5-R02.3, DB5-R06.2, NFR-01).
+// The shared machinery is sessions, CSRF proofs, transactions, the commit-time invariant check, the uniform 404, the
+// repository error mapping, the audit helper and the rate-limit numbers. Each operation (T-5C-07 and later: create, list,
+// read, update, member list ...) is one method below. It has no route and no SQL, and goes through groupRead or groupWrite.
 //
 // Trust boundaries.
 // 1. The actor is the user of a verified session, read once from the context and checked by auth.checkSession. A user
@@ -19,13 +18,15 @@
 // 5. Every failure leaves as an AuthError that carries a code and a status. No database text, name or value is forwarded.
 // Nothing here reads the environment, a forwarded header or a clock other than the injected one.
 
+const { createHash } = require('node:crypto');
 const { createSocialRepository } = require('../database/socialRepository');
 const { createGroupRepository, withMembershipTransaction, normaliseError, RepositoryError } = require('../database/groupRepository');
 const { createSqliteRateLimiter } = require('../auth/rateLimiter');
 const { AuthError } = require('../auth/errors');
 const { DISABLED_FEATURES } = require('../features/config');
 const { ROLES } = require('./policy');
-const { pathId } = require('./validation');
+const { pathId, createBody, patchBody, listQuery, membersQuery } = require('./validation');
+const codec = require('./cursor');
 
 // ASM-03: operational defaults copied from the existing services, not product policy. The per-source numbers are
 // configurable (OP-19) through the rates option of createGroupService. No environment variable exists for them, and no
@@ -142,7 +143,55 @@ function requireText(value, label) {
     return value;
 }
 
-/** Group policy infrastructure over the existing injected DAL; no operation, route or SQL of its own. */
+// G01 idempotency (DB5-R01.10, R01.11). The label is v2 because the History_Policy joined the payload, so a key claimed before
+// that change never matches. An omitted historyPolicy has already become from_joined in the validated input.
+const CREATE_LABEL = 'secubuzz-group-create-v2';
+const CREATION_WINDOW_MS = 24 * 60 * 60 * 1000;
+function creationFingerprint(input) {
+    return createHash('sha256').update(JSON.stringify([CREATE_LABEL, input.name, input.description ?? null, input.historyPolicy]), 'utf8').digest('hex');
+}
+
+// The group projection of DB5-R02.2. The name comes from Conversations.title and the description, the History_Policy and the
+// revision only from the Group_Extension_Record (DB5-R02.1); the repository row already holds exactly those columns.
+function projectGroup(row, role, memberCount) {
+    return {
+        id: row.conversation_id,
+        name: row.title,
+        description: row.description ?? null,
+        historyPolicy: row.history_policy,
+        membershipRevision: row.membership_revision,
+        archived: row.archived_at !== null && row.archived_at !== undefined,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        memberCount,
+        role
+    };
+}
+
+// PATCH body checks in the order of DB5-R02.15: the body (criteria 10 and 14) before historyPolicy (criterion 13). The validator
+// reports every offending field at once, so a historyPolicy that comes with another fault is dropped from the list and named
+// alone only when it is the only fault.
+function patchInput(body) {
+    try {
+        return patchBody(body);
+    } catch (error) {
+        if (error instanceof AuthError && error.code === 'VALIDATION_ERROR' && Array.isArray(error.fields) && error.fields.includes('historyPolicy')) {
+            const others = error.fields.filter(field => field !== 'historyPolicy');
+            throw new AuthError('VALIDATION_ERROR', 400, others.length > 0 ? others : ['historyPolicy']);
+        }
+        throw error;
+    }
+}
+
+// A decoded cursor of a member list is the pair (time, user id); repository paging needs exactly two strings.
+function memberCursor(cursor) {
+    if (cursor !== null && (cursor.last.length !== 2 || cursor.last.some(value => typeof value !== 'string'))) {
+        throw new AuthError('VALIDATION_ERROR', 400, ['cursor']);
+    }
+    return cursor;
+}
+
+/** Group service over the existing injected DAL; no route and no SQL of its own. */
 function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
     const groups = createGroupRepository(db);
     const social = createSocialRepository(db);
@@ -217,7 +266,24 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
         if (report.activeOwners !== 1 || report.openIntervals !== report.activeMembers || report.mismatches !== 0) throw internalError();
     }
 
-    return Object.freeze({
+    // One limiter call over a bucket pair. A malformed answer is a server fault, and only allowed === true passes.
+    function consume(name, actor, from, [userLimit, sourceLimit]) {
+        const pair = [[name, actor, userLimit], [`${name}-source`, from, sourceLimit]];
+        let result;
+        try {
+            result = bucketLimiter.consume(pair.map(([bucket, subject, limit]) => ({ key: `groups:${bucket}:${subject}`, limit: limit.limit, windowMs: limit.windowMs })), clock());
+        } catch (error) {
+            throw toAuthError(error);
+        }
+        if (!result || typeof result !== 'object') throw internalError();
+        if (result.allowed !== true) {
+            const error = new AuthError('RATE_LIMITED', 429, []);
+            error.retryAfterSeconds = positiveInteger(result.retryAfterSeconds) ? result.retryAfterSeconds : 1;
+            throw error;
+        }
+    }
+
+    const service = Object.freeze({
         features: settings,
         rates: limits,
 
@@ -302,23 +368,115 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
             if (operation !== 'read' && operation !== 'write') throw new TypeError('rate knows the operations read and write.');
             const actor = requireText(context && typeof context === 'object' ? context.userId : undefined, 'a user identifier');
             const from = requireText(source, 'a request source');
-            const pair = operation === 'read' ? [['read', actor, limits.readUser], ['read-source', from, limits.readSource]]
-                : [['write', actor, limits.writeUser], ['write-source', from, limits.writeSource]];
-            let result;
-            try {
-                result = bucketLimiter.consume(pair.map(([name, subject, limit]) => ({ key: `groups:${name}:${subject}`, limit: limit.limit, windowMs: limit.windowMs })), clock());
-            } catch (error) {
-                throw toAuthError(error);
-            }
-            // Only an explicit allowed === true passes. A malformed answer is a server fault, and any other value is a refusal.
-            if (!result || typeof result !== 'object') throw internalError();
-            if (result.allowed !== true) {
-                const error = new AuthError('RATE_LIMITED', 429, []);
-                error.retryAfterSeconds = positiveInteger(result.retryAfterSeconds) ? result.retryAfterSeconds : 1;
-                throw error;
-            }
+            if (operation === 'read') consume('read', actor, from, [limits.readUser, limits.readSource]);
+            else consume('write', actor, from, [limits.writeUser, limits.writeSource]);
+        },
+
+        // G01 POST /api/groups (T-5C-07; DB5-R01). The creation buckets (20 per hour per user, 60 per hour per source) are
+        // consumed first, outside the transaction, as the limiter keeps its own. The order inside the transaction is the
+        // design's: body (400), idempotency key (200 replay, 409 conflict), create. Returns {created, group}.
+        createGroup(context, proof, body, source) {
+            const actor = requireText(context && typeof context === 'object' ? context.userId : undefined, 'a user identifier');
+            consume('create', actor, requireText(source, 'a request source'), [limits.createUser, limits.createSource]);
+            return service.groupWrite(context, proof, (user, at) => {
+                const input = createBody(body);
+                const fingerprint = creationFingerprint(input);
+                if (input.idempotencyKey !== null) {
+                    const claimed = groups.getCreationKey(user, input.idempotencyKey);
+                    if (claimed && Date.parse(claimed.created_at) >= Date.parse(at) - CREATION_WINDOW_MS) {
+                        if (claimed.fingerprint !== fingerprint) throw new AuthError('IDEMPOTENCY_CONFLICT', 409, []);
+                        // The original group is returned only to a user who is still an Active_Member of it. A creator who has left
+                        // would otherwise read the current name of a group they cannot see; that case answers as a conflict.
+                        const original = groups.getVisibleGroup(claimed.conversation_id);
+                        const mine = original ? groups.getMember(claimed.conversation_id, user) : null;
+                        if (!original || !mine || mine.left_at !== null) throw new AuthError('IDEMPOTENCY_CONFLICT', 409, []);
+                        const seen = service.visibleGroup(user, claimed.conversation_id);
+                        return { created: false, group: projectGroup(seen.group, seen.member.role, groups.countActiveMembers(claimed.conversation_id)) };
+                    }
+                }
+                const inserted = groups.insertGroup({ created_by: user, title: input.name, description: input.description, historyPolicy: input.historyPolicy });
+                const id = inserted.conversation_id;
+                if (input.idempotencyKey !== null) groups.claimCreationKey(user, input.idempotencyKey, fingerprint, id, at);
+                service.audit(user, 'group.created', id);
+                // visibleGroup also registers the new group for the commit-time invariant check.
+                const seen = service.visibleGroup(user, id);
+                return { created: true, group: projectGroup(seen.group, seen.member.role, groups.countActiveMembers(id)) };
+            });
+        },
+
+        // G02 GET /api/groups (T-5C-08; DB5-R02.4 to R02.7). Only groups of which the requester is an Active_Member, archived
+        // ones included; the page is selected by the repository query, so a crafted cursor only moves inside the visible set.
+        listGroups(context, query) {
+            return service.groupRead(context, actor => {
+                const page = listQuery(query, { route: 'groups', userId: actor });
+                const rows = groups.listGroupsForUser(actor, { limit: page.limit, after: page.cursor });
+                const items = rows.slice(0, page.limit).map(row => ({ ...projectGroup(row, row.role, row.member_count), unreadCount: row.unread_count }));
+                const last = rows.length > page.limit ? rows[page.limit - 1] : null;
+                const nextCursor = last ? codec.encode({ last: [last.updated_at, last.conversation_id] }, { route: 'groups', userId: actor }) : null;
+                return { items, nextCursor };
+            });
+        },
+
+        // G03 GET /api/groups/:id (T-5C-08; DB5-R02.2, R02.3): the one 404 of visibleGroup for every case that is not a member.
+        getGroup(context, id) {
+            return service.groupRead(context, actor => {
+                const seen = service.visibleGroup(actor, id);
+                return projectGroup(seen.group, seen.member.role, groups.countActiveMembers(seen.group.conversation_id));
+            });
+        },
+
+        // G04 PATCH /api/groups/:id (T-5C-09; DB5-R02.9 to R02.15). Refusal order: 404, 403, archived 409, body 400,
+        // historyPolicy 400, stale revision 409. A patch that changes nothing writes nothing and audits nothing.
+        updateGroup(context, proof, id, body) {
+            return service.groupWrite(context, proof, (actor, at) => {
+                const seen = service.visibleGroup(actor, id);
+                service.requireRole(seen.member, ['owner']);
+                const groupId = seen.group.conversation_id;
+                if (seen.group.archived_at !== null && seen.group.archived_at !== undefined) throw new AuthError('CONFLICT', 409, []);
+                const input = patchInput(body);
+                if (input.membershipRevision !== null && input.membershipRevision !== seen.group.membership_revision) throw new AuthError('STALE_STATE', 409, []);
+                const patch = {};
+                if (Object.hasOwn(input.changes, 'name') && input.changes.name !== seen.group.title) patch.title = input.changes.name;
+                if (Object.hasOwn(input.changes, 'description') && input.changes.description !== (seen.group.description ?? null)) patch.description = input.changes.description;
+                let row = seen.group;
+                if (Object.keys(patch).length > 0) {
+                    row = groups.updateSettings(groupId, patch, at);
+                    service.audit(actor, 'group.updated', groupId);
+                }
+                return projectGroup(row, seen.member.role, groups.countActiveMembers(groupId));
+            });
+        },
+
+        // G05 GET /api/groups/:id/members (T-5C-10; DB5-R03.1 to R03.4, R03.15). 404 for a non-member, then 403 for a member who
+        // asks for former members, then the query checks. With former=true the page holds the former members only, each with
+        // leftAt, paged by (left time, user id); without it the Active_Members, paged by (joined time, user id).
+        listMembers(context, id, query) {
+            return service.groupRead(context, actor => {
+                const seen = service.visibleGroup(actor, id);
+                const groupId = seen.group.conversation_id;
+                const askedForFormer = query !== null && typeof query === 'object' && query.former === 'true';
+                if (askedForFormer) service.requireRole(seen.member, ['owner', 'admin']);
+                const page = membersQuery(query, { userId: actor, conversationId: groupId });
+                const rows = groups.listMembers(groupId, { limit: page.limit, after: memberCursor(page.cursor), former: page.former });
+                const items = rows.slice(0, page.limit).map(row => ({
+                    id: row.user_id,
+                    username: row.username,
+                    displayName: row.display_name,
+                    avatar: row.avatar ?? null,
+                    role: row.role,
+                    joinedAt: row.joined_at,
+                    ...(page.former ? { leftAt: row.left_at } : {})
+                }));
+                const last = rows.length > page.limit ? rows[page.limit - 1] : null;
+                const route = page.former ? 'group-former-members' : 'group-members';
+                const nextCursor = last
+                    ? codec.encode({ last: [page.former ? last.left_at : last.joined_at, last.user_id] }, { route, userId: actor, conversationId: groupId })
+                    : null;
+                return { items, nextCursor };
+            });
         }
     });
+    return service;
 }
 
 module.exports = { createGroupService, notFound, toAuthError, DEFAULT_RATE_LIMITS, AUDIT_EVENTS };

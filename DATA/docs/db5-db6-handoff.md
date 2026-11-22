@@ -943,6 +943,16 @@ Gate runner: the Validation_Runner is the gate of record of every phase from DB-
 
 Rebuild rules: Compose Watch syncs only `server/src`, `DATA/server` and `shared`, and the frontend mounts only `client/src`, `client/public` and `shared`. These need `docker compose up --build -d`: `DATA/docs`, `DATA/tests`, `DATA/scripts`, `client/authProxy.cjs`, `client/next.config.js`, any `package.json` or lockfile, and any Dockerfile. `NEXT_PUBLIC_*` values come only from `compose.yaml`; a flag for a manual test is set only in a temporary override file outside the repository, followed by recreation of the frontend container.
 
+### Start-failure output of both start paths (T-5C-05, T-5C-06)
+
+`DATA/server.js` and `server/src/data/main.ts` (`npm run start:data`, the Docker_Environment backend) print the same one line for a start failure the operator can act on. `describeStartFailure` in `DATA/server/start.js` builds it from setting names or the migration file name only, never a value, a cause, a stack or a path:
+
+- `FeatureConfigError`: `Feature configuration is incomplete; set a valid value for: <names>`, with every offending setting in declared order.
+- `MIGRATION_FAILED`: `MIGRATION_FAILED: Migration <file name> failed; the entire batch was rolled back.`
+- Any other failure keeps the generic line of `DATA/server.js`; `main.ts` prints only its JSON event for those.
+
+`main.ts` (read in full, T-5C-06) logged only `{"event":"realtime.data.start_failed","name":"FeatureConfigError"}` or `"name":"Error"`, so it hid the setting names and the migration file. It now calls `describeStartFailure` of the loaded DATA (when DATA offers it), writes the line to stderr and then writes the same JSON event. Measured before and after on a scratch copy outside the repository with a throw-away database file (Group_API on with `GROUP_MAX_MEMBERS` holding a secret-looking value and one setting missing; and a scratch `0009` migration with invalid SQL): the "before" output carried no setting name and no file name; the "after" output carried `GROUP_MAX_MEMBERS, GROUP_MAX_PENDING_INVITATIONS_PER_INVITEE` and `MIGRATION_FAILED: Migration 0009-broken-by-test.sql failed; ...`; the secret value appeared in neither. Both runs exit with code 1 and leave the exit path unchanged. No container was started. With the shipped `compose.yaml` no switch is set, so a project started from it never meets a configuration failure; the operator reads the line with `docker compose logs backend`.
+
 ### Proposed update of `docs/docker-development.md` (OP-18)
 
 The proposed update of the section "Data and future migrations" of `docs/docker-development.md` is carried here as text and is applied only after the Project_Owner approves it (OP-18; INFRA-01 owns that file). Until then the guide is not edited. The text below is a draft; its version numbers are set when 0008 ships (and again for 0009 in DB-6B).

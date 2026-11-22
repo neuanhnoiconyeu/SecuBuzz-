@@ -72,9 +72,10 @@ test('Group_Service infrastructure (T-5C-03)', async t => {
         assert.ok(createGroupService({ db: f.db, auth, now: f.clock.now }), 'the limiter defaults to the SQLite limiter');
     });
 
-    await t.test('the service offers exactly the Task 2.3 surface and nothing that mutates a group', () => {
+    await t.test('the service offers the Task 2.3 infrastructure and exactly the operations of the tasks done so far (2.7 to 2.10)', () => {
         assert.deepEqual(Object.keys(svc).sort(),
-            ['assertGroupInvariants', 'audit', 'features', 'groupRead', 'groupWrite', 'rate', 'rates', 'requireRole', 'visibleGroup']);
+            ['assertGroupInvariants', 'audit', 'createGroup', 'features', 'getGroup', 'groupRead', 'groupWrite', 'listGroups', 'listMembers',
+                'rate', 'rates', 'requireRole', 'updateGroup', 'visibleGroup']);
         assert.ok(Object.isFrozen(svc));
         assert.deepEqual(Object.keys(service).sort(), ['AUDIT_EVENTS', 'DEFAULT_RATE_LIMITS', 'createGroupService', 'notFound', 'toAuthError']);
         assert.deepEqual(svc.features, DISABLED_FEATURES);
@@ -679,7 +680,7 @@ test('Group_Service infrastructure (T-5C-03)', async t => {
             assert.ok(!source.includes(table), `${table} is named only by the repository`);
         }
         const requires = (source.match(/require\(\s*['"][^'"]+['"]\s*\)/g) || []).map(text => text.replace(/\s/g, ''));
-        assert.deepEqual(requires, ["require('../database/socialRepository')", "require('../database/groupRepository')", "require('../auth/rateLimiter')",
-            "require('../auth/errors')", "require('../features/config')", "require('./policy')", "require('./validation')"]);
+        assert.deepEqual(requires, ["require('node:crypto')", "require('../database/socialRepository')", "require('../database/groupRepository')", "require('../auth/rateLimiter')",
+            "require('../auth/errors')", "require('../features/config')", "require('./policy')", "require('./validation')", "require('./cursor')"]);
     });
 });

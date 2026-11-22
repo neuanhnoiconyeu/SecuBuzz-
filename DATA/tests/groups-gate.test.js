@@ -18,6 +18,8 @@ const GROUP_VALUES = Object.freeze({
     GROUP_MAX_PENDING_INVITATIONS_PER_INVITEE: '30'
 });
 const settingNames = message => message.match(/\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b/g) || [];
+// The start-up lines of a loaded configuration: one per switch, in declared order, on or off (T-5C-05).
+const switchLines = (...onVariables) => SWITCHES.map(([, variable]) => `Feature switch ${variable}: ${onVariables.includes(variable) ? 'on' : 'off'}`);
 
 function assertDeepFrozen(value) {
     assert.ok(Object.isFrozen(value));
@@ -501,4 +503,355 @@ test('gate.js has no environment access, logging, randomness or clock, and only 
     const requires = source.match(/require\(\s*['"][^'"]+['"]\s*\)/g) || [];
     assert.deepEqual(requires.map(text => text.replace(/\s/g, '')), ["require('./config')", "require('../auth/errors')"]);
     assert.ok(/^[\x00-\x7F]*$/.test(source), 'ASCII only');
+});
+
+// ---- T-5C-05: feature configuration at start-up (DB5-R16.7, R14.10, R14.17, R13.3, ARCH-R01.10) ----
+// The load happens in startServer before openDatabase. An injected features object is test-harness data and is refused in
+// production. A start failure names settings only. The child-process tests run server.js on a temporary database file under
+// os.tmpdir(), never on DATA/server/database/database.sqlite or a Docker volume (DB5-R14.17).
+const path = require('node:path');
+const { spawn } = require('node:child_process');
+const { setup, envDefaults } = require('./support/auth');
+const { snapshot, temporaryDirectory } = require('./support/groups');
+const { openDatabase } = require('../server/database/connection');
+const { migrate } = require('../server/database/migrate');
+const { startServer, describeStartFailure, FeatureProvenanceError } = require('../server/start');
+
+const DATA_ROOT = path.join(__dirname, '..');
+const PRODUCTION_ENV = Object.freeze({ NODE_ENV: 'production', AUTH_ALLOW_HTTP_LOCAL: 'false', AUTH_ALLOWED_ORIGINS: 'https://app.example.test' });
+const ENABLED_ENV = Object.freeze({ ...GROUP_VALUES, GROUPS_API_ENABLED: 'true' });
+const INJECTED_ON = Object.freeze({ groupApi: true, groupMessaging: true, attachmentApi: false, groups: Object.freeze({ maxMembers: 50 }) });
+const OFF_STATUS = Object.freeze({ groupApi: false, groupMessaging: false, attachmentApi: false });
+const FAILURE_VALUES = Object.freeze({ GROUP_MAX_MEMBERS: '47', GROUP_MAX_PENDING_INVITATIONS_PER_GROUP: '11', GROUP_MAX_PENDING_INVITATIONS_PER_INVITEE: '13' });
+const error503 = Object.freeze({ code: 'FEATURE_UNAVAILABLE', fields: [] });
+
+function memoryDatabase(t) {
+    const db = openDatabase({ filename: ':memory:' });
+    t.after(() => { if (db.open) db.close(); });
+    return db;
+}
+// startServer on an in-memory database, with the log lines collected. Returns the application, the database and the lines.
+async function boot(t, env, extra = {}) {
+    const db = memoryDatabase(t);
+    const lines = [];
+    const application = await startServer({ db, env: { ...envDefaults, ...env }, log: line => lines.push(line), ...extra });
+    t.after(() => application.close());
+    return { db, application, lines };
+}
+async function refusal(work) {
+    try { await work(); } catch (error) { return error; }
+    return assert.fail('expected the start to be refused');
+}
+async function underProcessEnvironment(value, work) {
+    const before = process.env.NODE_ENV;
+    process.env.NODE_ENV = value;
+    try { return await work(); } finally { if (before === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = before; }
+}
+// A start that must fail. DB_PATH points at a new file that must never appear, so a configuration error opened no database.
+async function failedStart(t, env, extra = {}) {
+    const directory = temporaryDirectory(t);
+    const file = path.join(directory, 'never-opened.sqlite');
+    const lines = [];
+    const error = await refusal(() => startServer({ env: { ...envDefaults, ...env, DB_PATH: file }, log: line => lines.push(line), ...extra }));
+    assert.deepEqual(fs.readdirSync(directory), [], 'no database file, journal or migration was created');
+    return { error, lines };
+}
+async function session(f, name) {
+    const browser = f.browser();
+    assert.equal((await browser.register(name)).status, 201);
+    assert.equal((await browser.login(name)).status, 200);
+    return { browser, token: await browser.csrf() };
+}
+const call = (actor, method, url, body) => actor.browser.request(url, { method, body, headers: ['GET', 'HEAD'].includes(method) ? {} : { 'X-CSRF-Token': actor.token } });
+
+test('the default start has every function off, prints one off line per switch, and reports off through feature-status', async t => {
+    const { application, lines } = await boot(t, {});
+    assert.deepEqual({ groupApi: application.features.groupApi, groupMessaging: application.features.groupMessaging, attachmentApi: application.features.attachmentApi }, OFF_STATUS);
+    assert.ok(Object.isFrozen(application.features));
+    assert.deepEqual(lines, switchLines(), 'every switch prints a line, and an unset one is off');
+    const f = await setup(t);
+    const alice = await session(f, 'cfg-default-alice');
+    const status = await call(alice, 'GET', '/api/groups/feature-status');
+    assert.deepEqual([status.status, status.body], [200, OFF_STATUS]);
+});
+
+test('every environment switch reaches the router, and its start-up line names the variable and the state, never the value', async t => {
+    for (const [key, variable] of SWITCHES) {
+        const { application, lines } = await boot(t, { [variable]: 'true', ...(key === 'groupApi' ? GROUP_VALUES : {}) });
+        assert.equal(application.features[key], true, `${variable} turns ${key} on`);
+        assert.deepEqual(lines, switchLines(variable));
+    }
+    const typos = ['TRUE', 'True', '1', 'yes', 'on', ' true', 'true ', 'false', '', 'tru'];
+    for (const value of typos) {
+        const { application, lines } = await boot(t, { GROUPS_API_ENABLED: value, GROUP_MESSAGING_ENABLED: value, ATTACHMENTS_API_ENABLED: value });
+        assert.deepEqual([application.features.groupApi, application.features.groupMessaging, application.features.attachmentApi], [false, false, false], JSON.stringify(value));
+        assert.deepEqual(lines, SWITCHES.map(([, variable]) => `Feature switch ${variable}: off`), JSON.stringify(value));
+        assert.ok(!lines.join('\n').includes(`: ${value}`) || value === '', 'the value is not echoed');
+    }
+    const { lines } = await boot(t, { GROUPS_API_ENABLED: 'true', ...GROUP_VALUES, GROUP_MESSAGING_ENABLED: 'yes' });
+    assert.deepEqual(lines, switchLines('GROUPS_API_ENABLED'));
+});
+
+test('with the Group_API on, feature-status reports it and a group that cannot be seen ends in the uniform 404', async t => {
+    const f = await setup(t, { env: ENABLED_ENV });
+    const alice = await session(f, 'cfg-on-alice');
+    const status = await call(alice, 'GET', '/api/groups/feature-status');
+    assert.deepEqual([status.status, status.body], [200, { groupApi: true, groupMessaging: false, attachmentApi: false }]);
+    const other = await call(alice, 'GET', '/api/groups/some-group');
+    assert.deepEqual([other.status, other.body], [404, { code: 'NOT_FOUND', fields: [] }]);
+    const alone = await setup(t, { env: { GROUP_MESSAGING_ENABLED: 'true' } });
+    const bob = await session(alone, 'cfg-messaging-bob');
+    const reported = await call(bob, 'GET', '/api/groups/feature-status');
+    assert.deepEqual(reported.body, OFF_STATUS, 'group messaging is reported only while the Group_API is on');
+});
+
+test('a valid production configuration starts, carries the settings into the application, and never carries the record id', async t => {
+    const { application, lines } = await boot(t, { ...PRODUCTION_ENV, ...ENABLED_ENV, GROUPS_API_GATE_RECORD: VALID_RECORD });
+    assert.equal(application.features.groupApi, true);
+    assert.deepEqual({ ...application.features.groups }, { maxMembers: 50, maxPendingInvitationsPerGroup: 20, maxPendingInvitationsPerInvitee: 30, directAdd: false });
+    assert.ok(!JSON.stringify(application.features).includes('GR-'));
+    assert.deepEqual(lines, switchLines('GROUPS_API_ENABLED'));
+    assert.ok(!lines.join('\n').includes(VALID_RECORD));
+    const both = await boot(t, { ...PRODUCTION_ENV, ...ENABLED_ENV, GROUP_MESSAGING_ENABLED: 'true', GROUPS_API_GATE_RECORD: VALID_RECORD, GROUP_MESSAGING_GATE_RECORD: 'GR-GROUP-MESSAGING-2026-12-01' });
+    assert.deepEqual([both.application.features.groupApi, both.application.features.groupMessaging], [true, true]);
+    const off = await boot(t, { ...PRODUCTION_ENV });
+    assert.equal(off.application.features.groupApi, false, 'production with no switch needs no record');
+});
+
+test('in production a missing or invalid Gate_Record stops the start before any database is opened, naming the variable only', async t => {
+    const records = [undefined, ...INVALID_RECORDS.slice(0, 12), 'GR-secret-looking-value'];
+    for (const record of records) {
+        const env = { ...PRODUCTION_ENV, ...ENABLED_ENV, ...(record === undefined ? {} : { GROUPS_API_GATE_RECORD: record }) };
+        const { error, lines } = await failedStart(t, env);
+        assert.ok(error instanceof FeatureConfigError, JSON.stringify(record));
+        assert.deepEqual([...error.settings], ['GROUPS_API_GATE_RECORD']);
+        assert.ok(record === undefined || record === '' || !JSON.stringify([error.message, describeStartFailure(error)]).includes(record.trim() || '\u0000'), 'the record value is not echoed');
+        assert.deepEqual(lines, [], 'no switch line is printed for a start that fails');
+    }
+    const messaging = await failedStart(t, { ...PRODUCTION_ENV, GROUP_MESSAGING_ENABLED: 'true', GROUP_MESSAGING_GATE_RECORD: 'bad' });
+    assert.deepEqual([...messaging.error.settings], ['GROUP_MESSAGING_GATE_RECORD']);
+    const wrongRecord = await failedStart(t, { ...PRODUCTION_ENV, ...ENABLED_ENV, GROUP_MESSAGING_ENABLED: 'true', GROUPS_API_GATE_RECORD: VALID_RECORD });
+    assert.deepEqual([...wrongRecord.error.settings], ['GROUP_MESSAGING_GATE_RECORD'], 'a record satisfies only its own switch');
+    const missingSettings = await failedStart(t, { ...PRODUCTION_ENV, GROUPS_API_ENABLED: 'true' });
+    assert.deepEqual([...missingSettings.error.settings], [...GROUP_API_SETTINGS, 'GROUPS_API_GATE_RECORD']);
+});
+
+test('a missing setting outside production stops the start before any database is opened and names every offending setting', async t => {
+    for (const missing of GROUP_API_SETTINGS) {
+        const values = { ...FAILURE_VALUES };
+        delete values[missing];
+        const { error } = await failedStart(t, { GROUPS_API_ENABLED: 'true', ...values });
+        assert.ok(error instanceof FeatureConfigError);
+        assert.deepEqual([...error.settings], [missing]);
+        assert.ok(!Object.values(FAILURE_VALUES).some(value => describeStartFailure(error).includes(value)));
+    }
+    const all = await failedStart(t, { GROUPS_API_ENABLED: 'true' });
+    assert.deepEqual([...all.error.settings], [...GROUP_API_SETTINGS]);
+    assert.ok(!describeStartFailure(all.error).includes(REMOVED_SETTING));
+});
+
+test('an injected features object is refused in production, whatever it enables, and no database is opened', async t => {
+    for (const injected of [INJECTED_ON, DISABLED_FEATURES, { ...INJECTED_ON, groupMessaging: false }, Object.freeze({ ...DISABLED_FEATURES })]) {
+        const { error } = await failedStart(t, { ...PRODUCTION_ENV, ...ENABLED_ENV, GROUPS_API_GATE_RECORD: VALID_RECORD }, { features: injected });
+        assert.ok(error instanceof FeatureProvenanceError);
+        assert.equal(error.code, 'FEATURE_PROVENANCE_REFUSED');
+        assert.deepEqual(settingNames(error.message), [], 'the error names no setting');
+        assert.equal(describeStartFailure(error), error.message);
+    }
+    const noRecord = await failedStart(t, { ...PRODUCTION_ENV }, { features: INJECTED_ON });
+    assert.ok(noRecord.error instanceof FeatureProvenanceError, 'an injected object is no substitute for the Gate_Record or for the load');
+    // A production process is production whatever env object it is handed.
+    await underProcessEnvironment('production', async () => {
+        const refused = await failedStart(t, {}, { features: INJECTED_ON });
+        assert.ok(refused.error instanceof FeatureProvenanceError);
+        const needsRecord = await failedStart(t, { ...ENABLED_ENV });
+        assert.ok(needsRecord.error instanceof FeatureConfigError);
+        assert.deepEqual([...needsRecord.error.settings], ['GROUPS_API_GATE_RECORD'], 'the Gate_Record applies although the env object says test');
+    });
+});
+
+test('outside production an injected object skips the load and is that application only; a malformed one stops the start', async t => {
+    const injected = await boot(t, { GROUPS_API_ENABLED: 'true' }, { features: INJECTED_ON });
+    assert.deepEqual([injected.application.features.groupApi, injected.application.features.groupMessaging], [true, true]);
+    assert.deepEqual(injected.lines, [], 'the load is skipped, so the incomplete environment stops nothing and prints nothing');
+    const off = await boot(t, { ...ENABLED_ENV }, { features: DISABLED_FEATURES });
+    assert.equal(off.application.features.groupApi, false, 'the injected object, not the environment, decides');
+    for (const malformed of [null, 'true', 7, [], () => ({})]) {
+        const db = memoryDatabase(t);
+        const error = await refusal(() => startServer({ db, env: { ...envDefaults }, features: malformed }));
+        assert.ok(error instanceof Error, String(malformed));
+        assert.ok(db.open, 'an injected database stays open');
+    }
+    // The Group_Service reads an object switch by switch, and only the boolean true turns one on: a string, a number or a
+    // missing switch is off. (Production never reaches this: an injected object is refused there.)
+    for (const partial of [{ groupApi: 'true', groupMessaging: 1, attachmentApi: 'yes' }, { groupApi: 1 }, {}, { groupApi: null, attachmentApi: {} }]) {
+        const { application } = await boot(t, {}, { features: partial });
+        assert.deepEqual([application.features.groupApi, application.features.groupMessaging, application.features.attachmentApi], [false, false, false], JSON.stringify(partial));
+    }
+});
+
+test('two applications in one process keep separate configuration, and the environment is read once at start', async t => {
+    const on = await boot(t, { ...ENABLED_ENV });
+    const off = await boot(t, {});
+    const injected = await boot(t, {}, { features: INJECTED_ON });
+    assert.deepEqual([on.application.features.groupApi, off.application.features.groupApi, injected.application.features.groupApi], [true, false, true]);
+    assert.notEqual(on.application.features, off.application.features);
+    assert.notEqual(on.application.features.groups, injected.application.features.groups);
+    const before = process.env.GROUPS_API_ENABLED;
+    process.env.GROUPS_API_ENABLED = 'true';
+    try {
+        const later = await boot(t, {});
+        assert.equal(later.application.features.groupApi, false, 'startServer reads the env it is given, not a changed process.env');
+    } finally { if (before === undefined) delete process.env.GROUPS_API_ENABLED; else process.env.GROUPS_API_ENABLED = before; }
+    // The same over HTTP, with two real servers: one app answering for one database cannot enable the other.
+    const first = await setup(t, { env: ENABLED_ENV });
+    const second = await setup(t);
+    const third = await setup(t, { features: INJECTED_ON });
+    const answers = [];
+    for (const [index, fixture] of [first, second, third, second].entries()) {
+        const actor = await session(fixture, `cfg-isolated-${index}`);
+        answers.push((await call(actor, 'GET', '/api/groups/feature-status')).body.groupApi);
+    }
+    assert.deepEqual(answers, [true, false, true, false]);
+});
+
+test('with every switch off no group operation is reachable, and no table changes', async t => {
+    const f = await setup(t);
+    const alice = await session(f, 'cfg-closed-alice');
+    const before = snapshot(f.db);
+    const paths = ['/api/groups', '/api/groups/', '/api/groups/some-group', '/api/groups/some-group/members', '/api/groups/some-group/members/some-user',
+        '/api/groups/invitations', '/api/groups/invitations/some-invitation/accept', '/api/groups/some-group/messages', '/api/groups/some-group/unarchive'];
+    for (const url of paths) {
+        for (const method of ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
+            const response = await call(alice, method, url, ['POST', 'PUT', 'PATCH'].includes(method) ? { name: 'x' } : undefined);
+            assert.equal(response.status, 503, `${method} ${url}`);
+            if (method !== 'HEAD') assert.deepEqual(response.body, error503, `${method} ${url}`);
+        }
+    }
+    const withoutSession = await f.browser().request('/api/groups/some-group');
+    assert.equal(withoutSession.status, 401, 'the session check still comes first');
+    assert.deepEqual(snapshot(f.db), before);
+});
+
+// ---- the process boundary: server.js on a temporary database, stdout and stderr, exit code ----
+function childEnvironment(overrides) {
+    const kept = {};
+    for (const [key, value] of Object.entries(process.env)) if (!/^(NODE_ENV|HOST|PORT|DB_|AUTH_|GROUPS?_|ATTACHMENTS?_)/.test(key)) kept[key] = value;
+    return { ...kept, NODE_ENV: 'test', AUTH_ALLOW_HTTP_LOCAL: 'true', AUTH_ALLOWED_ORIGINS: 'http://localhost:3000', HOST: '127.0.0.1', PORT: '0', ...overrides };
+}
+// Runs server.js to its end. A child that starts listening is stopped, and the result says so.
+function runServer(overrides) {
+    return new Promise((resolve, reject) => {
+        const child = spawn(process.execPath, ['server.js'], { cwd: DATA_ROOT, env: childEnvironment(overrides), stdio: ['ignore', 'pipe', 'pipe'] });
+        let stdout = '';
+        let stderr = '';
+        let listening = false;
+        const timeout = setTimeout(() => { child.kill(); reject(new Error('server.js neither listened nor stopped in time')); }, 20000);
+        child.stdout.on('data', piece => {
+            stdout += piece;
+            if (/listening on port/.test(stdout) && !listening) { listening = true; child.kill(); }
+        });
+        child.stderr.on('data', piece => { stderr += piece; });
+        child.once('error', reject);
+        child.once('exit', code => { clearTimeout(timeout); resolve({ code, stdout, stderr, listening }); });
+    });
+}
+function emptyDatabaseFile(t) {
+    const directory = temporaryDirectory(t);
+    const file = path.join(directory, 'child.sqlite');
+    fs.writeFileSync(file, '');
+    return { directory, file };
+}
+const assertUnmigrated = ({ directory, file }) => {
+    assert.deepEqual(fs.readdirSync(directory), ['child.sqlite'], 'no journal, WAL or other file appeared');
+    assert.equal(fs.statSync(file).size, 0, 'the database file was not migrated');
+};
+
+test('server.js with the Group_API on and one setting missing exits 1 before listening, names it on stderr, and leaves the database unmigrated', async t => {
+    for (const missing of GROUP_API_SETTINGS) {
+        const target = emptyDatabaseFile(t);
+        const values = { ...FAILURE_VALUES };
+        delete values[missing];
+        const result = await runServer({ DB_PATH: target.file, GROUPS_API_ENABLED: 'true', ...values });
+        assert.equal(result.listening, false);
+        assert.equal(result.code, 1, missing);
+        assert.deepEqual(result.stderr.trim().split(/\r?\n/), [`Feature configuration is incomplete; set a valid value for: ${missing}`]);
+        assert.deepEqual(settingNames(result.stderr), [missing], 'names the missing setting and no other');
+        assert.ok(!result.stderr.includes(REMOVED_SETTING));
+        for (const value of Object.values(FAILURE_VALUES)) assert.ok(!result.stderr.includes(value) && !result.stdout.includes(value), 'no value is printed');
+        assert.ok(!result.stdout.includes('listening'));
+        assertUnmigrated(target);
+    }
+    const target = emptyDatabaseFile(t);
+    const result = await runServer({ DB_PATH: target.file, GROUPS_API_ENABLED: 'true' });
+    assert.equal(result.code, 1);
+    assert.deepEqual(settingNames(result.stderr), [...GROUP_API_SETTINGS]);
+    assert.equal(result.stderr.trim().split(/\r?\n/).length, 1, 'one line for every offending setting');
+    assertUnmigrated(target);
+});
+
+test('server.js in production with a switch on and no Gate_Record exits 1 naming the variable, and an invalid setting is named the same way', async t => {
+    const production = { ...PRODUCTION_ENV, ...FAILURE_VALUES, GROUPS_API_ENABLED: 'true' };
+    const target = emptyDatabaseFile(t);
+    const result = await runServer({ ...production, DB_PATH: target.file });
+    assert.equal(result.code, 1);
+    assert.deepEqual(result.stderr.trim().split(/\r?\n/), ['Feature configuration is incomplete; set a valid value for: GROUPS_API_GATE_RECORD']);
+    assert.equal(result.listening, false);
+    assertUnmigrated(target);
+    const invalid = emptyDatabaseFile(t);
+    const bad = await runServer({ ...production, GROUPS_API_GATE_RECORD: VALID_RECORD, GROUP_MAX_MEMBERS: '0', DB_PATH: invalid.file });
+    assert.equal(bad.code, 1);
+    assert.deepEqual(settingNames(bad.stderr), ['GROUP_MAX_MEMBERS']);
+    assert.ok(!bad.stderr.includes(VALID_RECORD));
+    assertUnmigrated(invalid);
+});
+
+test('server.js with a complete configuration starts, migrates the database and prints one line per switch (the control of the failure tests)', async t => {
+    const target = emptyDatabaseFile(t);
+    const result = await runServer({ DB_PATH: target.file, ...ENABLED_ENV });
+    assert.equal(result.listening, true);
+    for (const line of switchLines('GROUPS_API_ENABLED')) assert.ok(result.stdout.includes(line), line);
+    assert.equal(result.stderr.trim(), '');
+    assert.ok(fs.statSync(target.file).size > 0, 'the control did migrate, so the empty file of the failure tests is meaningful');
+    const plain = emptyDatabaseFile(t);
+    const quiet = await runServer({ DB_PATH: plain.file });
+    assert.equal(quiet.listening, true);
+    for (const line of switchLines()) assert.ok(quiet.stdout.includes(line), line);
+});
+
+test('describeStartFailure builds one line from setting names or the migration file name, and nothing else', async t => {
+    const config = new FeatureConfigError(['GROUP_MAX_MEMBERS', 'GROUPS_API_GATE_RECORD']);
+    assert.equal(describeStartFailure(config), config.message);
+    const forged = { code: 'FEATURE_CONFIG_INVALID', settings: ['GROUP_MAX_MEMBERS', 'lower_case', 'GROUP_MAX_MEMBERS=50', 'A B', 7], message: SENTINEL };
+    assert.equal(describeStartFailure(forged), 'Feature configuration is incomplete; set a valid value for: GROUP_MAX_MEMBERS');
+    assert.equal(describeStartFailure({ code: 'FEATURE_CONFIG_INVALID', settings: ['x y', 3] }), null);
+    assert.equal(describeStartFailure({ code: 'FEATURE_CONFIG_INVALID', settings: 'GROUP_MAX_MEMBERS' }), null);
+    assert.equal(describeStartFailure(new FeatureProvenanceError()), new FeatureProvenanceError().message);
+    for (const other of [null, undefined, 'text', 7, new Error('boom'), new TypeError('x'), { code: 'MIGRATION_HISTORY_MISMATCH', message: SENTINEL }, { code: 'SQLITE_BUSY' }]) {
+        assert.equal(describeStartFailure(other), null, 'every other failure keeps the generic line');
+    }
+    // A real MIGRATION_FAILED from the runner: the line carries the code and the file name, never the cause or a path.
+    const directory = temporaryDirectory(t);
+    fs.writeFileSync(path.join(directory, '0001-broken-by-test.sql'), `THIS IS NOT SQL ${SENTINEL};`);
+    const db = openDatabase({ filename: ':memory:', migrate: false });
+    t.after(() => db.close());
+    const failed = await refusal(() => migrate(db, { directory }));
+    assert.equal(failed.code, 'MIGRATION_FAILED');
+    assert.ok(failed.cause, 'the runner keeps a cause');
+    const line = describeStartFailure(failed);
+    assert.ok(/^MIGRATION_FAILED: Migration 0001-broken-by-test\.sql failed; the entire batch was rolled back\.$/.test(line), line);
+    assert.ok(!line.includes(SENTINEL) && !line.includes(directory) && !line.includes(failed.cause.message) && !/\n/.test(line));
+    const hostile = Object.assign(new Error(`Migration C:\\secret\\0001-a.sql failed; ${SENTINEL}`), { code: 'MIGRATION_FAILED' });
+    assert.equal(describeStartFailure(hostile), 'MIGRATION_FAILED: a migration failed and the batch was rolled back.');
+});
+
+test('start.js is the one place that composes the load: it reads no feature switch itself and has no bypass', () => {
+    const source = fs.readFileSync(require.resolve('../server/start'), 'utf8');
+    assert.ok(source.indexOf('resolveFeatures(env,features)') < source.indexOf('openDatabase(databaseConfig(env))'), 'the load comes before openDatabase');
+    const environmentReads = source.match(/process\.env[.\[][A-Za-z_'"]*/g) || [];
+    assert.deepEqual([...new Set(environmentReads)], ['process.env.NODE_ENV'], 'start.js reads NODE_ENV only; every switch goes through loadFeatureConfig');
+    assert.ok(!/GROUPS?_[A-Z_]*ENABLED|ATTACHMENTS_API_ENABLED/.test(source.replace(/SWITCH_VARIABLES=Object\.freeze\(\{[^}]*\}\)/, '')), 'a switch variable is named only in the report list');
+    assert.ok(!/features\s*=\s*(?:DISABLED_FEATURES|\{)|JSON\.parse|require\(\s*env/.test(source.replace(/const SWITCH_VARIABLES[^\n]*/, '')), 'no default, parsed or env-named configuration');
+    const server = fs.readFileSync(require.resolve('../server'), 'utf8');
+    assert.ok(/describeStartFailure\(error\)/.test(server) && !/GROUPS?_|process\.env\.[A-Z_]*ENABLED/.test(server), 'server.js prints the line and reads no switch');
 });
