@@ -953,6 +953,38 @@ Rebuild rules: Compose Watch syncs only `server/src`, `DATA/server` and `shared`
 
 `main.ts` (read in full, T-5C-06) logged only `{"event":"realtime.data.start_failed","name":"FeatureConfigError"}` or `"name":"Error"`, so it hid the setting names and the migration file. It now calls `describeStartFailure` of the loaded DATA (when DATA offers it), writes the line to stderr and then writes the same JSON event. Measured before and after on a scratch copy outside the repository with a throw-away database file (Group_API on with `GROUP_MAX_MEMBERS` holding a secret-looking value and one setting missing; and a scratch `0009` migration with invalid SQL): the "before" output carried no setting name and no file name; the "after" output carried `GROUP_MAX_MEMBERS, GROUP_MAX_PENDING_INVITATIONS_PER_INVITEE` and `MIGRATION_FAILED: Migration 0009-broken-by-test.sql failed; ...`; the secret value appeared in neither. Both runs exit with code 1 and leave the exit path unchanged. No container was started. With the shipped `compose.yaml` no switch is set, so a project started from it never meets a configuration failure; the operator reads the line with `docker compose logs backend`.
 
+### DB-5C Batch 2A: invitation HTTP integration (2026-11-22)
+
+**PASS, Tasks 2.11 and 2.12 only.** Source checkpoint was `eb970bd` on `chuong-data`. Kiro's existing five service methods, complete invitation service tests and model-test operation list were preserved byte-for-byte during Codex integration and are included in the Batch 2A checkpoint. No acceptance operation or Task 2.13 implementation was added.
+
+| ID | HTTP endpoint | Service call / response |
+| --- | --- | --- |
+| G12 | `POST /api/groups/:id/invitations` | `createInvitation(auth, csrfProof, id, body, socketSource)`; 201 `{invitation}` |
+| G13 | `GET /api/groups/:id/invitations` | `listInvitations(auth, id, query)`; 200 `{items,nextCursor}`, manager projection |
+| G14 | `DELETE /api/groups/:id/invitations/:invitationId` | `cancelInvitation(auth, csrfProof, id, invitationId)`; 204, empty body |
+| G15 | `GET /api/groups/invitations` | `listOwnInvitations(auth, query)`; 200 `{items,nextCursor}`, invitee projection |
+| G17 | `POST /api/groups/invitations/:invitationId/decline` | `declineInvitation(auth, csrfProof, invitationId)`; 204, empty body |
+
+The frozen route-table order is G26, G15, G17, G01-G05, G12, G13, G14. Fixed invitation paths precede `/:id`. Every new handler delegates once to the existing service; no service SQL, lifecycle logic or invitation-specific rate bucket is duplicated in the router. Its required-method list and HTTP fake-service fixture include all five methods. The existing unmatched-route test now recognizes the private own-invitation collection's 200 response. G16 `/invitations/:invitationId/accept` remains unmounted and answers 404 after the usual request guards.
+
+The global Origin check, stored-session authentication, session-bound CSRF proof, feature gate, generic limiter and body/parser chain remain unchanged. Actor identity is always `request.auth`, never a body/path identity. Creation passes the direct socket address and ignores forwarded source claims. The existing service consumes its three invitation buckets exactly once: 20/hour/user, 5/hour/user-group-invitee and 60/hour/source. A real HTTP denial preserves `Retry-After`. Missing pending maxima remain fail-closed; test-only explicit maxima introduce no production defaults.
+
+The manager projection contains `id, groupId, invitee{id,username,displayName,avatar}, inviterId, state, createdAt, expiresAt`. The own projection contains `id, groupId, groupName, inviterDisplayName, createdAt, expiresAt`; it exposes no membership, message, credential or session data. Paging cursors remain user/route/group bound as applicable. Active members without management/inviter permission receive the same cancellation 403 for an existing or unknown invitation; non-members receive the uniform 404. Unknown, credential-less, disabled and blocked creation targets share one HTTP 404. Cancel and decline discard service return objects and send empty 204 responses. Fixed seven-day expiry, terminal-state protection, immediate re-invitation after decline and audit/membership atomicity remain service responsibilities. Audit failures were verified over HTTP to return sanitized 500 with complete rollback.
+
+Verification on Windows, all first runs (exit 0; zero failed, skipped, cancelled or todo):
+
+| Run | Command in DATA/ | Result |
+| --- | --- | --- |
+| Existing Kiro service baseline | `node --test --test-reporter=tap tests/groups-invitations.test.js` | 32/32 passed |
+| Nine new HTTP tests | `node --test --test-reporter=tap --test-name-pattern='^Batch 2A' tests/groups-http.test.js` | 9/9 passed |
+| Complete relevant regression files | `node --test --test-reporter=tap --test-concurrency=1 tests/groups-http.test.js tests/groups-invitations.test.js tests/groups-gate.test.js tests/groups-model.test.js tests/auth-http.test.js tests/auth-security.test.js tests/baseline-checksums.test.js` | 255/255 passed, 111.885 s |
+
+The regression includes the complete HTTP, invitation, gate and model files, session/Origin/CSRF/security coverage and frozen-baseline/checksum guards. Canonical Tasks 2.11-2.12 specify the invitation test file, which passes on the integrated tree. Their focused Verify commands may run on the host; this is a task checkpoint, not the DB-5C phase gate. No Validation_Runner group, Docker operation or unrelated client/server full suite was needed or run. Local first-run logs are retained under Git-ignored `docker/artifacts/db5c-batch2a-codex/`; no failure was hidden or cleared by a retry.
+
+Known Batch 1 deviations remain unchanged and are not resolved by these passing results: `former=true` returns former members only; creation-key replay after the creator loses membership returns 409 instead of the specified 200; `createApp` does not independently enforce production feature-configuration provenance (the startup guard remains in `startServer`); and the earlier `groups-http` flake remains unexplained. The current complete HTTP run passed on its first attempt, which does not establish the earlier flake's cause or waive any future failure.
+
+Task 2.13 still depends on this completed invitation HTTP surface and needs its own acceptance/revalidation and DC-09 committed-refusal implementation. No G16 handler or `acceptInvitation` service operation was supplied. No migration, repository, feature configuration, startup file, frozen fixture, lockfile, stash, persistent database or Docker volume was modified. The local Task 2.11/2.12 checkboxes are updated; untracked specifications and scheduler metadata are not staged.
+
 ### Proposed update of `docs/docker-development.md` (OP-18)
 
 The proposed update of the section "Data and future migrations" of `docs/docker-development.md` is carried here as text and is applied only after the Project_Owner approves it (OP-18; INFRA-01 owns that file). Until then the guide is not edited. The text below is a draft; its version numbers are set when 0008 ships (and again for 0009 in DB-6B).

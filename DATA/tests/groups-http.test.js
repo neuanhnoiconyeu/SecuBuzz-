@@ -4,8 +4,7 @@
 // Two kinds of test. The real createApp runs on loopback over a temporary database (support/auth.js), with real sessions and
 // real CSRF tokens, to show the HTTP behavior. A small express app around createGroupRouter, with fake middleware and a fake
 // service that record their calls, shows the exact order of the chain. T-5C-07 to T-5C-10 mount G01 to G05 (create, list, read,
-// update, member list) beside feature-status: every other path ends in the final 404, and the tests of those five operations
-// follow the chain tests.
+// update, member list) beside feature-status. T-5C-11/12 add G12-G15 and G17; G16 acceptance remains unmounted.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -91,7 +90,54 @@ function chunked(app, actor, url, chunks, headers = {}) {
 // below see the chain steps only.
 const fakeGroups = (extra = {}) => ({
     rate() {}, createGroup: () => ({ created: true, group: {} }), listGroups: () => ({ items: [], nextCursor: null }), getGroup: () => ({}),
-    updateGroup: () => ({}), listMembers: () => ({ items: [], nextCursor: null }), ...extra
+    updateGroup: () => ({}), listMembers: () => ({ items: [], nextCursor: null }),
+    createInvitation: () => ({ invitation: {} }), listInvitations: () => ({ items: [], nextCursor: null }),
+    cancelInvitation: () => ({}), listOwnInvitations: () => ({ items: [], nextCursor: null }), declineInvitation: () => ({}), ...extra
+});
+
+test('Batch 2A adapters: exact session/proof/target/query calls, socket source, projections and empty 204 bodies', async t => {
+    const actor = Object.freeze({ userId: 'session-actor', sessionId: 'session-id' });
+    const proof = Object.freeze({ type: 'session', userId: actor.userId, sessionId: actor.sessionId });
+    const calls = [], rates = [];
+    const record = (name, result) => (...args) => { calls.push({ name, args }); return result; };
+    const groups = fakeGroups({ rate: (...args) => rates.push(args),
+        createInvitation: record('createInvitation', { invitation: { id: 'created-invitation' } }),
+        listInvitations: record('listInvitations', { items: [{ id: 'manager-invitation' }], nextCursor: null }),
+        cancelInvitation: record('cancelInvitation', { mustNeverBeSerialized: SENTINEL }),
+        listOwnInvitations: record('listOwnInvitations', { items: [{ id: 'own-invitation' }], nextCursor: null }),
+        declineInvitation: record('declineInvitation', { mustNeverBeSerialized: SENTINEL }) });
+    const app = express();
+    app.use('/api/groups', createGroupRouter({ groups, features: ON }, {
+        requireAuth(req, res, next) { req.auth = actor; next(); },
+        requireCsrf(req, res, next) { req.csrfProof = proof; next(); }
+    }));
+    const server = http.createServer(app);
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
+    const origin = `http://127.0.0.1:${server.address().port}`;
+    const cases = [
+        ['POST', '/g/invitations', { userId: 'target-user' }, 'createInvitation', 201, { invitation: { id: 'created-invitation' } }],
+        ['GET', '/g/invitations?limit=2', undefined, 'listInvitations', 200, { items: [{ id: 'manager-invitation' }], nextCursor: null }],
+        ['DELETE', '/g/invitations/i', undefined, 'cancelInvitation', 204, null],
+        ['GET', '/invitations?limit=2', undefined, 'listOwnInvitations', 200, { items: [{ id: 'own-invitation' }], nextCursor: null }],
+        ['POST', '/invitations/i/decline', undefined, 'declineInvitation', 204, null]
+    ];
+    for (const [method, route, body, name, status, expected] of cases) {
+        const response = await fetch(origin + '/api/groups' + route, { method,
+            headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': '203.0.113.99' },
+            ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+        const text = await response.text();
+        assert.equal(response.status, status, name);
+        assert.deepEqual(text ? JSON.parse(text) : null, expected, name);
+        if (status === 204) assert.equal(text, '', 'the service return value is not exposed');
+        const call = calls.at(-1); assert.equal(call.name, name); assert.equal(call.args[0], actor);
+        if (name === 'createInvitation') assert.deepEqual(call.args, [actor, proof, 'g', body, '127.0.0.1']);
+        if (name === 'listInvitations') assert.deepEqual([...call.args.slice(0, 2), { ...call.args[2] }], [actor, 'g', { limit: '2' }]);
+        if (name === 'cancelInvitation') assert.deepEqual(call.args, [actor, proof, 'g', 'i']);
+        if (name === 'listOwnInvitations') assert.deepEqual([call.args[0], { ...call.args[1] }], [actor, { limit: '2' }]);
+        if (name === 'declineInvitation') assert.deepEqual(call.args, [actor, proof, 'i']);
+    }
+    assert.equal(calls.length, 5); assert.equal(rates.length, 5, 'one generic rate call per request');
 });
 
 test('the route table is frozen, and holds only the routes that are mounted', () => {
@@ -99,17 +145,24 @@ test('the route table is frozen, and holds only the routes that are mounted', ()
     for (const row of GROUP_ROUTES) assert.ok(Object.isFrozen(row));
     assert.deepEqual(GROUP_ROUTES.map(row => ({ ...row })), [
         { id: 'G26', method: 'GET', path: '/feature-status', gated: false },
+        { id: 'G15', method: 'GET', path: '/invitations', gated: true },
+        { id: 'G17', method: 'POST', path: '/invitations/:invitationId/decline', gated: true },
         { id: 'G01', method: 'POST', path: '/', gated: true },
         { id: 'G02', method: 'GET', path: '/', gated: true },
         { id: 'G03', method: 'GET', path: '/:id', gated: true },
         { id: 'G04', method: 'PATCH', path: '/:id', gated: true },
-        { id: 'G05', method: 'GET', path: '/:id/members', gated: true }
+        { id: 'G05', method: 'GET', path: '/:id/members', gated: true },
+        { id: 'G12', method: 'POST', path: '/:id/invitations', gated: true },
+        { id: 'G13', method: 'GET', path: '/:id/invitations', gated: true },
+        { id: 'G14', method: 'DELETE', path: '/:id/invitations/:invitationId', gated: true }
     ]);
     assert.equal(assertRouteTable(GROUP_ROUTES), GROUP_ROUTES);
     assert.equal(MAX_BODY_BYTES, 8192);
     const router = createGroupRouter({ groups: fakeGroups(), features: OFF_SHAPE }, { requireAuth() {}, requireCsrf() {} });
     const mounted = router.stack.filter(layer => layer.route).map(layer => `${Object.keys(layer.route.methods).map(method => method.toUpperCase()).sort().join('+')} ${layer.route.path}`);
-    assert.deepEqual(mounted, ['GET /feature-status', 'POST /', 'GET /', 'GET /:id', 'PATCH /:id', 'GET /:id/members'], 'the mounted layer stack equals the table');
+    assert.deepEqual(mounted, ['GET /feature-status', 'GET /invitations', 'POST /invitations/:invitationId/decline',
+        'POST /', 'GET /', 'GET /:id', 'PATCH /:id', 'GET /:id/members', 'POST /:id/invitations',
+        'GET /:id/invitations', 'DELETE /:id/invitations/:invitationId'], 'the mounted layer stack equals the table');
     assert.ok(!GROUP_ROUTES.some(row => row.method === 'DELETE' && /^\/:[^/]+$/.test(row.path)), 'no group deletion route');
     assert.ok(!GROUP_ROUTES.some(row => /unarchive|restore/i.test(row.path)), 'no unarchive or restore route');
 });
@@ -145,7 +198,7 @@ test('a route table that could expose an operation by accident is refused', () =
 test('createGroupRouter refuses missing dependencies and a handler that does not match the table', () => {
     const middleware = { requireAuth() {}, requireCsrf() {} };
     const groups = fakeGroups();
-    for (const method of ['rate', 'createGroup', 'listGroups', 'getGroup', 'updateGroup', 'listMembers']) {
+    for (const method of Object.keys(groups)) {
         assert.ok(thrown(() => createGroupRouter({ groups: { ...groups, [method]: undefined }, features: OFF_SHAPE }, middleware)) instanceof TypeError, `no ${method}`);
     }
     for (const [label, args] of [['no arguments', []], ['no service', [{ features: OFF_SHAPE }, middleware]], ['service without rate', [{ groups: {}, features: OFF_SHAPE }, middleware]],
@@ -439,11 +492,12 @@ test('switch on: a method and path with no route, and every request that names n
     const { actors, db } = await application(t, { features: ON, limiter, users: ['grp-http-alice'] });
     const alice = actors['grp-http-alice'];
     const before = snapshot(db).total;
-    // The only requests that reach an operation: POST and GET on the collection, GET and PATCH on one segment, GET on members.
+    // Newly mounted GET /invitations is a private collection, not a group id; its empty page is 200.
     // Here they carry a body with identity claims and unknown fields (400 for the POST) or name no group the user can see (404).
     const answered = (method, url) => {
         const clean = url.replace(/\/$/, '');
         if (clean === '/api/groups') return method === 'POST' ? 400 : ['GET', 'HEAD'].includes(method) ? 200 : 404;
+        if (clean === '/api/groups/invitations' && ['GET', 'HEAD'].includes(method)) return 200;
         return 404;
     };
     for (const method of EVERY_METHOD) {
@@ -1483,4 +1537,184 @@ test('G05: a non-member, a removed member, a pending invitee, a direct id and an
     for (const answer of answers) assert.deepEqual([answer[1], answer[2]], [JSON.stringify(error404), answers[0][2]], answer[0]);
     assert.equal((await f.browser().request(`/api/groups/${id}/members`)).status, 401);
     assert.equal((await membersOf(carol, id)).status, 200);
+});
+
+// T-5C-11/12 HTTP integration. Real sessions, CSRF, the existing service and guarded synthetic databases only.
+const INVITATION_FEATURES = Object.freeze({ groupApi: true, groups: Object.freeze({ maxMembers: 50,
+    maxPendingInvitationsPerGroup: 50, maxPendingInvitationsPerInvitee: 50 }) });
+async function invitationHttp(t, features = INVITATION_FEATURES, limiter = recordingLimiter()) {
+    const { httpGroupFixture } = require('./support/groups');
+    return httpGroupFixture(t, { features, limiter, clock: createClock('2030-01-01T00:00:00.000Z') });
+}
+const invitationPath = f => `/api/groups/${f.groupId}/invitations`;
+const managerFields = ['createdAt', 'expiresAt', 'groupId', 'id', 'invitee', 'inviterId', 'state'];
+const ownFields = ['createdAt', 'expiresAt', 'groupId', 'groupName', 'id', 'inviterDisplayName'];
+const membershipState = db => ['ConversationMembers', 'GroupMembershipIntervals', 'GroupExtensions']
+    .map(table => snapshot(db).tables[table]);
+
+test('Batch 2A G12: 201 manager projection, fixed expiry, session actor, audit and duplicate 409; membership unchanged', async t => {
+    const f = await invitationHttp(t), { owner, nonMember } = f.actors;
+    const before = membershipState(f.db);
+    const response = await send(owner, 'POST', invitationPath(f), { body: { userId: nonMember.id } });
+    assert.equal(response.status, 201); assertSecurityHeaders(response, 'G12');
+    assert.deepEqual(Object.keys(response.body), ['invitation']);
+    const value = response.body.invitation;
+    assert.deepEqual(Object.keys(value).sort(), managerFields);
+    assert.deepEqual(Object.keys(value.invitee).sort(), ['avatar', 'displayName', 'id', 'username']);
+    assert.equal(value.invitee.id, nonMember.id); assert.equal(value.inviterId, owner.id);
+    assert.equal(value.groupId, f.groupId); assert.equal(value.state, 'pending');
+    assert.equal(Date.parse(value.expiresAt) - Date.parse(value.createdAt), 604800000);
+    assert.equal(f.db.prepare('SELECT inviter_id FROM ConversationInvitations WHERE invitation_id=?').get(value.id).inviter_id, owner.id);
+    assert.equal(f.db.prepare("SELECT count(*) AS n FROM AuditLogs WHERE event_type='group.invitation.created' AND actor_user_id=? AND subject_id=?").get(owner.id, f.groupId).n, 1);
+    assert.deepEqual(membershipState(f.db), before);
+    assertError(await send(owner, 'POST', invitationPath(f), { body: { userId: nonMember.id } }), 409, { code: 'CONFLICT', fields: [] });
+    assertError(await send(owner, 'POST', invitationPath(f), { body: { userId: f.actors.removedMember.id, actorId: nonMember.id } }), 400, { code: 'VALIDATION_ERROR', fields: ['actorId'] });
+});
+
+test('Batch 2A G13/G15: manager and own projections, fixed route, private pages and user/route-bound cursors', async t => {
+    const f = await invitationHttp(t), { owner, admin, member, nonMember, pendingInvitee, removedMember } = f.actors;
+    for (const target of [nonMember, removedMember]) assert.equal((await send(owner, 'POST', invitationPath(f), { body: { userId: target.id } })).status, 201);
+    const other = f.builder.createGroup({ ownerId: owner.id, title: 'Second synthetic group', idempotencyKey: null });
+    assert.equal((await send(owner, 'POST', `/api/groups/${other}/invitations`, { body: { userId: nonMember.id } })).status, 201);
+    const before = snapshot(f.db).total;
+    const manager = await send(owner, 'GET', invitationPath(f) + '?limit=1');
+    assert.equal(manager.status, 200); assert.deepEqual(Object.keys(manager.body).sort(), ['items', 'nextCursor']);
+    assert.equal(manager.body.items.length, 1); assert.ok(manager.body.nextCursor);
+    assert.deepEqual(Object.keys(manager.body.items[0]).sort(), managerFields);
+    assert.equal((await send(admin, 'GET', invitationPath(f))).body.items.length, 3);
+    assertError(await send(member, 'GET', invitationPath(f)), 403, { code: 'FORBIDDEN', fields: [] });
+    assertError(await send(pendingInvitee, 'GET', invitationPath(f)), 404, error404);
+    const own = await send(nonMember, 'GET', '/api/groups/invitations?limit=1');
+    assert.equal(own.status, 200); assert.equal(own.body.items.length, 1); assert.ok(own.body.nextCursor);
+    assert.deepEqual(Object.keys(own.body.items[0]).sort(), ownFields);
+    assert.ok(own.body.items[0].groupName && own.body.items[0].inviterDisplayName);
+    const second = await send(nonMember, 'GET', '/api/groups/invitations?limit=1&cursor=' + encodeURIComponent(own.body.nextCursor));
+    assert.equal(second.status, 200); assert.equal(second.body.nextCursor, null);
+    assert.notEqual(second.body.items[0].id, own.body.items[0].id);
+    assert.deepEqual((await send(member, 'GET', '/api/groups/invitations')).body, { items: [], nextCursor: null });
+    const pending = await send(pendingInvitee, 'GET', '/api/groups/invitations');
+    assert.deepEqual(pending.body.items.map(row => row.id), [f.invitationId]);
+    assert.ok(!/email|password|credential|session|csrf|device|message|members/i.test(own.text));
+    for (const url of [invitationPath(f) + '?foo=1', invitationPath(f) + '?limit=0', '/api/groups/invitations?limit=51', '/api/groups/invitations?cursor=bad']) {
+        const response = await send(owner, 'GET', url); assert.equal(response.status, 400); assert.equal(response.body.code, 'VALIDATION_ERROR'); assert.ok(response.body.fields.length);
+    }
+    assertError(await send(admin, 'GET', invitationPath(f) + '?cursor=' + encodeURIComponent(manager.body.nextCursor)), 400, error400(['cursor']));
+    assertError(await send(nonMember, 'GET', '/api/groups/invitations?cursor=' + encodeURIComponent(manager.body.nextCursor)), 400, error400(['cursor']));
+    assertError(await send(pendingInvitee, 'GET', '/api/groups/invitations?cursor=' + encodeURIComponent(own.body.nextCursor)), 400, error400(['cursor']));
+    assert.equal(snapshot(f.db).total, before, 'all list and refused query requests are read-only');
+});
+
+test('Batch 2A G14/G17: empty 204 bodies, terminal-state conflicts, audit atomicity and immediate re-invitation', async t => {
+    const f = await invitationHttp(t), { owner, admin, pendingInvitee } = f.actors;
+    const before = membershipState(f.db);
+    const cancelled = await send(admin, 'DELETE', invitationPath(f) + '/' + f.invitationId);
+    assert.equal(cancelled.status, 204); assert.equal(cancelled.text, ''); assert.equal(cancelled.body, null); assertSecurityHeaders(cancelled, 'G14');
+    assert.equal(f.db.prepare('SELECT state FROM ConversationInvitations WHERE invitation_id=?').get(f.invitationId).state, 'cancelled');
+    assertError(await send(owner, 'DELETE', invitationPath(f) + '/' + f.invitationId), 409, { code: 'CONFLICT', fields: [] });
+    const created = await send(owner, 'POST', invitationPath(f), { body: { userId: pendingInvitee.id } });
+    assert.equal(created.status, 201);
+    const path = '/api/groups/invitations/' + created.body.invitation.id + '/decline';
+    const declined = await send(pendingInvitee, 'POST', path);
+    assert.equal(declined.status, 204); assert.equal(declined.text, ''); assert.equal(declined.body, null); assertSecurityHeaders(declined, 'G17');
+    assert.equal(f.db.prepare('SELECT state FROM ConversationInvitations WHERE invitation_id=?').get(created.body.invitation.id).state, 'declined');
+    assertError(await send(pendingInvitee, 'POST', path), 409, { code: 'CONFLICT', fields: [] });
+    assert.equal((await send(owner, 'POST', invitationPath(f), { body: { userId: pendingInvitee.id } })).status, 201, 'no re-invite delay was introduced');
+    for (const type of ['group.invitation.cancelled', 'group.invitation.declined']) assert.equal(f.db.prepare('SELECT count(*) AS n FROM AuditLogs WHERE event_type=? AND subject_id=?').get(type, f.groupId).n, 1);
+    assert.deepEqual(membershipState(f.db), before);
+});
+
+test('Batch 2A privacy: uniform 404s and unauthorized cancellation never reveal an invitation identifier', async t => {
+    const f = await invitationHttp(t), { owner, member, nonMember, pendingInvitee } = f.actors;
+    const before = snapshot(f.db).total;
+    for (const actor of [member, nonMember]) {
+        const expected = actor === member ? [403, { code: 'FORBIDDEN', fields: [] }] : [404, error404];
+        const answers = [];
+        for (const id of [f.invitationId, 'unknown-invitation', 'invalid%20id']) {
+            const response = await send(actor, 'DELETE', invitationPath(f) + '/' + id);
+            assert.deepEqual([response.status, response.body], expected); answers.push(response.text);
+        }
+        assert.equal(new Set(answers).size, 1);
+    }
+    for (const actor of [owner, member, nonMember]) for (const id of [f.invitationId, 'unknown-invitation']) {
+        assertError(await send(actor, 'POST', '/api/groups/invitations/' + id + '/decline'), 404, error404);
+    }
+    assertError(await send(owner, 'DELETE', '/api/groups/unknown-group/invitations/' + f.invitationId), 404, error404);
+    assertError(await send(owner, 'DELETE', invitationPath(f) + '/unknown-invitation'), 404, error404);
+    for (const id of [f.invitationId, 'unknown-invitation']) assertError(await send(pendingInvitee, 'POST', '/api/groups/invitations/' + id + '/accept'), 404, error404);
+    assert.ok(!GROUP_ROUTES.some(row => row.id === 'G16' || row.path.endsWith('/accept')));
+    assert.equal(snapshot(f.db).total, before, 'no unauthorized request or unmounted G16 changes state');
+});
+
+test('Batch 2A protection: real authentication, session-bound CSRF and gate-before-body on all five endpoints', async t => {
+    for (const features of [INVITATION_FEATURES, DISABLED_FEATURES]) {
+        const f = await invitationHttp(t, features), { owner, admin } = f.actors;
+        const cases = [['POST', invitationPath(f)], ['GET', invitationPath(f)], ['DELETE', invitationPath(f) + '/' + f.invitationId],
+            ['GET', '/api/groups/invitations'], ['POST', '/api/groups/invitations/' + f.invitationId + '/decline']];
+        const before = snapshot(f.db).total; f.limiter.calls.length = 0;
+        for (const [method, path] of cases) {
+            const write = !['GET', 'HEAD'].includes(method);
+            assertError(await f.browser().request(path, { method }), 401, { code: 'UNAUTHENTICATED', fields: [] });
+            if (write) {
+                assertError(await send(owner, method, path, { csrf: false }), 403, { code: 'CSRF_INVALID', fields: [] });
+                assertError(await send(owner, method, path, { headers: { 'X-CSRF-Token': admin.token } }), 403, { code: 'CSRF_INVALID', fields: [] });
+            }
+            if (!features.groupApi) {
+                const response = await send(owner, method, path, write ? { rawBody: '{invalid', headers: { 'Content-Type': 'application/json' } } : {});
+                assertError(response, 503, error503); assertSecurityHeaders(response, 'disabled invitation');
+            }
+        }
+        assert.equal(snapshot(f.db).total, before); assert.equal(f.limiter.calls.length, 0, 'authentication, CSRF and the disabled gate stop before rate writes');
+    }
+});
+
+test('Batch 2A G12 rate limits: one invitation bucket set, actual socket source and Retry-After without a write', async t => {
+    const limiter = { calls: [], denyInvitation: false, consume(buckets, at) {
+        this.calls.push({ buckets, at });
+        return this.denyInvitation && buckets.some(bucket => bucket.key.startsWith('groups:invite:'))
+            ? { allowed: false, retryAfterSeconds: 37 } : { allowed: true };
+    } };
+    const f = await invitationHttp(t, INVITATION_FEATURES, limiter), { owner, nonMember, removedMember } = f.actors;
+    limiter.calls.length = 0;
+    assert.equal((await send(owner, 'POST', invitationPath(f), { body: { userId: nonMember.id }, headers: { 'X-Forwarded-For': '203.0.113.99' } })).status, 201);
+    assert.equal(limiter.calls.length, 2, 'generic and invitation rate buckets, with no router duplication');
+    assert.equal(limiter.calls[0].buckets.length, 2); assert.equal(limiter.calls[1].buckets.length, 3);
+    assert.deepEqual(limiter.calls[1].buckets.map(bucket => [bucket.limit, bucket.windowMs]), [[20, 3600000], [5, 3600000], [60, 3600000]]);
+    assert.ok(limiter.calls[1].buckets.some(bucket => bucket.key === 'groups:invite-source:127.0.0.1'));
+    assert.ok(limiter.calls[1].buckets.some(bucket => bucket.key === 'groups:invite:' + owner.id));
+    limiter.denyInvitation = true;
+    const before = snapshot(f.db).total;
+    const limited = await send(owner, 'POST', invitationPath(f), { body: { userId: removedMember.id } });
+    assertError(limited, 429, { code: 'RATE_LIMITED', fields: [] }); assert.equal(limited.headers.get('retry-after'), '37');
+    assert.equal(snapshot(f.db).total, before);
+});
+
+test('Batch 2A G12: missing maxima fail closed and private target failures have the identical HTTP 404', async t => {
+    const missing = await invitationHttp(t, ON);
+    assertError(await send(missing.actors.owner, 'POST', invitationPath(missing), { body: { userId: missing.actors.nonMember.id } }), 503, error503);
+    const f = await invitationHttp(t), { owner, nonMember, pendingInvitee, removedMember } = f.actors;
+    const legacy = f.repositories.users.create({ user_id: 'batch2a-legacy', username: 'batch2alegacy', display_name: 'Synthetic legacy' });
+    f.db.prepare("UPDATE AccountCredentials SET status='disabled' WHERE user_id=?").run(removedMember.id);
+    f.db.prepare("INSERT INTO Blocks(blocker_id,blocked_id,origin,created_at) VALUES(?,?,'authenticated',?)").run(nonMember.id, owner.id, f.clock.iso());
+    const before = snapshot(f.db).total, answers = [];
+    for (const id of ['unknown-target', legacy.user_id, removedMember.id, nonMember.id]) {
+        const response = await send(owner, 'POST', invitationPath(f), { body: { userId: id } });
+        assertError(response, 404, error404); answers.push(response.text);
+    }
+    assert.equal(new Set(answers).size, 1);
+    assertError(await send(pendingInvitee, 'POST', invitationPath(f), { body: { userId: owner.id } }), 404, error404);
+    assert.equal(snapshot(f.db).total, before);
+});
+
+test('Batch 2A audit failures: G12, G14 and G17 return sanitized 500 and roll back the complete write', async t => {
+    const f = await invitationHttp(t), { owner, pendingInvitee, nonMember } = f.actors;
+    f.db.exec(`CREATE TRIGGER batch2a_audit_failure BEFORE INSERT ON AuditLogs WHEN NEW.event_type LIKE 'group.invitation.%'
+        BEGIN SELECT RAISE(ABORT, 'SENTINEL-BATCH2A-AUDIT'); END;`);
+    const before = snapshot(f.db).total;
+    for (const [actor, method, path, options] of [[owner, 'POST', invitationPath(f), { body: { userId: nonMember.id } }],
+        [owner, 'DELETE', invitationPath(f) + '/' + f.invitationId, {}],
+        [pendingInvitee, 'POST', '/api/groups/invitations/' + f.invitationId + '/decline', {}]]) {
+        const response = await send(actor, method, path, options);
+        assertError(response, 500, { code: 'INTERNAL_ERROR', fields: [] });
+        assert.ok(!response.text.includes('SENTINEL')); assert.equal(snapshot(f.db).total, before);
+    }
 });

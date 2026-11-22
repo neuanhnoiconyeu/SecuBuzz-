@@ -18,14 +18,14 @@
 // 5. Every failure leaves as an AuthError that carries a code and a status. No database text, name or value is forwarded.
 // Nothing here reads the environment, a forwarded header or a clock other than the injected one.
 
-const { createHash } = require('node:crypto');
+const { createHash, randomUUID } = require('node:crypto');
 const { createSocialRepository } = require('../database/socialRepository');
 const { createGroupRepository, withMembershipTransaction, normaliseError, RepositoryError } = require('../database/groupRepository');
 const { createSqliteRateLimiter } = require('../auth/rateLimiter');
 const { AuthError } = require('../auth/errors');
 const { DISABLED_FEATURES } = require('../features/config');
 const { ROLES } = require('./policy');
-const { pathId, createBody, patchBody, listQuery, membersQuery } = require('./validation');
+const { pathId, createBody, patchBody, listQuery, membersQuery, invitationBody } = require('./validation');
 const codec = require('./cursor');
 
 // ASM-03: operational defaults copied from the existing services, not product policy. The per-source numbers are
@@ -191,6 +191,34 @@ function memberCursor(cursor) {
     return cursor;
 }
 
+// The pending-Invitation maxima of OD-08 have no default. A missing one, or one that is not a positive whole number, answers
+// 503 FEATURE_UNAVAILABLE to an invitation request (DB5-R04.18). Only an injected features object can reach this: start-up
+// stops first while the Group_API switch is on.
+function pendingMaxima(settings) {
+    const perGroup = settings.groups.maxPendingInvitationsPerGroup;
+    const perInvitee = settings.groups.maxPendingInvitationsPerInvitee;
+    if (!positiveInteger(perGroup) || !positiveInteger(perInvitee)) throw new AuthError('FEATURE_UNAVAILABLE', 503, []);
+    return { perGroup, perInvitee };
+}
+
+// The invitee named in a request body, for the per-target rate bucket only. It reads one own data property of a plain object
+// and nothing else; the body is validated later, in the transaction.
+function bodyTarget(body) {
+    if (!isPlainObject(body)) return null;
+    const descriptor = Object.getOwnPropertyDescriptor(body, 'userId');
+    return descriptor && typeof descriptor.value === 'string' && descriptor.value.length > 0 && descriptor.value.length <= 1024 ? descriptor.value : null;
+}
+// The manager projection of an Invitation (design, API contracts: Projections).
+function projectManagerInvitation(row, invitee) {
+    return { id: row.invitation_id, groupId: row.conversation_id, invitee, inviterId: row.inviter_id, state: row.state, createdAt: row.created_at, expiresAt: row.expires_at };
+}
+// Both Invitation lists are ordered by (created time, id), newest first, so their cursors carry that pair.
+const TIME_ID_SHAPE = Object.freeze({ last: Object.freeze(['time', 'id']), highWater: false });
+const sha256Hex = text => createHash('sha256').update(text, 'utf8').digest('hex');
+
+// An Invitation is expired at or after its expiry time, whether or not a row was ever updated (DB5-R04.15).
+const isExpired = (invitation, at) => Date.parse(invitation.expires_at) <= Date.parse(at);
+
 /** Group service over the existing injected DAL; no route and no SQL of its own. */
 function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
     const groups = createGroupRepository(db);
@@ -266,12 +294,12 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
         if (report.activeOwners !== 1 || report.openIntervals !== report.activeMembers || report.mismatches !== 0) throw internalError();
     }
 
-    // One limiter call over a bucket pair. A malformed answer is a server fault, and only allowed === true passes.
-    function consume(name, actor, from, [userLimit, sourceLimit]) {
-        const pair = [[name, actor, userLimit], [`${name}-source`, from, sourceLimit]];
+    // One limiter call over a list of [bucket name, subject, limit]. A malformed answer is a server fault, and only
+    // allowed === true passes.
+    function consume(buckets) {
         let result;
         try {
-            result = bucketLimiter.consume(pair.map(([bucket, subject, limit]) => ({ key: `groups:${bucket}:${subject}`, limit: limit.limit, windowMs: limit.windowMs })), clock());
+            result = bucketLimiter.consume(buckets.map(([bucket, subject, limit]) => ({ key: `groups:${bucket}:${subject}`, limit: limit.limit, windowMs: limit.windowMs })), clock());
         } catch (error) {
             throw toAuthError(error);
         }
@@ -281,6 +309,14 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
             error.retryAfterSeconds = positiveInteger(result.retryAfterSeconds) ? result.retryAfterSeconds : 1;
             throw error;
         }
+    }
+
+    // Public fields of a user for an Invitation projection, from the user and profile records (no e-mail, no credential data).
+    const people = groups.repositories;
+    function person(userId) {
+        const user = people.users.get(userId);
+        const profile = people.profiles.get(userId);
+        return { id: userId, username: user ? user.username : null, displayName: (profile && profile.display_name) ?? (user ? user.display_name : null) ?? null, avatar: (profile && profile.avatar) ?? null };
     }
 
     const service = Object.freeze({
@@ -368,8 +404,8 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
             if (operation !== 'read' && operation !== 'write') throw new TypeError('rate knows the operations read and write.');
             const actor = requireText(context && typeof context === 'object' ? context.userId : undefined, 'a user identifier');
             const from = requireText(source, 'a request source');
-            if (operation === 'read') consume('read', actor, from, [limits.readUser, limits.readSource]);
-            else consume('write', actor, from, [limits.writeUser, limits.writeSource]);
+            if (operation === 'read') consume([['read', actor, limits.readUser], ['read-source', from, limits.readSource]]);
+            else consume([['write', actor, limits.writeUser], ['write-source', from, limits.writeSource]]);
         },
 
         // G01 POST /api/groups (T-5C-07; DB5-R01). The creation buckets (20 per hour per user, 60 per hour per source) are
@@ -377,7 +413,7 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
         // design's: body (400), idempotency key (200 replay, 409 conflict), create. Returns {created, group}.
         createGroup(context, proof, body, source) {
             const actor = requireText(context && typeof context === 'object' ? context.userId : undefined, 'a user identifier');
-            consume('create', actor, requireText(source, 'a request source'), [limits.createUser, limits.createSource]);
+            consume([['create', actor, limits.createUser], ['create-source', requireText(source, 'a request source'), limits.createSource]]);
             return service.groupWrite(context, proof, (user, at) => {
                 const input = createBody(body);
                 const fingerprint = creationFingerprint(input);
@@ -473,6 +509,115 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
                     ? codec.encode({ last: [page.former ? last.left_at : last.joined_at, last.user_id] }, { route, userId: actor, conversationId: groupId })
                     : null;
                 return { items, nextCursor };
+            });
+        },
+
+        // G12 POST /api/groups/:id/invitations (T-5C-11; DB5-R04.1 to R04.5, R04.18 to R04.21). Returns {invitation}, the manager
+        // projection of the new pending Invitation. The refusal order is: 503 for an unset maximum, 429 from the three buckets
+        // (20 per hour per user, 5 per hour per user, group and invitee, 60 per hour per source; the limiter keeps its own
+        // transaction, so they are consumed first), then inside one immediate transaction 404 (not an Active_Member), 403 (role),
+        // 409 (archived), 400 (body), 404 (invitee unknown, disabled, without credential or blocked, one answer), 409 (already
+        // an Active_Member), 409 (a pending Invitation exists, or a maximum is reached), then the insert and its audit row.
+        createInvitation(context, proof, id, body, source) {
+            const maxima = pendingMaxima(settings);
+            const actor = requireText(context && typeof context === 'object' ? context.userId : undefined, 'a user identifier');
+            const from = requireText(source, 'a request source');
+            const named = bodyTarget(body);
+            const buckets = [['invite', actor, limits.inviteUser]];
+            if (named !== null) buckets.push(['invite-target', sha256Hex(JSON.stringify([actor, String(id), named])), limits.inviteTarget]);
+            buckets.push(['invite-source', from, limits.inviteSource]);
+            consume(buckets);
+            return service.groupWrite(context, proof, (user, at) => {
+                const seen = service.visibleGroup(user, id);
+                service.requireRole(seen.member, ['owner', 'admin']);
+                const groupId = seen.group.conversation_id;
+                if (seen.group.archived_at !== null && seen.group.archived_at !== undefined) throw new AuthError('CONFLICT', 409, []);
+                const { userId: target } = invitationBody(body);
+                if (!social.active(target) || social.isBlocked(user, target)) notFound();
+                const existing = groups.getMember(groupId, target);
+                if (existing && existing.left_at === null) throw new AuthError('CONFLICT', 409, []);
+                // A past-expiry pending row of this pair becomes expired first, so it neither blocks the insert nor counts.
+                if (groups.expirePast(groupId, target, at) > 0) service.audit(user, 'group.invitation.expired', groupId, { targetId: target });
+                if (groups.findPending(groupId, target) !== null) throw new AuthError('CONFLICT', 409, []);
+                if (groups.countPendingForGroup(groupId, at) >= maxima.perGroup || groups.countPendingForInvitee(target, at) >= maxima.perInvitee) {
+                    throw new AuthError('CONFLICT', 409, []);
+                }
+                const created = groups.insertInvitation({ invitation_id: randomUUID(), conversation_id: groupId, invitee_id: target, inviter_id: user, created_at: at });
+                service.audit(user, 'group.invitation.created', groupId, { targetId: target });
+                return { invitation: projectManagerInvitation(created, person(target)) };
+            });
+        },
+
+        // G13 GET /api/groups/:id/invitations (T-5C-11). Owner and admin only: 404, 403, then the query checks (400). Pending
+        // Invitations whose expiry time is later than the server time, newest first, with the manager projection.
+        listInvitations(context, id, query) {
+            return service.groupRead(context, (actor, at) => {
+                const seen = service.visibleGroup(actor, id);
+                service.requireRole(seen.member, ['owner', 'admin']);
+                const groupId = seen.group.conversation_id;
+                const route = { route: 'group-invitations', userId: actor, conversationId: groupId };
+                const page = listQuery(query, route, TIME_ID_SHAPE);
+                const rows = groups.listPendingForGroup(groupId, at, { limit: page.limit, after: page.cursor });
+                const items = rows.slice(0, page.limit).map(row => projectManagerInvitation(row, person(row.invitee_id)));
+                const last = rows.length > page.limit ? rows[page.limit - 1] : null;
+                return { items, nextCursor: last ? codec.encode({ last: [last.created_at, last.invitation_id] }, route) : null };
+            });
+        },
+
+        // G14 DELETE /api/groups/:id/invitations/:invitationId (T-5C-12; DB5-R04.14, R04.17, R04.21, R04.22). The inviter, the
+        // owner or an admin cancels a pending Invitation. 404 for a requester who is not an Active_Member, and for an owner or
+        // admin whose group has no such Invitation; 403 for any other Active_Member (the same answer whether or not the
+        // Invitation exists, so a member learns nothing about it); 409 when the Invitation is no longer pending or its expiry
+        // time has passed. Returns {id, state: 'cancelled'}.
+        cancelInvitation(context, proof, id, invitationId) {
+            return service.groupWrite(context, proof, (actor, at) => {
+                const seen = service.visibleGroup(actor, id);
+                const groupId = seen.group.conversation_id;
+                const key = pathId(invitationId);
+                const found = key === null ? null : groups.getInvitation(key);
+                const invitation = found && found.conversation_id === groupId ? found : null;
+                const manager = seen.member.role === 'owner' || seen.member.role === 'admin';
+                if (!manager && !(invitation && invitation.inviter_id === actor)) forbidden();
+                if (!invitation) notFound();
+                if (invitation.state !== 'pending' || isExpired(invitation, at)) throw new AuthError('CONFLICT', 409, []);
+                groups.resolveInvitation(invitation.invitation_id, 'cancelled', at);
+                service.audit(actor, 'group.invitation.cancelled', groupId, { targetId: invitation.invitee_id });
+                return { id: invitation.invitation_id, state: 'cancelled' };
+            });
+        },
+
+        // G15 GET /api/groups/invitations (T-5C-12; DB5-R04.6). The caller's own unexpired pending Invitations, newest first,
+        // with the group name and the inviter's display name and nothing about the members or the messages of the group.
+        listOwnInvitations(context, query) {
+            return service.groupRead(context, (actor, at) => {
+                const route = { route: 'own-invitations', userId: actor };
+                const page = listQuery(query, route, TIME_ID_SHAPE);
+                const rows = groups.listPendingForInvitee(actor, at, { limit: page.limit, after: page.cursor });
+                const items = rows.slice(0, page.limit).map(row => ({
+                    id: row.invitation_id,
+                    groupId: row.conversation_id,
+                    groupName: row.group_name,
+                    inviterDisplayName: row.inviter_display_name,
+                    createdAt: row.created_at,
+                    expiresAt: row.expires_at
+                }));
+                const last = rows.length > page.limit ? rows[page.limit - 1] : null;
+                return { items, nextCursor: last ? codec.encode({ last: [last.created_at, last.invitation_id] }, route) : null };
+            });
+        },
+
+        // G17 POST /api/groups/invitations/:invitationId/decline (T-5C-12; DB5-R04.13, R04.15, R04.16, R04.17, R04.22). Only the
+        // invitee: 404 for an unknown id and for any other user, with one answer; 409 when the Invitation is no longer pending
+        // or its expiry time has passed. No membership, revision or re-invite delay changes. Returns {id, state: 'declined'}.
+        declineInvitation(context, proof, invitationId) {
+            return service.groupWrite(context, proof, (actor, at) => {
+                const key = pathId(invitationId);
+                const invitation = key === null ? null : groups.getInvitation(key);
+                if (!invitation || invitation.invitee_id !== actor) notFound();
+                if (invitation.state !== 'pending' || isExpired(invitation, at)) throw new AuthError('CONFLICT', 409, []);
+                groups.resolveInvitation(invitation.invitation_id, 'declined', at);
+                service.audit(actor, 'group.invitation.declined', invitation.conversation_id);
+                return { id: invitation.invitation_id, state: 'declined' };
             });
         }
     });
