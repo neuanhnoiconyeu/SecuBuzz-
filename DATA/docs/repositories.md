@@ -103,3 +103,92 @@ Coordination required before wiring:
 - Decide the canonical fingerprint algorithm with realtime; DB-1 merely preserves supplied fingerprints. Do not calculate a different fingerprint on each path.
 - Only Security can attest recipient key distribution and verify multi-user encryption. No key store, key exchange, decryption or RecipientKeyVerifier is supplied here. Unknown legacy authenticated metadata remains unknown.
 - Wire the SessionResolver, authorization and durable MessageStore only after the later services exist. No Kiro-owned modules or frontend code were edited, and remote AI remains disabled.
+
+## DB-5B group repository additions
+
+This section adds to the historical contracts above. `createGroupRepository(db)` in `server/database/groupRepository.js` composes `createRepositories(db)` on the caller's already migrated connection. It opens no connection and supplies no public API or feature-gate wiring. It is trusted internal persistence, not an authorization boundary. The service must apply session, CSRF, role, block, feature and payload checks under the approved contracts. This addition does not change E2EE, key management or realtime security.
+
+### Two additive base-repository edits
+
+1. `audit.insert` additionally allows `target_id` and `role`. Like `reason_code`, `operation` and `outcome`, both must be identifier strings matching `^[a-zA-Z0-9_.:-]{1,64}$`. Numeric `count` and `duration_ms` remain finite and nonnegative. No arbitrary metadata, nested values, prompts, ciphertext, passwords or free-form reasons are permitted.
+2. `repositories.js` exports its existing `translate` function. Its behavior is unchanged. In particular, the base mapper still maps a trigger constraint to INVALID; the group-specific mapper described below maps a raw SQLite trigger abort to CONFLICT. Already-translated RepositoryError instances pass through unchanged.
+
+### Transaction ownership and errors
+
+Reads carry `.kind = 'read'`; writes carry `.kind = 'write'`. Reads normalize errors and need no transaction. Every write throws TypeError before argument validation/SQL when no transaction is open. Each write runs in a savepoint: a failed function restores its own changes even if the caller catches the error and continues.
+
+The seven membership/interval primitives and `insertGroup` require `withMembershipTransaction(db, work)`, which owns an outer `BEGIN IMMEDIATE` transaction and rejects ambient/nested transactions and asynchronous or Promise-returning work. An ordinary caller transaction cannot invoke those primitives. It tracks groups touched across repository instances, permits coordinated membership/interval writes inside the transaction, and validates exactly one active owner, one open interval per active member and none per former member after work and before COMMIT. A callback exception or failed final validation rolls back the complete transaction; a validation mismatch is DATABASE. No write occurs between validation and the driver's commit. Immediate SQLite constraints and migration 0008 hardening remain enabled throughout. Metadata, Invitation, read-position and revision writes retain their ordinary open-transaction guard and can participate in this coordinated transaction.
+
+`readFunction`, `writeFunction`, `compareAndSet` and `normaliseError` are the internal core helpers. Conditional updates compare their expected previous state; the read-position UPSERT instead atomically retains the maximum. `compareAndSet` requires exactly one returned/changed row or throws CONFLICT, with its own savepoint. Bulk cancellation performs one such conditional update per selected pending row within the function savepoint.
+
+| Raw SQLite condition | Group repository class |
+| --- | --- |
+| Primary-key/unique constraint | DUPLICATE |
+| Trigger abort or stale compare-and-set | CONFLICT |
+| CHECK/other constraint or invalid repository input | INVALID |
+| Foreign-key constraint | REFERENCE |
+| Busy/locked | BUSY |
+| Cannot open, I/O, full disk, read-only | UNAVAILABLE; OP-09 remains provisional, unchanged by this task |
+| Unknown driver or unexpected error | DATABASE |
+
+Only fixed class messages escape; no driver message, SQL, bound value, constraint name or cause is attached. RepositoryError passes through unchanged. These are internal classes, not a change to public HTTP error contracts. The hardened second-open-interval guard intentionally yields CONFLICT instead of its former unique-index DUPLICATE; ordinary duplicate keys and pending Invitations remain DUPLICATE.
+
+### Group reads and returned values
+
+Rows are internal persistence records, not public DTOs. Keyset lists take `{limit, after}` (default 20, maximum 50) and return at most limit+1 raw rows; the service slices the lookahead and encodes cursors. `after` accepts the ordering tuple or a decoded `{last: tuple}`. The repository itself returns no cursor.
+
+| Function | Contract |
+| --- | --- |
+| `getVisibleGroup(id)` | Combined conversation/extension row only for group kind, authenticated origin and an existing extension; otherwise null. Archived groups remain readable. |
+| `getMember(id, user)`, `countActiveMembers(id)` | Retained membership row/null, including former membership for internal checks; active count or zero for an invisible group. |
+| `listGroupsForUser(actor, options)` | Active memberships ordered by updated time and group id descending, with role, member count and permitted unread count. |
+| `listMembers(id, options)` | Active rows by open-period join time/user ascending; `former: true` returns former rows by leave time/user ascending, using their latest closed period. |
+| `getCreationKey(user, key)` | Idempotency row/null restricted to a visible group. |
+| `invariantReport(id)` | Counts active owners, active members, open intervals and membership/interval mismatches. |
+| `getInvitation(invitationId)` | Invitation row/null restricted to a visible group, including terminal and past-expiry rows. |
+| `findPending(id, invitee)` | Pending row/null, including a past-expiry pending row for subsequent lazy expiry. |
+| `countPendingForGroup(id, nowIso)`, `countPendingForInvitee(user, nowIso)` | Count only unexpired pending rows of visible groups; expiry equal to now is expired. |
+| `listPendingForInvitee(user, nowIso, options)`, `listPendingForGroup(id, nowIso, options)` | Unexpired pending rows by creation time and invitation id descending. Own-list rows additionally project group name and inviter display name, with no member list or message content. |
+| `closedIntervalSince(id, user, sinceIso)` | Whether a retained closed interval ended at or after the supplied time, including removal evidence before a rejoin. |
+| `intervalsFor(id, user)`, `openInterval(id, user)` | Retained intervals in interval-number order; current open row/null. These internal metadata reads do not grant a former member history access. |
+| `historyPage(id, user, {policy, limit, highWater, before})` | One SQL query applies authorized membership ranges before LIMIT; returns limit+1 rows descending by sequence, bounded by fixed `highWater` and exclusive `before` (null by default). |
+| `getPermittedMessage(id, user, policy, messageId)` | Authenticated message row/null under the same permitted-range predicate; an unknown, foreign-group or nonpermitted id has the same null result. Permitted tombstones remain rows for service projection. |
+| `unreadCount(id, user, policy)` | Permitted authenticated messages above the stored position (zero if absent), excluding tombstones and the requester's own sends. |
+| `getReadPosition(id, user)` | Stored integer or zero; a former/non-member or invisible group reveals no stored position. |
+
+History, single-message and unread queries require current active membership and the supplied policy to match the immutable stored policy; a different valid policy fails closed. The range union includes prior and current periods; `all` additionally includes the prefix before the first join. Empty periods grant no message and absence gaps are always excluded. Former members and never-members receive no history. The first page's high-water must be reused on subsequent pages; an empty result has no lookahead or next-page indication. History uses `idx_messages_authenticated_history` without a full message scan.
+
+### Group writes
+
+| Function | Contract |
+| --- | --- |
+| `insertGroup({conversation_id?, created_by, title, description?, historyPolicy?})` | Uses the base conversation create operation for authenticated group kind and creator ownership, then extension revision 1 and the creator's first interval. Default description is NULL, default policy `from_joined`; only `all` and `from_joined` are valid. Returns the combined group row. The completed group is registered for mandatory final validation. |
+| `updateSettings(id, patch, at)` | Accepts only supplied title/description fields; description NULL clears it. Updates conversation title/time and extension description atomically, never history policy. Returns the combined group row; archived/invisible groups conflict. |
+| `archiveGroup(id, at)`, `touchConversation(id, at)` | Archive is a compare-and-set on unarchived state and writes archive/update times, returning the combined group. Touch sets update time on an unarchived visible group, returning the conversation row. |
+| `bumpRevision(id)` | Adds exactly 1 and returns the new membership revision. Service coordinates one increment per logical membership/role operation. |
+| `claimCreationKey(user, key, fingerprint, id, at)` | Inserts a key row, or explicitly deletes and inserts a row strictly older than 24 hours in one savepoint. Exactly 24 hours is still retained. Live collisions remain DUPLICATE; a failed renewal restores the old row. Returns the stored row. |
+| `addMember(id, user, at)` | Insert a new member with the supplied first join time and role member; a retained row conflicts. Pair with interval opening. |
+| `reactivateMember(id, user, at)` | Require former membership, clear leave time and reset role to member. Never rewrite the original ConversationMembers `joined_at`; pair with interval opening. |
+| `endMembership(id, user, at)` | Require active non-owner membership, set leave time; pair with interval closure at the same operation timestamp. |
+| `changeRole(id, user, from, to)` | Conditional active non-owner role change between member/admin using the expected old role. Ownership cannot be changed through this method. |
+| `transferOwnership(id, from, to)` | Demote the active owner first, then promote an active admin/member. The current `FORMER_OWNER_ROLE` policy constant is admin. A failed promotion restores the demotion, even if caught by the caller. |
+| `openIntervalAt(id, user, at, firstSeq?)` | Require active membership; append next interval number with `first_seq = highWater + 1`. A supplied sequence must equal that boundary. |
+| `closeInterval(id, user, at, lastSeq?)` | Require membership ended at the same timestamp; close its open interval with `last_seq = highWater`, including an empty `[first_seq, first_seq - 1]` period. A supplied sequence must match. |
+| `insertInvitation({invitation_id, conversation_id, invitee_id, inviter_id, created_at, expires_at?})` | Insert pending with NULL resolution. Expiry is creation plus the fixed 604800 seconds; an explicitly supplied expiry must agree. Returns the row. Session/role/block/maximum revalidation remains service work. |
+| `resolveInvitation(id, to, at)` | Pending-only transition to accepted, declined, cancelled or expired; returns the row. A terminal or missing row conflicts and never changes. |
+| `cancelPendingFor(id, user, at)` | Cancel all pending Invitations addressed to or issued by that user in the group, returning the count; the whole batch is atomic. |
+| `expirePast(id, invitee, nowIso)` | Expire the group's pending row for that invitee at or past expiry, returning 0 or 1. This permits a new pending row without deleting history. |
+| `upsertReadPosition(id, user, n, at)` | Require active membership, safe integer 0 through high-water and a permitted range for n > 0. Uses valid UPSERT with `max` and returns the stored integer; equal/lower valid reports preserve both position and timestamp. Retained membership/read identity is unchanged. |
+
+Membership and interval functions are coordinated primitives, not independently committable business operations. A typical already-authorized synchronous operation is:
+
+```js
+const groups = createGroupRepository(db);
+withMembershipTransaction(db, () => {
+    groups.addMember(groupId, userId, nowIso);
+    groups.openIntervalAt(groupId, userId, nowIso);
+    groups.bumpRevision(groupId);
+});
+```
+
+Authorization, auditing and public result mapping remain with the service; no asynchronous verifier runs inside this transaction. These additions preserve all existing direct-message, authentication and Security/Realtime interfaces. Feature-gate activation and later API implementation remain separate owner-reviewed work.
