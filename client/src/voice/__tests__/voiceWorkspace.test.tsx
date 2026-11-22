@@ -4,6 +4,8 @@ import { AuthenticatedWorkspace } from '@/auth/AuthenticatedWorkspace';
 import type { AuthService } from '@/auth/authService';
 import * as connections from '../livekitConnection';
 import { TestVoiceRoom, voiceService, voiceUser } from '@/test-support/liveVoiceFixture';
+// Timing budget: these cases render the full messenger; the 5 s Jest default was exceeded under full-suite load (Linux C4 evidence, T-5B-37).
+jest.setTimeout(20000);
 
 jest.mock('../livekitConnection', () => ({ ...jest.requireActual('../livekitConnection'), createSessionLiveKitConnection: jest.fn() }));
 

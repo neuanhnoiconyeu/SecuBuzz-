@@ -238,7 +238,7 @@ function createRepositories(db) {
                 fields(input, ['audit_id','actor_user_id','event_type','severity','source','subject_id','metadata']);
                 const metadata = input.metadata ?? {};
                 // Only explicit scalar metadata, never prompts, message bodies, credentials or keys.
-                const allowed = ['reason_code','operation','outcome','count','duration_ms'];
+                const allowed = ['reason_code','operation','outcome','count','duration_ms','target_id','role'];
                 fields(metadata,allowed);
                 if (Object.entries(metadata).some(([key,value]) =>
                     ['count','duration_ms'].includes(key) ? !Number.isFinite(value) || value < 0 :
@@ -300,4 +300,4 @@ function createRepositories(db) {
     };
     return repositories;
 }
-module.exports = { createRepositories, RepositoryError };
+module.exports = { createRepositories, RepositoryError, translate };

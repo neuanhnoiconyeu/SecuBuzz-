@@ -12,6 +12,8 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testEnvironment: 'jest-environment-jsdom',
+  // Git-ignored scratch workspaces are not client test inputs.
+  testPathIgnorePatterns: ['<rootDir>/tmp/'],
   testMatch: [
     '**/__tests__/**/*.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)',

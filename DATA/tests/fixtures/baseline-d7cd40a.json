@@ -1,0 +1,88 @@
+{
+  "baseline": "d7cd40aafcf8f432d17d3f4a85abb26d19fa9bc3",
+  "root": "DATA/tests",
+  "source": "git show <baseline>:<root>/<file>",
+  "normalisation": "UTF-8 text with every CRLF replaced by LF",
+  "digest": "sha256 hex of the normalised text",
+  "counts": {
+    "tests": 29,
+    "support": 6,
+    "dc01": 7
+  },
+  "tests": {
+    "auth-http.test.js": "a875925209773cb41674d23381d13201d9e0bb115838537b18ad5dfa5ec26ef9",
+    "auth-migrations.test.js": "2bfc350ae5ba4e62dd123fadc4279f742f5239100b54f235f3779da74492a16c",
+    "auth-security.test.js": "a9301d23e5d31a1d98b288825e73c8ef4946f91c8f92dffee85e0d4223a58a73",
+    "conversations-concurrency.test.js": "7eb044d43d7fbca0c3b58506df731346b41f9e1a94412ad3a5dd095d26078513",
+    "conversations-http.test.js": "a01fd3796a04be23b3132ce80709fa2be25d5727a80b6ba8f08f02c1dce22fbf",
+    "conversations-migrations.test.js": "4b243852d17e6ba5a9de5119ad8132c90f5dc303b5fb687ee8f0df17cea03ce6",
+    "conversations-security.test.js": "fe026c00a449c70e35211c30f5b5b3b8d39c94d92e3b5acbaf173f4d064974bf",
+    "database.test.js": "67928b5102cc682804a57172210b5c68c8b4190668c33b52df1d8b19e542595b",
+    "e2ee-concurrency.test.js": "b0c9fb95e753b6314890e444d60fdb338f850cc11e99c722d7dbbfd28408593c",
+    "e2ee-contracts.test.js": "507b47edcf92e64f4915130f17907287f85c0c0c915e9ceafcec209c02dab285",
+    "e2ee-http.test.js": "a33a2c71934b6d435623080cf70482e1ce16966cc8d77e6c20742e11d4a2a2ff",
+    "e2ee-migrations.test.js": "57966e96f076e234718a1a2cd3afaf5c4ede984767458be3d1a3ce00642d0a46",
+    "e2ee-security.test.js": "f3fd08c404f4a8415a9f07c2ba2bafe6500ef4e792a8c9e8e9a2451721ef3d8d",
+    "e2ee-vectors.test.js": "7b4bad8948739dec463c8bf9d19d4355929b58e9f4eb8a19851dd87a4ba3c064",
+    "messaging-concurrency.test.js": "1f8f9272ee4c6bb9b41a55182e8d0a1b2fc85851937017fe2538a9333525daa0",
+    "messaging-contracts.test.js": "623b5317c2c6021e4165c5298f5565878e180135a6ea06a4cd69c123dad5fc46",
+    "messaging-http.test.js": "56e37ff33ef2ae8d4e9db63c109655134434013cbb2df2229bcae27951303ecb",
+    "messaging-migrations.test.js": "f3b7b6a9fac6040e9749c396b3ecc702a70f933774be3860835adc0946d23aa6",
+    "messaging-pagination.test.js": "a573d9f3cd34064ae78109b483cc2a83daa103618924da04aa84ea80cfe238ca",
+    "messaging-security.test.js": "f8624da00db8c02282b183e325aa0eb217182a626ffec82713d3841b990eddde",
+    "migrations.test.js": "90b1f1de7681a5d1d060d1225f034c039b3f603dc4a570401d1776b6b22f2c1f",
+    "repositories.test.js": "3043405b1fcf54605cf6a7b8f9de437e349a2add4c098e99f464c275a88d435f",
+    "routes.test.js": "adddb6d85c4ac333ac2779bb4529a91760e7178d24f9e43fb9bf7ddaff2102f3",
+    "schema.test.js": "d75620e7bf25f4a9e9732e5c484566257334b6a6b0dcb58737d5e90fa6fe4098",
+    "social-concurrency.test.js": "9e9217dd372a0cf75e71de934b8895b7f6221ca465e233eba5ba31362384199e",
+    "social-http.test.js": "61a1c7c98352df881b05556cacf810d46c0d13ee3e975314ac916410f7bcdac0",
+    "social-migrations.test.js": "dffeb0a2cec69902f8e904a31f17622954b4b566143a271e14e4a145e2b1876c",
+    "social-revisions.test.js": "b29bf84c1d9a38e8bdbc315576fe224a4247aed1051186e32a8b4c7c6a6215f6",
+    "social-security.test.js": "61368eddb65f91242933575ba87b222a40e5ead0e8ed791202ae79ab7afeb6fb"
+  },
+  "support": {
+    "support/auth.js": "e9910b540e2078a34ff77763c95a00090a02a9d323fe239ecb40a96e69ac08d7",
+    "support/database.js": "335efde1a9984471dca331dde36e0844efeb7aa66f4eabc53750ec8ea78f37ae",
+    "support/e2ee.js": "aa80dd1b56126485a43f0086cb76f000dfdec85d16e5dda12763741afd7698d0",
+    "support/messaging-worker.cjs": "6b89734ca0459c6edbfdf976d31c2e3f8a94c907b62f26341c3f168d06ffd6a2",
+    "support/messaging.js": "d84866eca114d7a13450bf81fc72de5c383c5d06c0b1dee57cfad56a5b38bf4b",
+    "support/social.js": "a192b9719cd112afae47d7ae61c5c721cba08882174f8f3e22830413a6c99b36"
+  },
+  "dc01": [
+    {
+      "file": "auth-migrations.test.js",
+      "line": 24,
+      "text": "    assert.deepEqual(migrate(db).applied,['0003-authentication.sql','0004-profiles-friends.sql','0005-conversation-provenance.sql','0006-encrypted-message-lifecycle.sql','0007-recipient-keys.sql']);"
+    },
+    {
+      "file": "conversations-migrations.test.js",
+      "line": 21,
+      "text": "    assert.deepEqual(migrate(db).applied,['0005-conversation-provenance.sql','0006-encrypted-message-lifecycle.sql','0007-recipient-keys.sql']);"
+    },
+    {
+      "file": "e2ee-migrations.test.js",
+      "line": 12,
+      "text": "    assert.deepEqual(migrate(db).applied,['0007-recipient-keys.sql']);assert.equal(db.pragma('foreign_keys',{simple:true}),1);"
+    },
+    {
+      "file": "e2ee-migrations.test.js",
+      "line": 29,
+      "text": "    const {db}=fixture(t);assert.equal(db.prepare('SELECT max(version) v FROM SchemaMigrations').get().v,7);assert.deepEqual(db.pragma('foreign_key_check'),[]);"
+    },
+    {
+      "file": "messaging-migrations.test.js",
+      "line": 11,
+      "text": "    assert.deepEqual(migrate(db).applied,['0006-encrypted-message-lifecycle.sql','0007-recipient-keys.sql']);for(const [name,rows]of Object.entries(before)){if(rows.length)assert.deepEqual(db.prepare(`SELECT ${Object.keys(rows[0]).join(',')} FROM ${name}`).all(),rows);else assert.equal(db.prepare(`SELECT count(*) AS n FROM ${name}`).get().n,0);}"
+    },
+    {
+      "file": "migrations.test.js",
+      "line": 14,
+      "text": "    assert.deepEqual(history.map(row => row.version),[1,2,3,4,5,6,7]);"
+    },
+    {
+      "file": "social-migrations.test.js",
+      "line": 25,
+      "text": "    assert.deepEqual(migrate(db).applied,['0004-profiles-friends.sql','0005-conversation-provenance.sql','0006-encrypted-message-lifecycle.sql','0007-recipient-keys.sql']);"
+    }
+  ]
+}

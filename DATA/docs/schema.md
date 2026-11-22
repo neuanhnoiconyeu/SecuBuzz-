@@ -1,6 +1,8 @@
-# DB-1 schema and ERD
+# DATA schema and ERD
 
-Current post-DB-4B schema is version 7. `0007-recipient-keys.sql` adds DeviceKeys
+Current working-tree schema is version 12 (`0012-groups.sql`); its additive group
+schema is documented below. The existing DB-4B key schema is unchanged:
+`0007-recipient-keys.sql` adds DeviceKeys
 (public signing/agreement points, self-signature, account ownership, stable deviceId,
 monotonic keyVersion and active/superseded/revoked status), ConversationKeyEpochs
 (conversation/keyId PK, unique ordered epoch, creator/previous-epoch FKs, signature
@@ -81,3 +83,87 @@ erDiagram
 `SchemaMigrations`, `AuthChallenges` and `AuthRateLimits` are independent infrastructure tables. DM pair references to Users are described in the inventory rather than duplicating lines in the ERD.
 
 Encryption metadata is stored unchanged: algorithm, version, encoding, IV, ciphertext including its tag, sender name, client timestamp and type. The server stores no private keys or decrypted message content. Legacy ciphertext has no authenticated sender-name/client-timestamp metadata; those fields remain NULL and must not be invented or passed off as a modern envelope. Modern format/base64 validation and key-distribution verification remain the Security/Realtime owner's responsibility.
+
+## Version 12 group migration
+
+`0012-groups.sql` is the DB-5B draft migration. It adds sibling group tables and guards without rebuilding or changing any pre-existing row or value. Versions 1-7 remain unchanged. Applying the schema does not enable Group Chat, File Sharing or any feature gate. Messages and attachments remain in their existing shared tables; this migration changes no E2EE, key distribution or realtime security design.
+
+| Version | Migration file |
+| --- | --- |
+| 1 | `0001-legacy.sql` |
+| 2 | `0002-foundation.sql` |
+| 3 | `0003-authentication.sql` |
+| 4 | `0004-profiles-friends.sql` |
+| 5 | `0005-conversation-provenance.sql` |
+| 6 | `0006-encrypted-message-lifecycle.sql` |
+| 7 | `0007-recipient-keys.sql` |
+| 8 | `0008-authenticated-message-pins.sql` |
+| 9 | `0009-authenticated-message-reactions.sql` |
+| 10 | `0010-encrypted-attachments.sql` |
+| 11 | `0011-encrypted-message-revisions.sql` |
+| 12 | `0012-groups.sql` |
+
+### Added tables
+
+Every new foreign key uses `ON DELETE RESTRICT`. Primary-key indexes are implicit SQLite objects; the explicitly named indexes and triggers are inventoried below.
+
+| Table | Keys, columns and invariants |
+| --- | --- |
+| `GroupExtensions` | PK/FK `conversation_id` to Conversations, whose kind must be group. Nullable description of at most 1000 characters; immutable `history_policy` is exactly `all` or `from_joined` (default). Integer `membership_revision` starts at 1 and can increase only by exactly 1 per update; identity and `created_at` are immutable. |
+| `GroupMembershipIntervals` | PK `(conversation_id,user_id,interval_no)` and composite FK to ConversationMembers. Intervals append with consecutive numbers; `first_seq` is a positive safe integer; nullable `last_seq` is at least `first_seq - 1`. An empty closed interval has that latter bound. `last_seq` and `left_at` are NULL together for an open interval; `joined_at` records that period's join time. No append after an open interval, overlap (including open intervals), edit of closed history or deletion is allowed. |
+| `ConversationInvitations` | Nonblank `invitation_id` PK; conversation and invitee FKs, plus composite FK for the inviter's membership. States: pending, accepted, declined, cancelled, expired. Invitee differs from inviter; expiry follows creation; `resolved_at` is NULL exactly while pending. One pending row per group/invitee. Only pending-to-terminal transitions are allowed, preserving identity, participants and creation/expiry times; rows cannot be deleted. The repository writes the fixed seven-day expiry and filters expired pending rows lazily. |
+| `GroupReadPositions` | PK/FK `(conversation_id,user_id)` to retained membership; integer position 0 through 9007199254740991 and `updated_at`. Position cannot decrease; identity cannot change. Active-member authorization, high-water and permitted-range checks are repository/service responsibilities, beyond these schema checks. |
+| `GroupCreationKeys` | PK `(user_id,idempotency_key)` with FKs to Users and Conversations. Key length 1-256; fingerprint is exactly 64 lowercase hexadecimal characters; stores conversation and creation time. Every field is immutable. The repository may renew a key strictly after 24 hours using conditional DELETE then INSERT in one savepoint, never implicit REPLACE. |
+
+### Added named indexes
+
+| Index | Purpose |
+| --- | --- |
+| `uq_group_intervals_open` | Unique open interval per group/member. |
+| `idx_group_intervals_open_joined` | Active-member ordering by period join time and user. |
+| `uq_invitations_pending` | Unique pending invitation per group/invitee. |
+| `idx_invitations_invitee` | Invitee/state listing by creation time and invitation id descending. |
+| `idx_invitations_group` | Group/state listing in the same order. |
+| `idx_invitations_inviter` | Group/inviter lookup for cancellation. |
+| `idx_group_creation_keys_conversation` | Creation-key conversation lookup. |
+
+### Added named triggers
+
+| Trigger | Purpose |
+| --- | --- |
+| `group_extensions_group_only` | Require a group conversation for an extension insert. |
+| `group_extensions_update` | Preserve identity, immutable history policy and creation time; enforce exact +1 revision changes. |
+| `group_extensions_keep` | Retain extension rows. |
+| `group_intervals_insert` | Enforce append order and non-overlap, including open-ended intervals, and require group kind. |
+| `group_intervals_close` | Allow one closure of an open interval without changing identity, start or join time. |
+| `group_intervals_keep` | Retain interval history. |
+| `invitations_insert` | Require pending initial state and group kind. |
+| `invitations_transition` | Allow only pending-to-terminal state changes with fixed identity, participants and initial times. |
+| `invitations_keep` | Retain invitation history. |
+| `group_read_positions_monotonic` | Reject decreasing positions. |
+| `group_read_positions_insert` | Require group kind. |
+| `group_extensions_replacement_guard` | Protect extension collisions against implicit replacement. |
+| `invitations_replacement_guard` | Protect invitation identity and pending-pair collisions against replacement. |
+| `group_read_positions_replacement_guard` | Protect retained read-position rows against replacement. |
+| `group_creation_keys_replacement_guard` | Protect immutable creation-key rows against replacement. |
+| `group_members_replacement_guard` | Protect retained group membership against replacement. |
+| `group_owner_replacement_guard` | Prevent a conflicting owner update from replacing the existing owner. |
+| `group_read_positions_identity` | Preserve conversation/user identity. |
+| `group_creation_keys_immutable` | Preserve every creation-key field. |
+| `group_intervals_replacement_guard` | Protect interval identity and explicit rowid collision paths against replacement. |
+| `groupextensions_row_identity` | Preserve extension rowid. |
+| `groupmembershipintervals_row_identity` | Preserve interval rowid. |
+| `conversationinvitations_row_identity` | Preserve invitation rowid. |
+| `groupreadpositions_row_identity` | Preserve read-position rowid. |
+| `groupcreationkeys_row_identity` | Preserve creation-key rowid. |
+| `conversationmembers_row_identity` | Preserve member rowid. |
+
+Replacement guards do not depend on DELETE triggers firing for SQLite's implicit replacement deletions. Ordinary INSERT uniqueness and valid UPSERT behavior remain in force. The repository's coordinated transaction must additionally enforce exactly one active owner, one open interval per active member and none per former member before COMMIT; immediate SQLite constraints remain enabled.
+
+### Backfill and visibility
+
+The backfill inserts one extension for every group conversation of both origins: description NULL, policy `from_joined`, revision 1, and the conversation's original creation time. It inserts one interval numbered 1 per existing group member, retaining the member's join/leave timestamps.
+
+`first_seq` is the lowest authenticated message sequence created at or after that member's join, or the authenticated high-water plus 1 if no such message exists (1 for an empty stream). For active members `last_seq` is NULL. For former members it is the highest authenticated sequence created at or before leaving, or `first_seq - 1` when none qualifies. The SQL uses `strftime` normalization for ISO and legacy SQLite timestamp forms. Unparseable times match no message and narrow access; they never justify widening history. This bootstrap rule does not rewrite Messages or membership rows. Normal joins and closures thereafter use sequence high-water, not timestamp ordering.
+
+Schema presence is not authorization. The repository exposes a managed group only when kind is group, origin is authenticated and an extension exists. Active authorized members retain earlier permitted intervals after rejoining; absence gaps never become visible. `all` additionally allows sequences before the first join. Former members and never-members receive no history. Server filtering does not replace key-based confidentiality; E2EE and realtime security remain under their existing contracts.

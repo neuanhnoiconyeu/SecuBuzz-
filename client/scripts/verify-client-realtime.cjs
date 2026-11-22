@@ -747,7 +747,10 @@ async function websocketProbe(origin) {
       }
     }
     check('real accounts use the original sidebar, header, bubbles and composer', await alice.locator('.conversation-sidebar').count() === 1 && await alice.locator('.chat-toolbar').count() === 1 && await alice.locator('.message-bubble').count() >= 1 && await alice.locator('.composer-dock').count() === 1);
-    check('real chat has no demo messages or unverified file and voice actions', await alice.getByText('Demo reply', { exact: true }).count() === 0 && await alice.getByRole('button', { name: 'Attach files or images' }).count() === 0 && await alice.getByRole('button', { name: 'Record voice message' }).count() === 0);
+    check('real chat has no demo messages', await alice.getByText('Demo reply', { exact: true }).count() === 0);
+    await expect(alice.getByRole('button', { name: 'Attach files or images', exact: true })).toBeEnabled();
+    await expect(alice.getByRole('button', { name: 'Record voice message', exact: true })).toBeEnabled();
+    check('integrated encrypted attachment and voice controls remain available', true);
     await expect(alice.getByLabel('Message transport', { exact: true })).toBeHidden(); check('developer transport control is inside collapsed advanced settings', true);
     await alice.getByRole('textbox', { name: /^Message to / }).fill(secretTexts[8]);
     const mediaCid = (await api(alice, '/api/conversations?limit=50')).body.items[0].id;
@@ -824,9 +827,13 @@ async function websocketProbe(origin) {
     await alice.setViewportSize({ width: 390, height: 844 }); check('mobile layout has no horizontal overflow', await alice.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
     await alice.addStyleTag({ content: '.message-bubble, .conversation-list-preview, .composer-input { filter:blur(8px); }' }); await alice.screenshot({ path: path.join(artifacts, 'mobile-redacted.png'), fullPage: true }); evidence.screenshots.push('mobile-redacted.png');
     await alice.emulateMedia({ colorScheme: 'dark' }); await expect(alice.locator('html')).toHaveAttribute('data-theme', 'dark');
-    // Theme attributes update before the existing background transition has finished.
-    await expect.poll(() => alice.locator('.conversation-security-summary').evaluate(element => { const channels = getComputedStyle(element).backgroundColor.match(/\d+/g)?.slice(0, 3).map(Number); return channels?.length === 3 && channels.reduce((a, b) => a + b, 0) < 500; })).toBe(true);
-    check('dark security disclosure uses a readable dark surface', true);
+    // The theme attribute updates before the existing background transition finishes.
+    await expect.poll(() => alice.locator('.conversation-security-summary').evaluate(element => {
+      const channels = getComputedStyle(element).backgroundColor.match(/\d+/g)?.slice(0, 3).map(Number);
+      return element.getAnimations().every(animation => animation.playState === 'finished') &&
+        channels?.length === 3 && channels.reduce((a, b) => a + b, 0) < 500;
+    }), { timeout: 5000, message: 'Dark security disclosure completes its transition' }).toBe(true);
+    check('dark security disclosure uses a readable dark surface', await alice.locator('.conversation-security-summary').evaluate(element => { const channels = getComputedStyle(element).backgroundColor.match(/\d+/g)?.slice(0, 3).map(Number); return channels?.length === 3 && channels.reduce((a, b) => a + b, 0) < 500; }));
     await alice.screenshot({ path: path.join(artifacts, 'midnight-mobile-redacted.png'), fullPage: true }); evidence.screenshots.push('midnight-mobile-redacted.png');
     await alice.emulateMedia({ colorScheme: 'light' }); await expect(alice.locator('html')).toHaveAttribute('data-theme', 'light'); check('new panel preserves System appearance in light and Midnight dark', true);
     check('Bungee and Space Grotesk remain active', await alice.evaluate(async () => { await document.fonts.ready; return /bungee/i.test(getComputedStyle(document.querySelector('.chat-title-heading')).fontFamily) && /space.?grotesk/i.test(getComputedStyle(document.body).fontFamily); }));

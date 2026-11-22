@@ -8,6 +8,8 @@ import { MessengerApp } from '@/components/messenger/MessengerApp';
 import { createDemoProfile } from '@/profiles/profileModel';
 import { MockRealtimeClient } from '../MockRealtimeClient';
 import { DEMO_REALTIME_MESSAGE_TEXT, type RealtimeEvent } from '../realtimeModel';
+// Timing budget: these cases render the full messenger; the 5 s Jest default was exceeded under full-suite load (Linux C4 evidence, T-5B-37).
+jest.setTimeout(20000);
 
 const replace = jest.fn();
 jest.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));

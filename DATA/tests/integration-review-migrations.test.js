@@ -70,7 +70,7 @@ for (const version of [8, 9, 10, 11]) {
         assert.deepEqual(snapshot(f.db), before);
         assert.deepEqual(f.db.prepare('SELECT * FROM sqlite_master ORDER BY name').all(), schema);
         preserved(f.db, before);
-        assert.equal(migrate(f.db).applied.length, 4);
+        assert.equal(migrate(f.db).applied.length, loadMigrations().length - 7);
         preserved(f.db, before);
         assert.deepEqual(migrate(f.db).applied, []);
     });
