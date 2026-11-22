@@ -12,6 +12,11 @@
 !docker/**
 !.dockerignore
 
+# Include only the public guide required by validation documentation tests.
+!docs/
+docs/**
+!docs/docker-development.md
+
 # Never send host dependencies, environment files, databases, or private storage.
 **/node_modules
 **/.npmrc

@@ -22,7 +22,7 @@ test('DB-3 upgrade preserves users, sessions, Contacts and prior migration check
     const tables=['Users','UserProfiles','Sessions','Contacts','FriendRequests','Friendships','Blocks'];
     const before=Object.fromEntries(tables.map(table=>[table,db.prepare(`SELECT * FROM ${table}`).all()]));
     const history=db.prepare('SELECT * FROM SchemaMigrations ORDER BY version').all();
-    assert.deepEqual(migrate(db).applied,['0004-profiles-friends.sql','0005-conversation-provenance.sql','0006-encrypted-message-lifecycle.sql','0007-recipient-keys.sql']);
+    assert.deepEqual(migrate(db).applied,['0004-profiles-friends.sql','0005-conversation-provenance.sql','0006-encrypted-message-lifecycle.sql','0007-recipient-keys.sql','0008-groups.sql']);
     for(const table of tables) {
         const columns=Object.keys(before[table][0]).join(',');assert.deepEqual(db.prepare(`SELECT ${columns} FROM ${table}`).all(),before[table]);
     }

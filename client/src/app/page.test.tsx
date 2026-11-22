@@ -1,5 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MessengerHarness as Home } from '@/test-support/MessengerHarness';
+// Timing budget: these cases render the full messenger; the 5 s Jest default was exceeded under full-suite load (Linux C4 evidence, T-5B-37).
+jest.setTimeout(20000);
 
 async function selectConversation(label: RegExp) {
   await act(async () => {
