@@ -98,7 +98,7 @@ test('the composed demo chat keeps sent audio playable after clearing the draft 
   const player = await screen.findByLabelText('Voice message from You');
   await waitFor(() => expect(screen.queryByLabelText('Recorded voice preview')).not.toBeInTheDocument());
   expect(player).toHaveAttribute('src', url); expect(player).toHaveAttribute('controls'); expect(revoke).not.toHaveBeenCalledWith(url);
-  fireEvent.click(screen.getByRole('button', { name: 'More actions' })); fireEvent.click(screen.getByRole('menuitem', { name: 'Unsend' })); fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More actions' })); fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' })); fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(screen.queryByLabelText('Voice message from You')).not.toBeInTheDocument());
   expect(revoke).toHaveBeenCalledWith(url);
 });

@@ -334,7 +334,7 @@ export function MessageComposer({
           type="button"
           variant="ghost"
           loading={buzzBusy}
-          disabled={buzzBusy}
+          disabled={disabled || isSending || buzzBusy}
           data-buzz-active={buzzBusy}
           onClick={onBuzz}
           aria-label="Send BUZZ alert"

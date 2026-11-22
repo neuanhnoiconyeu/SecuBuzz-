@@ -25,6 +25,7 @@ import {
 } from './registry.ts';
 import { conversationRoom, isConversationRoom, RoomManager } from './rooms.ts';
 import { TypingRouter } from './typing.ts';
+import { BuzzRouter } from './buzz.ts';
 import { resolveDirectCallOptions } from '../calls/config.ts';
 import { DirectCallRouter } from '../calls/router.ts';
 import { CALL_CLIENT_EVENTS, CALL_CLIENT_EVENT_NAMES, callError, type CallClientEventName } from '../calls/protocol.ts';
@@ -182,6 +183,7 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
   };
 
   const gate = new EventGate(config, terminate);
+  const buzz = new BuzzRouter(config, registry, clock, gate, options.buzzConversationResolver);
   const typing = new TypingRouter(nsp, registry, clock, timing.typingTtlMs);
   const rooms = new RoomManager((user, conversationId) => {
     const first = user.connections.values().next();
@@ -399,6 +401,18 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     if (ack) onceAck(ack)(response);
   };
 
+  const onBuzz = async (connection: Connection, args: unknown[]): Promise<void> => {
+    const parts = gate.split(connection, args, 'required');
+    if (!parts) return;
+    if (!gate.admit(connection, 'send') || connection.pendingAcks >= limits.maxPendingAcksPerConnection) return reply(parts.ack, errorAck('rate_limited'));
+    const body = parseTypingBody(parts.body);
+    if (!body) { gate.invalid(connection, 'buzz_body'); return reply(parts.ack, errorAck('invalid_payload')); }
+    connection.pendingAcks++;
+    try { reply(parts.ack, await buzz.handle(connection, body.conversationId)); }
+    catch { reply(parts.ack, errorAck('unavailable')); }
+    finally { connection.pendingAcks--; }
+  };
+
   const onTyping = (connection: Connection, args: unknown[], isTyping: boolean): void => {
     const event: ClientEventName = isTyping ? CLIENT_EVENTS.typingStart : CLIENT_EVENTS.typingStop;
     const parts = gate.split(connection, args, 'forbidden');
@@ -553,6 +567,7 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     socket.on(CLIENT_EVENTS.presenceSubscribe, (...args: unknown[]) => onPresenceSubscribe(connection, args));
     socket.on(CLIENT_EVENTS.messageRead, (...args: unknown[]) => void onRead(connection, args));
     socket.on(CLIENT_EVENTS.messageSend, (...args: unknown[]) => void onSend(connection, args));
+    socket.on(CLIENT_EVENTS.buzzSend, (...args: unknown[]) => void onBuzz(connection, args));
     for (const event of Object.values(CALL_CLIENT_EVENTS)) socket.on(event, (...args: unknown[]) => void onCall(connection, event, args));
     socket.on('disconnect', (reason: string) => cleanup(connection, reason));
 
@@ -700,6 +715,7 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
         for (const connection of registry.allConnections()) cleanup(connection, 'shutdown');
         nsp.removeAllListeners('connection');
         typing.clear();
+        buzz.clear();
         presence.clear();
         messages.clear();
         revokedSessions.clear();

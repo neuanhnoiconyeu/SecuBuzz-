@@ -2,13 +2,25 @@ import type { ConversationSidebarItem } from './ConversationSidebar';
 import type { ChatMessage, ConnectionStatus } from '@/messaging/messageModel';
 import type { DirectConversation } from '@/security/e2ee/model';
 import type { DecryptedRow } from '@/security/e2ee/session';
-import type { SecureLiveState } from '@/realtime/SecureRealtimeWorkspace';
+import { mergeSecureRows, type SecureLiveState } from '@/realtime/SecureRealtimeWorkspace';
 import type { LiveConnection } from '@/realtime/AuthenticatedSocketIoClient';
 import type { Receipt } from '@/realtime/authenticatedProtocol';
 import { decodeAuthenticatedContent } from '@/messaging/authenticatedContent';
 import {getAttachmentRule} from '../../../../shared/attachmentPolicy';
 
 /** Presentation only. These projections never create transport payloads or key material. */
+export function mergePinnedRows(history: readonly DecryptedRow[], pins: readonly DecryptedRow[]): DecryptedRow[] {
+  const unavailable = new Map(pins.filter(row => row.text === null).map(row => [row.message.id, row]));
+  return mergeSecureRows(history, pins).map(row => {
+    const pin = unavailable.get(row.message.id);
+    if (!pin || row.text === null || row.message.state === 'deleted' ||
+      (row.message.edit?.proofs.length ?? 0) > (pin.message.edit?.proofs.length ?? 0)) return row;
+    // The ordinary history merge preserves good content after an invalid edit.
+    // A failed pin verification must not borrow an older history preview instead.
+    return { ...row, text: null, error: pin.error ?? 'Pinned message unavailable on this device.',
+      ...(pin.errorCode ? { errorCode: pin.errorCode } : {}) };
+  });
+}
 export function conversationName(conversation: DirectConversation, actorId: string): string {
   return conversation.participants.find(p => p.id !== actorId)?.displayName ?? 'Contact';
 }

@@ -1,13 +1,40 @@
-import { presentConnection, presentConversations, presentMessages, presentSendState } from '../authenticatedChatPresentation';
+import { mergePinnedRows, presentConnection, presentConversations, presentMessages, presentSendState } from '../authenticatedChatPresentation';
 import type { DecryptedRow } from '@/security/e2ee/session';
 import type { SecureLiveState } from '@/realtime/SecureRealtimeWorkspace';
 import { conversation, envelope } from '@/realtime/testing/authenticatedFixtures';
 import { AUTHENTICATED_CONTENT_PREFIX, encodeAuthenticatedContent } from '@/messaging/authenticatedContent';
+import type { MessageEditSnapshot } from '@/security/e2ee/model';
 
 const row = (sequence = 1): DecryptedRow => ({ message: { ...envelope, id: 'm-' + sequence, storageId: 'storage-' + sequence,
   sequence, revision: 1, state: 'active', deletedAt: null, storedAt: envelope.timestamp, updatedAt: envelope.timestamp },
   text: 'Locally decrypted ' + sequence, error: null });
 const empty: SecureLiveState = { connection: 'connected', conversations: [], rows: {}, cursors: {}, unread: {}, typing: {}, presence: {}, receipts: {}, keyVersions: {}, errors: {}, synchronized: 0 };
+
+test('an unavailable pin cannot borrow old history plaintext or disclose it through a reply preview', () => {
+  const original = row(1), reply = row(2);
+  reply.text = encodeAuthenticatedContent({ text: 'Reply', reply: { messageId: original.message.id, senderId: original.message.senderId } });
+  const unavailable = { ...original, text: null, error: 'This encrypted message could not be verified.', errorCode: 'invalid_proof' as const };
+  const projected = mergePinnedRows([original, reply], [unavailable]);
+  expect(projected[0]).toMatchObject({ text: null, errorCode: 'invalid_proof' });
+  expect(presentMessages(projected).messages[1]?.replyTo?.contentSnippet).toBe('Original message unavailable.');
+  expect(original.text).toBe('Locally decrypted 1');
+  expect(mergePinnedRows([original], [original])[0]?.text).toBe(original.text);
+});
+
+test('an older unavailable pin cannot replace a newer verified edit or a terminal deletion', () => {
+  const original = row(1), unavailable = { ...original, text: null, error: 'Old pin rejected' };
+  // This pure presentation test needs only chain lengths; crypto validation is tested separately.
+  const edited = { ...original, text: 'Verified latest edit', message: { ...original.message,
+    edit: { v: 1, proofs: [{}], envelope } as MessageEditSnapshot } };
+  expect(mergePinnedRows([edited], [unavailable])[0]?.text).toBe(edited.text);
+  const deleted = { ...original, text: null, message: { ...original.message, state: 'deleted' as const, encryption: null } };
+  expect(presentMessages(mergePinnedRows([deleted], [unavailable])).messages[0]).toMatchObject({ isDeleted: true, content: 'Message deleted' });
+});
+
+test('pin projection preserves strict storage identity validation', () => {
+  const original = row(1);
+  expect(() => mergePinnedRows([original], [{ ...original, text: null, error: 'Rejected', message: { ...original.message, storageId: 'different-storage' } }])).toThrow();
+});
 
 test('only decrypted text reaches message presentation; wire IDs, grouping metadata and sequence order are retained', () => {
   const result = presentMessages([row(2), row(1)]);

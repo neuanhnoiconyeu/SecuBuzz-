@@ -7,8 +7,10 @@
  */
 
 import type { CallClientEventName } from '../calls/protocol.ts';
+import { BUZZ_SEND_EVENT, BUZZ_RECEIVED_EVENT } from '../../../shared/buzz.ts';
 
 export const CLIENT_EVENTS = {
+  buzzSend: BUZZ_SEND_EVENT,
   messageSend: 'message:send',
   messageRead: 'message:read',
   typingStart: 'typing:start',
@@ -17,6 +19,7 @@ export const CLIENT_EVENTS = {
 } as const;
 
 export const SERVER_EVENTS = {
+  buzzReceived: BUZZ_RECEIVED_EVENT,
   messageNew: 'message:new',
   /** Post-commit hint only. Clients confirm the tombstone through authorized history. */
   messageDeleted: 'message:deleted',

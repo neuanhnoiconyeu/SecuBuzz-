@@ -5,6 +5,7 @@
 // Pass --unsend-only for authenticated Unsend, history and failure-recovery checks.
 // Pass --edit-only for authenticated signed encrypted revisions (the former --edit-unavailable-only flag is an alias).
 // Pass --pins-only for shared authenticated pinning, local-hide and recovery checks.
+// Pass --a2-only for cached pin replays after another real tab advances shared IndexedDB watermarks.
 // Pass --reactions-only for shared authenticated reactions and recovery checks.
 // Pass --attachments-only for encrypted file transfer, real media previews and lifecycle checks.
 // Pass --voice-only for real microphone recording and encrypted voice delivery using a synthetic browser microphone.
@@ -85,17 +86,17 @@ async function enroll(page) {
   await expect(page.getByText('Secure device ready', { exact: true })).toBeVisible({ timeout: 30000 });
 }
 async function advanced(page) { const section = page.getByText('Advanced settings', { exact: true }).locator('..'); if (await section.getAttribute('open') === null) await section.locator('summary').first().click(); }
-async function refresh(page) { await advanced(page); await page.getByRole('button', { name: 'Refresh secure conversation', exact: true }).click(); await ready(page); await page.getByText('Advanced settings', { exact: true }).click(); }
+async function refresh(page) { await advanced(page); await page.getByRole('button', { name: 'Refresh secure conversation', exact: true }).click(); await ready(page); await page.getByText('Advanced settings', { exact: true }).press('Enter'); }
 async function ready(page) { await expect(page.getByText('Secure message ready', { exact: true })).toBeVisible({ timeout: 45000 }); await expect(page.getByRole('textbox', { name: /^Message to / })).toBeEnabled(); }
 async function select(page, name) { await expect(page.locator('.conversation-sidebar')).toHaveCount(1, { timeout: 45000 }); if (!await page.getByRole('navigation', { name: 'Direct conversations' }).isVisible()) await page.getByRole('button', { name: 'Back to conversations', exact: true }).click(); await page.getByRole('button', { name: 'Refresh conversations', exact: true }).click(); await page.getByRole('navigation', { name: 'Direct conversations' }).getByRole('button', { name: new RegExp('^' + name + ',') }).click(); await ready(page); }
 async function send(page, text) { await page.getByRole('textbox', { name: /^Message to / }).fill(text); await page.getByRole('button', { name: 'Send', exact: true }).click(); await expect(page.getByRole('log').getByText(text, { exact: true })).toBeVisible({ timeout: 30000 }); }
 async function localDeleteReview(page, text) {
   const row = page.getByRole('log').locator('article').filter({ has: page.getByText(text, { exact: true }) });
   await row.hover(); await row.getByRole('button', { name: 'More actions', exact: true }).click();
-  await page.getByRole('menuitem', { name: 'Delete for me', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
   const review = page.getByRole('dialog'); await expect(review).toBeVisible();
-  await expect(review.getByRole('radio', { name: /Delete for me/ })).toBeChecked();
-  await expect(review.getByRole('radio', { name: /Unsend for everyone/ })).toHaveCount(0);
+  await review.getByRole('radio', { name: /Delete for you/ }).check();
+  await expect(review.getByRole('radio', { name: /Delete for you/ })).toBeChecked();
   await expect(review.getByText(/removed from your device.*visible to other chat members/)).toBeVisible();
   return { row, review };
 }
@@ -190,7 +191,7 @@ async function websocketProbe(origin) {
     await alice.getByRole('log').locator('article').first().hover();
     await alice.getByRole('button', { name: 'More actions', exact: true }).click();
     check('real-account menu exposes only integrated actions including encrypted Edit',
-      JSON.stringify((await alice.getByRole('menuitem').allTextContents()).map(text => text.trim())) === JSON.stringify(['Forward', 'Pin', 'Edit', 'Delete for me', 'Unsend']) &&
+      JSON.stringify((await alice.getByRole('menuitem').allTextContents()).map(text => text.trim())) === JSON.stringify(['Forward', 'Pin', 'Edit', 'Delete']) &&
       await alice.getByRole('button', { name: 'Reply', exact: true }).count() === 1 && await alice.getByRole('button', { name: 'React to message', exact: true }).count() === 1);
     await alice.keyboard.press('Escape');
     await send(bob, secretTexts[1]); await expect(alice.getByRole('log').getByText(secretTexts[1], { exact: true })).toBeVisible({ timeout: 30000 }); check('Alice receives and locally decrypts Bob live reply without Refresh', true);
@@ -281,7 +282,7 @@ async function websocketProbe(origin) {
       const uncertainCaption='Voice message retry '+suffix;secretTexts.push(uncertainCaption);await alice.getByRole('textbox',{name:/^Message to /}).fill(uncertainCaption);await alice.getByRole('button',{name:'Send',exact:true}).click();await expect(alice.getByRole('button',{name:'Reconcile or retry pending message',exact:true})).toBeVisible({timeout:30000});await alice.unroute('**/api/conversations/*/messages');await alice.getByRole('button',{name:'Reconcile or retry pending message',exact:true}).click();await expect(alice.getByRole('log').getByText(uncertainCaption,{exact:true})).toHaveCount(1);await expect(alice.getByRole('button',{name:'Reconcile or retry pending message',exact:true})).toHaveCount(0);check('uncertain voice message confirmation reconciles without duplication',true);
       await b.setOffline(true);await record(alice);const offlineCaption='Offline voice '+suffix;secretTexts.push(offlineCaption);await send(alice,offlineCaption);const offlineMessage=(await history(alice))[0];await b.setOffline(false);await bob.reload();await select(bob,'Alice');await play(bob,offlineMessage.id,'Alice');check('offline recipients recover and play voice from encrypted history',true);
       await alice.bringToFront();const menu=row(alice,original.id).getByRole('button',{name:'More actions',exact:true});await menu.scrollIntoViewIfNeeded();await menu.focus();await menu.press('Enter');await expect(alice.getByRole('menu')).toBeVisible();await expect(alice.getByRole('menuitem',{name:'Forward',exact:true})).toHaveCount(0);check('voice forwarding remains unavailable',true);
-      await alice.getByRole('menuitem',{name:'Unsend',exact:true}).click();await alice.getByRole('dialog').getByRole('button',{name:'Remove',exact:true}).click();await expect(row(bob,original.id).locator('audio')).toHaveCount(0,{timeout:30000});check('Unsend invalidates voice download access',(await api(bob,`/api/attachments/${fileId}/download`)).status===404);await bob.reload();await select(bob,'Alice');await expect(row(bob,original.id).locator('audio')).toHaveCount(0);check('Unsend tombstones and voice removal survive reload',true);
+      await alice.getByRole('menuitem',{name:'Delete',exact:true}).click();await alice.getByRole('dialog').getByRole('button',{name:'Delete',exact:true}).click();await expect(row(bob,original.id).locator('audio')).toHaveCount(0,{timeout:30000});check('Unsend invalidates voice download access',(await api(bob,`/api/attachments/${fileId}/download`)).status===404);await bob.reload();await select(bob,'Alice');await expect(row(bob,original.id).locator('audio')).toHaveCount(0);check('Unsend tombstones and voice removal survive reload',true);
       check('all microphone tracks are ended',await alice.evaluate(()=>window.__voiceTracks.every(track=>track.readyState==='ended'))&&await bob.evaluate(()=>window.__voiceTracks.every(track=>track.readyState==='ended')));check('no monitored messaging plaintext leaks',evidence.plaintextLeaks===0);check('no browser runtime exceptions',evidence.runtimeErrors===0);evidence.passed=true;console.log('PASS encrypted voice browser checks');return;
     }
     if(process.argv.includes('--attachments-only')){
@@ -351,7 +352,7 @@ async function websocketProbe(origin) {
       await b.setOffline(true);const offlineCaption='Offline attachment '+suffix;secretTexts.push(offlineCaption);await alice.getByLabel('Select attachments').setInputFiles(selected[0]);await send(alice,offlineCaption);await b.setOffline(false);await bob.reload();await select(bob,'Alice');await expect(bob.getByRole('log').getByText(offlineCaption,{exact:true})).toBeVisible({timeout:30000});check('offline recipient restores encrypted attachment messages from history',true);
       await alice.bringToFront();const unsendTrigger=row(alice).getByRole('button',{name:'More actions',exact:true});await unsendTrigger.scrollIntoViewIfNeeded();await unsendTrigger.focus();await unsendTrigger.press('Enter');
       await expect(alice.getByRole('menu')).toBeVisible();evidence.attachmentUnsendMenu=(await alice.getByRole('menuitem').allTextContents()).map(s=>s.trim());
-      await alice.getByRole('menuitem',{name:'Unsend',exact:true}).click();await alice.getByRole('dialog').getByRole('button',{name:'Remove',exact:true}).click();
+      await alice.getByRole('menuitem',{name:'Delete',exact:true}).click();await alice.getByRole('dialog').getByRole('button',{name:'Delete',exact:true}).click();
       await expect(row(bob)).toHaveCount(0,{timeout:30000});
       check('Unsend invalidates subsequent authorized downloads',(await api(bob,`/api/attachments/${new URL(sent[0].url).searchParams.get('id')}/download`)).status===404);
       await bob.reload();await select(bob,'Alice');check('Unsend history remains a tombstone without attachment cards',(await api(bob,`/api/conversations/${cid}/messages?limit=50`)).body.items.find(m=>m.id===stored.id)?.state==='deleted');
@@ -412,8 +413,8 @@ async function websocketProbe(origin) {
       check('offline recovery replaces stale reactions without manual refresh',true);
       check('reaction operations preserve the exact encrypted message record',JSON.stringify((await history()).find(m=>m.id===original.id))===JSON.stringify(original));
       await quick(alice,'👍');await expect(badge(alice,'👍')).toBeVisible();
-      await row(alice).hover();await row(alice).getByRole('button',{name:'More actions',exact:true}).click();await alice.getByRole('menuitem',{name:'Unsend',exact:true}).click();
-      await alice.getByRole('dialog').getByRole('button',{name:'Remove',exact:true}).click();
+      await row(alice).hover();await row(alice).getByRole('button',{name:'More actions',exact:true}).click();await alice.getByRole('menuitem',{name:'Delete',exact:true}).click();
+      await alice.getByRole('dialog').getByRole('button',{name:'Delete',exact:true}).click();
       for(const page of [alice,bob]){await expect(row(page).getByText('Message deleted',{exact:true})).toBeVisible();await expect(row(page).locator('.rx-pill')).toHaveCount(0);}
       const removed=await api(alice,`/api/conversations/${cid}/reactions?ids=${original.storageId}`);
       check('Unsend clears all reaction metadata while preserving the message tombstone',removed.body.items[0].state==='deleted'&&removed.body.items[0].actors.length===0);
@@ -453,7 +454,7 @@ async function websocketProbe(origin) {
       await menu(bob, original.id, 'Unpin'); await expect(pinned(alice)).toHaveCount(0); await expect(pinned(bob)).toHaveCount(0);
       check('the recipient can unpin a sender message for both participants', true);
       await menu(bob, original.id, 'Pin'); await expect(pinned(alice)).toBeVisible(); await expect(pinned(bob)).toBeVisible();
-      const local = await localDeleteReview(alice, secretTexts[0]); await local.review.getByRole('button', { name: 'Remove', exact: true }).click();
+      const local = await localDeleteReview(alice, secretTexts[0]); await local.review.getByRole('button', { name: 'Delete', exact: true }).click();
       await expect(row(alice, original.id)).toHaveCount(0); await expect(pinned(alice)).toHaveCount(0); await expect(pinned(bob)).toBeVisible();
       check('Delete for Me hides a pin only on this device without removing shared server metadata', (await api(bob, `/api/conversations/${cid}/pins`)).body.items.length === 1);
       check('Unsend of a locally hidden pinned message still uses the original sender-authorized API', (await api(alice, `/api/messages/${original.storageId}`, 'DELETE')).status === 200);
@@ -480,6 +481,74 @@ async function websocketProbe(origin) {
       check('pinning and unpinning preserve encrypted message identity and bytes', JSON.stringify((await history()).find(message => message.id === offline.id)) === JSON.stringify(offline));
       check('pin hints contain only a conversation ID and reach authorized participants', evidence.pinHints?.length >= 2 && evidence.pinHints.every(hint => hint.page !== 2 && hint.conversationId === cid && JSON.stringify(hint.keys) === JSON.stringify(['conversationId'])));
       check('shared pin flow keeps V2 encryption without plaintext network leaks or browser exceptions', evidence.plaintextLeaks === 0 && evidence.runtimeErrors === 0 && evidence.socketSends === evidence.v2Sends);
+      evidence.passed = true; evidence.nextStartupHealthy = next.exitCode === null; evidence.backendHealthy = backend.exitCode === null; return;
+    }
+    if (process.argv.includes('--a2-only')) {
+      const cid = (await api(alice, '/api/conversations?limit=50')).body.items[0].id;
+      const historyPath = `/api/conversations/${cid}/messages?limit=50`, pinsPath = `/api/conversations/${cid}/pins`;
+      for (const operation of ['edit', 'unsend']) {
+        const text = `A2 original ${operation} ${suffix}`, edited = `A2 edited ${operation}\n${suffix}`;
+        secretTexts.push(text, edited);
+        const previous = new Set((await api(alice, historyPath)).body.items.map(m => m.id));
+        await send(alice, text);
+        const original = (await api(alice, historyPath)).body.items.find(m => !previous.has(m.id));
+        const collection = (await api(alice, pinsPath)).body;
+        check(`A2 ${operation}: pin the test message through authorized DATA`,
+          (await api(alice, '/api/messages/' + original.storageId + '/pin', 'POST', { pinned: true, expectedVersion: collection.version, operationId: randomUUID() })).status === 200);
+        await expect(bob.getByRole('button', { name: 'View pinned messages', exact: true })).toBeVisible();
+        await bob.getByRole('button', { name: 'View pinned messages', exact: true }).click();
+        const pinRegion = bob.getByRole('region', { name: 'Pinned messages' });
+        await expect(pinRegion.getByText(text, { exact: true })).toBeVisible();
+        const oldPins = (await api(bob, pinsPath)).body;
+        const observer = await b.newPage(); monitor(observer);
+        await observer.goto(origin); await select(observer, 'Alice');
+        const originalRow = page => page.getByRole('log').locator(`[data-message-id="${original.id}"]`);
+        await expect(originalRow(observer).getByText(text, { exact: true })).toBeVisible();
+        let release;
+        const held = new Promise(resolve => { release = resolve; });
+        const historyReplay = '**/api/conversations/' + cid + '/messages?*';
+        const pinReplay = '**' + pinsPath;
+        await bob.route(historyReplay, async route => {
+          const response = await route.fetch(), body = await response.json();
+          body.items = body.items.map(m => m.id === original.id ? original : m);
+          await route.fulfill({ response, json: body });
+        });
+        await bob.route(pinReplay, async route => {
+          await held; await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(oldPins) });
+        });
+        try {
+          if (operation === 'edit') {
+            await originalRow(alice).hover(); await originalRow(alice).getByRole('button', { name: 'More actions', exact: true }).click();
+            await alice.getByRole('menuitem', { name: 'Edit', exact: true }).click();
+            await alice.getByRole('textbox', { name: 'Edit message', exact: true }).fill(edited);
+            await alice.getByRole('button', { name: 'Save edit', exact: true }).click();
+            await expect(originalRow(observer).getByText(edited, { exact: true })).toBeVisible();
+          } else {
+            check('A2 unsend: sender-authorized deletion succeeds', (await api(alice, '/api/messages/' + original.storageId, 'DELETE')).status === 200);
+            await expect(originalRow(observer).getByText('Message deleted', { exact: true })).toBeVisible();
+          }
+          check(`A2 ${operation}: another tab verifies the new state using the same browser key store`, true);
+          await expect(pinRegion.getByText(text, { exact: true })).toBeVisible();
+          release();
+          await expect(pinRegion.getByText(text, { exact: true })).toHaveCount(0);
+          check(`A2 ${operation}: normal pin refresh rejects a cached replay after the other tab's watermark`, true);
+          await refresh(bob);
+          await expect(pinRegion.getByText(text, { exact: true })).toHaveCount(0);
+          check(`A2 ${operation}: forced refresh also refuses the original plaintext`, true);
+        } finally {
+          release(); await bob.unroute(historyReplay); await bob.unroute(pinReplay); await observer.close();
+        }
+        await refresh(bob);
+        if (operation === 'edit') {
+          await expect(pinRegion.getByText(edited, { exact: true })).toBeVisible();
+          const latest = (await api(alice, pinsPath)).body;
+          check('A2 valid edited pin recovers without changing pin-version identity', latest.version === oldPins.version && latest.items[0].message.id === original.id);
+          check('A2 valid edited pin can still be unpinned', (await api(alice, '/api/messages/' + original.storageId + '/pin', 'POST',
+            { pinned: false, expectedVersion: latest.version, operationId: randomUUID() })).status === 200);
+        }
+        await expect(bob.getByRole('button', { name: 'View pinned messages', exact: true })).toHaveCount(0);
+      }
+      check('A2 cross-tab checks preserve ciphertext-only sends and have no browser runtime exceptions', evidence.plaintextLeaks === 0 && evidence.runtimeErrors === 0);
       evidence.passed = true; evidence.nextStartupHealthy = next.exitCode === null; evidence.backendHealthy = backend.exitCode === null; return;
     }
     if (process.argv.includes('--edit-only')||process.argv.includes('--edit-unavailable-only')) {
@@ -572,17 +641,22 @@ async function websocketProbe(origin) {
       const row = (page, id) => page.getByRole('log').locator(`[data-message-id="${id}"]`);
       const review = async (page, id) => {
         await row(page, id).hover(); await row(page, id).getByRole('button', { name: 'More actions', exact: true }).click();
-        await page.getByRole('menuitem', { name: 'Unsend', exact: true }).click();
+        await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
         const dialog = page.getByRole('dialog'); await expect(dialog).toBeVisible();
-        await expect(dialog.getByRole('radio', { name: /Unsend for everyone/ })).toBeChecked();
-        await expect(dialog.getByRole('radio', { name: /Delete for me/ })).toHaveCount(0); return dialog;
+        await expect(dialog.getByRole('radio', { name: /Delete for everyone/ })).toBeChecked();
+        await expect(dialog.getByRole('radio', { name: /Delete for you/ })).toBeEnabled(); return dialog;
       };
       const removed = async id => {
         for (const page of [alice, bob]) await expect(row(page, id).getByText('Message deleted', { exact: true })).toBeVisible({ timeout: 45000 });
       };
       check('wire ID is distinct from the storage ID used by the existing Unsend API', original.id !== original.storageId);
       await row(bob, original.id).hover(); await row(bob, original.id).getByRole('button', { name: 'More actions', exact: true }).click();
-      await expect(bob.getByRole('menuitem', { name: 'Unsend', exact: true })).toHaveCount(0); await bob.keyboard.press('Escape');
+      await bob.getByRole('menuitem', { name: 'Delete', exact: true }).click();
+      const recipientDelete = bob.getByRole('dialog');
+      await expect(recipientDelete.getByRole('radio', { name: /Delete for you/ })).toBeChecked();
+      await expect(recipientDelete.getByRole('radio', { name: /Delete for everyone/ })).toHaveCount(0);
+      await bob.keyboard.press('Escape'); await expect(recipientDelete).toBeHidden();
+      check('recipient Delete offers only local removal and Escape cancels it', true);
       check('recipient and unrelated account cannot unsend the sender message',
         (await api(bob, '/api/messages/' + original.storageId, 'DELETE')).status === 403 &&
         (await api(charlie, '/api/messages/' + original.storageId, 'DELETE')).status === 404);
@@ -598,8 +672,8 @@ async function websocketProbe(origin) {
       const deletePath = '**/api/messages/' + original.storageId;
       let release, requestSeen; const gate = new Promise(resolve => { release = resolve; }), started = new Promise(resolve => { requestSeen = resolve; }); let deletes = 0;
       await alice.route(deletePath, async route => { deletes++; requestSeen(); await gate; await route.continue(); });
-      dialog = await review(alice, original.id); await dialog.getByRole('button', { name: 'Remove', exact: true }).click(); await started;
-      await expect(dialog).toHaveAttribute('aria-busy', 'true'); await expect(dialog.getByRole('button', { name: 'Remove', exact: true })).toBeDisabled();
+      dialog = await review(alice, original.id); await dialog.getByRole('button', { name: 'Delete', exact: true }).click(); await started;
+      await expect(dialog.getByRole('button', { name: 'Delete', exact: true })).toHaveAttribute('aria-busy', 'true'); await expect(dialog.getByRole('button', { name: 'Delete', exact: true })).toBeDisabled();
       for (const page of [alice, bob]) await expect(row(page, original.id).getByText(secretTexts[0], { exact: true })).toBeVisible();
       check('Unsend retains the original while waiting for server confirmation and prevents duplicate submissions', deletes === 1);
       release(); await expect(dialog).toBeHidden(); await removed(original.id); await alice.unroute(deletePath);
@@ -619,22 +693,22 @@ async function websocketProbe(origin) {
       check('both authenticated sessions retain the tombstone after history reload', true);
       await send(alice, secretTexts[21]); await expect(bob.getByRole('log').getByText(secretTexts[21], { exact: true })).toBeVisible();
       const offline = (await history())[0]; await b.setOffline(true);
-      dialog = await review(alice, offline.id); await dialog.getByRole('button', { name: 'Remove', exact: true }).click(); await expect(dialog).toBeHidden();
+      dialog = await review(alice, offline.id); await dialog.getByRole('button', { name: 'Delete', exact: true }).click(); await expect(dialog).toBeHidden();
       await b.setOffline(false); await connected(bob); await removed(offline.id);
       check('offline recipient recovers a missed Unsend from durable history on reconnect', true);
       await send(alice, secretTexts[22]); await expect(bob.getByRole('log').getByText(secretTexts[22], { exact: true })).toBeVisible();
       const failed = (await history())[0], failurePath = '**/api/messages/' + failed.storageId;
       await alice.route(failurePath, route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: { code: 'SERVICE_UNAVAILABLE', fields: [] } }) }));
-      dialog = await review(alice, failed.id); await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
+      dialog = await review(alice, failed.id); await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
       await expect(dialog.getByRole('alert')).toContainText('Your message is unchanged');
       for (const page of [alice, bob]) await expect(row(page, failed.id).getByText(secretTexts[22], { exact: true })).toBeVisible();
       check('failed Unsend shows useful feedback and preserves both participants original message', (await history()).find(message => message.id === failed.id).state === 'active');
-      await alice.unroute(failurePath); await dialog.getByRole('button', { name: 'Remove', exact: true }).click(); await expect(dialog).toBeHidden(); await removed(failed.id);
+      await alice.unroute(failurePath); await dialog.getByRole('button', { name: 'Delete', exact: true }).click(); await expect(dialog).toBeHidden(); await removed(failed.id);
       check('retry after a real failure commits one tombstone', (await history()).find(message => message.id === failed.id).revision === failed.revision + 1);
       await send(alice, secretTexts[23]); await expect(bob.getByRole('log').getByText(secretTexts[23], { exact: true })).toBeVisible();
       const lost = (await history())[0], lostPath = '**/api/messages/' + lost.storageId; let lostRequests = 0;
       await alice.route(lostPath, async route => { lostRequests++; await route.fetch(); await route.abort('failed'); });
-      dialog = await review(alice, lost.id); await dialog.getByRole('button', { name: 'Remove', exact: true }).click(); await expect(dialog).toBeHidden(); await removed(lost.id); await alice.unroute(lostPath);
+      dialog = await review(alice, lost.id); await dialog.getByRole('button', { name: 'Delete', exact: true }).click(); await expect(dialog).toBeHidden(); await removed(lost.id); await alice.unroute(lostPath);
       check('lost HTTP acknowledgment is reconciled from authorized history without a duplicate DELETE', lostRequests === 1 && (await history()).find(message => message.id === lost.id).revision === lost.revision + 1);
       check('only authorized participants receive server Unsend hints containing identifiers alone', evidence.deletionHints?.length >= 2 && evidence.deletionHints.every(hint => hint.page !== 2 && hint.conversationId === cid && JSON.stringify(hint.keys) === JSON.stringify(['conversationId', 'messageId'])));
       check('Unsend preserves genuine V2 encryption without plaintext network leaks or browser exceptions', evidence.plaintextLeaks === 0 && evidence.runtimeErrors === 0 && evidence.invalidAuthShapes === 0 && evidence.socketSends === evidence.v2Sends);
@@ -666,7 +740,7 @@ async function websocketProbe(origin) {
       await expect(alice.getByRole('log').getByText(secretTexts[17], { exact: true })).toHaveCount(1, { timeout: 45000 });
       check('reconnect reconciles an encrypted reply without duplicates', true);
       await row(alice, originalBob.id).hover(); await row(alice, originalBob.id).getByRole('button', { name: 'More actions' }).click();
-      await alice.getByRole('menuitem', { name: 'Delete for me', exact: true }).click(); await alice.getByRole('dialog').getByRole('button', { name: 'Remove', exact: true }).click();
+      await alice.getByRole('menuitem', { name: 'Delete', exact: true }).click(); await alice.getByRole('dialog').getByRole('radio', { name: /Delete for you/ }).check(); await alice.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click();
       await expect(row(alice, originalBob.id)).toHaveCount(0);
       await expect(row(alice, replyId).getByText('Original message unavailable.', { exact: true })).toBeVisible();
       await row(alice, replyId).getByRole('button', { name: 'Go to original message from a message' }).click();
@@ -719,7 +793,7 @@ async function websocketProbe(origin) {
       await localReview.review.getByRole('button', { name: 'Cancel', exact: true }).click();
       await expect(localReview.row).toBeVisible(); check('cancelling device-only deletion preserves the outgoing message', true);
       for (const text of [secretTexts[12], secretTexts[13]]) {
-        localReview = await localDeleteReview(alice, text); await localReview.review.getByRole('button', { name: 'Remove', exact: true }).click();
+        localReview = await localDeleteReview(alice, text); await localReview.review.getByRole('button', { name: 'Delete', exact: true }).click();
         await expect(localReview.review).toBeHidden(); await expect(localReview.row).toHaveCount(0);
         await expect(bob.getByRole('log').getByText(text, { exact: true })).toBeVisible();
       }
@@ -854,7 +928,7 @@ async function websocketProbe(origin) {
       evidence.failureLocation = e.stack?.split('\n').filter(line => /^\s+at /.test(line) && line.includes('verify-client-realtime.cjs')).slice(-3);
     }
     evidence.connections = await Promise.all(pages.map(p => p.getByRole('status', { name: 'Live connection' }).textContent({ timeout: 1000 }).catch(() => 'no workspace')));
-    if(process.argv.includes('--edit-only'))evidence.editAlerts=await Promise.all(pages.map(async p=>(await p.getByRole('alert').allTextContents()).map(value=>secretTexts.reduce((s,t)=>s.replaceAll(t,'[redacted]'),value).slice(0,300))));
+    if(process.argv.includes('--edit-only')||process.argv.includes('--a2-only'))evidence.editAlerts=await Promise.all(pages.map(async p=>(await p.getByRole('alert').allTextContents().catch(()=>[])).map(value=>secretTexts.reduce((s,t)=>s.replaceAll(t,'[redacted]'),value).slice(0,300))));
     evidence.backendDiagnostics = children[0]?.diagnostics().split('\n').filter(line => /realtime\./.test(line)).slice(-12);
     process.exitCode = 1; console.error('Browser verification failed; sanitized evidence saved.'); }
   finally {

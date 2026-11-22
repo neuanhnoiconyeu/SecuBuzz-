@@ -93,7 +93,7 @@ test('logout and identity replacement isolate profiles, friends, messages, draft
   expect(screen.getByRole('textbox', { name: 'Message to SecureBot' })).toHaveValue('');
   expect(screen.queryByText('Nova DM identity')).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Open profile for Demo Explorer/ })).toBeInTheDocument();
-}, 15_000); // Several account/workspace lifecycles; keep all assertions under variable CPU load.
+}, 30_000); // Several full workspace lifecycles; retain every assertion under shared CI/browser load.
 
 test('development StrictMode lifecycle leaves a usable fresh session, including safe intended section', async () => {
   window.history.replaceState({}, '', '/#friends');

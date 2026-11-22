@@ -7,6 +7,8 @@ import type { SocketPort } from './SocketIoRealtimeClient';
 import {CALL_CLIENT_EVENT_NAMES,CALL_SERVER_EVENTS} from '../../../shared/directCalls';
 import {parseCallSnapshot,parseCallCleared,type CallSignalingPort} from '@/calls/callSignaling';
 import type {RealtimeEvent,RealtimeConnectionStatus} from './realtimeModel';
+import { BUZZ_SEND_EVENT, BUZZ_RECEIVED_EVENT, type BuzzEvent } from '../../../shared/buzz';
+import { buzzEvent } from './authenticatedProtocol';
 import { errorAck, incomingEnvelope, keysChanged, messageDeleted, pinsChanged, persistenceAck, presenceUpdate, receipt, SocketFailure, typingUpdate,
   type KeysChanged, type PresenceUpdate, type Receipt, type TypingUpdate } from './authenticatedProtocol';
 
@@ -17,6 +19,7 @@ export interface AuthenticatedSocketOptions {
   auth: { csrfToken: string };
 }
 export interface LiveHandlers {
+  buzz?(event: BuzzEvent): void;
   connection(state: LiveConnection): void;
   message(envelope: EnvelopeV2): Promise<boolean>;
   keys(event: KeysChanged): void;
@@ -60,6 +63,7 @@ export class AuthenticatedSocketIoClient {
   private deadline: ReturnType<typeof setTimeout> | undefined;
   private scopes = new Map<string, Set<string>>();
   private peers = new Set<string>();
+  private buzzSeen = new Set<string>();
   private pending = new Set<() => void>();
   private bindings: Array<[string, (...args: unknown[]) => void]> = [];
   private typingAt = new Map<string, number>();
@@ -165,6 +169,11 @@ export class AuthenticatedSocketIoClient {
       validated('conversation:pins-changed', pinsChanged, e => { if (this.allowed(e.conversationId)) this.handlers.pins?.(e); });
       validated('message:reactions-changed', messageDeleted, e => { if (this.allowed(e.conversationId)) this.handlers.reactions?.(e); });
       validated('typing:update', typingUpdate, e => { if (e.userId !== this.api.actor.id && this.allowed(e.conversationId, e.userId)) this.handlers.typing(e); });
+      validated(BUZZ_RECEIVED_EVENT, buzzEvent, e => {
+        if (e.userId === this.api.actor.id || !this.allowed(e.conversationId, e.userId) || this.buzzSeen.has(e.id) || Math.abs(Date.now() - Date.parse(e.timestamp)) > 30_000) return;
+        this.buzzSeen.add(e.id); if (this.buzzSeen.size > 100) this.buzzSeen.delete(this.buzzSeen.values().next().value!);
+        this.handlers.buzz?.(e);
+      });
       validated('presence:update', presenceUpdate, e => { if (this.peers.has(e.userId)) this.handlers.presence(e); });
       for (const status of ['delivered', 'read'] as const) validated('message:' + status, r => receipt(r, status), e => {
         if (e.userId !== this.api.actor.id && this.allowed(e.conversationId, e.userId)) this.handlers.receipt(e);
@@ -213,6 +222,14 @@ export class AuthenticatedSocketIoClient {
       if (r.conversationId !== cid || r.messageId !== id || r.userId !== this.api.actor.id) throw new SocketFailure('unavailable'); return r;
     });
   }
+  buzz(cid: string): Promise<BuzzEvent> {
+    if (!this.allowed(cid)) return Promise.reject(new SocketFailure('unauthorized_conversation'));
+    return this.operation(BUZZ_SEND_EVENT, { conversationId: cid }, value => {
+      errorAck(value); const event = buzzEvent(value);
+      if (event.conversationId !== cid || event.userId !== this.api.actor.id) throw new SocketFailure('unavailable');
+      return event;
+    });
+  }
   typing(cid: string): void {
     if (!this.connected || !this.allowed(cid)) return;
     const prior = this.typingAt.get(cid);
@@ -227,6 +244,7 @@ export class AuthenticatedSocketIoClient {
     for (const cid of this.typingAt.keys()) this.stopTyping(cid);
     this.disposed = true; this.generation++; if (this.timer) clearTimeout(this.timer); this.clearSocket();
     this.scopes.clear(); this.peers.clear();
+    this.buzzSeen.clear();
     this.callListeners.clear();this.statusListeners.clear();
   }
 }

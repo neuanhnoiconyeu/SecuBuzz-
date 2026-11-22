@@ -7,7 +7,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import {
   AlertTriangle, ArrowDown, Check, Edit2, Forward, LockKeyhole, MoreHorizontal,
-  Pin, Plus, Reply, Undo2, SmilePlus, Sparkles, Trash2, X,
+  Pin, Plus, Reply, SmilePlus, Sparkles, Trash2, X,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/branding';
 import { Badge, Button, Surface } from '@/components/ui';
@@ -36,7 +36,7 @@ export interface MessageListProps {
   isEditEligible?(message:ChatMessage):boolean;
   editFailureMessage?:string;
   onDeleteMessage?: (messageId: string) => Promise<boolean | void> | boolean | void;
-  /** Real-account local hiding confirms incoming messages as well as outgoing ones. */
+  /** Compatibility prop; all local deletion now uses the shared confirmation. */
   confirmDeleteForMe?: boolean;
   onUnsendMessage?: (messageId: string) => Promise<boolean> | boolean;
   onTogglePin?: (messageId: string) => Promise<boolean | void> | boolean | void;
@@ -89,7 +89,6 @@ export function MessageList({
   onReplyMessage: suppliedReply,
   onEditMessage: suppliedEdit,
   onDeleteMessage: suppliedDelete,
-  confirmDeleteForMe = false,
   onUnsendMessage: suppliedUnsend,
   onTogglePin: suppliedPin,
   pinBusy = false,
@@ -142,7 +141,6 @@ export function MessageList({
     }
   };
   const [unsendingMessage, setUnsendingMessage] = useState<ChatMessage | null>(null);
-  const [removeForMe, setRemoveForMe] = useState(false);
   const [removing, setRemoving] = useState(false);
   const removalLock = useRef(false);
   const [actionFeedback, setActionFeedback] = useState<{ text: string; error: boolean } | null>(null);
@@ -164,9 +162,6 @@ export function MessageList({
     } finally {
       removalLock.current = false; setRemoving(false);
     }
-  };
-  const deleteIncoming = async (messageId: string) => {
-    if (!await remove(messageId, 'me')) setActionFeedback({ error: true, text: 'Could not delete this message for you. Your message is unchanged. Try again.' });
   };
   const [pinsOpen, setPinsOpen] = useState(false);
   const [pinning, setPinning] = useState(false);
@@ -674,24 +669,14 @@ export function MessageList({
                                         <Edit2 size={14} aria-hidden="true" /> Edit
                                       </button>
                                     )}
-                                    {canDelete && (transportMode === 'realtime' || !isOutgoing || !canUnsend) && (
+                                    {(canDelete || canUnsend) && (
                                       <button type="button" role="menuitem" className="msg-menu-item" disabled={removing} onClick={() => {
-                                        closePopovers(true);
-                                        setRemoveForMe(true);
-                                        if (isOutgoing || confirmDeleteForMe) setUnsendingMessage(message); else void deleteIncoming(message.id);
+                                        closePopovers();
+                                        // Keep a mounted return target for the modal's focus restoration.
+                                        popoverTriggerRef.current?.focus({ preventScroll: true });
+                                        setUnsendingMessage(message);
                                       }}>
-                                        <Trash2 size={14} aria-hidden="true" /> Delete for me
-                                      </button>
-                                    )}
-                                    {canUnsend && (
-                                      <button
-                                        type="button"
-                                        role="menuitem"
-                                        className="msg-menu-item msg-menu-item--danger"
-                                        disabled={removing}
-                                        onClick={() => { closePopovers(); setRemoveForMe(false); setUnsendingMessage(message); }}
-                                      >
-                                        <Undo2 size={14} aria-hidden="true" /> Unsend
+                                        <Trash2 size={14} aria-hidden="true" /> Delete
                                       </button>
                                     )}
                                   </div>
@@ -742,8 +727,8 @@ export function MessageList({
       )}
         <UnsendDialog
           message={unsendingMessage}
-          canUnsendEveryone={Boolean((transportMode !== 'realtime' || !removeForMe) && onUnsendMessage && unsendingMessage && unsendingMessage.senderId === currentUserId && isAcceptedMessage(unsendingMessage))}
-          canDeleteForMe={Boolean((transportMode !== 'realtime' || removeForMe) && onDeleteMessage)}
+          canUnsendEveryone={Boolean(onUnsendMessage && unsendingMessage && unsendingMessage.senderId === currentUserId && isAcceptedMessage(unsendingMessage))}
+          canDeleteForMe={Boolean(onDeleteMessage)}
           localOnly={transportMode === 'local-demo'}
           onClose={() => setUnsendingMessage(null)}
           onConfirm={scope => unsendingMessage ? remove(unsendingMessage.id, scope) : Promise.resolve(false)}

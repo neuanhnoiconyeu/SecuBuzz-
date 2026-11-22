@@ -79,6 +79,7 @@ export function attachRealtimeToData(httpServer: HttpServer | HttpsServer, appli
     connectionBinder: createDataConnectionBinder(data),
     resolveTransportSecurity: transportSecurityFor(config),
     authorizer,
+    buzzConversationResolver: createDataCallResolver(data),
     ...(livekit.directCallsReady||options.directCalls?{directCalls:{...options.directCalls,conversationResolver:createDataCallResolver(data),
       ...(options.directCalls?.media?{media:options.directCalls.media}:livekit.directCallsReady?{media:createDirectCallMediaLifecycle(livekit)}:{})}}:{}),
     ...(options.path !== undefined ? { path: options.path } : {}),

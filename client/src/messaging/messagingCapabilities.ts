@@ -32,5 +32,6 @@ export const DEMO_MESSAGING_CAPABILITIES: MessagingCapabilities = Object.freeze(
 export const REAL_ACCOUNT_MESSAGING_CAPABILITIES: MessagingCapabilities = Object.freeze({
   sendMessages: true, retryMessages: true, emoji: true,
   reply: true, forward: true, edit: true, deleteForMe: true, unsendForEveryone: true,
-  pin: true, reactions: true, attachments: true, voiceMessages: true, directCalls: false, buzz: false,
+  pin: true, reactions: true, attachments: true, voiceMessages: true,
+  directCalls: (process.env.NEXT_PUBLIC_DIRECT_CALLS_ENABLED ?? process.env.NEXT_PUBLIC_LIVEKIT_ENABLED) === 'true' && Boolean(process.env.NEXT_PUBLIC_LIVEKIT_URL), buzz: true,
 });

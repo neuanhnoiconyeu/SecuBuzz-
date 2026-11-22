@@ -18,6 +18,19 @@ async function setup(initial: DecryptedRow[] = []) {
 }
 beforeEach(() => jest.useFakeTimers()); afterEach(() => jest.useRealTimers());
 
+test('Buzz changes only ephemeral workspace state, preserving rows, receipts, history and encryption paths', async () => {
+  const h = await setup([row(1)]), before = h.live.getSnapshot();
+  h.session.history.mockClear(); h.session.revalidate.mockClear();
+  const value = { id: 'buzz-1', conversationId: conversation.id, userId: 'bob', displayName: 'Bob', timestamp: new Date().toISOString() };
+  h.sockets[0]!.fire('buzz:received', value);
+  expect(h.live.getSnapshot().buzz).toEqual(value);
+  expect(h.live.getSnapshot().rows).toBe(before.rows); expect(h.live.getSnapshot().receipts).toBe(before.receipts);
+  expect(h.session.history).not.toHaveBeenCalled(); expect(h.session.revalidate).not.toHaveBeenCalled(); expect(h.session.decryptIncoming).not.toHaveBeenCalled();
+  const pending = h.live.buzz(conversation.id);
+  h.sockets[0]!.emit.mock.calls.at(-1)![2]!({ ...value, userId: 'alice', displayName: 'Alice' }); await expect(pending).resolves.toMatchObject({ userId: 'alice' });
+  expect(h.session.send).not.toHaveBeenCalled(); h.live.dispose();
+});
+
 test.each(['send','retry'] as const)('a confirmed %s remains successful when the following history refresh fails',async operation=>{
   const h=await setup(),stored=row(1,true).message;
   h.session.history.mockRejectedValue(new ApiError('unavailable'));

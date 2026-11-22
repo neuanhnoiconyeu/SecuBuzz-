@@ -1,6 +1,14 @@
 import { decode, exact, identifier, parseEnvelope, timestamp } from '@/security/e2ee/protocol';
 import type { EnvelopeV2 } from '@/security/e2ee/model';
 import type { PersistenceAck } from '@/security/e2ee/session';
+import type { BuzzEvent } from '../../../shared/buzz';
+
+export function buzzEvent(input: unknown): BuzzEvent {
+  const r = exact(input, ['id', 'conversationId', 'userId', 'displayName', 'timestamp']);
+  identifier(r.id); identifier(r.conversationId); identifier(r.userId); timestamp(r.timestamp);
+  if (typeof r.displayName !== 'string' || !r.displayName.trim() || r.displayName.length > 160 || /[\u0000-\u001f\u007f-\u009f]/u.test(r.displayName)) throw new Error('Invalid Buzz');
+  return r as unknown as BuzzEvent;
+}
 
 export const ACK_CODES = ['invalid_payload', 'unauthorized_conversation', 'rate_limited', 'unavailable',
   'message_not_found', 'actor_mismatch', 'idempotency_conflict', 'recipient_keys_unavailable', 'policy_denied'] as const;

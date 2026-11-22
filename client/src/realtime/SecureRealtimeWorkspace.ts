@@ -6,8 +6,10 @@ import { AuthenticatedSocketIoClient, type LiveConnection } from './Authenticate
 import { SocketFailure, type PresenceUpdate, type Receipt, type TypingUpdate } from './authenticatedProtocol';
 import { AuthenticatedPins } from '@/messaging/authenticatedPins';
 import { AuthenticatedReactions } from '@/messaging/authenticatedReactions';
+import type { BuzzEvent } from '../../../shared/buzz';
 
 export interface SecureLiveState {
+  buzz?: BuzzEvent;
   connection: LiveConnection; conversations: DirectConversation[]; rows: Record<string, DecryptedRow[]>;
   cursors: Record<string, string | null>; unread: Record<string, number>; typing: Record<string, TypingUpdate>;
   presence: Record<string, PresenceUpdate>; receipts: Record<string, Receipt>; keyVersions: Record<string, number>;
@@ -73,6 +75,7 @@ export class SecureRealtimeWorkspace {
         void this.session.revalidate(e.conversationId).catch(error => this.fail(e.conversationId, error));
       },
       receipt: e => this.observeReceipt(e), typing: e => this.observeTyping(e), presence: e => this.observePresence(e),
+      buzz: event => { if (this.allowed(event.conversationId)) this.update({ buzz: event }); },
       updated: () => { void this.refresh().catch(e => this.fail('', e)); },
       deleted: event => {
         if (!this.allowed(event.conversationId)) return;
@@ -111,6 +114,10 @@ export class SecureRealtimeWorkspace {
     this.interval = setInterval(() => { if (this.active) void this.refresh().catch(e => this.fail('', e)); }, 15000);
   }
   reconnect() { this.transport.reconnect(); if (this.transport.connected) void this.reconcile().catch(e => this.fail('', e)); }
+  buzz(cid: string): Promise<BuzzEvent> {
+    if (!this.allowed(cid)) return Promise.reject(new SocketFailure('unauthorized_conversation'));
+    return this.transport.buzz(cid);
+  }
   refresh(): Promise<void> {
     if (this.refreshing) return this.refreshing;
     const run = async () => {

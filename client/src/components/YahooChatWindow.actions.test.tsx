@@ -86,13 +86,13 @@ test('composed demo chat replaces reactions and preserves a pinned message until
   react(QUICK_EMOJIS[0]!);
   fireEvent.click(within(original).getByRole('button', { name: 'More actions' })); fireEvent.click(screen.getByRole('menuitem', { name: 'Pin' }));
   expect(screen.getByText('Pinned (1):')).toBeInTheDocument();
-  fireEvent.click(within(original).getByRole('button', { name: 'More actions' })); fireEvent.click(screen.getByRole('menuitem', { name: 'Unsend' }));
+  fireEvent.click(within(original).getByRole('button', { name: 'More actions' })); fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
   local.deleteMessage.mockRejectedValueOnce(new Error('Backend detail'));
-  fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Your message is unchanged');
   expect(original.querySelector('.message-bubble')?.textContent).toBe('Keep until confirmed');
   expect(screen.getByText('Pinned (1):')).toBeInTheDocument(); expect(original.querySelector('.rx-summary')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(original.querySelector('.message-bubble')?.textContent).toBe('This message was deleted.');
   expect(screen.queryByText('Pinned (1):')).not.toBeInTheDocument(); expect(original.querySelector('.rx-summary')).not.toBeInTheDocument();
@@ -104,8 +104,8 @@ test('Delete for Me removes an outgoing message locally without invoking Unsend'
   const composer = screen.getByRole('textbox'); await waitFor(() => expect(composer).toBeEnabled());
   fireEvent.change(composer, { target: { value: 'Remove only here' } }); fireEvent.click(screen.getByRole('button', { name: 'Send' }));
   await waitFor(() => expect(composer).toHaveValue(''));
-  fireEvent.click(screen.getByRole('button', { name: 'More actions' })); fireEvent.click(screen.getByRole('menuitem', { name: 'Unsend' }));
-  fireEvent.click(screen.getByRole('radio', { name: /Delete for me/ })); fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More actions' })); fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+  fireEvent.click(screen.getByRole('radio', { name: /Delete for you/ })); fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(screen.queryByText('Remove only here')).not.toBeInTheDocument(); expect(local.deleteMessage).not.toHaveBeenCalled();
 });

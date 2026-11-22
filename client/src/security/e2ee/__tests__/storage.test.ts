@@ -7,6 +7,9 @@ import { encryptV2, decryptV2 } from '../messages';
 import { openKey, sealKey } from '../hpke';
 import { encode } from '../protocol';
 import { SecureMessagingSession } from '../session';
+import { messageEditHead } from '../edits';
+import { envelope } from '@/realtime/testing/authenticatedFixtures';
+import type { StoredMessage } from '../model';
 beforeAll(() => { Object.defineProperty(globalThis, 'crypto', { configurable: true, value: webcrypto }); Object.defineProperty(globalThis, 'indexedDB', { configurable: true, value: indexedDB }); });
 test('actual IndexedDB structured clone restores the same non-extractable device keys across manager instances', async () => {
   const name = 'test-' + randomUUID(), a = new BrowserKeyStore('alice', name), d = await generateDevice('alice');
@@ -42,4 +45,43 @@ test('unavailable IndexedDB has no memory/localStorage key fallback', async () =
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'indexedDB')!; Object.defineProperty(globalThis, 'indexedDB', { configurable: true, value: undefined });
   const store = new BrowserKeyStore('alice', 'test-' + randomUUID());
   try { await expect(store.get('device')).rejects.toMatchObject({ code: 'storage_unavailable' }); } finally { store.close(); Object.defineProperty(globalThis, 'indexedDB', previous); }
+});
+
+const cachedMessage: StoredMessage = { ...envelope, storageId: 'cached-storage', storedAt: envelope.timestamp, updatedAt: envelope.timestamp,
+  sequence: 1, revision: 0, state: 'active', deletedAt: null };
+
+test('cache freshness reads the exact shared account watermark without network requests or creating missing records', async () => {
+  const name = 'cache-head-' + randomUUID(), store = new BrowserKeyStore('alice', name), otherTab = new BrowserKeyStore('alice', name);
+  const request = jest.fn().mockRejectedValue(new Error('Cache freshness must not make network requests'));
+  const session = new SecureMessagingSession({ actor: { id: 'alice', username: 'alice' }, request, dispose() {} }, store);
+  const root = await messageEditHead(cachedMessage);
+  try {
+    expect(await session.isCachedMessageCurrent(cachedMessage)).toBe(false);
+    expect(await store.get('message-revision', cachedMessage.storageId)).toBeUndefined();
+    await otherTab.observeRevision(cachedMessage.storageId, [root]);
+    expect(await session.isCachedMessageCurrent(cachedMessage)).toBe(true);
+    const bobStore = new BrowserKeyStore('bob', name);
+    const bob = new SecureMessagingSession({ actor: { id: 'bob', username: 'bob' }, request, dispose() {} }, bobStore);
+    try { expect(await bob.isCachedMessageCurrent(cachedMessage)).toBe(false); } finally { bob.dispose(); }
+    await otherTab.observeRevision(cachedMessage.storageId, [root, 'f'.repeat(64)]);
+    expect(await session.isCachedMessageCurrent(cachedMessage)).toBe(false);
+    expect(await store.get('message-revision', cachedMessage.storageId)).toEqual({ revision: 1, hash: 'f'.repeat(64), deleted: false });
+    expect(request).not.toHaveBeenCalled();
+  } finally { otherTab.close(); session.dispose(); }
+});
+
+test('cache freshness refuses terminal, corrupt and unavailable watermark storage without resetting observations', async () => {
+  const name = 'cache-terminal-' + randomUUID(), store = new BrowserKeyStore('alice', name), otherTab = new BrowserKeyStore('alice', name);
+  const session = new SecureMessagingSession({ actor: { id: 'alice', username: 'alice' }, request: jest.fn(), dispose() {} }, store);
+  try {
+    await otherTab.observeRevision(cachedMessage.storageId, [], true);
+    expect(await session.isCachedMessageCurrent(cachedMessage)).toBe(false);
+    expect(await store.get('message-revision', cachedMessage.storageId)).toEqual({ revision: 0, hash: '', deleted: true });
+    const corrupt = { revision: '0', hash: await messageEditHead(cachedMessage), deleted: false };
+    await otherTab.put('message-revision', cachedMessage.storageId, corrupt);
+    expect(await session.isCachedMessageCurrent(cachedMessage)).toBe(false);
+    expect(await store.get('message-revision', cachedMessage.storageId)).toEqual(corrupt);
+    store.close();
+    await expect(session.isCachedMessageCurrent(cachedMessage)).rejects.toMatchObject({ code: 'disposed' });
+  } finally { otherTab.close(); session.dispose(); }
 });

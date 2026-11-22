@@ -55,6 +55,31 @@ function setup(auto = true) {
   const client = new AuthenticatedSocketIoClient(api, events, 'http://localhost:4177', factory);
   client.setScopes([conversation]); return { client, api, events, sockets, factory };
 }
+test('Buzz uses the existing session socket, exact conversation-only request and actor-bound acknowledgement', async () => {
+  const h = setup(); h.client.start(); await flush();
+  const received = jest.fn(); h.events.buzz = received;
+  const value = { id: 'buzz-1', conversationId: conversation.id, userId: 'alice', displayName: 'Alice', timestamp: new Date().toISOString() };
+  const pending = h.client.buzz(conversation.id), emitted = h.sockets[0]!.emit.mock.calls.at(-1)!;
+  expect(emitted.slice(0, 2)).toEqual(['buzz:send', { conversationId: conversation.id }]); emitted[2]!(value);
+  await expect(pending).resolves.toEqual(value); expect(h.factory).toHaveBeenCalledTimes(1);
+  await expect(h.client.buzz('outside')).rejects.toMatchObject({ code: 'unauthorized_conversation' });
+  const peer = { ...value, userId: 'bob', displayName: 'Bob' };
+  for (const invalid of [{ ...peer, content: 'forged' }, { ...peer, conversationId: 'outside' }, { ...peer, userId: 'outsider' }, value,
+    { ...peer, timestamp: new Date(Date.now() - 60000).toISOString() }]) h.sockets[0]!.fire('buzz:received', invalid);
+  expect(received).not.toHaveBeenCalled();
+  h.sockets[0]!.fire('buzz:received', peer); h.sockets[0]!.fire('buzz:received', peer);
+  expect(received).toHaveBeenCalledTimes(1); h.client.dispose();
+  h.sockets[0]!.fire('buzz:received', { ...peer, id: 'buzz-2' }); expect(received).toHaveBeenCalledTimes(1);
+  await expect(h.client.buzz(conversation.id)).rejects.toBeInstanceOf(Error);
+});
+
+test('Buzz failures, forged acknowledgements and disconnect never report success or buffer a retry', async () => {
+  const h = setup(); h.client.start(); await flush(); const socket = h.sockets[0]!;
+  const failed = h.client.buzz(conversation.id), rejected = expect(failed).rejects.toMatchObject({ code: 'unavailable' });
+  socket.emit.mock.calls.at(-1)![2]!({ id: 'buzz-1', conversationId: conversation.id, userId: 'bob', displayName: 'Bob', timestamp: new Date().toISOString() }); await rejected;
+  const pending = h.client.buzz(conversation.id), canceled = expect(pending).rejects.toMatchObject({ code: 'unavailable' });
+  socket.drop(); await canceled; expect(socket.emit).toHaveBeenCalledTimes(2); h.client.dispose();
+});
 test('edit hints are identifier-only, scope checked and ignored after disposal',async()=>{
  const h=setup(),edited=jest.fn();Object.assign(h.events,{edited});h.client.start();await flush();const socket=h.sockets[0]!;
  socket.fire('message:edited',{conversationId:conversation.id,messageId:envelope.id,content:'forged'});

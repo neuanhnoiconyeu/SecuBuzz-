@@ -69,9 +69,12 @@ export class AuthenticatedPins {
         const rows = await Promise.all(collection.items.map(async (pin): Promise<DecryptedRow> => {
           const m = pin.message;
           const cached = this.state.rows[cid]?.find(row => row.message.id === m.id && JSON.stringify(row.message) === JSON.stringify(m));
-          if (cached && (cached.text !== null || !retry)) return cached;
           if (m.encryption?.version !== 2) throw new ApiError('invalid_response');
           try {
+            if (cached && cached.text === null && !retry) return cached;
+            // DTO equality does not establish freshness across sessions/tabs. Reuse
+            // verified plaintext only while its exact persisted head is still current.
+            if (cached && cached.text !== null && await this.session.isCachedMessageCurrent(cached.message)) return cached;
             return await this.session.decryptStoredMessage(m);
           } catch (e) {
             if (e instanceof ApiError && ['unauthorized', 'forbidden', 'not_found'].includes(e.code)) throw e;

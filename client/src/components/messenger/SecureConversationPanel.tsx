@@ -22,10 +22,11 @@ import type { ChatMessage,MessageAttachment,VoiceMessageMetadata } from '@/messa
 import {AuthenticatedAttachments} from '@/messaging/authenticatedAttachments';
 import {EncryptedAttachmentContext} from '@/messaging/EncryptedAttachmentContext';
 import {useChatFileDrop} from '@/hooks/useChatFileDrop';
+import { useConversationBuzz } from '@/hooks/useConversationBuzz';
 import { ReplyPreview } from './ReplyPreview';
 import {MAX_MESSAGE_EDITS} from '../../../../shared/messageRevisions';
 import { ForwardDialog } from './ForwardDialog';
-import { conversationName, presentConnection, presentConversations, presentMessages, presentSendState } from './authenticatedChatPresentation';
+import { conversationName, mergePinnedRows, presentConnection, presentConversations, presentMessages, presentSendState } from './authenticatedChatPresentation';
 import styles from './SecureConversationPanel.module.css';
 
 const emptyLive: SecureLiveState = { connection: 'offline', conversations: [], rows: {}, cursors: {}, unread: {}, typing: {}, presence: {}, receipts: {}, keyVersions: {}, errors: {}, synchronized: 0 };
@@ -57,6 +58,8 @@ export function SecureConversationPanel({ session, live, active = true, selected
   const reactions=live?.reactions??(localReactions?.session===session?localReactions.store:undefined);
   const reactionState=useSyncExternalStore(reactions?.subscribe??noSubscription,reactions?.getSnapshot??emptyReactionSnapshot,emptyReactionSnapshot);
   const actorId = session.api.session.actor.id;
+  const sendBuzz = useCallback((cid: string) => live!.buzz(cid), [live]);
+  const buzz = useConversationBuzz(liveState.buzz, active, live ? sendBuzz : undefined);
   const attachmentSession=useMemo(()=>new AuthenticatedAttachments(session.api.session,selectedId??''),[session,selectedId]);
   const [attachmentLimit,setAttachmentLimit]=useState<number|null>(null),[attachmentError,setAttachmentError]=useState('');
   const [composerRevision,setComposerRevision]=useState(0);
@@ -69,7 +72,7 @@ export function SecureConversationPanel({ session, live, active = true, selected
     }).catch(()=>{if(active)setAttachmentError('Encrypted file storage is unavailable. Text messaging is still available.');});
     return()=>{active=false;};
   },[session]);
-  const chatCapabilities=useMemo(()=>({...capabilities,attachments:capabilities.attachments&&attachmentLimit!==null,voiceMessages:capabilities.voiceMessages&&attachmentLimit!==null}),[attachmentLimit]);
+  const chatCapabilities=useMemo(()=>({...capabilities,buzz:capabilities.buzz&&Boolean(live),attachments:capabilities.attachments&&attachmentLimit!==null,voiceMessages:capabilities.voiceMessages&&attachmentLimit!==null}),[attachmentLimit,live]);
   const localHidden = useLocalHiddenMessages(actorId);
   const [localDeleteError, setLocalDeleteError] = useState('');
   const [unsendError, setUnsendError] = useState('');
@@ -79,7 +82,7 @@ export function SecureConversationPanel({ session, live, active = true, selected
   const [initializing, setInitializing] = useState(false), [revoked, setRevoked] = useState(false);
   const [keyReview, setKeyReview] = useState<ReturnType<SecureMessagingSession['getKeyReview']>>(null);
   const [localRows, setRows] = useState<DecryptedRow[]>([]), [localCursor, setCursor] = useState<string | null>(null);
-  const rows = useMemo(() => mergeSecureRows(live && selectedId ? liveState.rows[selectedId] ?? [] : localRows.filter(row => row.message.conversationId === selectedId),
+  const rows = useMemo(() => mergePinnedRows(live && selectedId ? liveState.rows[selectedId] ?? [] : localRows.filter(row => row.message.conversationId === selectedId),
     selectedId ? pinState.rows[selectedId] ?? [] : []), [live, selectedId, liveState.rows, localRows, pinState.rows]);
   useEffect(() => {
     pins?.authorize(conversations);
@@ -353,7 +356,8 @@ export function SecureConversationPanel({ session, live, active = true, selected
         {onOpenVoiceRooms && <Button size="sm" variant="outline" onClick={onOpenVoiceRooms}>Open Voice Rooms</Button>}
       </div>} />
     <div className={`messenger-main-column ${styles.column}`}>
-      <section className="chat-window chat-attachment-drop-target" {...drop.bind} aria-label={selectedId ? `${name} conversation` : 'Choose a conversation'}>
+      <section className="chat-window chat-attachment-drop-target" data-buzz-active={Boolean(active && selectedId && buzz.effectConversation === selectedId)} {...drop.bind} aria-label={selectedId ? `${name} conversation` : 'Choose a conversation'}>
+        {buzz.notice && <p role="status" aria-label="Buzz notification" className={styles.notice}>{buzz.notice}</p>}
         {drop.dragging&&<div className="chat-attachment-drop-overlay" aria-hidden="true">Drop files to attach</div>}
         {selectedId && <ConversationHeader name={name} type="direct" securityStatus={null} transportMode="realtime"
           connectionStatus={presentConnection(live?.getSnapshot().connection)} headingRef={heading} transitionKey={selectedId}
@@ -398,8 +402,8 @@ export function SecureConversationPanel({ session, live, active = true, selected
           {attachmentError&&<p role="status" className={styles.notice}>{attachmentError}</p>}
           <MessageComposer key={`composer:${selectedId}:${composerRevision}`} conversationName={name} messageCount={presented.messages.length}
             draftValue={draft} onDraftChange={setDraft} disabled={busy || forwardBusy || !ready || pending || sendingId !== null || (mode === 'live' && !live?.transport.connected)}
-            isSending={sendingId === selectedId} buzzBusy={false} capabilities={chatCapabilities} active={visible}
-            textOnly={!chatCapabilities.attachments && !chatCapabilities.voiceMessages} demoNotice={`Messages and files are encrypted on your device before sending.${attachmentLimit?` Server file limit: ${Math.floor(attachmentLimit/1024/1024)} MB including encryption overhead.`:''}`}
+            isSending={sendingId === selectedId} buzzBusy={buzz.busy} onBuzz={() => { if (selectedId && authorized && live?.transport.connected) void buzz.sendBuzz(selectedId); }} capabilities={chatCapabilities} active={visible}
+            demoNotice={`Messages and files are encrypted on your device before sending.${attachmentLimit?` Server file limit: ${Math.floor(attachmentLimit/1024/1024)} MB including encryption overhead.`:''}`}
             uploadAttachment={attachmentSession.upload} discardAttachment={attachmentSession.discard} attachmentActionLabel="Encrypting and uploading"
             prepareVoice={attachmentSession.uploadVoice}
             {...(drop.files?{droppedFiles:drop.files}:{})}

@@ -20,9 +20,10 @@ async function fixture(initial = false, missingKeys = false) {
     ? post(options.body as { operationId: string; pinned: boolean; expectedVersion: number }) : snapshot);
   const session = new SecureMessagingSession({ actor: { id: 'alice', username: 'alice' }, request, dispose() {} });
   const decrypt = jest.spyOn(session, 'decryptStoredMessage').mockResolvedValue({message,text:'First line 👩🏽‍💻\nTiếng Việt',error:null});
+  const current = jest.spyOn(session, 'isCachedMessageCurrent').mockResolvedValue(true);
   if (missingKeys) decrypt.mockRejectedValue(new E2eeError('missing_key'));
   const store = new AuthenticatedPins(session); store.authorize([conversation]); await store.refresh(conversation.id);
-  return { store, session, request, post, decrypt, snapshot: (value: PinCollection) => { snapshot = value; } };
+  return { store, session, request, post, decrypt, current, snapshot: (value: PinCollection) => { snapshot = value; } };
 }
 
 test('pin uses the storage ID, accepts either participant, and decrypts references through the existing session', async () => {
@@ -30,7 +31,32 @@ test('pin uses the storage ID, accepts either participant, and decrypts referenc
   expect(f.request).toHaveBeenCalledWith('/api/messages/server-storage-id/pin', expect.objectContaining({ method: 'POST', body: { pinned: true, expectedVersion: 0, operationId: expect.any(String) } }));
   expect(f.store.getSnapshot().collections[conversation.id]?.items).toEqual([pin]);
   expect(f.decrypt).toHaveBeenCalledWith(message); expect(f.store.getSnapshot().rows[conversation.id]?.[0]?.text).toContain('\nTiếng Việt');
-  await f.store.refresh(conversation.id); expect(f.decrypt).toHaveBeenCalledTimes(1); f.store.dispose();
+  await f.store.refresh(conversation.id); expect(f.decrypt).toHaveBeenCalledTimes(1);
+  expect(f.current).toHaveBeenCalledWith(message); f.store.dispose();
+});
+
+test.each([false, true])('unchanged pin plaintext is reverified against newer watermarks, retryUnavailable=%s', async retryUnavailable => {
+  const f = await fixture(true);
+  try {
+    expect(f.store.getSnapshot().rows[conversation.id]?.[0]?.text).not.toBeNull();
+    f.current.mockResolvedValueOnce(false);
+    f.decrypt.mockRejectedValueOnce(new E2eeError('invalid_proof'));
+    await f.store.refresh(conversation.id, retryUnavailable);
+    expect(f.decrypt).toHaveBeenCalledTimes(2);
+    expect(f.store.getSnapshot().rows[conversation.id]?.[0]).toMatchObject({ text: null, errorCode: 'invalid_proof' });
+    expect(f.store.getSnapshot().collections[conversation.id]?.items).toEqual([pin]);
+  } finally { f.store.dispose(); }
+});
+
+test('cached plaintext fails closed when persistent watermark storage cannot be checked', async () => {
+  const f = await fixture(true);
+  try {
+    f.current.mockRejectedValueOnce(new E2eeError('storage_unavailable'));
+    await f.store.refresh(conversation.id);
+    expect(f.store.getSnapshot().rows[conversation.id]?.[0]).toMatchObject({ text: null, errorCode: 'storage_unavailable' });
+    await f.store.set(message, false);
+    expect(f.store.getSnapshot().collections[conversation.id]?.items).toEqual([]);
+  } finally { f.store.dispose(); }
 });
 
 test('duplicate clicks share one request and leave pin state unchanged until server confirmation', async () => {
@@ -79,6 +105,8 @@ test('older snapshots cannot restore an unpinned message', async () => {
 test('missing historical keys show an unavailable pin without preventing authorized unpin', async () => {
   const f = await fixture(true, true);
   expect(f.store.getSnapshot().rows[conversation.id]?.[0]).toMatchObject({ text: null, errorCode: 'missing_key' });
+  await f.store.refresh(conversation.id); expect(f.decrypt).toHaveBeenCalledTimes(1);
+  await f.store.refresh(conversation.id, true); expect(f.decrypt).toHaveBeenCalledTimes(2);
   await f.store.set(message, false); expect(f.store.getSnapshot().collections[conversation.id]?.items).toEqual([]); f.store.dispose();
 });
 

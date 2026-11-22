@@ -17,7 +17,7 @@ test('the real-account profile prevents unsupported actions even if callbacks ar
   ]} currentUserId="self" transportMode="realtime" capabilities={{...REAL_ACCOUNT_MESSAGING_CAPABILITIES,edit:false}} onRetryMessage={jest.fn()} {...callbacks} />);
   expect(container.querySelectorAll('.msg-toolbar button')).toHaveLength(6);
   fireEvent.click(screen.getAllByRole('button', { name: 'More actions' })[0]!);
-  expect(screen.getAllByRole('menuitem').map(item => item.textContent?.trim())).toEqual(['Forward', 'Unpin', 'Delete for me', 'Unsend']);
+  expect(screen.getAllByRole('menuitem').map(item => item.textContent?.trim())).toEqual(['Forward', 'Unpin', 'Delete']);
   fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
   expect(screen.getByRole('button', { name: '👍 1' })).toBeEnabled();
   fireEvent.click(screen.getByRole('button', { name: '👍 1' }));
@@ -74,7 +74,8 @@ test.each(['profile', 'textOnly'] as const)('%s prevents dropped files from beco
     {...(mode === 'profile' ? { capabilities: {...REAL_ACCOUNT_MESSAGING_CAPABILITIES,attachments:false,voiceMessages:false} } : { textOnly: true })} />);
   expect(screen.queryByRole('button', { name: 'Attach files or images' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Record voice message' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Send BUZZ alert' })).not.toBeInTheDocument();
+  if (mode === 'textOnly') expect(screen.queryByRole('button', { name: 'Send BUZZ alert' })).not.toBeInTheDocument();
+  else expect(screen.getByRole('button', { name: 'Send BUZZ alert' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Insert emoji' })).toBeEnabled();
   fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Text only' } });
   fireEvent.click(screen.getByRole('button', { name: 'Send' }));

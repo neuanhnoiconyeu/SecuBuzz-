@@ -47,6 +47,7 @@ async function fixture(actorId = 'alice') {
   const prepare = jest.spyOn(session, 'prepare').mockResolvedValue({ conversation, key, keyId: 'epoch', safetyNumber: '1234' });
   jest.spyOn(session, 'history').mockResolvedValue({ items: [], nextCursor: null });
   jest.spyOn(session, 'pending').mockResolvedValue(null);
+  jest.spyOn(session, 'isCachedMessageCurrent').mockResolvedValue(true);
   return { session, device, initialize, prepare, key };
 }
 
@@ -54,6 +55,7 @@ test('startup and cancelled confirmation cannot enroll; confirmation permits exp
   const f = await fixture(), confirm = jest.spyOn(window, 'confirm').mockReturnValue(false);
   render(<SecureConversationPanel session={f.session} selectedId={null} onSelect={jest.fn()} displayName="Alice" />);
   const button = await screen.findByRole('button', { name: /^Enroll this browser/ });
+  expect(screen.getByLabelText('Choose a conversation')).toHaveAttribute('data-buzz-active', 'false');
   expect(f.initialize.mock.calls).toEqual([[false]]);
   fireEvent.click(button); expect(confirm).toHaveBeenCalledTimes(1); expect(f.initialize).toHaveBeenCalledTimes(1);
   expect(screen.getByText(/does not recover keys from another device/)).toBeInTheDocument();
@@ -209,7 +211,8 @@ test('an authenticated edit failure exposes the security error while preserving 
 function openDeleteForMe(id: string) {
   const row = document.querySelector<HTMLElement>(`[data-message-id="${id}"]`)!;
   fireEvent.click(within(row).getByRole('button', { name: 'More actions' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Delete for me' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+  fireEvent.click(screen.getByRole('radio', { name: /Delete for you/ }));
   return within(screen.getByRole('dialog'));
 }
 
@@ -221,15 +224,16 @@ test('real sent and received messages use device-only confirmation; refresh/sign
   const panel = () => <SecureConversationPanel session={f.session} selectedId="conversation" onSelect={jest.fn()} displayName="Alice" />;
   let view = render(panel()); await screen.findByText('Text outgoing');
   let review = openDeleteForMe('outgoing');
-  expect(review.queryByRole('radio', { name: /Unsend for everyone/ })).not.toBeInTheDocument();
+  expect(review.getByRole('radio', { name: /Delete for everyone/ })).toBeEnabled();
+  expect(review.getByRole('radio', { name: /Delete for you/ })).toBeChecked();
   expect(review.getByText(/removed from your device.*visible to other chat members/)).toBeInTheDocument();
   fireEvent.click(review.getByRole('button', { name: 'Cancel' })); expect(screen.getByRole('log')).toHaveTextContent('Text outgoing');
   expect(localStorage.length).toBe(0);
-  review = openDeleteForMe('outgoing'); fireEvent.click(review.getByRole('button', { name: 'Remove' }));
+  review = openDeleteForMe('outgoing'); fireEvent.click(review.getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(screen.getByRole('log')).not.toHaveTextContent('Text outgoing');
   review = openDeleteForMe('incoming'); expect(screen.getByRole('log')).toHaveTextContent('Text incoming');
-  fireEvent.click(review.getByRole('button', { name: 'Remove' }));
+  fireEvent.click(review.getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(screen.getByRole('log')).not.toHaveTextContent('Text incoming');
   expect(screen.getByText('Message deleted for you on this device.')).toBeInTheDocument();
@@ -268,7 +272,7 @@ test('replayed realtime rows and reconnect reconciliation cannot resurrect local
   jest.spyOn(live, 'subscribe').mockImplementation(listener => { listeners.add(listener); return () => { listeners.delete(listener); }; });
   jest.spyOn(live, 'refresh').mockResolvedValue(undefined); jest.spyOn(live, 'sync').mockResolvedValue(undefined);
   const view = render(<SecureConversationPanel session={f.session} live={live} selectedId="conversation" onSelect={jest.fn()} displayName="Alice" />);
-  await within(screen.getByRole('log')).findByText('Text hidden'); fireEvent.click(openDeleteForMe('hidden').getByRole('button', { name: 'Remove' }));
+  await within(screen.getByRole('log')).findByText('Text hidden'); fireEvent.click(openDeleteForMe('hidden').getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   act(() => { state = { ...state, rows: { conversation: [{ ...hidden, message: { ...hidden.message, storageId: 'different-storage-projection', revision: 2 } }, incoming] }, synchronized: 2 }; listeners.forEach(listener => listener()); });
   await within(screen.getByRole('log')).findByText('Text new-live'); await waitFor(() => expect(f.prepare).toHaveBeenCalledTimes(2));
@@ -283,11 +287,11 @@ test('storage write failure preserves the message and confirmation until durable
   render(<SecureConversationPanel session={f.session} selectedId="conversation" onSelect={jest.fn()} displayName="Alice" />);
   await within(screen.getByRole('log')).findByText('Text failure'); const review = openDeleteForMe('failure');
   const write = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('Full', 'QuotaExceededError'); });
-  fireEvent.click(review.getByRole('button', { name: 'Remove' }));
+  fireEvent.click(review.getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(review.getByRole('alert')).toHaveTextContent('Your message is unchanged'));
   expect(screen.getByText(/Delete for Me could not be saved on this device/)).toBeInTheDocument();
   expect(screen.getByRole('log')).toHaveTextContent('Text failure'); expect(localStorage.length).toBe(0);
-  write.mockRestore(); fireEvent.click(review.getByRole('button', { name: 'Remove' }));
+  write.mockRestore(); fireEvent.click(review.getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(screen.queryByText('Text failure')).not.toBeInTheDocument(); expect(serverDelete).not.toHaveBeenCalled();
   expect(Object.keys(localStorage).filter(key => key.startsWith(LOCAL_HIDDEN_MESSAGE_PREFIX))).toHaveLength(1);
@@ -311,7 +315,7 @@ test('authenticated reply uses the shared preview, encrypted content adapter and
   expect(screen.queryByRole('button', { name: 'Cancel reply' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Go to original message from Bob' }));
   expect(document.querySelector('[data-message-id="original"]')).toHaveAttribute('data-message-highlighted', 'true');
-  fireEvent.click(openDeleteForMe('original').getByRole('button', { name: 'Remove' }));
+  fireEvent.click(openDeleteForMe('original').getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(screen.getByText('Original message unavailable.')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Go to original message from a message' }));
@@ -387,7 +391,7 @@ test('reconciling an unconfirmed reply keeps a newer reply selection and never s
 
 function openUnsend(id: string) {
   fireEvent.click(within(document.querySelector<HTMLElement>(`[data-message-id="${id}"]`)!).getByRole('button', { name: 'More actions' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Unsend' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
   return within(screen.getByRole('dialog'));
 }
 const unsent = (row: DecryptedRow): StoredMessage => ({ ...row.message, state: 'deleted', encryption: null, revision: row.message.revision + 1, deletedAt: envelope.timestamp });
@@ -402,12 +406,12 @@ test('real Unsend is sender-only, uses storage ID, and waits for confirmation wh
   await within(screen.getByRole('log')).findByText('Text own-unsend');
   fireEvent.click(within(document.querySelector<HTMLElement>('[data-message-id="received"]')!).getByRole('button', { name: 'More actions' }));
   expect(screen.queryByRole('menuitem', { name: 'Unsend' })).not.toBeInTheDocument(); fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
-  const local = openDeleteForMe('own-unsend'); expect(local.queryByRole('radio', { name: /Unsend for everyone/ })).not.toBeInTheDocument();
+  const local = openDeleteForMe('own-unsend'); expect(local.getByRole('radio', { name: /Delete for everyone/ })).toBeEnabled();
   fireEvent.click(local.getByRole('button', { name: 'Cancel' }));
   const review = openUnsend('own-unsend');
-  expect(review.getByRole('radio', { name: /Unsend for everyone/ })).toBeChecked();
-  expect(review.queryByRole('radio', { name: /Delete for me/ })).not.toBeInTheDocument();
-  fireEvent.click(review.getByRole('button', { name: 'Remove' })); fireEvent.click(review.getByRole('button', { name: 'Remove' }));
+  expect(review.getByRole('radio', { name: /Delete for everyone/ })).toBeChecked();
+  expect(review.getByRole('radio', { name: /Delete for you/ })).not.toBeChecked();
+  fireEvent.click(review.getByRole('button', { name: 'Delete' })); fireEvent.click(review.getByRole('button', { name: 'Delete' }));
   expect(remove).toHaveBeenCalledTimes(1); expect(remove).toHaveBeenCalledWith('storage-own-unsend');
   expect(screen.getByRole('log')).toHaveTextContent('Text own-unsend'); expect(screen.queryByText('Message unsent for everyone.')).not.toBeInTheDocument();
   await act(async () => { confirm(unsent(own)); });
@@ -425,11 +429,11 @@ test('failed Unsend leaves the original visible and the confirmation open; retry
   const remove = jest.spyOn(f.session.api, 'remove').mockRejectedValueOnce(new Error('Private transport details')).mockResolvedValue(unsent(own));
   render(<SecureConversationPanel session={f.session} selectedId="conversation" onSelect={jest.fn()} displayName="Alice" />);
   await within(screen.getByRole('log')).findByText('Text failure-unsend'); const review = openUnsend('failure-unsend');
-  fireEvent.click(review.getByRole('button', { name: 'Remove' }));
+  fireEvent.click(review.getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(review.getByRole('alert')).toHaveTextContent('Your message is unchanged'));
   expect(screen.getByRole('log')).toHaveTextContent('Text failure-unsend'); expect(screen.queryByText('Message unsent for everyone.')).not.toBeInTheDocument();
   expect(screen.queryByText('Private transport details')).not.toBeInTheDocument();
-  fireEvent.click(review.getByRole('button', { name: 'Remove' }));
+  fireEvent.click(review.getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(remove).toHaveBeenCalledTimes(2); expect(screen.getByRole('log')).toHaveTextContent('Message deleted');
 });
@@ -439,7 +443,7 @@ test('a stale REST refresh cannot resurrect a confirmed tombstone', async () => 
   const history = jest.spyOn(f.session, 'history').mockResolvedValue({ items: [own], nextCursor: null });
   jest.spyOn(f.session.api, 'remove').mockResolvedValue(unsent(own));
   render(<SecureConversationPanel session={f.session} selectedId="conversation" onSelect={jest.fn()} displayName="Alice" />);
-  await within(screen.getByRole('log')).findByText('Text refresh-unsend'); fireEvent.click(openUnsend('refresh-unsend').getByRole('button', { name: 'Remove' }));
+  await within(screen.getByRole('log')).findByText('Text refresh-unsend'); fireEvent.click(openUnsend('refresh-unsend').getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   fireEvent.click(screen.getByText('Advanced settings')); fireEvent.click(screen.getByRole('button', { name: 'Refresh secure conversation' }));
   await waitFor(() => expect(screen.getByLabelText('Message to Bob')).toBeEnabled());
@@ -494,6 +498,28 @@ test('an already reconciled live connection prepares once on selection and still
   act(() => { state = { ...state, keyVersions: { conversation: 1 } }; listeners.forEach(listener => listener()); });
   await screen.findByText('Contact device keys changed'); expect(f.prepare).toHaveBeenCalledTimes(2);
   expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
+  view.unmount(); live.dispose();
+});
+
+test('real-account Buzz reuses the composer and authenticated workspace without sending a message', async () => {
+  const f = await fixture(); f.initialize.mockResolvedValue(f.device);
+  const send = jest.spyOn(f.session, 'send');
+  const live = new SecureRealtimeWorkspace(f.session, 'http://localhost:4177');
+  let state: SecureLiveState = { connection: 'connected', conversations: [conversation], rows: {}, cursors: {}, unread: {}, typing: {}, presence: {}, receipts: {}, keyVersions: {}, errors: {}, synchronized: 1 };
+  const listeners = new Set<() => void>();
+  jest.spyOn(live, 'getSnapshot').mockImplementation(() => state);
+  jest.spyOn(live, 'subscribe').mockImplementation(listener => { listeners.add(listener); return () => { listeners.delete(listener); }; });
+  jest.spyOn(live, 'refresh').mockResolvedValue(undefined); jest.spyOn(live, 'sync').mockResolvedValue(undefined);
+  jest.spyOn(live.transport, 'connected', 'get').mockReturnValue(true);
+  const event = { id: 'buzz-1', conversationId: conversation.id, userId: 'alice', displayName: 'Alice', timestamp: new Date().toISOString() };
+  const buzz = jest.spyOn(live, 'buzz').mockResolvedValue(event);
+  const view = render(<SecureConversationPanel session={f.session} live={live} selectedId="conversation" onSelect={jest.fn()} displayName="Alice" />);
+  await screen.findByText('Secure message ready', { exact: true });
+  const button = screen.getByRole('button', { name: 'Send BUZZ alert' }); expect(button).toBeEnabled(); fireEvent.click(button);
+  await screen.findByText('BUZZ! sent.'); expect(buzz).toHaveBeenCalledWith('conversation'); expect(button).toBeDisabled();
+  expect(send).not.toHaveBeenCalled(); expect(screen.getByLabelText('Bob conversation')).toHaveAttribute('data-buzz-active', 'true');
+  act(() => { state = { ...state, buzz: { ...event, id: 'buzz-2', userId: 'bob', displayName: 'Bob' } }; listeners.forEach(listener => listener()); });
+  expect(screen.getByRole('status', { name: 'Buzz notification' })).toHaveTextContent('Bob sent you a BUZZ!');
   view.unmount(); live.dispose();
 });
 
@@ -553,7 +579,7 @@ test('server pins reuse original rows and navigation beyond loaded history while
   fireEvent.click(screen.getByRole('button', { name: 'View pinned messages' }));
   fireEvent.click(within(screen.getByRole('region', { name: 'Pinned messages' })).getByRole('button', { name: /Bob.*Text older-pin/ }));
   expect(document.querySelector('[data-message-id="older-pin"]')).toHaveAttribute('data-message-highlighted', 'true');
-  openDeleteForMe('older-pin'); fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+  openDeleteForMe('older-pin'); fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(document.querySelector('[data-message-id="older-pin"]')).not.toBeInTheDocument());
   expect(screen.queryByRole('button', { name: 'View pinned messages' })).not.toBeInTheDocument();
   expect(request.mock.calls.some(([, options]) => options?.method === 'POST')).toBe(false);

@@ -33,6 +33,41 @@ async function pair(label:string){
  await clients[0]!.session.prepare(cid);await clients[1]!.session.prepare(cid);
  return {a:clients[0]!,b:clients[1]!,cid};
 }
+for (const operation of ['edit', 'unsend'] as const) {
+ test(`pin refresh rejects cached plaintext after another client verifies ${operation}, and recovers from honest history`, async () => {
+  const {a,b,cid}=await pair('pin-watermark-'+operation);
+  const m=await a.session.send(cid,'Alice','ORIGINAL_PIN_WATERMARK_FIXTURE');
+  await a.api.request(`/api/messages/${m.storageId}/pin`,{method:'POST',body:{pinned:true,expectedVersion:0,operationId:crypto.randomUUID()}});
+  const saved=await b.api.request(`/api/conversations/${cid}/pins`);let replay=false;
+  const reader=new Session({...b.api,request:(path:string,options:any)=>replay&&path===`/api/conversations/${cid}/pins`
+   ?Promise.resolve(structuredClone(saved)):b.api.request(path,options)});sessions.push(reader);
+  const pins=new Pins(reader);pins.authorize([await reader.api.getConversation(cid)]);
+  try{
+   await pins.refresh(cid);assert.equal(pins.getSnapshot().rows[cid][0].text,'ORIGINAL_PIN_WATERMARK_FIXTURE');
+   await a.session.editMessage(m,'UPDATED_PIN_WATERMARK_FIXTURE\nUnicode: \u{1f1fb}\u{1f1f3}');
+   if(operation==='unsend')await a.session.api.remove(m.storageId);
+   const verified=(await b.session.history(cid)).items[0];
+   assert.equal(verified.message.state,operation==='unsend'?'deleted':'active');
+   replay=true;
+   for(const retryUnavailable of [false,true]){
+    await pins.refresh(cid,retryUnavailable);
+    const row=pins.getSnapshot().rows[cid][0];
+    assert.equal(row.text,null);assert.equal(typeof row.error,'string');
+   }
+   const restored=new Session(reader.api.session);sessions.push(restored);
+   await assert.rejects(restored.decryptStoredMessage(m),(error:any)=>error.code==='invalid_proof');
+   replay=false;await pins.refresh(cid,true);
+   const current=pins.getSnapshot().rows[cid];
+   if(operation==='unsend')assert.deepEqual(current,[]);
+   else{
+    assert.equal(current[0].text,'UPDATED_PIN_WATERMARK_FIXTURE\nUnicode: \u{1f1fb}\u{1f1f3}');
+    assert.equal(current[0].message.id,m.id);assert.equal(current[0].message.storageId,m.storageId);
+    assert.equal(pins.getSnapshot().collections[cid].version,saved.version,'Editing must not require a pin-version change');
+   }
+  }finally{pins.dispose();}
+ });
+}
+
 test('actual client E2EE encrypts, authenticates and synchronizes Unicode edits; reload, rollback and terminal Unsend are consistent',async()=>{
  const {a,b,cid}=await pair('live-edits');const m=await a.session.send(cid,'Alice','Original 👩🏽‍💻\nsecond line');
  a.live.start();b.live.start();await until(()=>a.live.getSnapshot().connection==='connected'&&b.live.getSnapshot().connection==='connected',10000);

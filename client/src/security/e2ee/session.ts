@@ -226,6 +226,17 @@ export class SecureMessagingSession {
     }));
     this.assert(); return { items, nextCursor: result.nextCursor };
   }
+  /** Only for previously verified, unchanged DTOs. This never authenticates new plaintext.
+   * Read the shared persisted head before reusing a caller's cache; do not create/reset it.
+   */
+  async isCachedMessageCurrent(message:StoredMessage):Promise<boolean>{
+    this.assert();if(message.state!=='active'||message.encryption?.version!==2)return false;
+    const hash=await messageEditHead(message);this.assert();
+    const known=await this.store.get<unknown>('message-revision',message.storageId);this.assert();
+    if(!known||typeof known!=='object'||Array.isArray(known))return false;
+    const head=known as Record<string,unknown>;
+    return Number.isSafeInteger(head.revision)&&head.revision===messageEditVersion(message)&&head.hash===hash&&head.deleted===false;
+  }
   async decryptStoredMessage(input:StoredMessage):Promise<DecryptedRow>{
     this.assert();const m=this.api.stored(input,input.conversationId),c=await this.api.getConversation(m.conversationId);this.assert();
     if(!c.interactionAllowed||!c.participants.some(p=>p.id===m.senderId))throw new ApiError('forbidden');
