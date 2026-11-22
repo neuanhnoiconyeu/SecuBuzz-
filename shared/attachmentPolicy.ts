@@ -1,4 +1,5 @@
 /** Client attachment formats and limits. DB6 also enforces its own server-side upload cap. */
+import type {EncryptedAttachmentManifest} from './encryptedAttachments.ts';
 export const ATTACHMENT_LIMITS = {
   maxCount: 5,
   maxTotalSizeMb: 100,
@@ -20,6 +21,8 @@ export interface AttachmentMetadata {
   mimeType?: string;
   /** An IndexedDB reference is scoped by the current demo user and conversation. */
   storage?: 'indexeddb';
+  /** Present only after a verified authenticated V2 message is decrypted. */
+  encrypted?: EncryptedAttachmentManifest;
 }
 
 interface FileRule {
@@ -55,6 +58,7 @@ const rules: readonly FileRule[] = [
   { extensions: ['webm'], mimeTypes: ['video/webm'], kind: 'video', label: 'video', maxSizeMb: videoSizeMb },
   { extensions: ['mov'], mimeTypes: ['video/quicktime'], kind: 'video', label: 'video', maxSizeMb: videoSizeMb },
   { extensions: ['mp3'], mimeTypes: ['audio/mpeg', 'audio/mp3'], kind: 'audio', label: 'audio', maxSizeMb: audioSizeMb },
+  { extensions: ['weba'], mimeTypes: ['audio/webm'], kind: 'audio', label: 'audio', maxSizeMb: audioSizeMb },
   { extensions: ['wav'], mimeTypes: ['audio/wav', 'audio/x-wav', 'audio/wave'], kind: 'audio', label: 'audio', maxSizeMb: audioSizeMb },
   { extensions: ['ogg'], mimeTypes: ['audio/ogg', 'application/ogg'], kind: 'audio', label: 'audio', maxSizeMb: audioSizeMb },
   { extensions: ['m4a'], mimeTypes: ['audio/mp4', 'audio/x-m4a'], kind: 'audio', label: 'audio', maxSizeMb: audioSizeMb },
@@ -99,6 +103,7 @@ export function formatAttachmentSize(bytes: number): string {
 export function parseUploadedAttachment(value: unknown): AttachmentMetadata | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const item = value as Record<string, unknown>;
+  if('encrypted' in item)return null; // Never feed ciphertext references into the legacy plaintext loader.
   if (typeof item.id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(item.id) ||
       typeof item.name !== 'string' || typeof item.mimeType !== 'string' || typeof item.sizeBytes !== 'number' ||
       (item.url !== `/api/attachments/${item.id}/download` && item.url !== `/api/attachments/${item.id}`)) return null;

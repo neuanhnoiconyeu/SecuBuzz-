@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import type { AuthUser } from '@/auth/authModel';
-import type { RealtimeClient } from '@/realtime/realtimeModel';
+import type {DirectCallSignalingClient} from './callSignaling';
 import type { LiveKitConnectionService } from '@/voice/livekitConnection';
 import { useLiveRoomMedia } from '@/voice/useLiveVoiceRoom';
 import { CALL_CLIENT_EVENTS as C, type CallClientEventName, type CallSnapshot } from '../../../shared/directCalls';
@@ -13,7 +13,7 @@ const terminal = (call: CallSnapshot) => call.status !== 'ringing' && call.statu
 const ok = (value: unknown): value is { status: 'ok'; call: unknown; calls?: unknown[] } => Boolean(value && typeof value === 'object' && 'status' in value && value.status === 'ok');
 
 /** Invitation state comes only from signaling; capture/publication/playback belongs to the shared room controller. */
-export function useLiveDirectCalls(client: RealtimeClient | null, service: LiveKitConnectionService | null, user: AuthUser) {
+export function useLiveDirectCalls(client: DirectCallSignalingClient | null, service: LiveKitConnectionService | null, user: AuthUser) {
   const media = useLiveRoomMedia(service, user, allowedCall);
   const mediaRef = useRef(media); mediaRef.current = media;
   const [state, dispatch] = useReducer(directCallReducer, idleDirectCall);

@@ -2,6 +2,8 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { useAttachmentSource } from '../useAttachmentSource';
 import { readRemoteAttachment } from '@/messaging/attachmentDownload';
 import type { MessageAttachment } from '@/messaging/messageModel';
+import {EncryptedAttachmentContext} from '@/messaging/EncryptedAttachmentContext';
+import type {ReactNode} from 'react';
 
 const originalFetch = Object.getOwnPropertyDescriptor(globalThis, 'fetch');
 const originalCreate = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
@@ -11,6 +13,25 @@ const create = jest.fn((_blob: Blob) => 'blob:db6-preview');
 const revoke = jest.fn();
 const id = '550e8400-e29b-41d4-a716-446655440000';
 const url = `/api/attachments/${id}/download`;
+
+test('encrypted previews stay verified and keep their Blob URL across equivalent history projections',async()=>{
+  const encrypted:MessageAttachment={id,name:'private.png',type:'image',mimeType:'image/png',sizeBytes:8,url:'',encrypted:{v:1,id,
+    conversationId:'chat',messageId:id,senderId:'alice',name:'private.png',mimeType:'image/png',size:8,key:'A'.repeat(43),iv:'A'.repeat(16),sha256:'a'.repeat(64)}};
+  const read=jest.fn(async()=>new Blob([new Uint8Array([137,80,78,71,13,10,26,10])],{type:'image/png'}));
+  const wrapper=({children}:{children:ReactNode})=><EncryptedAttachmentContext.Provider value={read}>{children}</EncryptedAttachmentContext.Provider>;
+  const {result,rerender,unmount}=renderHook(({attachment})=>useAttachmentSource(attachment,{ownerId:'bob',conversationId:'chat'}),{initialProps:{attachment:encrypted},wrapper});
+  await waitFor(()=>expect(result.current.downloadUrl).toBe('blob:db6-preview'));
+  rerender({attachment:{...encrypted,encrypted:{...encrypted.encrypted!}}});
+  expect(read).toHaveBeenCalledTimes(1);expect(revoke).not.toHaveBeenCalled();expect(requestFetch).not.toHaveBeenCalled();
+  unmount();expect(revoke).toHaveBeenCalledWith('blob:db6-preview');
+});
+test('encrypted integrity failures never expose a preview or a raw ciphertext download URL',async()=>{
+  const attachment:MessageAttachment={id,name:'private.pdf',type:'file',url:'',sizeBytes:8,encrypted:{v:1,id,conversationId:'chat',messageId:id,senderId:'alice',name:'private.pdf',mimeType:'application/pdf',size:8,key:'A'.repeat(43),iv:'A'.repeat(16),sha256:'a'.repeat(64)}};
+  const read=jest.fn(async()=>{throw new Error('Attachment integrity verification failed.');});
+  const wrapper=({children}:{children:ReactNode})=><EncryptedAttachmentContext.Provider value={read}>{children}</EncryptedAttachmentContext.Provider>;
+  const {result}=renderHook(()=>useAttachmentSource(attachment,{conversationId:'chat'}),{wrapper});
+  await waitFor(()=>expect(result.current.error).toMatch(/integrity/));expect(result.current.previewUrl).toBe('');expect(result.current.downloadUrl).toBe('');expect(create).not.toHaveBeenCalled();
+});
 const file = (name: string, type: MessageAttachment['type'], mimeType: string, bytes: string | Uint8Array): [MessageAttachment, Blob] => {
   const blob = new Blob([typeof bytes === 'string' ? bytes : Uint8Array.from(bytes)], { type: 'application/octet-stream' });
   return [{ id, name, type, mimeType, sizeBytes: blob.size, url }, blob];

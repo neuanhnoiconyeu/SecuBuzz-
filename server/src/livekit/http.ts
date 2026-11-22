@@ -10,6 +10,8 @@ import { isDemoIdentity, isIdentifier, parseIdentifierList, parseSessionResoluti
 import type { LiveKitConfig, LiveKitRoomAccess } from './config.ts';
 
 export interface LiveKitHttpOptions {
+  /** Trusted host transport policy (e.g. DATA's exact HTTPS proxy allowlist). */
+  readonly resolveTransportSecurity?: (request:IncomingMessage)=>boolean;
   readonly directCalls?: Pick<RealtimeServerHandle, 'authorizeCallMedia'>;
   readonly config: LiveKitConfig;
   readonly allowedOrigins: readonly string[];
@@ -93,7 +95,7 @@ export function createLiveKitHttpHandler(options: LiveKitHttpOptions) {
       const cookie = extractSessionCookie(request.headers.cookie, cookieName);
       if (cookie.status !== 'present') return reject(401, 'authentication_required');
       const context = { sessionToken: cookie.value, origin, remoteAddress: request.socket.remoteAddress ?? '',
-        userAgent: request.headers['user-agent'] ?? null, secure: 'encrypted' in request.socket && request.socket.encrypted === true,
+        userAgent: request.headers['user-agent'] ?? null, secure: options.resolveTransportSecurity?options.resolveTransportSecurity(request):'encrypted' in request.socket && request.socket.encrypted === true,
         receivedAt: new Date() };
       const authenticate = async () => {
         const result = await callAdapter(() => sessionResolver.resolveSession({ ...context, receivedAt: new Date() }), timeout);

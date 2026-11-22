@@ -67,12 +67,12 @@ export function ForwardDialog({ message, conversations, onClose, onConfirm }: Fo
       if (failed.length === 0) {
         onClose();
       } else {
-        const names = (ids: string[]) => conversations.filter(c => ids.includes(c.id)).map(c => c.displayName).join(', ');
+        const names = (ids: string[]) => ids.map(id => conversations.find(c => c.id === id)?.displayName ?? 'Unavailable conversation').join(', ');
         const forwardFailed = failed.filter(id => !noteFailed.includes(id));
         setSelected(failed);
         setError([
           forwardFailed.length ? `Could not forward to: ${names(forwardFailed)}.` : '',
-          noteFailed.length ? `The message was forwarded to ${names(noteFailed)}, but the optional note was not sent.` : '',
+          noteFailed.length ? `The message was forwarded to ${names(noteFailed)}, but the optional note was not confirmed.` : '',
           'Retry resumes unfinished sends without forwarding completed messages again.',
         ].filter(Boolean).join(' '));
       }

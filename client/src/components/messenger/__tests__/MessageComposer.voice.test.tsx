@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MessageComposer } from '../MessageComposer';
+import { MessageComposer,type MessageComposerSendExtras } from '../MessageComposer';
 import YahooChatWindow from '../../YahooChatWindow';
 import { TestMediaRecorder, microphone } from '../../../../test/voiceRecordingFixture';
-import type { OutboundMessage } from '@/messaging/messageModel';
+import {makeAttachmentFile} from '../../../../test/attachmentFixtures';
+import type { OutboundMessage,VoiceMessageMetadata,RecordedVoiceDraft } from '@/messaging/messageModel';
 
 const originals = [Object.getOwnPropertyDescriptor(globalThis, 'MediaRecorder'), Object.getOwnPropertyDescriptor(navigator, 'mediaDevices'),
   Object.getOwnPropertyDescriptor(URL, 'createObjectURL'), Object.getOwnPropertyDescriptor(URL, 'revokeObjectURL'),
@@ -29,6 +30,32 @@ const record = async () => {
   return screen.findByLabelText('Recorded voice preview');
 };
 const props = { conversationName: 'Peer', messageCount: 0, isSending: false, buzzBusy: false };
+
+test('voice counts toward the existing attachment limit before any encrypted uploads start',async()=>{
+  const prepareVoice=jest.fn(),uploadAttachment=jest.fn(),onSend=jest.fn(async()=>true);
+  render(<MessageComposer {...props} prepareVoice={prepareVoice} uploadAttachment={uploadAttachment} onSend={onSend}/>);
+  fireEvent.change(screen.getByLabelText('Select attachments'),{target:{files:Array.from({length:5},(_,i)=>makeAttachmentFile(`file-${i}.pdf`,'application/pdf'))}});
+  await screen.findByRole('button',{name:'Remove file-4.pdf'});await record();fireEvent.click(screen.getByRole('button',{name:'Send'}));
+  expect(await screen.findByRole('alert')).toHaveTextContent('up to four other files');expect(prepareVoice).not.toHaveBeenCalled();expect(uploadAttachment).not.toHaveBeenCalled();expect(onSend).not.toHaveBeenCalled();
+});
+
+test('authenticated preparation receives the recording bytes and sends no local URL or Blob as message metadata',async()=>{
+  const prepared:VoiceMessageMetadata={audioUrl:'',durationSeconds:1,attachment:{id:'file',name:'voice.weba',type:'audio',url:'',sizeBytes:32}};
+  const prepareVoice=jest.fn(async(_draft:RecordedVoiceDraft,_signal:AbortSignal)=>prepared),onSend=jest.fn(async(_text:string,_extras?:MessageComposerSendExtras)=>false);
+  render(<MessageComposer {...props} prepareVoice={prepareVoice} onSend={onSend}/>);const preview=await record();
+  fireEvent.click(screen.getByRole('button',{name:'Send'}));await waitFor(()=>expect(onSend).toHaveBeenCalledWith('',{voice:prepared}));
+  expect(prepareVoice.mock.calls[0]?.[0]).toMatchObject({audioUrl:preview.getAttribute('src'),blob:expect.any(Blob)});
+  expect(onSend.mock.calls[0]?.[1]).not.toHaveProperty('voice.blob');expect(preview).toBeInTheDocument();
+});
+test('an encrypted voice preparation completing after unmount is cancelled and safely discarded',async()=>{
+  let finish!:(voice:VoiceMessageMetadata)=>void;
+  const prepareVoice=jest.fn((_draft:unknown,_signal:AbortSignal)=>new Promise<VoiceMessageMetadata>(resolve=>{finish=resolve;})),onSend=jest.fn(async()=>true),discardAttachment=jest.fn(async()=>{});
+  const view=render(<MessageComposer {...props} prepareVoice={prepareVoice} onSend={onSend} discardAttachment={discardAttachment}/>);await record();
+  fireEvent.click(screen.getByRole('button',{name:'Send'}));await waitFor(()=>expect(prepareVoice).toHaveBeenCalled());view.unmount();
+  const attachment={id:'file',name:'voice.weba',type:'audio' as const,url:'',sizeBytes:32};
+  await act(async()=>finish({audioUrl:'',durationSeconds:1,attachment}));
+  expect(prepareVoice.mock.calls[0]?.[1].aborted).toBe(true);expect(discardAttachment).toHaveBeenCalledWith(attachment);expect(onSend).not.toHaveBeenCalled();
+});
 
 test('recording previews retain native playback controls, survive a rejected send, and revoke on removal', async () => {
   const send = jest.fn(async () => false); render(<MessageComposer {...props} onSend={send} />);

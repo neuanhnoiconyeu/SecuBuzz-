@@ -28,6 +28,15 @@ export interface Receipt { conversationId: string; messageId: string; userId: st
 export interface TypingUpdate { conversationId: string; userId: string; displayName: string; isTyping: boolean; timestamp: string }
 export interface PresenceUpdate { userId: string; status: 'online' | 'away' | 'busy' | 'offline' | 'unknown'; timestamp: string }
 export interface KeysChanged { conversationId: string; currentEpoch: { keyId: string; epoch: number } | null }
+export interface MessageDeleted { conversationId: string; messageId: string }
+export function pinsChanged(input: unknown): { conversationId: string } {
+  const value=exact(input,['conversationId']);identifier(value.conversationId);return value as unknown as {conversationId:string};
+}
+
+export function messageDeleted(input: unknown): MessageDeleted {
+  const value = exact(input, ['conversationId', 'messageId']); identifier(value.conversationId); identifier(value.messageId);
+  return value as unknown as MessageDeleted;
+}
 
 export function errorAck(input: unknown): void {
   if (input && typeof input === 'object' && 'status' in input && input.status === 'error') {

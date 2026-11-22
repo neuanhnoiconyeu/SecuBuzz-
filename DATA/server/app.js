@@ -12,8 +12,14 @@ const { createConversationService }=require('./conversations/service');
 const { createConversationRouter }=require('./routes/conversations');
 const { createMessageService }=require('./messaging/service');
 const { createMessageRouters }=require('./routes/messaging');
+const { createPinService }=require('./messaging/pins');
+const { createPinRouters }=require('./routes/pins');
+const { createReactionService }=require('./messaging/reactions');
+const { createReactionRouters }=require('./routes/reactions');
 const { createKeyService }=require('./e2ee/service');
 const { createKeyRouters }=require('./routes/keys');
+const {createEncryptedAttachmentService}=require('./messaging/attachments');
+const {createEncryptedAttachmentRouter}=require('./routes/attachments');
 
 function createApp({db,config=loadAuthConfig(),messageOptions={},...dependencies}) {
     const app=express();
@@ -29,6 +35,13 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},...dependencies
     app.get(['/', '/healthz'],(req,res)=>res.json({status:'ok'}));
     app.use('/api',(req,res,next)=>requestAllowed(req,config) ? next() : sendError(res,'FORBIDDEN',403));
     app.use('/api/auth',createAuthRouter(auth,middleware));
+    // The combined DATA/realtime host installs the existing LiveKit handler here, before body parsing.
+    // DATA still enforces its own Origin/transport/session/CSRF policy on every request.
+    let directCallTokens=null;
+    app.all('/api/calls/token',middleware.requireAuth,(req,res,next)=>['GET','HEAD'].includes(req.method)?next():middleware.requireCsrf(req,res,next),(req,res,next)=>{
+        if(!directCallTokens)return sendError(res,'FEATURE_UNAVAILABLE',503);
+        Promise.resolve(directCallTokens(req,res)).then(handled=>{if(!handled&&!res.headersSent)sendError(res,'FEATURE_UNAVAILABLE',503);},next);
+    });
     const social=createSocialService({db,auth,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
     const socialRouters=createSocialRouters(social,middleware);
     app.use('/api/users',socialRouters.users);
@@ -39,9 +52,19 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},...dependencies
     const keyRouters=createKeyRouters(keys,middleware);
     app.use('/api/keys',keyRouters.devices);
     app.use('/api/conversations',keyRouters.conversations);
-    const messaging=createMessageService({recipientKeyVerifier:keys.verifier,...messageOptions,db,auth,conversations,
+    const attachments=createEncryptedAttachmentService({db,auth,conversations,options:dependencies.attachmentOptions,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
+    app.use('/api/attachments',createEncryptedAttachmentRouter(attachments,middleware));
+    const messaging=createMessageService({recipientKeyVerifier:keys.verifier,...messageOptions,db,auth,conversations,attachments,
         verifyKeysInTransaction:keys.verifyInTransaction,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
     const messageRouters=createMessageRouters(messaging,middleware);
+    const pins=createPinService({db,auth,conversations,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
+    const pinRouters=createPinRouters(pins,middleware);
+    app.use('/api/conversations',pinRouters.conversations);
+    app.use('/api/messages',pinRouters.messages);
+    const reactions=createReactionService({db,auth,conversations,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
+    const reactionRouters=createReactionRouters(reactions,middleware);
+    app.use('/api/conversations',reactionRouters.conversations);
+    app.use('/api/messages',reactionRouters.messages);
     // Exact history routes precede the metadata router; every other path falls through.
     app.use('/api/conversations',messageRouters.history);
     app.use('/api/conversations',createConversationRouter(conversations,middleware));
@@ -69,6 +92,11 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},...dependencies
         // Never log raw errors, bodies, cookies, SQL, password hashes or session/CSRF material.
         return sendError(res,'INTERNAL_ERROR',500);
     });
-    return {app,auth,social,conversations,keys,messaging,adapters:createAuthAdapters(auth),middleware};
+    return {app,auth,social,conversations,keys,messaging,attachments,adapters:createAuthAdapters(auth),middleware,
+        setDirectCallTokenHandler(handler){
+            if(handler!==null&&typeof handler!=='function')throw new TypeError('Invalid direct call token handler');
+            if(handler&&directCallTokens)throw new TypeError('Direct call token handler is already installed');
+            directCallTokens=handler;
+        }};
 }
 module.exports={createApp};

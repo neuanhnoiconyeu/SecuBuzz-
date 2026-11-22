@@ -18,6 +18,12 @@ export const CLIENT_EVENTS = {
 
 export const SERVER_EVENTS = {
   messageNew: 'message:new',
+  /** Post-commit hint only. Clients confirm the tombstone through authorized history. */
+  messageDeleted: 'message:deleted',
+  messageEdited: 'message:edited',
+  /** Pin metadata changed; recipients fetch an authorized snapshot. */
+  pinsChanged: 'conversation:pins-changed',
+  reactionsChanged: 'message:reactions-changed',
   /**
    * Reserved by the client contract and never emitted. Send acknowledgements are returned through
    * the Socket.IO callback of `message:send`, which binds them to the exact request.

@@ -1,6 +1,7 @@
 import { ApiError, type SessionApi } from '@/api/sessionApi';
 import { E2eeError, type DeviceRecord, type DirectConversation, type EnvelopeV2, type EpochBody, type KeyEpoch, type KeyState, type Registration, type StoredMessage } from './model';
 import { decode, exact, identifier, object, parseEnvelope, parseEpoch, registrationStatement, timestamp, verifyDevice, verifySignature } from './protocol';
+import {parseEditProof,MAX_MESSAGE_EDITS} from '../../../../shared/messageRevisions';
 const part = (value: string) => encodeURIComponent(identifier(value));
 const pageCursor = (v: unknown): string | null => { if (v === null) return null; if (typeof v !== 'string' || !/^[A-Za-z0-9_-]{1,1024}$/.test(v)) throw new E2eeError('invalid_proof'); return v; };
 export class E2eeApi {
@@ -53,7 +54,15 @@ export class E2eeApi {
     const r = exact(await this.session.request(`/api/conversations/${part(cid)}/keys/epochs`, { method: 'POST', body: safe, status: [200, 201] }), ['epoch']); const e = parseEpoch(r.epoch, cid); if (e.keyId !== body.keyId) throw new E2eeError('invalid_proof'); return e;
   }
   stored(input: unknown, cid: string): StoredMessage {
-    const r = exact(input, ['storageId', 'id', 'conversationId', 'senderId', 'senderName', 'timestamp', 'type', 'encryption', 'storedAt', 'updatedAt', 'sequence', 'revision', 'state', 'deletedAt']);
+    const r = exact(input, ['storageId', 'id', 'conversationId', 'senderId', 'senderName', 'timestamp', 'type', 'encryption', 'storedAt', 'updatedAt', 'sequence', 'revision', 'state', 'deletedAt',...(Object.prototype.hasOwnProperty.call(object(input),'edit')?['edit']:[])]);
+    if(r.edit!==undefined){
+      if(r.state!=='active')throw new E2eeError('invalid_message');
+      const edit=exact(r.edit,['v','proofs','envelope']);
+      if(edit.v!==1||!Array.isArray(edit.proofs)||!edit.proofs.length||edit.proofs.length>MAX_MESSAGE_EDITS)throw new E2eeError('invalid_message');
+      edit.proofs.forEach((item,i)=>{const x=exact(item,['proof','signer']),p=parseEditProof(x.proof);
+        if(!p||p.revision!==i+1||p.storageId!==r.storageId||p.messageId!==r.id||p.conversationId!==cid||p.senderId!==r.senderId)throw new E2eeError('invalid_message');object(x.signer);
+      });parseEnvelope(edit.envelope);
+    }
     if (r.conversationId !== cid || !Number.isSafeInteger(r.sequence) || (r.sequence as number) < 1 || ![0, 1].includes(r.revision as number) || !['active', 'deleted'].includes(r.state as string)) throw new E2eeError('invalid_message');
     identifier(r.storageId); timestamp(r.storedAt); timestamp(r.updatedAt);
     if (r.state === 'deleted') { if (r.encryption !== null || r.revision !== 1) throw new E2eeError('invalid_message'); timestamp(r.deletedAt); identifier(r.id); identifier(r.senderId); }

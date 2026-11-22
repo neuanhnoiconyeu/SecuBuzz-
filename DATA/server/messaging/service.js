@@ -2,20 +2,23 @@ const { randomUUID } = require('node:crypto');
 const { createSqliteRateLimiter } = require('../auth/rateLimiter');
 const { AuthError } = require('../auth/errors');
 const v = require('./validation');
+const {createMessageEdits}=require('./edits');
 const missing=()=>{throw new AuthError('NOT_FOUND',404);};
 const denied=()=>{throw new AuthError('FORBIDDEN',403);};
 const conflict=()=>{throw new AuthError('IDEMPOTENCY_CONFLICT',409);};
-function project(row) {
+function projectBase(row) {
     return {storageId:row.message_id,id:row.client_id,conversationId:row.conversation_id,senderId:row.sender_id,senderName:row.sender_name,
         timestamp:row.client_timestamp,type:'text',encryption:row.deleted_at===null?{version:row.envelope_version,algorithm:row.algorithm,encoding:row.encoding,
             ...(row.envelope_version===2?{keyId:row.key_id}:{}),iv:row.iv,ciphertext:row.ciphertext}:null,
         storedAt:row.created_at,updatedAt:row.updated_at,sequence:row.message_seq,revision:row.revision,state:row.deleted_at===null?'active':'deleted',deletedAt:row.deleted_at};
 }
-function createMessageService({db,auth,conversations,recipientKeyVerifier=null,verifyKeysInTransaction=null,verifierTimeoutMs=2000,limiter=createSqliteRateLimiter(db)}) {
+function createMessageService({db,auth,conversations,attachments=null,recipientKeyVerifier=null,verifyKeysInTransaction=null,verifierTimeoutMs=2000,limiter=createSqliteRateLimiter(db)}) {
     if(!Number.isInteger(verifierTimeoutMs)||verifierTimeoutMs<10||verifierTimeoutMs>4000)throw new TypeError('Invalid verifier deadline');
     const repositories=conversations.repositories;const messages=repositories.messages;let pending=0;
     const read=(context,id,work)=>db.transaction(()=>work(conversations.authorizeInTransaction(context,id))).deferred();
     const event=(actor,operation,id)=>repositories.audit.insert({actor_user_id:actor,event_type:`message.${operation}`,source:'messaging',subject_id:id,metadata:{operation,outcome:'confirmed'}});
+    const edits=createMessageEdits({db,auth,conversations,verifyKeysInTransaction,verifyEnvelope:verify,event});
+    const project=row=>edits.project(projectBase(row));
     function stored(context,id,interaction,work) {
         v.identifier(id);const row=messages.getAuthenticated(id);if(!row)missing();
         const capability=conversations.authorizeInTransaction(context,row.conversation_id,{interaction});
@@ -56,6 +59,7 @@ function createMessageService({db,auth,conversations,recipientKeyVerifier=null,v
                 }
                 const existing=messages.findAuthenticatedClient(id,envelope.id);
                 if(existing){if(existing.sender_id!==frozen.userId||existing.fingerprint!==fingerprint)conflict();return {outcome:'duplicate',message:project(existing)};}
+                attachments?.checkMessage(id,envelope.id,frozen.userId,envelope.encryption.version);
                 if(auth.repository.byId(frozen.sessionId).display_name!==envelope.senderName)throw new AuthError('FORBIDDEN',403,['senderName']);
                 const high=messages.highWater(id);if(high>=Number.MAX_SAFE_INTEGER)throw new AuthError('SERVICE_UNAVAILABLE',503);
                 const at=new Date(auth.now()).toISOString();
@@ -63,6 +67,7 @@ function createMessageService({db,auth,conversations,recipientKeyVerifier=null,v
                     ciphertext:envelope.encryption.ciphertext,iv:envelope.encryption.iv,envelope_version:envelope.encryption.version,
                     ...(envelope.encryption.version===2?{key_id:envelope.encryption.keyId}:{}),encoding:'base64',sender_name:envelope.senderName,
                     client_timestamp:envelope.timestamp,message_type:'text',fingerprint,client_id:envelope.id,message_seq:high+1,created_at:at});
+                attachments?.attachMessage(id,envelope.id,frozen.userId,row.message_id);
                 db.prepare('UPDATE Conversations SET updated_at=? WHERE conversation_id=?').run(at,id);event(frozen.userId,'stored',row.message_id);
                 return {outcome:'created',message:project(row)};
             });
@@ -97,10 +102,7 @@ function createMessageService({db,auth,conversations,recipientKeyVerifier=null,v
                 return {outcome:existing?'duplicate':'created',receipt:{conversationId:row.conversation_id,storageId:id,messageId:row.client_id,userId:context.userId,status,observedAt:receipt.observed_at,recordedAt:receipt.recorded_at}};
             }));
         },
-        edit(context,proof,id){
-            v.identifier(id);const original=messages.getAuthenticated(id);if(!original)missing();
-            return conversations.withInteraction(context,proof,original.conversation_id,()=>stored(context,id,true,row=>{if(row.sender_id!==context.userId)denied();throw new AuthError('FEATURE_UNAVAILABLE',503);}));
-        },
+        edit(context,proof,id,body){return edits.submit(context,proof,id,body);},
         // A trusted composition must bind a DB-2 actor/proof; never infer it from envelope.senderId.
         bindStore(context,proof){
             const bound=Object.freeze({userId:context.userId,sessionId:context.sessionId});const csrf=Object.freeze({...proof});
@@ -121,4 +123,4 @@ function createMessageService({db,auth,conversations,recipientKeyVerifier=null,v
     };
     return service;
 }
-module.exports={createMessageService};
+module.exports={createMessageService,projectMessage:projectBase};

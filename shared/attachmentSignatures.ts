@@ -19,7 +19,7 @@ export function matchesAttachmentSignature(name: string, bytes: Uint8Array): boo
     case '7z': return hex.startsWith('377abcaf271c');
     case 'mp4': case 'm4v': case 'm4a': return ascii.slice(4, 8) === 'ftyp';
     case 'mov': return ['ftyp', 'moov', 'mdat', 'wide', 'free'].includes(ascii.slice(4, 8));
-    case 'webm': return hex.startsWith('1a45dfa3');
+    case 'webm': case 'weba': return hex.startsWith('1a45dfa3');
     case 'wav': return ascii.startsWith('RIFF') && ascii.slice(8, 12) === 'WAVE';
     case 'ogg': return ascii.startsWith('OggS');
     case 'mp3': return ascii.startsWith('ID3') || (bytes[0] === 0xff && ((bytes[1] ?? 0) & 0xe0) === 0xe0);

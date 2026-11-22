@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { VoiceMessageMetadata } from '@/messaging/messageModel';
+import type { RecordedVoiceDraft } from '@/messaging/messageModel';
 import { createAttachmentUrl, releaseAttachmentUrl } from '@/messaging/attachmentUrls';
 
 /** Owns the microphone and the draft URL; accepted messages retain their own URL reference. */
-export function useVoiceRecording(active: boolean, disabled: boolean) {
-  const [draft, setDraft] = useState<VoiceMessageMetadata | null>(null);
-  const draftRef = useRef<VoiceMessageMetadata | null>(null);
+export function useVoiceRecording(active: boolean, disabled: boolean,limits:{maxSeconds?:number;maxBytes?:number}={}) {
+  const [draft, setDraft] = useState<RecordedVoiceDraft | null>(null);
+  const draftRef = useRef<RecordedVoiceDraft | null>(null);
   const [recording, setRecording] = useState(false), [requesting, setRequesting] = useState(false);
   const [seconds, setSeconds] = useState(0), [error, setError] = useState('');
   const alive = useRef(false), generation = useRef(0), pending = useRef(false);
-  const allowed = useRef({ active, disabled }); allowed.current = { active, disabled };
+  const allowed = useRef({ active, disabled,...limits }); allowed.current = { active, disabled,...limits };
   const recorder = useRef<MediaRecorder | null>(null);
   const releaseStream = useRef<(() => void) | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -64,7 +64,12 @@ export function useVoiceRecording(active: boolean, disabled: boolean) {
         if (generation.current !== attempt) return;
         cancel(); if (alive.current) setError('Audio recording failed. Check your microphone and try again.');
       };
-      capture.ondataavailable = event => { if (current() && event.data.size > 0) chunks.push(event.data); };
+      let capturedBytes=0;
+      capture.ondataavailable = event => { if (current() && event.data.size > 0) {
+        capturedBytes+=event.data.size;
+        if(allowed.current.maxBytes&&capturedBytes>allowed.current.maxBytes){failed();if(alive.current)setError('Voice recordings must be 20 MB or less.');return;}
+        chunks.push(event.data);
+      } };
       capture.onerror = failed;
       capture.onstop = () => {
         release(); clearTimer();
@@ -76,14 +81,19 @@ export function useVoiceRecording(active: boolean, disabled: boolean) {
           const blob = new Blob(chunks, { type: capture.mimeType || 'audio/webm' });
           if (!blob.size) { setError('No audio was captured. Check your microphone.'); return; }
           const audioUrl = createAttachmentUrl(blob);
-          clearDraft(); draftRef.current = { audioUrl, durationSeconds }; setDraft(draftRef.current);
+          clearDraft(); draftRef.current = { audioUrl, durationSeconds,blob }; setDraft(draftRef.current);
         } catch { setError('The audio preview could not be created. Record your message again.'); }
       };
       recorder.current = capture;
-      capture.start();
+      if(allowed.current.maxBytes)capture.start(1000);else capture.start();
       if (!current()) { release(); return; }
       clearDraft(); setSeconds(0); setRecording(true);
-      timer.current = setInterval(() => { if (current()) setSeconds(Math.max(1, Math.round((Date.now() - startedAt) / 1000))); }, 500);
+      timer.current = setInterval(() => {
+        if(!current())return;const elapsed=(Date.now()-startedAt)/1000;setSeconds(Math.max(1,Math.round(elapsed)));
+        if(allowed.current.maxSeconds&&elapsed>=allowed.current.maxSeconds-1){
+          stoppedAt.current=Date.now();clearTimer();try{capture.stop();}catch{failed();}finally{release();}
+        }
+      },500);
     } catch (failure) {
       release();
       if (generation.current === attempt) {

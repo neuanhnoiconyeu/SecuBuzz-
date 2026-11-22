@@ -4,9 +4,11 @@ import { BellRing, Check, Mic, Paperclip, Send, Smile, Sparkles, Square, X } fro
 import { EmojiPicker } from './EmojiPicker';
 import { useAnchoredMessagePopover } from '@/hooks/useAnchoredMessagePopover';
 import { Button } from '@/components/ui';
-import type { MessageAttachment, VoiceMessageMetadata } from '@/messaging/messageModel';
+import type { MessageAttachment, VoiceMessageMetadata,RecordedVoiceDraft } from '@/messaging/messageModel';
+import {VOICE_LIMITS} from '../../../../shared/encryptedVoice';
+import { DEMO_MESSAGING_CAPABILITIES, type MessagingCapabilities } from '@/messaging/messagingCapabilities';
 import { AttachmentUploadError, type AttachmentUploader } from '@/messaging/attachmentUpload';
-import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT } from '../../../../shared/attachmentPolicy';
+import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT,ATTACHMENT_LIMITS } from '../../../../shared/attachmentPolicy';
 import { useAttachmentDrafts } from '@/hooks/useAttachmentDrafts';
 import { useVoiceRecording } from '@/hooks/useVoiceRecording';
 import { MessageAttachmentView } from './MessageAttachmentView';
@@ -36,12 +38,14 @@ export interface MessageComposerProps {
   demoNotice?: string;
   uploadAttachment?: AttachmentUploader;
   discardAttachment?: (attachment: MessageAttachment) => Promise<void>;
+  prepareVoice?: (draft:RecordedVoiceDraft,signal:AbortSignal)=>Promise<VoiceMessageMetadata>;
   attachmentActionLabel?: string;
   droppedFiles?: readonly File[];
   attachmentUnavailableReason?: string;
   onSend(content: string, extras?: MessageComposerSendExtras): Promise<boolean>;
   onBuzz?(): void;
   textOnly?: boolean;
+  capabilities?: MessagingCapabilities;
   active?: boolean;
   onTypingActivity?(): void;
   onTypingStop?(): void;
@@ -65,26 +69,33 @@ export function MessageComposer({
   uploadAttachment,
   attachmentUnavailableReason,
   discardAttachment,
+  prepareVoice,
   attachmentActionLabel = 'Uploading',
   droppedFiles,
   onRewriteDraft,
   textOnly = false,
+  capabilities = DEMO_MESSAGING_CAPABILITIES,
   active = true,
 }: MessageComposerProps) {
+  const canAttach = !textOnly && capabilities.attachments;
+  const canRecord = !textOnly && capabilities.voiceMessages;
   const [internalValue, setInternalValue] = useState('');
   const value = draftValue ?? internalValue;
   const setValue = onDraftChange ?? setInternalValue;
   const [sendError, setSendError] = useState('');
   const [sendFeedback, setSendFeedback] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const attachmentDrafts = useAttachmentDrafts({ disabled: disabled || isSending || isSubmitting || Boolean(attachmentUnavailableReason), uploadAttachment, discardAttachment });
+  const attachmentDrafts = useAttachmentDrafts({ disabled: !canAttach || disabled || isSending || isSubmitting || Boolean(attachmentUnavailableReason), uploadAttachment, discardAttachment });
   const attachments = attachmentDrafts.drafts.map((draft) => draft.attachment);
   const uploadProgress = attachmentDrafts.progress;
   const processingAttachments = attachmentDrafts.processing;
   const addAttachmentFiles = attachmentDrafts.addFiles;
   const mounted = useRef(true);
   const previousDrop = useRef<readonly File[] | undefined>();
-  const voice = useVoiceRecording(active, disabled || isSending || textOnly);
+  const voice = useVoiceRecording(active, disabled || isSending || !canRecord,prepareVoice?{maxSeconds:VOICE_LIMITS.maxSeconds,maxBytes:VOICE_LIMITS.maxBytes}:{});
+  const voiceOperation=useRef<AbortController|null>(null),preparedVoice=useRef<VoiceMessageMetadata|null>(null);
+  const discardVoice=useRef(discardAttachment);discardVoice.current=discardAttachment;
+  useEffect(()=>()=>{voiceOperation.current?.abort();const saved=preparedVoice.current?.attachment;if(saved)void discardVoice.current?.(saved).catch(()=>{});preparedVoice.current=null;},[voice.draft?.blob]);
   const { draft: voiceDraft, recording: isRecording, requesting: requestingMicrophone, seconds: recordingSeconds } = voice;
   const displayedError = setupError || sendError || voice.error || attachmentDrafts.error;
   const [emojiOpen, setEmojiOpen] = useState(false);
@@ -98,7 +109,8 @@ export function MessageComposer({
   latestValue.current = value;
   const hasContent = Boolean(value.trim()) || attachments.length > 0 || Boolean(voiceDraft);
   const isUploading = uploadProgress !== null;
-  const canSend = hasContent && !disabled && !isSending && !isRecording && !requestingMicrophone && !isUploading && !processingAttachments && !isSubmitting;
+  const supportedDraft = (!attachments.length || canAttach) && (!voiceDraft || canRecord);
+  const canSend = capabilities.sendMessages && supportedDraft && hasContent && !disabled && !isSending && !isRecording && !requestingMicrophone && !isUploading && !processingAttachments && !isSubmitting;
 
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   useEffect(() => { if (textOnly && draftValue === '') setSendError(''); }, [textOnly, draftValue]);
@@ -127,24 +139,25 @@ export function MessageComposer({
   useEffect(() => {
     if (emojiOpen) emojiPanel.current?.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
   }, [emojiOpen]);
-  useEffect(() => { if (!active || disabled || isSending || isSubmitting) closeEmoji(); }, [active, disabled, isSending, isSubmitting, closeEmoji]);
+  useEffect(() => { if (!active || !capabilities.emoji || disabled || isSending || isSubmitting) closeEmoji(); }, [active, capabilities.emoji, disabled, isSending, isSubmitting, closeEmoji]);
 
   const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.currentTarget.files ?? []);
     event.currentTarget.value = '';
-    if (files.length === 0 || disabled || isSending || submitLock.current || attachmentUnavailableReason) return;
+    if (!canAttach || files.length === 0 || disabled || isSending || submitLock.current || attachmentUnavailableReason) return;
     setSendFeedback(false);
     setSendError('');
     void attachmentDrafts.addFiles(files);
   };
 
   const startRecording = () => {
-    if (disabled || isSending || submitLock.current) return;
+    if (!canRecord || disabled || isSending || submitLock.current) return;
     setSendError('');
     void voice.start();
   };
 
   const insertEmoji = (emoji: string) => {
+    if (!capabilities.emoji) return;
     const input = inputRef.current;
     const text = latestValue.current;
     const start = Math.min(selection.current?.start ?? input?.selectionStart ?? text.length, text.length);
@@ -164,7 +177,9 @@ export function MessageComposer({
   const submit = async () => {
     const content = value.trim();
     const hasExtras = attachments.length > 0 || Boolean(voiceDraft);
-    if ((!content && !hasExtras) || disabled || isSending || isRecording || requestingMicrophone || processingAttachments || submitLock.current) return;
+    if (!capabilities.sendMessages || !supportedDraft || (!content && !hasExtras) || disabled || isSending || isRecording || requestingMicrophone || processingAttachments || submitLock.current) return;
+    if(prepareVoice&&voiceDraft&&attachments.length>=ATTACHMENT_LIMITS.maxCount){setSendError('A voice recording counts as one file. Attach up to four other files.');return;}
+    if(prepareVoice&&voiceDraft&&attachments.reduce((n,file)=>n+file.sizeBytes,voiceDraft.blob.size)>ATTACHMENT_LIMITS.maxTotalSizeMb*1024*1024){setSendError('Voice and attachments must total 100 MB or less.');return;}
     submitLock.current = true;
     setIsSubmitting(true);
     setSendError('');
@@ -173,13 +188,24 @@ export function MessageComposer({
     try {
       const sentAttachments = attachments.length ? await attachmentDrafts.prepareForSend() : [];
       if (!mounted.current) return;
+      let sentVoice:VoiceMessageMetadata|undefined;
+      if(voiceDraft){
+        if(prepareVoice){
+          const operation=new AbortController();voiceOperation.current=operation;sentVoice=await prepareVoice(voiceDraft,operation.signal);
+          if(operation.signal.aborted||!mounted.current){if(sentVoice.attachment)void discardVoice.current?.(sentVoice.attachment).catch(()=>{});return;}
+          preparedVoice.current=sentVoice;
+        }
+        else sentVoice={audioUrl:voiceDraft.audioUrl,durationSeconds:voiceDraft.durationSeconds};
+      }
+      if(!mounted.current)return;
       const extras: MessageComposerSendExtras = {
         ...(sentAttachments.length > 0 ? { attachments: sentAttachments } : {}),
-        ...(voiceDraft ? { voice: voiceDraft } : {}),
+        ...(sentVoice ? { voice: sentVoice } : {}),
       };
       const accepted = hasExtras ? await onSend(content, extras) : await onSend(content);
       if (!mounted.current) return;
       if (accepted) {
+        preparedVoice.current=null;
         attachmentDrafts.clearAccepted();
         if (latestValue.current === value) setValue('');
         voice.clearDraft();
@@ -187,9 +213,10 @@ export function MessageComposer({
       } else setSendError(textOnly ? 'Your message was not confirmed. Your draft is still here.' : 'The message was not accepted. Your draft is still here.');
     } catch (failure) {
       if (mounted.current) setSendError(failure instanceof AttachmentUploadError
-        ? failure.message : 'The message was not accepted. Your draft is still here.');
+        ? failure.message : prepareVoice&&failure instanceof Error?`${failure.message} Your draft is still here.`:'The message was not accepted. Your draft is still here.');
     } finally {
       submitLock.current = false;
+      voiceOperation.current=null;
       if (mounted.current) setIsSubmitting(false);
     }
   };
@@ -301,7 +328,7 @@ export function MessageComposer({
         disabled={disabled || isSending || isSubmitting || isRecording || processingAttachments || !validAIInput(value)} onClick={() => { onTypingStop?.(); onRewriteDraft(value); }}>Rewrite draft with @Secu</Button></div>}
       <label className="sr-only" htmlFor="message-input">Message to {conversationName}</label>
       <div className="composer-dock">
-        {!textOnly && onBuzz && <Button
+        {!textOnly && capabilities.buzz && onBuzz && <Button
           id="buzz-button"
           className="composer-buzz"
           type="button"
@@ -316,7 +343,7 @@ export function MessageComposer({
           BUZZ!
         </Button>}
 
-        {!textOnly && <><input
+        {canAttach && <><input
           ref={fileInputRef}
           type="file"
           multiple
@@ -338,7 +365,9 @@ export function MessageComposer({
           leadingIcon={<Paperclip size={18} aria-hidden="true" />}
         />
 
-        <Button
+        </>}
+
+        {canRecord && <Button
           type="button"
           variant="ghost"
           className="composer-icon-button composer-voice"
@@ -348,9 +377,8 @@ export function MessageComposer({
           aria-label={isRecording ? 'Stop voice recording' : 'Record voice message'}
           title={isRecording ? 'Stop recording' : 'Record voice message'}
           leadingIcon={isRecording ? <Square size={18} aria-hidden="true" /> : <Mic size={18} aria-hidden="true" />}
-        />
-        </>}
-                <div className="composer-emoji-wrap">
+        />}
+        {capabilities.emoji && <div className="composer-emoji-wrap">
           <Button
             ref={emojiTrigger}
             type="button"
@@ -375,7 +403,7 @@ export function MessageComposer({
               <EmojiPicker onSelect={insertEmoji} onClose={() => closeEmoji(true)} />
             </div>
           )}
-        </div>
+        </div>}
         
         <textarea
           ref={inputRef}

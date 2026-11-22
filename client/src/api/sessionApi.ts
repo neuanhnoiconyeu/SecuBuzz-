@@ -45,6 +45,8 @@ export interface ApiRequest {
 export interface SessionApi {
   readonly actor: Pick<AuthUser, 'id' | 'username'>;
   request(path: string, options?: ApiRequest): Promise<unknown>;
+  /** Bounded ciphertext-only transfer, with the same session identity/CSRF policy. */
+  binary?(path:string,options:{method:'GET'|'POST';body?:Blob;signal?:AbortSignal}):Promise<unknown>;
   /** Fresh, identity-checked proof for the cookie-authenticated realtime handshake. */
   realtimeAuth?(): Promise<{ csrfToken: string }>;
   invalidateSession?(): void;

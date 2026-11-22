@@ -78,6 +78,36 @@ test('reaction picker retains selection state, supports expanded reactions and f
   expect(callbacks.onToggleReaction).toHaveBeenLastCalledWith(incoming.id, '👍');
 });
 
+test('server-backed unpin waits for confirmation, blocks duplicate clicks and preserves the pin on failure', async () => {
+  let fail!: (reason: Error) => void;
+  const onTogglePin = jest.fn(() => new Promise<boolean>((_resolve, reject) => { fail = reject; }));
+  render(<MessageList {...props({ messages: [{ ...outgoing, isPinned: true }], onTogglePin })} transportMode="realtime" />);
+  const unpin = screen.getByRole('button', { name: 'Unpin' });
+  fireEvent.click(unpin); fireEvent.click(unpin);
+  expect(onTogglePin).toHaveBeenCalledTimes(1); expect(unpin).toBeDisabled(); expect(screen.getByText('Pinned (1):')).toBeInTheDocument();
+  await act(async () => { fail(new Error('Service unavailable')); });
+  expect(screen.getByRole('alert')).toHaveTextContent('Could not update pinned messages');
+  expect(unpin).toBeEnabled(); expect(screen.getByText('Pinned (1):')).toBeInTheDocument();
+});
+
+test('authenticated reactions preserve counts while saving, block duplicates and report failures',async()=>{
+  let fail!:(e:Error)=>void;const onToggleReaction=jest.fn(()=>new Promise<boolean>((_resolve,reject)=>{fail=reject;}));
+  render(<MessageList {...props({messages:[{...incoming,reactions:[{emoji:'👍',userIds:['self','peer']}]}],onToggleReaction})} transportMode="realtime"/>);
+  const badge=screen.getByRole('button',{name:'👍 2'});fireEvent.click(badge);fireEvent.click(badge);
+  expect(onToggleReaction).toHaveBeenCalledTimes(1);expect(badge).toBeDisabled();expect(badge).toHaveTextContent('2');
+  await act(async()=>{fail(new Error('Unavailable'));});expect(screen.getByRole('alert')).toHaveTextContent('previous reaction is unchanged');expect(badge).toBeEnabled();
+});
+
+test.each(['body','draft'])('async reaction focus restoration respects the current focus: %s',async focus=>{
+  let finish!:(value:boolean)=>void;const onToggleReaction=jest.fn(()=>new Promise<boolean>(resolve=>{finish=resolve;}));
+  render(<><MessageList {...props({messages:[incoming],onToggleReaction})} transportMode="realtime"/><input aria-label="Next draft"/></>);
+  const trigger=screen.getByRole('button',{name:'React to message'});trigger.focus();fireEvent.click(trigger);fireEvent.click(screen.getByRole('menuitemcheckbox',{name:'React 👍'}));
+  expect(trigger).toBeDisabled();trigger.blur();
+  const draft=screen.getByRole('textbox',{name:'Next draft'});if(focus==='draft')draft.focus();
+  await act(async()=>{finish(true);});
+  if(focus==='body')await waitFor(()=>expect(trigger).toHaveFocus());else{await new Promise(resolve=>setTimeout(resolve,30));expect(draft).toHaveFocus();}
+});
+
 test('only one popover is open; Escape restores focus and touch pointer outside dismisses it', () => {
   const { container } = render(<MessageList {...props()} />);
   const more = row(container, 'outgoing').getByRole('button', { name: 'More actions' });
@@ -251,6 +281,16 @@ test('Unsend awaits confirmation, prevents duplicate submissions and preserves t
   expect(screen.getByText(outgoing.content)).toBeInTheDocument();
   fireEvent.click(review.getByRole('button', { name: 'Remove' })); await act(async () => finish(true));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument(); expect(screen.getByRole('status')).toHaveTextContent('local demo only');
+});
+
+test('an authoritative realtime tombstone arriving while confirmation is open closes idempotently without another request', async () => {
+  const unsend = jest.fn(), initial = props({ messages: [outgoing], transportMode: 'realtime', onUnsendMessage: unsend });
+  const view = render(<MessageList {...initial} />);
+  fireEvent.click(screen.getByRole('button', { name: 'More actions' })); fireEvent.click(screen.getByRole('menuitem', { name: 'Unsend' }));
+  view.rerender(<MessageList {...initial} messages={[{ ...outgoing, isDeleted: true, content: 'Message deleted' }]} />);
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(unsend).not.toHaveBeenCalled(); expect(screen.getByText('Message unsent for everyone.')).toBeInTheDocument();
 });
 
 test('an incoming message exposes Delete for me when it is its only capability, and reports asynchronous failure safely', async () => {

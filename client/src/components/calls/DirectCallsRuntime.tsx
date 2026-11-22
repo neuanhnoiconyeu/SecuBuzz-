@@ -1,6 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import type { AuthUser } from '@/auth/authModel';
-import type { RealtimeClient } from '@/realtime/realtimeModel';
+import type {DirectCallSignalingClient} from '@/calls/callSignaling';
+import type {SessionApi} from '@/api/sessionApi';
 import { useLiveKitConnection } from '@/voice/useLiveKitConnection';
 import { useLiveDirectCalls, type LiveDirectCallsController } from '@/calls/useLiveDirectCalls';
 import { VoiceRoomAudio } from '@/components/voice/VoiceMedia';
@@ -29,6 +30,7 @@ export function DirectCallMediaStage({ calls, user }: { calls: LiveDirectCallsCo
 export function LiveDirectCallLayer({ calls, user }: { calls: LiveDirectCallsController; user: AuthUser }) {
   const incoming = calls.state.phase === 'ringing' && calls.state.call.direction === 'incoming';
   return <>
+    {calls.state.phase!=='idle'&&<p role="status" className="direct-call-note">Calls use LiveKit transport encryption. End-to-end media encryption is not enabled.</p>}
     {incoming ? <DirectCallLayer state={calls.state} actions={calls} busy={calls.busy} canAccept={calls.available} error={calls.error}
       media={{ microphoneEnabled: calls.media.microphoneEnabled, cameraEnabled: calls.media.cameraEnabled,
         pending: calls.media.pending.audio || calls.media.pending.video,
@@ -40,8 +42,8 @@ export function LiveDirectCallLayer({ calls, user }: { calls: LiveDirectCallsCon
   </>;
 }
 /** Mount once at the real authenticated workspace boundary; it uses that workspace's existing socket. */
-export function DirectCallsRuntime({ client, user, children }: { client: RealtimeClient; user: AuthUser; children?: ReactNode }) {
-  const { service } = useLiveKitConnection('direct-call', () => client.calls?.getConnectionId() ?? null);
-  const calls = useLiveDirectCalls(client, service, user);
+export function DirectCallsRuntime({ client, user, children,sessionApi,enabled=true }: { client: DirectCallSignalingClient; user: AuthUser; children?: ReactNode;sessionApi?:SessionApi;enabled?:boolean }) {
+  const { service } = useLiveKitConnection('direct-call', () => client.calls?.getConnectionId() ?? null,sessionApi,enabled);
+  const calls = useLiveDirectCalls(enabled ? client : null, service, user);
   return <DirectCallsContext.Provider value={calls}>{children}<LiveDirectCallLayer calls={calls} user={user} /></DirectCallsContext.Provider>;
 }

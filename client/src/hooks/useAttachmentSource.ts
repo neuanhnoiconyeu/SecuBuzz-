@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useContext,useEffect,useMemo, useState } from 'react';
+import {EncryptedAttachmentContext} from '@/messaging/EncryptedAttachmentContext';
 import type { MessageAttachment } from '@/messaging/messageModel';
 import { localAttachmentStore } from '@/messaging/localAttachmentStore';
 import { createSafeSvgPreview, readAttachmentBytes } from '@/messaging/attachmentFiles';
@@ -8,18 +9,24 @@ import { getAttachmentRule, parseUploadedAttachment } from '../../../shared/atta
 import { readRemoteAttachment } from '@/messaging/attachmentDownload';
 
 interface Source { downloadUrl: string; previewUrl: string; loading: boolean; error: string }
-export interface AttachmentSourceOptions { ownerId?: string | undefined; conversationId?: string | undefined; previewUrl?: string | undefined; previewPdf?: boolean }
+export interface AttachmentSourceOptions { ownerId?: string | undefined; conversationId?: string | undefined; previewUrl?: string | undefined; previewPdf?: boolean;
+  validateBlob?: ((blob:Blob,signal:AbortSignal)=>Promise<void>)|undefined;retryToken?:number }
 
 export function useAttachmentSource(attachment: MessageAttachment, options: AttachmentSourceOptions = {}): Source {
+  const validateBlob=options.validateBlob;
+  const readEncrypted=useContext(EncryptedAttachmentContext),encrypted=Boolean(attachment.encrypted);
   const svg = getAttachmentRule(attachment.name)?.mimeTypes[0] === 'image/svg+xml';
   const pdf = getAttachmentRule(attachment.name)?.mimeTypes[0] === 'application/pdf';
   const remote = attachment.storage !== 'indexeddb' ? parseUploadedAttachment(attachment) : null;
   const download = remote?.url ?? attachment.url;
-  const direct = attachment.storage !== 'indexeddb' && (attachment.url.startsWith('blob:') || Boolean(remote));
+  const direct = !encrypted && attachment.storage !== 'indexeddb' && (attachment.url.startsWith('blob:') || Boolean(remote));
   const remotePreview = Boolean(remote && (attachment.type !== 'file' || pdf && options.previewPdf));
   const needsPreviewProcessing = remotePreview || (svg && !options.previewUrl) || Boolean(pdf && options.previewPdf);
   const key = JSON.stringify([attachment.id, attachment.name, attachment.type, attachment.mimeType, attachment.sizeBytes, attachment.storage, attachment.url, options.ownerId,
-    options.conversationId, options.previewUrl, options.previewPdf]);
+    options.conversationId, options.previewUrl, options.previewPdf,attachment.encrypted,options.retryToken]);
+  // History/receipt projections recreate metadata objects. Keep an unchanged file's Blob alive.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const stableAttachment=useMemo(()=>attachment,[key]);
   const initial: Source = { downloadUrl: direct ? download : '',
     previewUrl: direct && !needsPreviewProcessing ? options.previewUrl ?? download : '',
     loading: !direct || needsPreviewProcessing, error: '' };
@@ -31,9 +38,14 @@ export function useAttachmentSource(attachment: MessageAttachment, options: Atta
     const controller = new AbortController();
     const create = (blob: Blob) => { const url = createAttachmentUrl(blob); urls.push(url); return url; };
     const load = async () => {
-      if (!direct && attachment.storage !== 'indexeddb') throw new Error('Attachment unavailable.');
+      const attachment=stableAttachment;
+      if (!direct && attachment.storage !== 'indexeddb'&&!encrypted) throw new Error('Attachment unavailable.');
       let blob: Blob | undefined;
       let downloadUrl = direct ? download : '';
+      if(encrypted){
+        if(!readEncrypted||attachment.encrypted?.conversationId!==options.conversationId)throw new Error('Encrypted attachment unavailable in this conversation.');
+        blob=await readEncrypted(attachment,controller.signal);if(validateBlob)await validateBlob(blob,controller.signal);if(!active)return;downloadUrl=create(blob);
+      }
       if (attachment.storage === 'indexeddb') {
         if (!options.ownerId || !options.conversationId) throw new Error('This local file is unavailable in this conversation.');
         blob = await localAttachmentStore.getFile(options.ownerId, options.conversationId, attachment.id);
@@ -71,7 +83,7 @@ export function useAttachmentSource(attachment: MessageAttachment, options: Atta
         error: failure instanceof Error ? failure.message : 'The file could not be loaded.' });
     });
     return () => { active = false; controller.abort(); urls.forEach(releaseAttachmentUrl); };
-  }, [attachment, download, remotePreview, direct, svg, pdf, key, needsPreviewProcessing,
-    options.ownerId, options.conversationId, options.previewUrl, options.previewPdf]);
+  }, [stableAttachment, download, remotePreview, direct, svg, pdf, key, needsPreviewProcessing,
+    options.ownerId, options.conversationId, options.previewUrl, options.previewPdf,validateBlob,encrypted,readEncrypted]);
   return source.key === key ? source : initial;
 }

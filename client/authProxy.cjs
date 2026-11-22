@@ -33,8 +33,9 @@ function messagingProxyRewrites(env = process.env) {
   const origin = new URL(auth[0].destination).origin;
   return ['/api/keys/devices/:deviceId/revoke', '/api/keys/devices',
     '/api/conversations/:id/keys/epochs/:keyId', '/api/conversations/:id/keys/epochs', '/api/conversations/:id/keys',
-    '/api/conversations/:id/messages', '/api/conversations/dm', '/api/conversations/:id', '/api/conversations',
-    '/api/messages/:id/read', '/api/messages/:id'].map(source => ({ source, destination: `${origin}${source}` }));
+    '/api/conversations/:id/messages', '/api/conversations/:id/pins', '/api/conversations/:id/reactions', '/api/conversations/dm', '/api/conversations/:id', '/api/conversations',
+    '/api/messages/:id/reaction', '/api/messages/:id/pin', '/api/messages/:id/read', '/api/messages/:id',
+    '/api/attachments/limits','/api/attachments/batches/:cid/:mid','/api/attachments/:id/download','/api/attachments/:id','/api/attachments','/api/calls/token'].map(source => ({ source, destination: `${origin}${source}` }));
 }
 function realtimeProxyRewrites(env = process.env) {
   const auth = authProxyRewrites(env); if (!auth.length) return [];

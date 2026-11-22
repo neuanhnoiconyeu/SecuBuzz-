@@ -2,6 +2,7 @@ import type { Server as HttpServer } from 'node:http';
 import type { Server as HttpsServer } from 'node:https';
 import { Server, type DefaultEventsMap, type Namespace } from 'socket.io';
 import { callAdapter, forEachLimited } from './adapterCall.ts';
+import { mayReceive } from './authority.ts';
 import { HandshakeAuthenticator, isAllowedOrigin } from './authentication.ts';
 import { rememberBounded } from './bounded.ts';
 import { ServerClock } from './clock.ts';
@@ -90,6 +91,11 @@ export interface RealtimeServerHandle {
    * the key directory. Returns the number of sockets emitted to.
    */
   notifyKeysChanged(conversationId: string): Promise<number>;
+  /** Server-only post-commit hint; each connected recipient is freshly authorized. */
+  notifyMessageDeleted(conversationId: string, messageId: string): Promise<number>;
+  notifyMessageEdited(conversationId:string,messageId:string):Promise<number>;
+  notifyPinsChanged(conversationId: string): Promise<number>;
+  notifyReactionsChanged(conversationId: string, messageId: string): Promise<number>;
   getStats(): RealtimeStats;
   /** Stops accepting handshakes and closes every transport. Leaves the HTTP server open. Idempotent. */
   close(): Promise<void>;
@@ -578,6 +584,17 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     allowedOrigins: config.allowedOrigins.size,
   });
 
+  const notifyAuthorizedMetadata = async (conversationId: string, event: string, payload: object): Promise<number> => {
+    const members = nsp.adapter.rooms.get(conversationRoom(conversationId));
+    if (!members || closing) return 0;
+    let emitted = 0;
+    await forEachLimited([...members], 8, async socketId => {
+      const connection = registry.connection(socketId);
+      if (!connection || connection.closed || !(await mayReceive(config, connection, conversationId)) || closing) return;
+      connection.socket.emit(event, payload); emitted++;
+    });
+    return emitted;
+  };
   return {
     authorizeCallMedia(actor, callId, connectionId) { return calls.authorizeMedia(actor, callId, connectionId); },
     revokeSession(sessionId) {
@@ -627,6 +644,22 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     notifyKeysChanged(conversationId) {
       if (!isIdentifier(conversationId)) invalidArgument('conversationId');
       return notifyKeysChanged(conversationId);
+    },
+    async notifyMessageDeleted(conversationId, messageId) {
+      if (!isIdentifier(conversationId) || !isIdentifier(messageId)) invalidArgument('message identity');
+      return notifyAuthorizedMetadata(conversationId, SERVER_EVENTS.messageDeleted, { conversationId, messageId });
+    },
+    async notifyMessageEdited(conversationId,messageId){
+      if(!isIdentifier(conversationId)||!isIdentifier(messageId))invalidArgument('message identity');
+      return notifyAuthorizedMetadata(conversationId,SERVER_EVENTS.messageEdited,{conversationId,messageId});
+    },
+    async notifyPinsChanged(conversationId) {
+      if (!isIdentifier(conversationId)) invalidArgument('conversationId');
+      return notifyAuthorizedMetadata(conversationId, SERVER_EVENTS.pinsChanged, { conversationId });
+    },
+    async notifyReactionsChanged(conversationId, messageId) {
+      if (!isIdentifier(conversationId) || !isIdentifier(messageId)) invalidArgument('message identity');
+      return notifyAuthorizedMetadata(conversationId, SERVER_EVENTS.reactionsChanged, { conversationId, messageId });
     },
     getStats() {
       let conversationRooms = 0;

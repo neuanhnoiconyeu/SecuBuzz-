@@ -25,6 +25,20 @@ afterAll(() => {
 });
 const setup = () => renderHook(({ active, disabled }) => useVoiceRecording(active, disabled), { initialProps: { active: true, disabled: false } });
 
+test('bounded authenticated capture stops automatically and retains the recording Blob without leaking tracks',async()=>{
+  const mic=microphone();getMedia.mockResolvedValue(mic.stream);
+  const h=renderHook(()=>useVoiceRecording(true,false,{maxSeconds:3,maxBytes:1024}));
+  await act(async()=>h.result.current.start());act(()=>jest.advanceTimersByTime(2100));
+  expect(mic.stop).toHaveBeenCalledTimes(1);expect(h.result.current.recording).toBe(false);expect(h.result.current.draft?.blob.size).toBeGreaterThan(0);
+  expect(jest.getTimerCount()).toBe(0);
+});
+test('oversize capture discards chunks and releases the microphone without creating a preview',async()=>{
+  const mic=microphone();getMedia.mockResolvedValue(mic.stream);
+  const h=renderHook(()=>useVoiceRecording(true,false,{maxSeconds:300,maxBytes:2}));
+  await act(async()=>h.result.current.start());act(()=>h.result.current.stop());
+  expect(mic.stop).toHaveBeenCalledTimes(1);expect(h.result.current.draft).toBeNull();expect(create).not.toHaveBeenCalled();expect(h.result.current.error).toMatch(/20 MB/);
+});
+
 test('records, stops tracks, measures capture duration and releases replaced, cancelled and unmounted draft URLs', async () => {
   const mic = microphone(); getMedia.mockResolvedValue(mic.stream);
   const h = setup(); await act(async () => h.result.current.start());

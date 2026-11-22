@@ -6,6 +6,8 @@ Client limits live in `shared/attachmentPolicy.ts`: 5 files per message; images 
 
 ## Current availability
 
+Real-account files use the [Phase 8B encrypted attachment integration](authenticated-encrypted-attachments.md), with DATA authorization and client-side encryption/decryption. The legacy uploader below sends plaintext bytes and remains separate from authenticated E2EE conversations. The [Phase 8 audit](authenticated-encrypted-attachments-contract.md) records the earlier integration gaps.
+
 The development demo stores actual file Blobs in the `files` object store of the `secubuzz-local-attachments-v1` IndexedDB database. Attachment message snapshots live in `messages`. Both use composite keys containing the demo identity, conversation ID, and file/message ID. Files are never encoded into localStorage. Temporary object URLs are generated for previews/downloads and revoked when their owners leave; stored records contain durable IDs rather than stale blob URLs.
 
 Reloading requires signing into the same demo persona again because demo authentication itself remains memory-only. Its attachment messages and downloads then restore. Different demo personas and conversations have separate storage scopes. This is local browser data, not authenticated account storage or E2EE: local metadata/captions are stored as plaintext demo snapshots, and anyone with access to the browser profile can inspect its site storage. Clearing site data removes the files. The visible “Saved on this device” labels do not imply delivery to another user.

@@ -18,10 +18,79 @@ async function setup(initial: DecryptedRow[] = []) {
 }
 beforeEach(() => jest.useFakeTimers()); afterEach(() => jest.useRealTimers());
 
+test.each(['send','retry'] as const)('a confirmed %s remains successful when the following history refresh fails',async operation=>{
+  const h=await setup(),stored=row(1,true).message;
+  h.session.history.mockRejectedValue(new ApiError('unavailable'));
+  h.session.send.mockResolvedValue(stored);h.session.retryPending.mockResolvedValue(stored);
+  const result=operation==='send'?await h.live.send(conversation.id,'Alice','protected attachment manifest','rest',jest.fn(),crypto.randomUUID()):await h.live.retry(conversation.id,'rest',jest.fn());
+  expect(result).toEqual(stored);expect(h.live.getSnapshot().errors[conversation.id]).toBeTruthy();
+  expect(h.session.send).toHaveBeenCalledTimes(operation==='send'?1:0);expect(h.session.retryPending).toHaveBeenCalledTimes(operation==='retry'?1:0);
+  h.live.dispose();
+});
+
 test('REST/live rows merge by wire ID, keep sequence ordering and reject conflicting bytes', () => {
   expect(mergeSecureRows([row(2), row(1)], [row(2), row(3)]).map(r => r.message.sequence)).toEqual([1, 2, 3]);
   const conflicting = row(1); conflicting.message.encryption = { ...envelope.encryption, iv: 'AQEBAQEBAQEBAQEB' };
   expect(() => mergeSecureRows([row(1)], [conflicting])).toThrow(E2eeError);
+});
+test('verified edit snapshots merge monotonically and cannot change stable storage identity or fork a known proof',()=>{
+ const base=row(1),proof={v:1 as const,storageId:base.message.storageId,messageId:base.message.id,conversationId:base.message.conversationId,senderId:base.message.senderId,
+  revision:1,operationId:'11111111-2222-4333-8444-555555555555',previousHash:'a'.repeat(64),keyId:envelope.encryption.keyId,signerDeviceKeyId:'A'.repeat(43),editedAt:envelope.timestamp,envelopeHash:'b'.repeat(64),signature:'A'.repeat(86)};
+ // Only merge semantics are under test here; crypto validity is covered by actual-client DATA tests.
+ const first={...base,text:'First edit',message:{...base.message,edit:{v:1 as const,proofs:[{proof,signer:{} as import('@/security/e2ee/model').DeviceRecord}],envelope}}};
+ const second={...first,text:'Second edit',message:{...first.message,edit:{...first.message.edit,proofs:[...first.message.edit.proofs,{proof:{...proof,revision:2,signature:'B'.repeat(86)},signer:{} as import('@/security/e2ee/model').DeviceRecord}]}}};
+ expect(mergeSecureRows([first],[second])[0]?.text).toBe('Second edit');expect(mergeSecureRows([second],[first])[0]?.text).toBe('Second edit');
+ expect(mergeSecureRows([first],[{...second,text:null,error:'Invalid signature'}])[0]?.text).toBe('First edit');
+ const fork={...second,message:{...second.message,edit:{...second.message.edit,proofs:[{...first.message.edit.proofs[0]!,proof:{...proof,previousHash:'f'.repeat(64)}}]}}};
+ expect(()=>mergeSecureRows([first],[fork])).toThrow(E2eeError);
+ expect(()=>mergeSecureRows([first],[{...first,message:{...first.message,storageId:'another'}}])).toThrow(E2eeError);
+ expect(()=>mergeSecureRows([first],[{...first,message:{...first.message,sequence:99}}])).toThrow(E2eeError);
+});
+
+const deleted = (message: DecryptedRow): DecryptedRow => ({ message: { ...message.message, state: 'deleted', encryption: null,
+  deletedAt: envelope.timestamp, revision: message.message.revision + 1 }, text: null, error: null });
+
+test('a confirmed tombstone keeps its wire identity and cannot be resurrected by stale or higher-revision active rows', () => {
+  const tombstone = deleted(row());
+  expect(mergeSecureRows([row()], [tombstone])[0]).toEqual(tombstone);
+  expect(mergeSecureRows([tombstone], [row()])[0]).toEqual(tombstone);
+  expect(mergeSecureRows([tombstone], [{ ...row(), message: { ...row().message, revision: 999 } }])[0]).toEqual(tombstone);
+});
+
+test('a deletion hint fetches past a known head anchor to confirm an older tombstone without phantom unread messages', async () => {
+  const h = await setup([row(1), row(100)]), tombstone = deleted(row(1));
+  h.session.history.mockReset().mockImplementation(async (_, cursor) => cursor ? { items: [row(50), tombstone], nextCursor: null } : { items: [row(100)], nextCursor: 'older' });
+  const unread = h.live.getSnapshot().unread[conversation.id];
+  h.sockets[0]!.fire('message:deleted', { conversationId: conversation.id, messageId: 'wire-1' }); await flush();
+  expect(h.session.history).toHaveBeenCalledWith(conversation.id, 'older');
+  expect(h.live.getSnapshot().rows[conversation.id]?.find(r => r.message.id === 'wire-1')).toEqual(tombstone);
+  expect(h.live.getSnapshot().unread[conversation.id]).toBe(unread); h.live.dispose();
+});
+
+test('a hint never deletes locally when authorized history still contains the active message', async () => {
+  const h = await setup([row()]);
+  h.sockets[0]!.fire('message:deleted', { conversationId: conversation.id, messageId: 'wire-1' }); await flush();
+  expect(h.live.getSnapshot().rows[conversation.id]?.[0]?.message.state).toBe('active');
+  expect(h.live.getSnapshot().rows[conversation.id]?.[0]?.text).toBe(row().text); h.live.dispose();
+});
+
+test('offline reconnect rechecks the whole loaded window, including an old deletion outside the newest page', async () => {
+  const h = await setup([row(1), row(100)]);
+  h.sockets[0]!.drop();
+  h.session.history.mockReset().mockImplementation(async (_, cursor) => cursor ? { items: [deleted(row(1))], nextCursor: null } : { items: [row(100)], nextCursor: 'older' });
+  jest.advanceTimersByTime(1000); await flush();
+  expect(h.session.history).toHaveBeenCalledWith(conversation.id, 'older');
+  expect(h.live.getSnapshot().rows[conversation.id]?.find(r => r.message.id === 'wire-1')?.message.state).toBe('deleted'); h.live.dispose();
+});
+
+test('a hint arriving during a history request is reconciled in a fresh follow-up pass', async () => {
+  const h = await setup([row(1), row(100)]); let release!: (value: unknown) => void;
+  h.session.history.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+  const work = h.live.sync(conversation.id);
+  h.sockets[0]!.fire('message:deleted', { conversationId: conversation.id, messageId: 'wire-1' });
+  h.session.history.mockImplementation(async (_, cursor) => cursor ? { items: [deleted(row(1))], nextCursor: null } : { items: [row(100)], nextCursor: 'older' });
+  release({ items: [row(100)], nextCursor: 'older' }); await work; await flush();
+  expect(h.live.getSnapshot().rows[conversation.id]?.find(r => r.message.id === 'wire-1')?.message.state).toBe('deleted'); h.live.dispose();
 });
 test('valid live event decrypts locally, merges REST and acknowledges only after acceptance', async () => {
   const h = await setup(); h.session.history.mockResolvedValue({ items: [row()], nextCursor: null }); const delivered = jest.fn();

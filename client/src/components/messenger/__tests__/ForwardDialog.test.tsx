@@ -24,7 +24,7 @@ test('partial results clearly identify a failed note and retry only failed recip
   fireEvent.click(screen.getByRole('button', { name: 'Alice' })); fireEvent.click(screen.getByRole('button', { name: 'Bob' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Optional message' }), { target: { value: 'Note' } });
   fireEvent.click(screen.getByRole('button', { name: 'Send (2)' }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('forwarded to Bob, but the optional note was not sent');
+  expect(await screen.findByRole('alert')).toHaveTextContent('forwarded to Bob, but the optional note was not confirmed');
   expect(close).not.toHaveBeenCalled(); expect(screen.getByRole('button', { name: 'Alice Sent' })).toBeDisabled();
   expect(screen.getByRole('textbox', { name: 'Optional message' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Send' }));
@@ -66,4 +66,14 @@ test('pending forwarding locks submission, recipient changes, closing and native
   expect(confirm).toHaveBeenCalledTimes(1); expect(screen.getByRole('button', { name: 'Bob' })).toBeDisabled(); expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled();
   const cancel = new Event('cancel', { cancelable: true }); fireEvent(screen.getByRole('dialog'), cancel); expect(cancel.defaultPrevented).toBe(true);
   await act(async () => finish({ failed: [] })); expect(close).toHaveBeenCalledTimes(1);
+});
+
+test('a destination removed while the dialog is open is named clearly when its send is rejected', async () => {
+  const props = { message, onClose: jest.fn(), onConfirm: jest.fn(async () => ({ failed: ['b'] })) };
+  const view = render(<ForwardDialog {...props} conversations={conversations} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Bob' }));
+  view.rerender(<ForwardDialog {...props} conversations={conversations.filter(c => c.id !== 'b')} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Could not forward to: Unavailable conversation.');
+  expect(props.onClose).not.toHaveBeenCalled();
 });

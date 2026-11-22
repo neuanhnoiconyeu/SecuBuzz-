@@ -3,6 +3,7 @@ import { MessageComposer } from '../MessageComposer';
 import type { MessageComposerProps } from '../MessageComposer';
 import { AttachmentUploadError } from '@/messaging/attachmentUpload';
 import type { MessageAttachment } from '@/messaging/messageModel';
+import {DEMO_MESSAGING_CAPABILITIES,REAL_ACCOUNT_MESSAGING_CAPABILITIES} from '@/messaging/messagingCapabilities';
 import { makeAttachmentFile as makeFile } from '../../../../test/attachmentFixtures';
 
 const megabyte = 1024 * 1024;
@@ -53,6 +54,17 @@ test('accepts images and PDFs at their size limits and sends both attachments', 
     ],
   }));
   await waitFor(() => expect(screen.queryByRole('button', { name: 'Remove photo.png' })).not.toBeInTheDocument());
+});
+
+test('disabling attachment capability on an existing draft cannot invoke its uploader',async()=>{
+  const uploadAttachment=jest.fn(),onSend=jest.fn(async()=>true);
+  const props={conversationName:'Peer',messageCount:0,isSending:false,buzzBusy:false,onSend,uploadAttachment};
+  const view=render(<MessageComposer {...props} capabilities={DEMO_MESSAGING_CAPABILITIES}/>);
+  fireEvent.change(screen.getByLabelText('Select attachments'),{target:{files:[makeFile('private.pdf','application/pdf',32)]}});
+  await screen.findByRole('button',{name:'Remove private.pdf'});
+  view.rerender(<MessageComposer {...props} capabilities={{...REAL_ACCOUNT_MESSAGING_CAPABILITIES,attachments:false}}/>);
+  expect(screen.queryByRole('button',{name:'Attach files or images'})).not.toBeInTheDocument();expect(screen.getByRole('button',{name:'Send'})).toBeDisabled();
+  fireEvent.submit(screen.getByRole('form'));expect(uploadAttachment).not.toHaveBeenCalled();expect(onSend).not.toHaveBeenCalled();
 });
 
 test.each([

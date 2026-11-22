@@ -111,12 +111,18 @@ describe('Phase 8.7A SocketIoRealtimeClient against the realtime server', () => 
     );
     assert.deepEqual(
       [names.messageNew, names.messageAck, names.messageDelivered, names.messageReadReceipt, names.typingUpdate, names.presenceUpdate, names.conversationUpdated],
-      Object.values(SERVER_EVENTS).filter((name) => name !== 'conversation:keys-changed'),
+      Object.values(SERVER_EVENTS).filter((name) => name !== 'conversation:keys-changed' && name !== 'message:deleted' && name !== 'message:edited' && name !== 'conversation:pins-changed' && name !== 'message:reactions-changed'),
     );
-    // The only server event the Phase 8.7A client contract does not list. A client that has no
+    // Optional authenticated hints the Phase 8.7A client contract does not list. A client that has no
     // listener ignores it (Socket.IO drops unhandled events), so it cannot break an older client.
     assert.equal(SERVER_EVENTS.conversationKeysChanged, 'conversation:keys-changed');
     assert.equal(Object.values(names).includes('conversation:keys-changed'), false);
+    assert.equal(SERVER_EVENTS.messageDeleted, 'message:deleted');
+    assert.equal(SERVER_EVENTS.messageEdited,'message:edited');assert.equal(Object.values(names).includes('message:edited'),false);
+    assert.equal(Object.values(names).includes('message:deleted'), false);
+    assert.equal(SERVER_EVENTS.pinsChanged, 'conversation:pins-changed');
+    assert.equal(Object.values(names).includes('conversation:pins-changed'), false);
+    assert.equal(SERVER_EVENTS.reactionsChanged,'message:reactions-changed');assert.equal(Object.values(names).includes('message:reactions-changed'),false);
     assert.deepEqual(model.SERVER_ACK_ERROR_CODES, ACK_ERROR_CODES);
     assert.deepEqual(model.SERVER_CONNECT_ERROR_CODES, CONNECT_ERROR_CODES);
     for (const code of ACK_ERROR_CODES) {

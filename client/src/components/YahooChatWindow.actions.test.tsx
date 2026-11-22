@@ -60,7 +60,7 @@ test('forward dialog retries the failed note through the composed chat without f
   fireEvent.click(dialog.getByRole('button', { name: 'Alice' })); fireEvent.change(dialog.getByRole('textbox', { name: 'Optional message' }), { target: { value: 'Keep this note' } });
   local.sendMessage.mockResolvedValueOnce().mockRejectedValueOnce(new Error('Note failed'));
   fireEvent.click(dialog.getByRole('button', { name: 'Send' }));
-  expect(await dialog.findByRole('alert')).toHaveTextContent('optional note was not sent');
+  expect(await dialog.findByRole('alert')).toHaveTextContent('optional note was not confirmed');
   const note = local.sendMessage.mock.calls[2]![0];
   fireEvent.click(dialog.getByRole('button', { name: 'Send' }));
   await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Forward to' })).not.toBeInTheDocument());
