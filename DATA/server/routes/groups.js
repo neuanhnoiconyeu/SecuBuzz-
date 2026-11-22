@@ -50,6 +50,9 @@ const GROUP_ROUTES = Object.freeze([
     route('G06', 'POST', '/:id/members', true),
     route('G07', 'DELETE', '/:id/members/:userId', true),
     route('G09', 'POST', '/:id/leave', true),
+    route('G08', 'PATCH', '/:id/members/:userId', true),
+    route('G10', 'POST', '/:id/transfer', true),
+    route('G11', 'POST', '/:id/archive', true),
     route('G03', 'GET', '/:id', true),
     route('G04', 'PATCH', '/:id', true),
     route('G05', 'GET', '/:id/members', true),
@@ -124,7 +127,8 @@ function requireFunction(value, label) {
 function createGroupRouter({ groups, features } = {}, middleware) {
     if (!groups || typeof groups !== 'object') throw new TypeError('createGroupRouter needs the Group_Service.');
     for (const name of ['rate', 'createGroup', 'listGroups', 'getGroup', 'updateGroup', 'listMembers',
-        'createInvitation', 'listInvitations', 'cancelInvitation', 'listOwnInvitations', 'declineInvitation', 'acceptInvitation', 'addMember', 'removeMember', 'leaveGroup']) requireFunction(groups[name], `groups.${name}`);
+        'createInvitation', 'listInvitations', 'cancelInvitation', 'listOwnInvitations', 'declineInvitation', 'acceptInvitation', 'addMember', 'removeMember', 'leaveGroup',
+        'changeMemberRole', 'transferOwnership', 'archiveGroup']) requireFunction(groups[name], `groups.${name}`);
     if (!middleware || typeof middleware !== 'object') throw new TypeError('createGroupRouter needs the authentication middleware.');
     requireFunction(middleware.requireAuth, 'requireAuth');
     requireFunction(middleware.requireCsrf, 'requireCsrf');
@@ -143,6 +147,9 @@ function createGroupRouter({ groups, features } = {}, middleware) {
         G06: (request, response) => response.status(201).json(groups.addMember(request.auth, request.csrfProof, request.params.id, request.body)),
         G07: (request, response) => { groups.removeMember(request.auth, request.csrfProof, request.params.id, request.params.userId); response.status(204).end(); },
         G09: (request, response) => { groups.leaveGroup(request.auth, request.csrfProof, request.params.id); response.status(204).end(); },
+        G08: (request, response) => response.json(groups.changeMemberRole(request.auth, request.csrfProof, request.params.id, request.params.userId, request.body)),
+        G10: (request, response) => response.json(groups.transferOwnership(request.auth, request.csrfProof, request.params.id, request.body)),
+        G11: (request, response) => response.json(groups.archiveGroup(request.auth, request.csrfProof, request.params.id)),
         G03: (request, response) => response.json({ group: groups.getGroup(request.auth, request.params.id) }),
         G04: (request, response) => response.json({ group: groups.updateGroup(request.auth, request.csrfProof, request.params.id, request.body) }),
         G05: (request, response) => response.json(groups.listMembers(request.auth, request.params.id, request.query)),

@@ -24,8 +24,8 @@ const { createGroupRepository, withMembershipTransaction, normaliseError, Reposi
 const { createSqliteRateLimiter } = require('../auth/rateLimiter');
 const { AuthError } = require('../auth/errors');
 const { DISABLED_FEATURES } = require('../features/config');
-const { ROLES, invitationRevalidation, removalDecision } = require('./policy');
-const { pathId, createBody, patchBody, listQuery, membersQuery, invitationBody, memberBody } = require('./validation');
+const { ROLES, invitationRevalidation, removalDecision, transferDecision } = require('./policy');
+const { pathId, createBody, patchBody, listQuery, membersQuery, invitationBody, memberBody, roleChangeBody, transferBody } = require('./validation');
 const codec = require('./cursor');
 
 // ASM-03: operational defaults copied from the existing services, not product policy. The per-source numbers are
@@ -521,6 +521,7 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
             return service.groupWrite(context, proof, (actor, at) => {
                 const seen = service.visibleGroup(actor, id);
                 service.requireRole(seen.member, ['owner', 'admin']);
+                if (seen.group.archived_at !== null && seen.group.archived_at !== undefined) throw new AuthError('CONFLICT', 409, []);
                 const { userId: target } = memberBody(body);
                 if (!social.active(target)) notFound();
                 if (social.isBlocked(actor, target)) notFound();
@@ -570,6 +571,73 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
                 groups.cancelPendingFor(seen.group.conversation_id, actor, at);
                 groups.bumpRevision(seen.group.conversation_id);
                 service.audit(actor, 'group.member.left', seen.group.conversation_id);
+            });
+        },
+
+        // G08 changes a role without changing membership intervals. The requester's role, body,
+        // target, revision and final conflict checks follow DB5-R06.17 inside the write transaction.
+        changeMemberRole(context, proof, id, targetId, body) {
+            return service.groupWrite(context, proof, (actor, at) => {
+                const seen = service.visibleGroup(actor, id);
+                service.requireRole(seen.member, ['owner']);
+                const groupId = seen.group.conversation_id;
+                if (seen.group.archived_at !== null && seen.group.archived_at !== undefined) throw new AuthError('CONFLICT', 409, []);
+                const input = roleChangeBody(body);
+                const target = pathId(targetId);
+                const member = target === null ? null : groups.getMember(groupId, target);
+                if (!member || member.left_at !== null) notFound();
+                if (input.membershipRevision !== null && input.membershipRevision !== seen.group.membership_revision) throw new AuthError('STALE_STATE', 409, []);
+                if (member.role === 'owner' || member.role === input.role) throw new AuthError('CONFLICT', 409, []);
+                groups.changeRole(groupId, target, member.role, input.role);
+                groups.bumpRevision(groupId);
+                service.audit(actor, 'group.role.changed', groupId, { targetId: target, role: input.role });
+                const changed = groups.getMember(groupId, target);
+                const user = groups.repositories.users.get(target);
+                const profile = groups.repositories.profiles.get(target);
+                if (!changed || !user) throw internalError();
+                const interval = groups.openInterval(groupId, target);
+                if (!interval) throw internalError();
+                return { member: { id: target, username: user.username, displayName: profile?.display_name ?? user.display_name ?? null,
+                    avatar: profile?.avatar ?? null, role: changed.role, joinedAt: interval.joined_at } };
+            });
+        },
+
+        // G10 applies the repository's demote-first transfer primitive under one immediate transaction.
+        transferOwnership(context, proof, id, body) {
+            return service.groupWrite(context, proof, (actor, at) => {
+                const seen = service.visibleGroup(actor, id);
+                service.requireRole(seen.member, ['owner']);
+                const groupId = seen.group.conversation_id;
+                const archived = seen.group.archived_at !== null && seen.group.archived_at !== undefined;
+                if (archived) throw new AuthError('CONFLICT', 409, []);
+                const input = transferBody(body);
+                const target = pathId(input.userId);
+                const member = target === null ? null : groups.getMember(groupId, target);
+                const decision = transferDecision({ actorId: actor, actorRole: seen.member.role, targetId: target,
+                    targetRole: member && member.left_at === null ? member.role : null, archived,
+                    precondition: input.membershipRevision, revision: seen.group.membership_revision });
+                if (decision.decision === 'forbidden') forbidden();
+                if (decision.decision === 'conflict') throw new AuthError('CONFLICT', 409, []);
+                if (decision.decision === 'invalid') throw new AuthError('VALIDATION_ERROR', 400, ['userId']);
+                if (decision.decision === 'stale') throw new AuthError('STALE_STATE', 409, []);
+                groups.transferOwnership(groupId, actor, target);
+                groups.bumpRevision(groupId);
+                service.audit(actor, 'group.owner.transferred', groupId, { targetId: target, role: 'owner' });
+                const current = service.visibleGroup(actor, groupId);
+                return { group: projectGroup(current.group, current.member.role, groups.countActiveMembers(groupId)) };
+            });
+        },
+
+        // G11 is archive-only: the row and its related data remain, while repository CAS and
+        // groupWrite make the archived timestamp and audit event atomic.
+        archiveGroup(context, proof, id) {
+            return service.groupWrite(context, proof, (actor, at) => {
+                const seen = service.visibleGroup(actor, id);
+                service.requireRole(seen.member, ['owner']);
+                if (seen.group.archived_at !== null && seen.group.archived_at !== undefined) throw new AuthError('CONFLICT', 409, []);
+                const archived = groups.archiveGroup(seen.group.conversation_id, at);
+                service.audit(actor, 'group.archived', seen.group.conversation_id);
+                return { group: projectGroup(archived, seen.member.role, groups.countActiveMembers(seen.group.conversation_id)) };
             });
         },
 

@@ -74,8 +74,9 @@ test('Group_Service infrastructure (T-5C-03)', async t => {
 
     await t.test('the service offers the Task 2.3 infrastructure and exactly the operations implemented so far', () => {
         assert.deepEqual(Object.keys(svc).sort(),
-            ['acceptInvitation', 'addMember', 'assertGroupInvariants', 'audit', 'cancelInvitation', 'createGroup', 'createInvitation', 'declineInvitation', 'features', 'getGroup', 'groupRead',
-                'groupWrite', 'leaveGroup', 'listGroups', 'listInvitations', 'listMembers', 'listOwnInvitations', 'rate', 'rates', 'removeMember', 'requireRole', 'updateGroup', 'visibleGroup']);
+            ['acceptInvitation', 'addMember', 'archiveGroup', 'assertGroupInvariants', 'audit', 'cancelInvitation', 'changeMemberRole', 'createGroup', 'createInvitation', 'declineInvitation',
+                'features', 'getGroup', 'groupRead', 'groupWrite', 'leaveGroup', 'listGroups', 'listInvitations', 'listMembers', 'listOwnInvitations', 'rate', 'rates', 'removeMember',
+                'requireRole', 'transferOwnership', 'updateGroup', 'visibleGroup']);
         assert.ok(Object.isFrozen(svc));
         assert.deepEqual(Object.keys(service).sort(), ['AUDIT_EVENTS', 'DEFAULT_RATE_LIMITS', 'createGroupService', 'notFound', 'toAuthError']);
         assert.deepEqual(svc.features, DISABLED_FEATURES);
