@@ -6,7 +6,8 @@ const assert=require('node:assert/strict');
 const {AuthError}=require('../server/auth/errors');
 const {createGroupService}=require('../server/groups/service');
 const {createGroupRepository}=require('../server/database/groupRepository');
-const {httpGroupFixture,openLimiter,snapshot,changedTables,createClock,INVITATION_EXPIRY_MS}=require('./support/groups');
+const {httpGroupFixture,groupFixture,openLimiter,snapshot,changedTables,createClock,INVITATION_EXPIRY_MS}=require('./support/groups');
+const {withMembershipTransaction}=require('../server/database/groupRepository');
 const {createRandom,forAll}=require('./support/random');
 
 const P01_SEQUENCES=100;
@@ -70,6 +71,10 @@ function cancelInvitationsFor(group,userId,at) {
     }
 }
 function groupSnapshot(f,group) { return stateRows(f.db,group.id); }
+function retainedGroupCounts(db,id) {
+    return Object.fromEntries(['Conversations','ConversationMembers','GroupMembershipIntervals','ConversationInvitations','Messages','MessageReceipts','Attachments']
+        .map(table=>[table,db.prepare(`SELECT count(*) AS n FROM ${table} WHERE conversation_id=?`).get(id).n]));
+}
 
 // Oracle is a separate literal state machine based on the canonical requirement order.
 // It deliberately does not call groups/policy.js or service validators.
@@ -445,6 +450,7 @@ async function runSequence(f,plan,info,coverage) {
         if(request.op!=='advance'&&!actor)throw new Error(`missing P-01 fixture session for actor ${request.actorId}`);
         const expected=decide(f,groups,request);
         const before=group?groupSnapshot(f,group):null;
+        const retainedBefore=group?retainedGroupCounts(f.db,group.id):null;
         const revisionBefore=group?f.db.prepare('SELECT membership_revision FROM GroupExtensions WHERE conversation_id=?').get(group.id).membership_revision:null;
         const fullBefore=(expected.status>=400&&!expected.committed||['advance','create-replay'].includes(expected.effect))?snapshot(f.db):null;
         let value;
@@ -465,7 +471,7 @@ async function runSequence(f,plan,info,coverage) {
                 ...(request.membershipRevision===null?{}:{membershipRevision:request.membershipRevision})});break;
             case 'archive': value=service.archiveGroup(...args,group.id);break;
             case 'add': value=service.addMember(...args,group.id,{userId:request.targetId});break;
-            case 'update': value=service.updateGroup(...args,group.id,{name:request.name,description:request.description,
+            case 'update': value=service.updateGroup(...args,group.id,request.body??{name:request.name,description:request.description,
                 ...(request.membershipRevision===null?{}:{membershipRevision:request.membershipRevision})});break;
             default: throw new Error(`unsupported operation ${request.op}`);
             }
@@ -510,6 +516,11 @@ async function runSequence(f,plan,info,coverage) {
         if(expected.effect==='accept')coverage.accepted++;
         if(request.op==='advance'&&group)assert.deepEqual(groupSnapshot(f,group),before,'clock advance wrote database rows');
         if(group)assertGroupState(f,repository,group);
+        if(group&&retainedBefore) {
+            const retainedAfter=retainedGroupCounts(f.db,group.id);
+            for(const [table,count] of Object.entries(retainedBefore))assert.ok(retainedAfter[table]>=count,
+                `${JSON.stringify(failureContext)} P-24 ${table} row count decreased`);
+        }
         if(expected.status<400||expected.committed) {
             if(group&&expected.effect!=='advance'&&expected.effect!=='create-replay')group.version++;
         }
@@ -564,6 +575,45 @@ async function runSequence(f,plan,info,coverage) {
             coverage.p09.directSqlAttempts++;
         }
     }
+    async function runP24Checks(group,operationIndex) {
+        const owner=actors[group.ownerId];assert.ok(owner,'P-24 fixture owner session');
+        const tableNames=['Conversations','ConversationMembers','GroupMembershipIntervals','ConversationInvitations','Messages','MessageReceipts','Attachments'];
+        const counts=()=>Object.fromEntries(tableNames.map(table=>[table,f.db.prepare(`SELECT count(*) AS n FROM ${table} WHERE conversation_id=?`).get(group.id).n]));
+        const runArchived=(op,extra={})=>runRequest({op,group,clock:f.clock,actorId:owner.id,actorClass:'owner',sessionExpiresAt:owner.expiresAt,
+            targetId:extra.targetId,targetClass:extra.targetClass||'nonMember',newRole:extra.newRole||'member',membershipRevision:null,revisionMode:'none',
+            body:extra.body,index:operationIndex++,...extra},info.random,sequence,operationIndex);
+        const assertNondecreasing=before=>{const after=counts();for(const name of tableNames)assert.ok(after[name]>=before[name],
+            `P-24 ${name} rows decreased in archived sequence ${info.run}`);return after;};
+        let prior=counts();
+        const active=[...group.members.entries()].filter(([id,row])=>id!==group.ownerId&&row.active);
+        assert.ok(active.length,'P-24 requires another active member');
+        const target=active[0][0];
+        let outsider=USER_CLASSES.map(name=>f.actors[name].id).find(id=>!roleOf(group,id));
+        assert.ok(outsider,'P-24 requires a non-member target');
+        for(const [op,extra] of [['add',{targetId:outsider}],['invite',{targetId:outsider}],['role',{targetId:target,newRole:'member'}],
+            ['transfer',{targetId:target}],['update',{body:{name:'archived update'}}],['update',{body:{description:'archived description'}}],
+            ['update',{body:{historyPolicy:'all'}}],['archive',{}]]) {
+            const result=await runArchived(op,extra);assert.equal(result.expected.status,409,`P-24 archived ${op} is a conflict`);
+            prior=assertNondecreasing(prior);
+        }
+        const beforeRead=groupSnapshot(f,group),readCounts=counts();
+        assert.equal(service.getGroup(owner.context,group.id).archived,true,'P-24 metadata remains readable and archived');
+        assert.ok(service.listMembers(owner.context,group.id,{}).items.length>0,'P-24 member list remains readable');
+        assert.deepEqual(groupSnapshot(f,group),beforeRead,'P-24 allowed reads are read-only');assert.deepEqual(counts(),readCounts);
+        const beforeLeave=counts(),leaver=active.find(([id])=>id!==target)?.[0]||target,actor=actors[leaver];
+        assert.ok(actor&&group.members.get(leaver).active&&group.members.get(leaver).role!=='owner');
+        const left=await runRequest({op:'leave',group,clock:f.clock,actorId:leaver,actorClass:actor.actorClass,sessionExpiresAt:actor.expiresAt,
+            index:operationIndex++},info.random,sequence,operationIndex);
+        assert.equal(left.expected.status,204,'P-24 leave remains allowed');assertNondecreasing(beforeLeave);
+        const routeBrowser=f.browser(),routeUser=`p24-route-${info.run}`;
+        assert.equal((await routeBrowser.register(routeUser,{displayName:'P-24 route probe'})).status,201);
+        assert.equal((await routeBrowser.login(routeUser)).status,200,'P-24 uses an independent authenticated account for absent-route checks');
+        for(const [method,path] of [['DELETE',`/api/groups/${group.id}`],['POST',`/api/groups/${group.id}/unarchive`],['POST',`/api/groups/${group.id}/restore`]]) {
+            const response=await routeBrowser.request(path,{method,headers:{'X-CSRF-Token':await routeBrowser.csrf()}});
+            assert.equal(response.status,404,`P-24 ${method} ${path} stays absent`);assert.equal(response.body.code,'NOT_FOUND');
+        }
+        coverage.p24.sequences++;coverage.p24.refusedWrites+=8;coverage.p24.absentRoutes+=3;
+    }
     const random=info.random;
     const sequence={line:`property=P-01 seed=${info.seed} run=${info.run} runSeed=${info.runSeed}`};
     const maxGroups=plan[0].maxGroups;
@@ -601,6 +651,7 @@ async function runSequence(f,plan,info,coverage) {
                     const invitation=inviteRows.length?random.pick(inviteRows):null;
                     const op=['accept','decline','cancel'].includes(generated.op)&&!invitation?'accept':generated.op;
                     let actor=group?chooseActor(random,actors,group,op,invitation):actors[f.actors[generated.actorClass].id];
+                    if(generated.forceOwner&&group)actor=actors[group.ownerId];
                     let forcedWrongActor=false;
                     if(generated.wrongActor&&op!=='create') {
                         let forbiddenIds=[];
@@ -637,6 +688,17 @@ async function runSequence(f,plan,info,coverage) {
                     for(const state of groups)assertGroupState(f,repository,state);
                     continue;
                 }
+                if(sequenceIndex===10&&request.op==='archive') {
+                    const archiveGroup=groups[0];
+                    if(![...archiveGroup.members.entries()].some(([id,row])=>id!==archiveGroup.ownerId&&row.active)) {
+                        const targetId=USER_CLASSES.map(name=>f.actors[name].id).find(id=>id!==archiveGroup.ownerId&&!roleOf(archiveGroup,id));
+                        assert.ok(targetId,'P-24 setup can add an active non-owner before archive');
+                        const owner=actors[archiveGroup.ownerId];
+                        await runRequest({op:'add',group:archiveGroup,clock:f.clock,actorId:owner.id,actorClass:owner.actorClass,
+                            sessionExpiresAt:owner.expiresAt,targetId,targetClass:USER_CLASSES.find(name=>f.actors[name].id===targetId),
+                            membershipRevision:null,revisionMode:'none',index:P01_OPERATIONS+info.run*20-1},info.random,sequence,P01_OPERATIONS+info.run*20-1);
+                    }
+                }
                 const saved={...request,versionAtRequest:request.group?.version??0};
                 const outcome=await runRequest(request,random,sequence,sequenceIndex);
                 if(sequenceIndex===0&&outcome.expected.effect==='create')await runP09Checks(outcome.group,P01_OPERATIONS+sequenceIndex*20);
@@ -653,6 +715,11 @@ async function runSequence(f,plan,info,coverage) {
                 }
                 for(const state of groups)assertGroupState(f,repository,state);
                 verifyP04Step(sequenceIndex);
+                if(sequenceIndex===10) {
+                    const archived=groups.find(item=>item.archived);
+                    assert.ok(archived?.archived,`P-24 archive commits after step 10 in sequence ${info.run}`);
+                    await runP24Checks(archived,P01_OPERATIONS+info.run*20);
+                }
             }
     coverage.createdGroups.add(groups.length);
     assert.ok(groups.length>=1&&groups.length<=maxGroups,`sequence ${info.run} used ${groups.length} groups (max ${maxGroups})`);
@@ -660,15 +727,15 @@ async function runSequence(f,plan,info,coverage) {
 
 test('P-01: generated operation sequences preserve the owner and group state model',{timeout:240000},async t=>{
     const coverage={operations:new Set(),actors:new Set(),targets:new Set(),roles:new Set(),archived:new Set(),stale:new Set(),wrongActor:0,replays:0,
-        accepted:0,committedRefusals:0,ordinaryRefusals:0,createdGroups:new Set(),p09:{requests:0,directSqlAttempts:0,noopAssignments:0,preconditions:new Set(),operations:new Set()},p04:{transitions:new Set(),snapshots:0,
+        accepted:0,committedRefusals:0,ordinaryRefusals:0,createdGroups:new Set(),p24:{sequences:0,refusedWrites:0,absentRoutes:0},p09:{requests:0,directSqlAttempts:0,noopAssignments:0,preconditions:new Set(),operations:new Set()},p04:{transitions:new Set(),snapshots:0,
             sqlAttemptSlots:0,sqlMutationKinds:new Set(),clockPeriods:new Set()}};
     await forAll('P-01',{runs:P01_SEQUENCES,seed:P01_SEED,onRun:line=>t.diagnostic(line),describe:describeSequence},
         (random,info)=>{const maxGroups=1+random.int(0,2);return Array.from({length:P01_OPERATIONS},(_,index)=>({
-            op:index===0?'create':random.weighted(OP_WEIGHTS),
+            op:index===0?'create':index===10?'archive':random.weighted(index<10?OP_WEIGHTS.filter(([op])=>op!=='archive'):OP_WEIGHTS),forceOwner:index===10,
             actorClass:random.pick(USER_CLASSES),targetClass:random.pick(USER_CLASSES),newRole:random.pick(['admin','member']),
             revisionMode:random.weighted([['none',0.55],['current',0.2],['stale',0.25]]),
-            maxGroups,groupSlot:random.int(0,2),replay:random.bool(0.2),advanceMs:random.int(0,3)*INVITATION_EXPIRY_MS,
-            wrongActor:random.bool(0.2),run:info.run,index
+            maxGroups,groupSlot:index===10?0:random.int(0,2),replay:index===10?false:random.bool(0.2),advanceMs:index<10?0:random.int(0,3)*INVITATION_EXPIRY_MS,
+            wrongActor:index===10?false:random.bool(0.2),run:info.run,index
         }));},async(plan,info)=>withIsolatedSequenceFixture(f=>runSequence(f,plan,info,coverage)));
     t.diagnostic(`P-01 coverage ${JSON.stringify(Object.fromEntries(Object.entries(coverage).map(([key,value])=>[key,value instanceof Set?[...value]:value])))}`);
     t.diagnostic(`P-04 coverage ${JSON.stringify({transitions:[...coverage.p04.transitions],snapshots:coverage.p04.snapshots,
@@ -676,6 +743,7 @@ test('P-01: generated operation sequences preserve the owner and group state mod
         clockPeriods:[...coverage.p04.clockPeriods]})}`);
     t.diagnostic(`P-09 coverage ${JSON.stringify({generatedUpdates:coverage.p09.requests,directSqlAttempts:coverage.p09.directSqlAttempts,
         noopAssignments:coverage.p09.noopAssignments,operations:[...coverage.p09.operations],preconditions:[...coverage.p09.preconditions]})}`);
+    t.diagnostic(`P-24 coverage ${JSON.stringify(coverage.p24)}`);
     if(process.env.PROPERTY_SEED===undefined) {
         assert.equal(coverage.operations.size,12);assert.ok([...coverage.createdGroups].every(n=>n>=1&&n<=3));
         assert.ok(coverage.actors.size>=5);assert.ok(coverage.targets.size>=5);assert.equal(coverage.roles.size,2);
@@ -687,6 +755,7 @@ test('P-01: generated operation sequences preserve the owner and group state mod
         assert.deepEqual([...coverage.p04.clockPeriods].sort(),[0,1,2,3]);
         assert.equal(coverage.p09.requests,P01_SEQUENCES*15);assert.equal(coverage.p09.directSqlAttempts,P01_SEQUENCES*3);
         assert.equal(coverage.p09.noopAssignments,P01_SEQUENCES);
+        assert.deepEqual(coverage.p24,{sequences:P01_SEQUENCES,refusedWrites:P01_SEQUENCES*8,absentRoutes:P01_SEQUENCES*3});
         assert.deepEqual([...coverage.p09.operations].sort(),['direct-add','rejoin']);
         assert.deepEqual([...coverage.p09.preconditions].sort(),['current','future','stale']);
         for(const state of ['accepted','declined','cancelled'])assert.ok(coverage.p04.transitions.has(`pending->${state}`),`P-04 missing pending->${state}`);
@@ -739,4 +808,118 @@ test('P-04: at the exact expiry boundary accept commits expired and decline refu
         error.status===409&&error.code==='CONFLICT','expired decline is refused as 409');
     assert.deepEqual(f.db.prepare('SELECT invitation_id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at FROM ConversationInvitations WHERE invitation_id=?').get(second.id),pendingBefore);
     assert.deepEqual(snapshot(f.db),beforeDecline,'expired decline rolls back without invitation or audit changes');
+});
+
+// P-10 keeps an independent interval history. Each run has its own migrated disposable database.
+const P10_RUNS=100,P10_EVENTS=50,P10_SEED=0x5c100027;
+function intervalRows(db,id) {
+    return db.prepare('SELECT conversation_id,user_id,interval_no,first_seq,last_seq,joined_at,left_at FROM GroupMembershipIntervals WHERE conversation_id=? ORDER BY user_id,interval_no').all(id);
+}
+function membershipRows(db,id) {
+    return db.prepare('SELECT conversation_id,user_id,role,joined_at,left_at FROM ConversationMembers WHERE conversation_id=? ORDER BY user_id').all(id);
+}
+function assertP10State(f,repository,model,memberModel,closedSeen,coverage,expectedHighWater) {
+    const actual=intervalRows(f.db,f.groupId);
+    const expected=[...model.values()].flat().sort((a,b)=>a.user_id.localeCompare(b.user_id)||a.interval_no-b.interval_no);
+    assert.deepEqual(actual,expected,'P-10 persisted intervals equal the independent history model');
+    const actualMembers=membershipRows(f.db,f.groupId);
+    const expectedMembers=[...memberModel.values()].sort((a,b)=>a.user_id.localeCompare(b.user_id));
+    assert.deepEqual(actualMembers,expectedMembers,'P-10 persisted membership joined_at/left_at match the independent model');
+    for(const [user,intervals] of model) {
+        assert.deepEqual(intervals.map(row=>row.interval_no),intervals.map((_,index)=>index+1),`P-10 interval numbering for ${user}`);
+        for(let index=1;index<intervals.length;index++)assert.ok(intervals[index].first_seq>intervals[index-1].last_seq,
+            `P-10 ordered disjoint intervals for ${user}`);
+        const active=memberModel.get(user)?.left_at===null;
+        assert.equal(intervals.filter(row=>row.left_at===null&&row.last_seq===null).length,active?1:0,`P-10 open interval count for ${user}`);
+    }
+    for(const [key,row] of closedSeen)assert.deepEqual(actual.find(item=>`${item.user_id}:${item.interval_no}`===key),row,
+        `P-10 closed interval ${key} is immutable`);
+    for(const row of actual)if(row.left_at!==null)closedSeen.set(`${row.user_id}:${row.interval_no}`,row);
+    const report=repository.invariantReport(f.groupId);
+    assert.equal(report.openIntervals,report.activeMembers,'P-10 repository open interval invariant');
+    assert.equal(report.mismatches,0,'P-10 repository invariant report');
+    assert.equal(repository.repositories.messages.highWater(f.groupId),expectedHighWater,'P-10 persisted message high-water equals the operation model');
+    coverage.snapshots++;
+}
+function attemptP10SqlMutation(f,repository,kind,coverage,expectedHighWater) {
+    const before={intervals:intervalRows(f.db,f.groupId),members:membershipRows(f.db,f.groupId)};
+    const active=before.members.find(row=>row.left_at===null);
+    const former=f.actors.removedMember.id;
+    const closed=before.intervals.filter(row=>row.user_id===former&&row.left_at!==null).at(-1);
+    assert.ok(active&&closed,`P-10 ${kind} fixture preconditions`);
+    if(kind==='second-open')assert.throws(()=>f.db.prepare(`INSERT INTO GroupMembershipIntervals(conversation_id,user_id,interval_no,first_seq,last_seq,joined_at,left_at)
+        VALUES(?,?,(SELECT coalesce(max(interval_no),0)+1 FROM GroupMembershipIntervals WHERE conversation_id=?),?,NULL,?,NULL)`)
+        .run(f.groupId,active.user_id,f.groupId,expectedHighWater+1,f.clock.iso()),/constraint|group_intervals|invalid_group_interval/i);
+    if(kind==='overlap')assert.throws(()=>f.db.prepare(`INSERT INTO GroupMembershipIntervals(conversation_id,user_id,interval_no,first_seq,last_seq,joined_at,left_at)
+        VALUES(?,?,(SELECT coalesce(max(interval_no),0)+1 FROM GroupMembershipIntervals WHERE conversation_id=?),?,?,?,?)`)
+        .run(f.groupId,former,f.groupId,closed.first_seq,closed.last_seq,f.clock.iso(),f.clock.iso()),/constraint|group_intervals|invalid_group_interval/i);
+    if(kind==='closed-edit')assert.throws(()=>f.db.prepare(`UPDATE GroupMembershipIntervals SET first_seq=first_seq+1 WHERE conversation_id=? AND user_id=? AND interval_no=?`)
+        .run(f.groupId,former,closed.interval_no),/constraint|group_intervals|invalid_group_interval|group_interval_immutable|group_interval_retained/i);
+    if(kind==='closed-delete')assert.throws(()=>f.db.prepare('DELETE FROM GroupMembershipIntervals WHERE conversation_id=? AND user_id=? AND interval_no=?')
+        .run(f.groupId,former,closed.interval_no),/constraint|group_intervals|invalid_group_interval|group_interval_immutable|group_interval_retained/i);
+    assert.deepEqual({intervals:intervalRows(f.db,f.groupId),members:membershipRows(f.db,f.groupId)},before,`P-10 rejected SQL ${kind} leaves state unchanged`);
+    coverage.sqlAttempts++;coverage.mutationKinds.add(kind);
+}
+test('P-10: generated membership interval histories preserve boundaries, ordering and immutability',{timeout:240000},async t=>{
+    const coverage={events:0,snapshots:0,sqlAttempts:0,mutationKinds:new Set(),eventKinds:new Set()};
+    const fixed=['message','rejoin','message','remove','join','leave'];
+    await forAll('P-10',{runs:P10_RUNS,seed:P10_SEED,onRun:line=>t.diagnostic(line),describe:events=>events.map((event,index)=>`${index}:${event}`)},
+        random=>Array.from({length:P10_EVENTS},(_,index)=>fixed[index]||random.weighted([['message',4],['join',2],['rejoin',3],['remove',2],['leave',2]])),
+        async(events,info)=>{
+            const f=groupFixture(t,{clock:createClock()});
+            const id=f.groupId,repository=createGroupRepository(f.db),at=()=>f.clock.iso();
+            const model=new Map(),memberModel=new Map(),closedSeen=new Map();let modeledHighWater=0;
+            for(const name of ['owner','admin','member']) {
+                const user=f.actors[name].id,joined=f.clock.iso();
+                memberModel.set(user,{conversation_id:id,user_id:user,role:name==='owner'?'owner':name==='admin'?'admin':'member',joined_at:joined,left_at:null});
+                model.set(user,[{conversation_id:id,user_id:user,interval_no:1,first_seq:1,last_seq:null,joined_at:joined,left_at:null}]);
+            }
+            const former=f.actors.removedMember.id,firstJoined=f.clock.iso(),firstLeft=f.clock.iso();
+            memberModel.set(former,{conversation_id:id,user_id:former,role:'member',joined_at:firstJoined,left_at:firstLeft});
+            model.set(former,[{conversation_id:id,user_id:former,interval_no:1,first_seq:1,last_seq:0,joined_at:firstJoined,left_at:firstLeft}]);
+            const candidates={join:[f.actors.nonMember.id,f.actors.pendingInvitee.id],rejoin:[former],remove:[f.actors.member.id,f.actors.admin.id],leave:[f.actors.member.id,f.actors.admin.id]};
+            const runEvent=(kind,user,eventIndex)=>{
+                const member=memberModel.get(user),intervals=model.get(user)||[];
+                if(kind==='message') {
+                    const seq=modeledHighWater+1,stamp=at();
+                    f.repositories.messages.insertAuthenticated({message_id:`p10-${info.run}-${seq}`,conversation_id:id,sender_id:f.actors.owner.id,receiver_id:null,
+                        ciphertext:'opaque ciphertext',iv:'opaque-iv',envelope_version:1,encoding:'base64',sender_name:'Group Owner',client_timestamp:stamp,
+                        message_type:'text',fingerprint:'a'.repeat(64),client_id:`p10-client-${info.run}-${seq}`,message_seq:seq,created_at:stamp});
+                    modeledHighWater=seq;
+                } else if(kind==='join'||kind==='rejoin') {
+                    const stamp=at(),first=modeledHighWater+1;
+                    withMembershipTransaction(f.db,()=>{
+                        if(kind==='join')repository.addMember(id,user,stamp);else repository.reactivateMember(id,user,stamp);
+                        repository.openIntervalAt(id,user,stamp,first);
+                    });
+                    const row=memberModel.get(user)||{conversation_id:id,user_id:user,role:'member',joined_at:stamp,left_at:null};
+                    row.left_at=null;if(kind==='rejoin')row.role='member';memberModel.set(user,row);
+                    const rows=intervals.slice();rows.push({conversation_id:id,user_id:user,interval_no:rows.length+1,first_seq:first,last_seq:null,joined_at:stamp,left_at:null});model.set(user,rows);
+                } else {
+                    const stamp=at(),last=modeledHighWater;
+                    try{withMembershipTransaction(f.db,()=>{repository.endMembership(id,user,stamp);repository.closeInterval(id,user,stamp,last);});}
+                    catch(error){throw new Error(`P-10 ${kind} at event ${eventIndex} user=${user} modeled=${JSON.stringify(member)} stored=${JSON.stringify(f.repositories.members.get(id,user))}`,{cause:error});}
+                    member.left_at=stamp;intervals.at(-1).last_seq=last;intervals.at(-1).left_at=stamp;
+                }
+            };
+            assertP10State(f,repository,model,memberModel,closedSeen,coverage,modeledHighWater);
+            for(let index=0;index<events.length;index++) {
+                const kind=events[index];let user;
+                if(kind==='message')user=f.actors.owner.id;
+                else {
+                    const forced=index===3?former:(index===4||index===5)?f.actors.nonMember.id:null;
+                    const choices=forced?[forced]:(candidates[kind]||[]).filter(candidate=>kind==='join'?!memberModel.has(candidate):kind==='rejoin'?memberModel.has(candidate)&&memberModel.get(candidate).left_at!==null:memberModel.get(candidate)?.left_at===null);
+                    const available=choices.length?choices:[];
+                    if(!available.length){runEvent('message',f.actors.owner.id,index);coverage.events++;coverage.eventKinds.add('message');}
+                    else {user=info.random.pick(available);f.clock.advance(1000);runEvent(kind,user,index);coverage.events++;coverage.eventKinds.add(kind);}
+                }
+                if(kind==='message'){f.clock.advance(1000);runEvent(kind,user,index);coverage.events++;coverage.eventKinds.add(kind);}
+                assertP10State(f,repository,model,memberModel,closedSeen,coverage,modeledHighWater);
+                if((index+1)%10===0)attemptP10SqlMutation(f,repository,['second-open','overlap','closed-edit','closed-delete','second-open'][(index+1)/10-1],coverage,modeledHighWater);
+            }
+        });
+    t.diagnostic(`P-10 coverage ${JSON.stringify({events:coverage.events,snapshots:coverage.snapshots,sqlAttempts:coverage.sqlAttempts,mutationKinds:[...coverage.mutationKinds],eventKinds:[...coverage.eventKinds]})}`);
+    assert.equal(coverage.events,P10_RUNS*P10_EVENTS);assert.equal(coverage.snapshots,P10_RUNS*(P10_EVENTS+1));
+    assert.equal(coverage.sqlAttempts,P10_RUNS*5);assert.deepEqual([...coverage.mutationKinds].sort(),['closed-delete','closed-edit','overlap','second-open']);
+    assert.deepEqual([...coverage.eventKinds].sort(),['join','leave','message','rejoin','remove']);
 });

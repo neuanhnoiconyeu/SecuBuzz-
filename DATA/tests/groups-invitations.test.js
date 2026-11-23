@@ -17,6 +17,7 @@ const { AuthError } = require('../server/auth/errors');
 const { INVITATION_EXPIRY_SECONDS, roleMatrix } = require('../server/groups/policy');
 const codec = require('../server/groups/cursor');
 const { createGroupService } = require('../server/groups/service');
+const { forAll } = require('./support/random');
 
 const SOURCE = '203.0.113.9';
 const SENTINEL = 'SENTINEL-INVITATION-TEXT-5c11';
@@ -1160,6 +1161,166 @@ test('G16 across processes: two simultaneous accepts of one Invitation commit ex
         assert.deepEqual(eventsOf(f.db, group), ['group.invitation.accepted']);
         assert.deepEqual(repository.invariantReport(group), { activeOwners: 1, activeMembers: 2, openIntervals: 2, mismatches: 0 });
     }
+});
+
+test('P-05: generated invitation-heavy sequences preserve one pending row per group/invitee pair',{timeout:240000},async t=>{
+    const coverage={requests:0,advances:0,refusals:0,successes:0,duplicate:0,limit:0,expiredReinvite:0,directSqlAttempts:0,managerIds:new Set(),inviteeIds:new Set(),limits:new Set()};
+    const runs=20,events=30,seed=0x5c050029,targets=['pendingInvitee','removedMember','nonMember'];
+    await forAll('P-05',{runs,seed,onRun:line=>t.diagnostic(line),describe:plan=>plan.events.map((event,index)=>`${index}:${event.kind}:${event.actor}:${event.target}`)},
+        (random,info)=>({perGroup:info.run%4+1,perInvitee:(info.run*3)%4+1,events:Array.from({length:events},(_,index)=>{
+            if(index===0)return{kind:'invite',actor:'owner',target:'pendingInvitee'};
+            if(index===1)return{kind:'advance',ms:INVITATION_EXPIRY_MS+1};
+            if(index===2)return{kind:'invite',actor:'admin',target:'pendingInvitee'};
+            if(index===3)return{kind:'invite',actor:'admin',target:'nonMember'};
+            if(index===4)return{kind:'invite',actor:'owner',target:'pendingInvitee'};
+            return random.bool(0.25)?{kind:'advance',ms:random.int(0,2)*INVITATION_EXPIRY_MS}:
+                {kind:'invite',actor:random.pick(['owner','admin']),target:random.pick(targets)};
+        })}),async(plan,info)=>{
+            const w=await world(t,{features:withMaxima(plan.perGroup,plan.perInvitee)}),svc=w.svc;
+            const state=[];
+            // Known fixture input: one pending owner -> pendingInvitee row, created at the injected fixture time.
+            state.push({id:w.invitationId,conversation_id:w.groupId,invitee_id:w.who.pendingInvitee.id,inviter_id:w.who.owner.id,
+                state:'pending',created_at:w.clock.iso(),expires_at:isoPlus(w.clock.iso(),INVITATION_EXPIRY_MS),resolved_at:null});
+            coverage.limits.add(plan.perGroup);coverage.inviteeIds.add('pendingInvitee');
+            const actualRows=()=>rows(w.db,'SELECT invitation_id AS id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at FROM ConversationInvitations WHERE conversation_id=? ORDER BY invitation_id',w.groupId);
+            const pendingAt=(items,at)=>items.filter(row=>row.state==='pending'&&Date.parse(row.expires_at)>at);
+            const assertModel=()=>{
+                const actual=actualRows();
+                assert.deepEqual(actual,state.slice().sort((a,b)=>a.id.localeCompare(b.id)),'P-05 every persisted Invitation equals independent transition model');
+                const pairs=new Set();
+                for(const row of actual)if(row.state==='pending') {
+                    const pair=`${row.conversation_id}:${row.invitee_id}`;assert.ok(!pairs.has(pair),`P-05 duplicate pending pair ${pair}`);pairs.add(pair);
+                }
+            };
+            assertModel();
+            for(let index=0;index<plan.events.length;index++) {
+                const event=plan.events[index],before=snapshot(w.db),at=w.clock.now();
+                if(event.kind==='advance') {w.clock.advance(event.ms);coverage.advances++;assert.deepEqual(snapshot(w.db),before,'P-05 clock advances do not write rows');assertModel();continue;}
+                const actor=w.who[event.actor],invitee=w.who[event.target];coverage.managerIds.add(event.actor);coverage.inviteeIds.add(event.target);
+                const prior=state.find(row=>row.invitee_id===invitee.id&&row.state==='pending');
+                const expiredPrior=prior&&Date.parse(prior.expires_at)<=at;
+                const candidate=state.map(row=>row===prior&&expiredPrior?{...row,state:'expired',resolved_at:w.clock.iso()}:row);
+                const groupCount=pendingAt(candidate,at).length;
+                const inviteeCount=candidate.filter(row=>row.invitee_id===invitee.id&&row.state==='pending'&&Date.parse(row.expires_at)>at).length;
+                const duplicate=prior&&!expiredPrior;
+                const limited=!duplicate&&(groupCount>=plan.perGroup||inviteeCount>=plan.perInvitee);
+                const expected=duplicate||limited?409:201;
+                let result;
+                try {result=invite(w,actor,{userId:invitee.id},w.groupId,svc);}
+                catch(error) {assertAuth(error,'CONFLICT',409);result=null;}
+                const actual=result?201:409;assert.equal(actual,expected,`P-05 seed=${info.seed} run=${info.run} step=${index}`);coverage.requests++;
+                if(expected===409) {
+                    coverage.refusals++;if(duplicate)coverage.duplicate++;if(limited)coverage.limit++;
+                    assert.deepEqual(snapshot(w.db),before,'P-05 refused duplicate or limit request is atomic');
+                } else {
+                    coverage.successes++;
+                    if(expiredPrior) {state.splice(state.indexOf(prior),1,{...prior,state:'expired',resolved_at:w.clock.iso()});coverage.expiredReinvite++;}
+                    const created=result.invitation;
+                    assert.deepEqual([created.inviterId,created.invitee.id,created.state,created.createdAt,created.expiresAt],
+                        [actor.id,invitee.id,'pending',w.clock.iso(),isoPlus(w.clock.iso(),INVITATION_EXPIRY_MS)]);
+                    state.push({id:created.id,conversation_id:w.groupId,invitee_id:invitee.id,inviter_id:actor.id,state:'pending',
+                        created_at:w.clock.iso(),expires_at:isoPlus(w.clock.iso(),INVITATION_EXPIRY_MS),resolved_at:null});
+                }
+                assertModel();
+            }
+            const pending=state.find(row=>row.state==='pending');assert.ok(pending,'P-05 direct INSERT needs an existing pending pair');
+            const before=snapshot(w.db),duplicateId=`p05-duplicate-${info.run}`;
+            assert.throws(()=>w.db.prepare(`INSERT INTO ConversationInvitations(invitation_id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at)
+                VALUES(?,?,?,?, 'pending',?,?,NULL)`).run(duplicateId,pending.conversation_id,pending.invitee_id,pending.inviter_id,w.clock.iso(),isoPlus(w.clock.iso(),INVITATION_EXPIRY_MS)),
+                /uq_invitations_pending|UNIQUE constraint failed/i,'P-05 unique pending index rejects a direct duplicate INSERT');
+            assert.deepEqual(snapshot(w.db),before,'P-05 rejected direct INSERT leaves database unchanged');coverage.directSqlAttempts++;
+            assertModel();
+        });
+    t.diagnostic(`P-05 coverage ${JSON.stringify({requests:coverage.requests,refusals:coverage.refusals,successes:coverage.successes,
+        duplicates:coverage.duplicate,limit:coverage.limit,expiredReinvites:coverage.expiredReinvite,directSqlAttempts:coverage.directSqlAttempts,
+        managers:coverage.managerIds.size,invitees:coverage.inviteeIds.size,limits:[...coverage.limits]})}`);
+    assert.equal(coverage.requests+coverage.advances,runs*events);assert.ok(coverage.duplicate>0);assert.ok(coverage.limit>0);assert.ok(coverage.expiredReinvite>0);
+    assert.equal(coverage.directSqlAttempts,runs);assert.equal(coverage.managerIds.size,2);assert.equal(coverage.inviteeIds.size,3);
+    assert.deepEqual([...coverage.managerIds].sort(),['admin','owner']);assert.deepEqual([...coverage.inviteeIds].sort(),['nonMember','pendingInvitee','removedMember']);
+    assert.deepEqual([...coverage.limits].sort(),[1,2,3,4]);
+});
+
+test('AF-05: duplicate pending invitations are rejected',async t=>{
+    const w=await world(t),before=rows(w.db,'SELECT * FROM ConversationInvitations WHERE conversation_id=? ORDER BY invitation_id',w.groupId);
+    refusal(thrown(()=>invite(w,w.who.admin,{userId:w.who.pendingInvitee.id})),'CONFLICT',409);
+    const after=rows(w.db,'SELECT * FROM ConversationInvitations WHERE conversation_id=? ORDER BY invitation_id',w.groupId);
+    assert.equal(after.filter(row=>row.invitee_id===w.who.pendingInvitee.id&&row.state==='pending').length,1);
+    assert.equal(after.length,before.length,'duplicate invitation adds no row');
+    const pending=after.find(row=>row.invitee_id===w.who.pendingInvitee.id&&row.state==='pending');
+    assert.throws(()=>w.db.prepare(`INSERT INTO ConversationInvitations(invitation_id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at)
+        VALUES(?,?,?,?, 'pending',?,?,NULL)`).run('af05-direct-duplicate',pending.conversation_id,pending.invitee_id,pending.inviter_id,
+        w.clock.iso(),isoPlus(w.clock.iso(),INVITATION_EXPIRY_MS)),/uq_invitations_pending|UNIQUE constraint failed/i);
+    assert.equal(rows(w.db,'SELECT count(*) AS n FROM ConversationInvitations WHERE conversation_id=?',w.groupId)[0].n,before.length);
+});
+
+async function exerciseP06Scenario(t,mode,run=0) {
+    const w=await world(t),svc=w.service({groupApi:true,groups:{...FEATURES.groups,directAdd:true}});
+    const owner=w.who.owner,admin=w.who.admin,outsider=w.who.nonMember;
+    let subject,inviteId,invitee;
+    if(mode==='direct-add-then-remove') {
+        subject=w.who.pendingInvitee;inviteId=w.invitationId;invitee=subject;
+        svc.addMember(owner.context,owner.proof,w.groupId,{userId:subject.id});
+    } else {
+        subject=admin;
+        seed(w.db,{id:`p06-to-${run}`,groupId:w.groupId,invitee:subject.id,inviter:owner.id,createdAt:w.clock.iso(),expiresAt:isoPlus(w.clock.iso(),INVITATION_EXPIRY_MS)});
+        const issued=invite(w,admin,{userId:outsider.id},w.groupId,svc);inviteId=issued.invitation.id;invitee=outsider;
+    }
+    const incomingAndOutgoing=rows(w.db,"SELECT * FROM ConversationInvitations WHERE conversation_id=? AND state='pending' AND (invitee_id=? OR inviter_id=?) ORDER BY invitation_id",w.groupId,subject.id,subject.id);
+    assert.ok(incomingAndOutgoing.length>=1,`P-06 ${mode} has invitations to/from removed user`);
+    const beforeRemoval=memberState(w.db,w.groupId),revisionBefore=beforeRemoval.revision;
+    if(mode==='leave')svc.leaveGroup(subject.context,subject.proof,w.groupId);
+    else svc.removeMember(owner.context,owner.proof,w.groupId,subject.id);
+    const afterRemoval=memberState(w.db,w.groupId),revisionAfterRemoval=afterRemoval.revision;
+    assert.equal(revisionAfterRemoval,revisionBefore+1,'P-06 committed leave/removal increments revision once');
+    for(const old of incomingAndOutgoing) {
+        const resolved=invitationRow(w.db,old.invitation_id);assert.deepEqual([resolved.state,resolved.resolved_at],['cancelled',w.clock.iso()]);
+    }
+    assert.ok(!afterRemoval.members.some(row=>row.user_id===subject.id&&row.left_at===null),'P-06 removed user has no active membership');
+    assert.equal(afterRemoval.intervals.filter(row=>row.user_id===subject.id&&row.left_at===null&&row.last_seq===null).length,0,
+        'P-06 removed user has no open interval');
+    const staleActor=subject;
+    if(mode!=='leave') {
+        for(const request of [
+            ()=>invite(w,staleActor,{userId:outsider.id},w.groupId,svc),
+            ()=>svc.addMember(staleActor.context,staleActor.proof,w.groupId,{userId:outsider.id}),
+            ()=>svc.removeMember(staleActor.context,staleActor.proof,w.groupId,w.who.member.id),
+            ()=>svc.changeMemberRole(staleActor.context,staleActor.proof,w.groupId,w.who.member.id,{role:'admin'})
+        ]) {const before=snapshot(w.db);assertAuth(thrown(request),'NOT_FOUND',404);assert.deepEqual(snapshot(w.db),before,'P-06 stale removed-actor refusal changes no row');}
+    }
+    assertAuth(thrown(()=>w.svc.getGroup(subject.context,w.groupId)),'NOT_FOUND',404,'removed user cannot see group');
+    const revisionBeforeAccept=memberState(w.db,w.groupId).revision,acceptedAudits=inviteAudit(w.db,w.groupId).filter(row=>row.event_type==='group.invitation.accepted').length;
+    const beforeAccept=snapshot(w.db);
+    refusal(thrown(()=>accept(w,invitee,inviteId,svc)),'CONFLICT',409);
+    assert.deepEqual(snapshot(w.db),beforeAccept,'P-06 cancelled-invitation replay is a no-op');
+    assert.equal(memberState(w.db,w.groupId).revision,revisionBeforeAccept,'P-06 refused replay does not change revision');
+    refusal(thrown(()=>accept(w,owner,inviteId,svc)),'NOT_FOUND',404);
+    assert.equal(inviteAudit(w.db,w.groupId).filter(row=>row.event_type==='group.invitation.accepted').length,acceptedAudits,
+        'P-06 replay writes no invitation.accepted audit');
+    w.clock.advance(1000);const newInvitation=invite(w,owner,{userId:subject.id},w.groupId,svc).invitation;
+    assert.equal(newInvitation.createdAt,w.clock.iso(),'P-06 a new invitation may be created after the removal');
+    const revisionBeforeNewAccept=memberState(w.db,w.groupId).revision;
+    const rejoined=accept(w,subject,newInvitation.id,svc);
+    assert.equal(rejoined.group.role,'member','P-06 rejoin occurs only through the new post-removal invitation');
+    assert.equal(memberState(w.db,w.groupId).revision,revisionBeforeNewAccept+1);
+    return {w,svc,subject,inviteId,invitee,revisionAfterRemoval};
+}
+
+test('P-06: generated removal and leave scenarios cancel all invitations to or from the departing user',{timeout:240000},async t=>{
+    const modes=['direct-add-then-remove','inviter-removed','leave'],coverage={modes:new Set(),scenarios:0,relatedCancelled:0,staleRefusals:0};
+    await forAll('P-06',{runs:24,seed:0x5c060030,onRun:line=>t.diagnostic(line),describe:mode=>[mode]},
+        (_random,info)=>modes[info.run%modes.length],async(mode,info)=>{
+            const result=await exerciseP06Scenario(t,mode,info.run);coverage.modes.add(mode);coverage.scenarios++;
+            coverage.relatedCancelled+=rows(result.w.db,"SELECT * FROM ConversationInvitations WHERE conversation_id=? AND state='cancelled' AND (invitee_id=? OR inviter_id=?)",
+                result.w.groupId,result.subject.id,result.subject.id).length;
+            if(mode!=='leave')coverage.staleRefusals+=4;
+        });
+    t.diagnostic(`P-06 coverage ${JSON.stringify({scenarios:coverage.scenarios,modes:[...coverage.modes],relatedCancelled:coverage.relatedCancelled,staleRefusals:coverage.staleRefusals})}`);
+    assert.equal(coverage.scenarios,24);assert.deepEqual([...coverage.modes].sort(),['direct-add-then-remove','inviter-removed','leave']);
+    assert.ok(coverage.relatedCancelled>=24);assert.equal(coverage.staleRefusals,64);
+});
+
+test('AF-03: an invitation issued before removal cannot restore the removed member',async t=>{
+    for(const mode of ['direct-add-then-remove','inviter-removed'])await exerciseP06Scenario(t,mode,`af03-${mode}`);
 });
 
 test('G16 across processes: an accept and a cancel of the same Invitation end in one of the two legal serial outcomes', async t => {
