@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
 const {AuthError}=require('../server/auth/errors');
 const {createGroupService}=require('../server/groups/service');
 const {createGroupRepository}=require('../server/database/groupRepository');
-const {httpGroupFixture,openLimiter,snapshot,createClock,INVITATION_EXPIRY_MS}=require('./support/groups');
+const {httpGroupFixture,openLimiter,snapshot,changedTables,createClock,INVITATION_EXPIRY_MS}=require('./support/groups');
 const {createRandom,forAll}=require('./support/random');
 
 const P01_SEQUENCES=100;
@@ -17,6 +17,10 @@ const USER_CLASSES=['owner','admin','member','pendingInvitee','removedMember','n
 const OP_WEIGHTS=[['create',6],['invite',12],['accept',10],['decline',7],['cancel',7],['advance',5],
     ['remove',12],['leave',10],['role',10],['transfer',8],['archive',5],['add',8]];
 const MUTATIONS=new Set(['create','invite','accept','decline','cancel','remove','leave','role','transfer','archive','add']);
+const INVITATION_STATES=new Set(['pending','accepted','declined','cancelled','expired']);
+const TERMINAL_INVITATION_STATES=new Set(['accepted','declined','cancelled','expired']);
+const INVITATION_IMMUTABLE_FIELDS=['invitation_id','conversation_id','invitee_id','inviter_id','created_at','expires_at'];
+const invitationQueriesByDatabase=new WeakMap();
 const describeSequence=sequence=>sequence.map((op,index)=>`${index}:${op.op}(a=${op.actorClass},t=${op.targetClass},g=${op.groupSlot},stale=${op.revisionMode||'no'},replay=${op.replay})`);
 const stateQueriesByDatabase=new WeakMap();
 
@@ -277,6 +281,104 @@ function assertGroupState(f,repository,group) {
         `${group.label}: exactly one active owner and consistent intervals`);
 }
 
+function invitationRowsForGroups(db,groups) {
+    let query=invitationQueriesByDatabase.get(db);
+    if(!query) {
+        query=db.prepare(`SELECT invitation_id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at
+            FROM ConversationInvitations ORDER BY invitation_id`);
+        invitationQueriesByDatabase.set(db,query);
+    }
+    const groupIds=new Set(groups.map(group=>group.id));
+    return query.all().filter(row=>groupIds.has(row.conversation_id));
+}
+
+// P-04's transition oracle is independent of the service and checks every persisted Invitation after each P-01 step.
+function assertInvitationStateMachine(f,groups,history,coverage) {
+    const actual=invitationRowsForGroups(f.db,groups);
+    const expected=groups.flatMap(group=>[...group.invitations.values()].map(invitation=>({
+        invitation_id:invitation.id,conversation_id:group.id,invitee_id:invitation.inviteeId,inviter_id:invitation.inviterId,
+        state:invitation.state,created_at:invitation.createdAt,expires_at:invitation.expiresAt,resolved_at:invitation.resolvedAt
+    }))).sort((a,b)=>a.invitation_id.localeCompare(b.invitation_id));
+    assert.deepEqual(actual,expected,'P-04 persisted Invitation rows equal the independent operation model');
+    const current=new Map(actual.map(row=>[row.invitation_id,row]));
+    for(const row of actual) {
+        assert.ok(INVITATION_STATES.has(row.state),`P-04 unknown Invitation state ${row.state}`);
+        assert.equal(row.resolved_at===null,row.state==='pending',`P-04 resolved_at consistency for ${row.invitation_id}`);
+        const previous=history.get(row.invitation_id);
+        if(previous) {
+            if(previous.state!=='pending') {
+                assert.deepEqual(row,previous,`P-04 terminal Invitation ${row.invitation_id} changed after resolution`);
+            } else {
+                for(const field of INVITATION_IMMUTABLE_FIELDS)
+                    assert.equal(row[field],previous[field],`P-04 pending Invitation ${row.invitation_id} changed ${field}`);
+                if(row.state==='pending')assert.deepEqual(row,previous,`P-04 pending Invitation ${row.invitation_id} changed without resolution`);
+                else {
+                    assert.ok(TERMINAL_INVITATION_STATES.has(row.state),`P-04 invalid transition from pending to ${row.state}`);
+                    assert.notEqual(row.resolved_at,null,`P-04 terminal Invitation ${row.invitation_id} lacks resolved_at`);
+                    coverage.transitions.add(`pending->${row.state}`);
+                }
+            }
+        }
+        history.set(row.invitation_id,{...row});
+    }
+    for(const [id,previous] of history) {
+        assert.ok(current.has(id),`P-04 Invitation ${id} was deleted`);
+        if(previous.state!=='pending')assert.deepEqual(current.get(id),previous,`P-04 terminal Invitation ${id} changed or disappeared`);
+    }
+    coverage.snapshots++;
+}
+
+const P04_SQL_MUTATIONS=['pending-id','pending-group','pending-invitee','pending-inviter','pending-created','pending-expires',
+    'terminal-update','terminal-delete'];
+function attemptInvitationMutation(f,actors,coverage) {
+    const rows=f.db.prepare(`SELECT invitation_id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at
+        FROM ConversationInvitations ORDER BY invitation_id`).all();
+    const pending=rows.filter(row=>row.state==='pending');
+    const terminal=rows.filter(row=>TERMINAL_INVITATION_STATES.has(row.state));
+    const requested=P04_SQL_MUTATIONS[coverage.sqlAttemptSlots%P04_SQL_MUTATIONS.length];
+    let kind=requested;
+    if(kind.startsWith('terminal')&&!terminal.length)kind=P04_SQL_MUTATIONS[coverage.sqlAttemptSlots%6];
+    if(kind.startsWith('pending')&&!pending.length)kind=coverage.sqlAttemptSlots%2?'terminal-delete':'terminal-update';
+    const row=kind.startsWith('terminal')?terminal[coverage.sqlAttemptSlots%terminal.length]:pending[coverage.sqlAttemptSlots%pending.length];
+    if(!row)return false;
+    const before={...row};
+    let sql,parameters,trigger;
+    switch(kind) {
+    case 'terminal-update':
+        if(!TERMINAL_INVITATION_STATES.has(row.state))break;
+        sql="UPDATE ConversationInvitations SET state='declined' WHERE invitation_id=?";parameters=[row.invitation_id];trigger='invalid_invitation_transition';break;
+    case 'terminal-delete':
+        if(!TERMINAL_INVITATION_STATES.has(row.state))break;
+        sql='DELETE FROM ConversationInvitations WHERE invitation_id=?';parameters=[row.invitation_id];trigger='invitation_retained';break;
+    case 'pending-id':
+        if(row.state!=='pending')break;
+        sql='UPDATE ConversationInvitations SET invitation_id=? WHERE invitation_id=?';parameters=[`${row.invitation_id}.mutated`,row.invitation_id];trigger='invalid_invitation_transition';break;
+    case 'pending-group':
+        if(row.state!=='pending')break;
+        sql='UPDATE ConversationInvitations SET conversation_id=? WHERE invitation_id=?';parameters=['p04-mutated-group',row.invitation_id];trigger='invalid_invitation_transition';break;
+    case 'pending-invitee':
+        if(row.state!=='pending')break;
+        sql='UPDATE ConversationInvitations SET invitee_id=? WHERE invitation_id=?';parameters=[actors.find(actor=>actor.id!==row.invitee_id).id,row.invitation_id];trigger='invalid_invitation_transition';break;
+    case 'pending-inviter':
+        if(row.state!=='pending')break;
+        sql='UPDATE ConversationInvitations SET inviter_id=? WHERE invitation_id=?';parameters=[actors.find(actor=>actor.id!==row.inviter_id).id,row.invitation_id];trigger='invalid_invitation_transition';break;
+    case 'pending-created':
+        if(row.state!=='pending')break;
+        sql='UPDATE ConversationInvitations SET created_at=? WHERE invitation_id=?';parameters=[new Date(Date.parse(row.created_at)+1).toISOString(),row.invitation_id];trigger='invalid_invitation_transition';break;
+    case 'pending-expires':
+        if(row.state!=='pending')break;
+        sql='UPDATE ConversationInvitations SET expires_at=? WHERE invitation_id=?';parameters=[new Date(Date.parse(row.expires_at)+1).toISOString(),row.invitation_id];trigger='invalid_invitation_transition';break;
+    }
+    assert.throws(()=>f.db.prepare(sql).run(...parameters),error=>error.code==='SQLITE_CONSTRAINT_TRIGGER'&&error.message===trigger,
+        `P-04 ${kind} must be rejected by its schema trigger`);
+    const after=f.db.prepare(`SELECT invitation_id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at
+        FROM ConversationInvitations WHERE invitation_id=?`).get(before.invitation_id);
+    assert.deepEqual(after,before,`P-04 rejected ${kind} changed its Invitation row`);
+    coverage.sqlAttemptSlots++;
+    coverage.sqlMutationKinds.add(kind);
+    return true;
+}
+
 function chooseActor(random,actors,group,operation,invitation) {
     if(['accept','decline'].includes(operation)&&invitation&&random.bool(0.8))return actors[invitation.inviteeId];
     if(operation==='cancel'&&invitation&&random.bool(0.8)) {
@@ -318,6 +420,7 @@ async function runSequence(f,plan,info,coverage) {
     const repository=createGroupRepository(f.db);
     const byKey=new Map();
     const history=[];
+    const invitationHistory=new Map();
     let groups=[];
     async function runRequest(request,random,sequence,sequenceIndex) {
         let group=request.group;
@@ -395,6 +498,13 @@ async function runSequence(f,plan,info,coverage) {
     const random=info.random;
     const sequence={line:`property=P-01 seed=${info.seed} run=${info.run} runSeed=${info.runSeed}`};
     const maxGroups=plan[0].maxGroups;
+    const verifyP04Step=sequenceIndex=>{
+        assertInvitationStateMachine(f,groups,invitationHistory,coverage.p04);
+        if((sequenceIndex+1)%10===0) {
+            attemptInvitationMutation(f,Object.values(actors),coverage.p04);
+            assertInvitationStateMachine(f,groups,invitationHistory,coverage.p04);
+        }
+    };
     for(let sequenceIndex=0;sequenceIndex<plan.length;sequenceIndex++) {
                 const generated=plan[sequenceIndex];
                 let request;
@@ -452,7 +562,9 @@ async function runSequence(f,plan,info,coverage) {
                 }
                 if(request.op==='advance') {
                     request.versionAtRequest=request.group?.version??0;
+                    coverage.p04.clockPeriods.add(request.advanceMs/INVITATION_EXPIRY_MS);
                     await runRequest(request,random,sequence,sequenceIndex);
+                    verifyP04Step(sequenceIndex);
                     for(const state of groups)assertGroupState(f,repository,state);
                     continue;
                 }
@@ -470,6 +582,7 @@ async function runSequence(f,plan,info,coverage) {
                     if(MUTATIONS.has(request.op))history.push(saved);
                 }
                 for(const state of groups)assertGroupState(f,repository,state);
+                verifyP04Step(sequenceIndex);
             }
     coverage.createdGroups.add(groups.length);
     assert.ok(groups.length>=1&&groups.length<=maxGroups,`sequence ${info.run} used ${groups.length} groups (max ${maxGroups})`);
@@ -477,21 +590,77 @@ async function runSequence(f,plan,info,coverage) {
 
 test('P-01: generated operation sequences preserve the owner and group state model',{timeout:240000},async t=>{
     const coverage={operations:new Set(),actors:new Set(),targets:new Set(),roles:new Set(),archived:new Set(),stale:new Set(),wrongActor:0,replays:0,
-        accepted:0,committedRefusals:0,ordinaryRefusals:0,createdGroups:new Set()};
+        accepted:0,committedRefusals:0,ordinaryRefusals:0,createdGroups:new Set(),p04:{transitions:new Set(),snapshots:0,
+            sqlAttemptSlots:0,sqlMutationKinds:new Set(),clockPeriods:new Set()}};
     await forAll('P-01',{runs:P01_SEQUENCES,seed:P01_SEED,onRun:line=>t.diagnostic(line),describe:describeSequence},
         (random,info)=>{const maxGroups=1+random.int(0,2);return Array.from({length:P01_OPERATIONS},(_,index)=>({
             op:index===0?'create':random.weighted(OP_WEIGHTS),
             actorClass:random.pick(USER_CLASSES),targetClass:random.pick(USER_CLASSES),newRole:random.pick(['admin','member']),
             revisionMode:random.weighted([['none',0.55],['current',0.2],['stale',0.25]]),
-            maxGroups,groupSlot:random.int(0,2),replay:random.bool(0.2),advanceMs:random.int(0,INVITATION_EXPIRY_MS*2),
+            maxGroups,groupSlot:random.int(0,2),replay:random.bool(0.2),advanceMs:random.int(0,3)*INVITATION_EXPIRY_MS,
             wrongActor:random.bool(0.2),run:info.run,index
         }));},async(plan,info)=>withIsolatedSequenceFixture(f=>runSequence(f,plan,info,coverage)));
     t.diagnostic(`P-01 coverage ${JSON.stringify(Object.fromEntries(Object.entries(coverage).map(([key,value])=>[key,value instanceof Set?[...value]:value])))}`);
+    t.diagnostic(`P-04 coverage ${JSON.stringify({transitions:[...coverage.p04.transitions],snapshots:coverage.p04.snapshots,
+        sqlAttemptSlots:coverage.p04.sqlAttemptSlots,sqlMutationKinds:[...coverage.p04.sqlMutationKinds],
+        clockPeriods:[...coverage.p04.clockPeriods]})}`);
     if(process.env.PROPERTY_SEED===undefined) {
         assert.equal(coverage.operations.size,12);assert.ok([...coverage.createdGroups].every(n=>n>=1&&n<=3));
         assert.ok(coverage.actors.size>=5);assert.ok(coverage.targets.size>=5);assert.equal(coverage.roles.size,2);
         assert.equal(coverage.archived.size,2);assert.ok(coverage.stale.has('stale'));assert.ok(coverage.stale.has('current'));
         assert.ok(coverage.wrongActor>0);assert.ok(coverage.replays>=100);assert.ok(coverage.accepted>0);
         assert.ok(coverage.committedRefusals>0);assert.ok(coverage.ordinaryRefusals>0);
+        assert.equal(coverage.p04.snapshots,P01_SEQUENCES*P01_OPERATIONS+coverage.p04.sqlAttemptSlots);
+        assert.equal(coverage.p04.sqlAttemptSlots,P01_SEQUENCES*(P01_OPERATIONS/10));
+        assert.deepEqual([...coverage.p04.clockPeriods].sort(),[0,1,2,3]);
+        for(const state of ['accepted','declined','cancelled'])assert.ok(coverage.p04.transitions.has(`pending->${state}`),`P-04 missing pending->${state}`);
+        assert.ok(coverage.p04.sqlMutationKinds.has('pending-id'));assert.ok(coverage.p04.sqlMutationKinds.has('pending-group'));
+        assert.ok(coverage.p04.sqlMutationKinds.has('pending-invitee'));assert.ok(coverage.p04.sqlMutationKinds.has('pending-inviter'));
+        assert.ok(coverage.p04.sqlMutationKinds.has('pending-created'));assert.ok(coverage.p04.sqlMutationKinds.has('pending-expires'));
+        assert.ok(coverage.p04.sqlMutationKinds.has('terminal-update'));assert.ok(coverage.p04.sqlMutationKinds.has('terminal-delete'));
     }
+});
+
+test('P-04: at the exact expiry boundary accept commits expired and decline refuses without changing the row',async t=>{
+    const f=await httpGroupFixture(t,{clock:createClock(),features:{groupApi:true,
+        groups:{directAdd:true,maxMembers:6,maxPendingInvitationsPerGroup:10000,maxPendingInvitationsPerInvitee:10000}}});
+    const service=createGroupService({db:f.db,auth:f.application.auth,limiter:openLimiter(),features:{groupApi:true,
+        groups:{directAdd:true,maxMembers:6,maxPendingInvitationsPerGroup:10000,maxPendingInvitationsPerInvitee:10000}},now:f.clock.now});
+    const owner=makeActorContext(f,f.actors.owner);
+    const declinedTarget=f.actors.nonMember;
+    const second=service.createInvitation(owner.context,owner.proof,f.groupId,{userId:declinedTarget.id},SOURCE).invitation;
+    const firstBefore=f.db.prepare('SELECT invitation_id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at FROM ConversationInvitations WHERE invitation_id=?').get(f.invitationId);
+    const beforeMembership=f.db.prepare('SELECT user_id,role,joined_at,left_at FROM ConversationMembers WHERE conversation_id=? ORDER BY user_id').all(f.groupId);
+    const beforeIntervals=f.db.prepare('SELECT user_id,interval_no,first_seq,last_seq,joined_at,left_at FROM GroupMembershipIntervals WHERE conversation_id=? ORDER BY user_id,interval_no').all(f.groupId);
+    const beforeRevision=f.db.prepare('SELECT membership_revision FROM GroupExtensions WHERE conversation_id=?').get(f.groupId).membership_revision;
+    f.clock.advance(INVITATION_EXPIRY_MS);
+
+    const inviteeBrowser=f.actors.pendingInvitee.browser;
+    assert.equal((await inviteeBrowser.login(f.actors.pendingInvitee.username)).status,200,'reauthenticate the invitee after the 7-day clock jump');
+    const invitee=makeActorContext(f,{browser:inviteeBrowser,token:await inviteeBrowser.csrf()});
+    const beforeAccept=snapshot(f.db);
+    const auditBefore=f.db.prepare("SELECT event_type,actor_user_id,subject_id,metadata_json,created_at FROM AuditLogs WHERE source='groups' AND subject_id=? ORDER BY rowid").all(f.groupId);
+    assert.throws(()=>service.acceptInvitation(invitee.context,invitee.proof,f.invitationId),error=>error instanceof AuthError&&
+        error.status===409&&error.code==='CONFLICT','expired acceptance is a committed 409 refusal');
+    const expiredRow=f.db.prepare('SELECT invitation_id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at FROM ConversationInvitations WHERE invitation_id=?').get(f.invitationId);
+    assert.deepEqual([expiredRow.state,expiredRow.resolved_at],['expired',f.clock.iso()]);
+    assert.deepEqual({...expiredRow,state:'pending',resolved_at:null},firstBefore,'expiry preserves all other Invitation columns');
+    assert.deepEqual(changedTables(beforeAccept,snapshot(f.db)).sort(),['AuditLogs','ConversationInvitations']);
+    assert.deepEqual(f.db.prepare('SELECT user_id,role,joined_at,left_at FROM ConversationMembers WHERE conversation_id=? ORDER BY user_id').all(f.groupId),beforeMembership);
+    assert.deepEqual(f.db.prepare('SELECT user_id,interval_no,first_seq,last_seq,joined_at,left_at FROM GroupMembershipIntervals WHERE conversation_id=? ORDER BY user_id,interval_no').all(f.groupId),beforeIntervals);
+    assert.equal(f.db.prepare('SELECT membership_revision FROM GroupExtensions WHERE conversation_id=?').get(f.groupId).membership_revision,beforeRevision);
+    const auditAfter=f.db.prepare("SELECT event_type,actor_user_id,subject_id,metadata_json,created_at FROM AuditLogs WHERE source='groups' AND subject_id=? ORDER BY rowid").all(f.groupId);
+    assert.equal(auditAfter.length,auditBefore.length+1);
+    assert.deepEqual(auditAfter.at(-1),{event_type:'group.invitation.expired',actor_user_id:f.actors.pendingInvitee.id,
+        subject_id:f.groupId,metadata_json:'{"operation":"invitation.expired","outcome":"confirmed"}',created_at:f.clock.iso()});
+
+    const declineBrowser=declinedTarget.browser;
+    assert.equal((await declineBrowser.login(declinedTarget.username)).status,200,'reauthenticate the invitee after the 7-day clock jump');
+    const decliner=makeActorContext(f,{browser:declineBrowser,token:await declineBrowser.csrf()});
+    const pendingBefore=f.db.prepare('SELECT invitation_id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at FROM ConversationInvitations WHERE invitation_id=?').get(second.id);
+    const beforeDecline=snapshot(f.db);
+    assert.throws(()=>service.declineInvitation(decliner.context,decliner.proof,second.id),error=>error instanceof AuthError&&
+        error.status===409&&error.code==='CONFLICT','expired decline is refused as 409');
+    assert.deepEqual(f.db.prepare('SELECT invitation_id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at FROM ConversationInvitations WHERE invitation_id=?').get(second.id),pendingBefore);
+    assert.deepEqual(snapshot(f.db),beforeDecline,'expired decline rolls back without invitation or audit changes');
 });
