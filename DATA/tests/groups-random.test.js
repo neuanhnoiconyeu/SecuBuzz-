@@ -32,14 +32,14 @@ function makeActorContext(f,actor) {
 }
 function expectedStatus(op) {
     return ({create:201,invite:201,accept:200,decline:204,cancel:204,remove:204,leave:204,
-        role:200,transfer:200,archive:200,add:201})[op];
+        role:200,transfer:200,archive:200,add:201,update:200})[op];
 }
 function stateRows(db,id) {
     let queries=stateQueriesByDatabase.get(db);
     if(!queries) {
         queries={
-            conversation:db.prepare('SELECT conversation_id,created_by,created_at,updated_at,archived_at FROM Conversations WHERE conversation_id=?'),
-            extension:db.prepare('SELECT conversation_id,history_policy,membership_revision,created_at FROM GroupExtensions WHERE conversation_id=?'),
+            conversation:db.prepare('SELECT conversation_id,created_by,title,created_at,updated_at,archived_at FROM Conversations WHERE conversation_id=?'),
+            extension:db.prepare('SELECT conversation_id,description,history_policy,membership_revision,created_at FROM GroupExtensions WHERE conversation_id=?'),
             members:db.prepare('SELECT conversation_id,user_id,role,joined_at,left_at FROM ConversationMembers WHERE conversation_id=? ORDER BY user_id'),
             intervals:db.prepare('SELECT conversation_id,user_id,interval_no,first_seq,last_seq,joined_at,left_at FROM GroupMembershipIntervals WHERE conversation_id=? ORDER BY user_id,interval_no'),
             invitations:db.prepare('SELECT invitation_id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at FROM ConversationInvitations WHERE conversation_id=? ORDER BY invitation_id'),
@@ -169,6 +169,14 @@ function decide(f,groups,request) {
         if(group.archived)return deny(409,'CONFLICT');
         return {status:200,code:null,effect:'archive',at,actorId};
     }
+    if(op==='update') {
+        if(!actorRole)return deny(404,'NOT_FOUND');
+        if(actorRole!=='owner')return deny(403,'FORBIDDEN');
+        if(group.archived)return deny(409,'CONFLICT');
+        if(request.membershipRevision!==null&&request.membershipRevision!==undefined&&request.membershipRevision!==revision)
+            return deny(409,'STALE_STATE');
+        return {status:200,code:null,effect:'update',at,actorId,name:request.name,description:request.description};
+    }
     if(op==='add') {
         if(!actorRole)return deny(404,'NOT_FOUND');
         if(!['owner','admin'].includes(actorRole))return deny(403,'FORBIDDEN');
@@ -188,6 +196,7 @@ function applyModel(group,request,decision,result) {
         const id=result.group.id;
         const joinedAt=request.clock.iso();
         const created={label:request.label,id,ownerId:actorId,maximum:request.groupMaximum,clock:request.clock,
+            name:request.body.name,description:request.body.description,
             createdAt:joinedAt,updatedAt:joinedAt,creationKey:{userId:actorId,key:request.idempotencyKey,createdAt:joinedAt},
             archived:false,archivedAt:null,revision:1,version:0,members:new Map([[actorId,{role:'owner',active:true,joinedAt,leftAt:null,
                 intervals:[{intervalNo:1,firstSeq:1,lastSeq:null,joinedAt,leftAt:null}]}]]),
@@ -241,6 +250,12 @@ function applyModel(group,request,decision,result) {
         group.members.get(actorId).role='admin';group.members.get(targetId).role='owner';group.ownerId=targetId;group.revision++;
         addAudit(group,'group.owner.transferred',actorId,at);return group;
     case 'archive': group.archived=true;group.archivedAt=at;group.updatedAt=at;addAudit(group,'group.archived',actorId,at);return group;
+    case 'update':
+        if(group.name!==request.name||group.description!==request.description) {
+            group.name=request.name;group.description=request.description;group.updatedAt=at;
+            addAudit(group,'group.updated',actorId,at);
+        }
+        return group;
     case 'add': {
         let member=group.members.get(targetId);
         if(!member) {member={role:'member',active:true,joinedAt:at,leftAt:null,intervals:[]};group.members.set(targetId,member);}
@@ -255,6 +270,8 @@ function applyModel(group,request,decision,result) {
 function assertGroupState(f,repository,group) {
     const actual=groupSnapshot(f,group);
     assert.equal(actual.conversation.created_at,group.createdAt,`${group.label}: created timestamp`);
+    assert.equal(actual.conversation.title,group.name,`${group.label}: name`);
+    assert.equal(actual.extension.description,group.description,`${group.label}: description`);
     assert.equal(actual.conversation.updated_at,group.updatedAt,`${group.label}: updated timestamp`);
     assert.equal(actual.extension.membership_revision,group.revision,`${group.label}: revision`);
     assert.equal(actual.extension.created_at,group.createdAt,`${group.label}: extension timestamp`);
@@ -428,6 +445,7 @@ async function runSequence(f,plan,info,coverage) {
         if(request.op!=='advance'&&!actor)throw new Error(`missing P-01 fixture session for actor ${request.actorId}`);
         const expected=decide(f,groups,request);
         const before=group?groupSnapshot(f,group):null;
+        const revisionBefore=group?f.db.prepare('SELECT membership_revision FROM GroupExtensions WHERE conversation_id=?').get(group.id).membership_revision:null;
         const fullBefore=(expected.status>=400&&!expected.committed||['advance','create-replay'].includes(expected.effect))?snapshot(f.db):null;
         let value;
         try {
@@ -447,6 +465,8 @@ async function runSequence(f,plan,info,coverage) {
                 ...(request.membershipRevision===null?{}:{membershipRevision:request.membershipRevision})});break;
             case 'archive': value=service.archiveGroup(...args,group.id);break;
             case 'add': value=service.addMember(...args,group.id,{userId:request.targetId});break;
+            case 'update': value=service.updateGroup(...args,group.id,{name:request.name,description:request.description,
+                ...(request.membershipRevision===null?{}:{membershipRevision:request.membershipRevision})});break;
             default: throw new Error(`unsupported operation ${request.op}`);
             }
         } catch(error) {
@@ -464,9 +484,16 @@ async function runSequence(f,plan,info,coverage) {
             targetClass:request.targetClass,expected:{status:expected.status,code:expected.code},actual,
             replay:Boolean(request.replay),replayOfIndex:request.replayOfIndex??null};
         assert.deepEqual(actual,{status:expected.status,code:expected.code},JSON.stringify(failureContext));
+        if(group) {
+            const qualifies=expected.status<400&&['accept','add','remove','leave','role','transfer'].includes(expected.effect);
+            const revisionAfter=f.db.prepare('SELECT membership_revision FROM GroupExtensions WHERE conversation_id=?').get(group.id).membership_revision;
+            assert.equal(revisionAfter,revisionBefore+(qualifies?1:0),`${JSON.stringify(failureContext)} P-09 exact revision delta`);
+        }
         if(expected.effect==='create') {
             group=applyModel(null,request,expected,value);
             group.clock=f.clock;
+            assert.equal(f.db.prepare('SELECT membership_revision FROM GroupExtensions WHERE conversation_id=?').get(group.id).membership_revision,1,
+                `${JSON.stringify(failureContext)} P-09 creation starts at revision 1`);
             groups.push(group);byKey.set(request.idempotencyKey,group);request.createdGroup=group;
             request.group=group;request.label=group.label;request.effectGroup=group;
         } else {
@@ -488,12 +515,54 @@ async function runSequence(f,plan,info,coverage) {
         }
         if(request.replay)coverage.replays++;
         request.stateVersionAfter=group?.version??0;
-        coverage.operations.add(request.op);if(request.actorClass)coverage.actors.add(request.actorClass);
+        if(request.op!=='update')coverage.operations.add(request.op);if(request.actorClass)coverage.actors.add(request.actorClass);
         if(request.targetClass)coverage.targets.add(request.targetClass);
         if(request.newRole)coverage.roles.add(request.newRole);if(group)coverage.archived.add(group.archived);
         if(request.revisionMode)coverage.stale.add(request.revisionMode);
         if(request.wrongActor)coverage.wrongActor++;
         return {group,expected,value};
+    }
+    async function runP09Checks(group,operationIndex) {
+        const owner=actors[group.ownerId];
+        const targetId=USER_CLASSES.map(name=>f.actors[name].id).find(id=>id!==group.ownerId&&!group.members.get(id)?.active);
+        assert.ok(owner,`P-09 fixture lacks owner session for ${group.label}`);
+        assert.ok(targetId,`P-09 fixture lacks an eligible non-member for ${group.label}`);
+        const targetClass=USER_CLASSES.find(name=>f.actors[name].id===targetId);
+        // Establish both a committed removal and rejoin so each qualifying transition is checked from a real prior revision.
+        for(const [op,index] of [['add',0],['remove',1],['add',2]]) {
+            const request={op,group,clock:f.clock,actorId:owner.id,actorClass:'owner',sessionExpiresAt:owner.expiresAt,
+                targetId,targetClass,index:operationIndex+index};
+            if(op==='add')coverage.p09.operations.add(group.members.has(targetId)&&!group.members.get(targetId).active?'rejoin':'direct-add');
+            const before=group.revision;
+            const outcome=await runRequest(request,info.random,sequence,operationIndex+index);
+            assert.equal(outcome.expected.effect,op,`P-09 setup ${op} must commit`);
+            assert.equal(group.revision,before+1,`P-09 setup ${op} must increment revision exactly once`);
+        }
+        // Across each 15-request block exactly one request carries a current, stale, or future precondition.
+        const modes=['none','none','none','none','current','none','none','none','none','stale','none','none','none','none','future'];
+        for(let index=0;index<modes.length;index++) {
+            const mode=modes[index];
+            const revision=mode==='current'?group.revision:mode==='stale'?(group.revision>1?group.revision-1:group.revision+2):mode==='future'?group.revision+1:null;
+            const request={op:'update',group,clock:f.clock,actorId:owner.id,actorClass:'owner',sessionExpiresAt:owner.expiresAt,
+                name:group.name,description:`P09 ${info.run} update ${index}`,membershipRevision:revision,revisionMode:mode,index:operationIndex+3+index};
+            coverage.p09.requests++;
+            if(mode!=='none')coverage.p09.preconditions.add(mode);
+            await runRequest(request,info.random,sequence,operationIndex+3+index);
+            assertGroupState(f,repository,group);
+        }
+        const directRevision=group.revision;
+        const revisionStatement=f.db.prepare('UPDATE GroupExtensions SET membership_revision=? WHERE conversation_id=?');
+        const beforeNoOp=snapshot(f.db);
+        assert.equal(revisionStatement.run(directRevision,group.id).changes,1,'P-09 same-value assignment is a permitted no-op');
+        assert.deepEqual(snapshot(f.db),beforeNoOp,'P-09 same-value assignment leaves revision state unchanged');
+        coverage.p09.noopAssignments++;
+        for(const attempted of [directRevision+2,directRevision-1,directRevision+0.5]) {
+            assert.throws(()=>revisionStatement.run(attempted,group.id),/group_extension_immutable|constraint/i,
+                `P-09 trigger must reject direct revision ${attempted}`);
+            assert.equal(f.db.prepare('SELECT membership_revision FROM GroupExtensions WHERE conversation_id=?').get(group.id).membership_revision,
+                directRevision,'P-09 rejected direct revision update leaves the database value unchanged');
+            coverage.p09.directSqlAttempts++;
+        }
     }
     const random=info.random;
     const sequence={line:`property=P-01 seed=${info.seed} run=${info.run} runSeed=${info.runSeed}`};
@@ -570,6 +639,7 @@ async function runSequence(f,plan,info,coverage) {
                 }
                 const saved={...request,versionAtRequest:request.group?.version??0};
                 const outcome=await runRequest(request,random,sequence,sequenceIndex);
+                if(sequenceIndex===0&&outcome.expected.effect==='create')await runP09Checks(outcome.group,P01_OPERATIONS+sequenceIndex*20);
                 if(outcome.group) {
                     request.group=outcome.group;
                     saved.group=outcome.group;saved.versionAtRequest=request.versionAtRequest??saved.versionAtRequest;
@@ -590,7 +660,7 @@ async function runSequence(f,plan,info,coverage) {
 
 test('P-01: generated operation sequences preserve the owner and group state model',{timeout:240000},async t=>{
     const coverage={operations:new Set(),actors:new Set(),targets:new Set(),roles:new Set(),archived:new Set(),stale:new Set(),wrongActor:0,replays:0,
-        accepted:0,committedRefusals:0,ordinaryRefusals:0,createdGroups:new Set(),p04:{transitions:new Set(),snapshots:0,
+        accepted:0,committedRefusals:0,ordinaryRefusals:0,createdGroups:new Set(),p09:{requests:0,directSqlAttempts:0,noopAssignments:0,preconditions:new Set(),operations:new Set()},p04:{transitions:new Set(),snapshots:0,
             sqlAttemptSlots:0,sqlMutationKinds:new Set(),clockPeriods:new Set()}};
     await forAll('P-01',{runs:P01_SEQUENCES,seed:P01_SEED,onRun:line=>t.diagnostic(line),describe:describeSequence},
         (random,info)=>{const maxGroups=1+random.int(0,2);return Array.from({length:P01_OPERATIONS},(_,index)=>({
@@ -604,6 +674,8 @@ test('P-01: generated operation sequences preserve the owner and group state mod
     t.diagnostic(`P-04 coverage ${JSON.stringify({transitions:[...coverage.p04.transitions],snapshots:coverage.p04.snapshots,
         sqlAttemptSlots:coverage.p04.sqlAttemptSlots,sqlMutationKinds:[...coverage.p04.sqlMutationKinds],
         clockPeriods:[...coverage.p04.clockPeriods]})}`);
+    t.diagnostic(`P-09 coverage ${JSON.stringify({generatedUpdates:coverage.p09.requests,directSqlAttempts:coverage.p09.directSqlAttempts,
+        noopAssignments:coverage.p09.noopAssignments,operations:[...coverage.p09.operations],preconditions:[...coverage.p09.preconditions]})}`);
     if(process.env.PROPERTY_SEED===undefined) {
         assert.equal(coverage.operations.size,12);assert.ok([...coverage.createdGroups].every(n=>n>=1&&n<=3));
         assert.ok(coverage.actors.size>=5);assert.ok(coverage.targets.size>=5);assert.equal(coverage.roles.size,2);
@@ -613,6 +685,10 @@ test('P-01: generated operation sequences preserve the owner and group state mod
         assert.equal(coverage.p04.snapshots,P01_SEQUENCES*P01_OPERATIONS+coverage.p04.sqlAttemptSlots);
         assert.equal(coverage.p04.sqlAttemptSlots,P01_SEQUENCES*(P01_OPERATIONS/10));
         assert.deepEqual([...coverage.p04.clockPeriods].sort(),[0,1,2,3]);
+        assert.equal(coverage.p09.requests,P01_SEQUENCES*15);assert.equal(coverage.p09.directSqlAttempts,P01_SEQUENCES*3);
+        assert.equal(coverage.p09.noopAssignments,P01_SEQUENCES);
+        assert.deepEqual([...coverage.p09.operations].sort(),['direct-add','rejoin']);
+        assert.deepEqual([...coverage.p09.preconditions].sort(),['current','future','stale']);
         for(const state of ['accepted','declined','cancelled'])assert.ok(coverage.p04.transitions.has(`pending->${state}`),`P-04 missing pending->${state}`);
         assert.ok(coverage.p04.sqlMutationKinds.has('pending-id'));assert.ok(coverage.p04.sqlMutationKinds.has('pending-group'));
         assert.ok(coverage.p04.sqlMutationKinds.has('pending-invitee'));assert.ok(coverage.p04.sqlMutationKinds.has('pending-inviter'));

@@ -61,7 +61,29 @@ async function main() {
 
     const { startServer } = require('../../server/start');
     const limiter = Object.freeze({ consume:() => ({ allowed:true }) });
-    const application = await startServer({ env:process.env, features, limiter, log:() => {} });
+    let application;
+    const rejectedPorts=[];
+    for(let attempt=0;attempt<16;attempt++) {
+        const candidate=await startServer({ env:process.env, features, limiter, log:() => {} });
+        const address=candidate.server.address();
+        const port=address&&typeof address==='object'?address.port:null;
+        if(!Number.isInteger(port)||port<1||port>65535) {
+            await candidate.close();
+            throw new Error('Worker server did not receive a valid TCP port.');
+        }
+        try {
+            // Probe Node fetch's forbidden-port list before joining the process barrier.
+            // A rejected candidate is closed before another OS-assigned ephemeral port is requested.
+            await fetch(`http://127.0.0.1:${port}/__fixture_port_probe__`,{method:'HEAD',redirect:'manual'});
+            application=candidate;
+            break;
+        } catch(error) {
+            await candidate.close();
+            if(error?.cause?.message!=='bad port'||String(process.env.PORT)!=='0')throw error;
+            rejectedPorts.push(port);
+        }
+    }
+    if(!application)throw new Error(`No Node-fetch-compatible worker port after 16 attempts; rejected ports: ${rejectedPorts.join(', ')}`);
     try {
         process.stdout.write(`READY ${application.server.address().port}\n`);
         const input = requestInput(JSON.parse(await firstInputLine()));

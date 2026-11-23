@@ -1817,6 +1817,8 @@ test('T-5B-26: archive is a one-time CAS and retains all group data', t => {
 test('T-5B-26: touching a conversation changes only updated_at and does not increment its revision', t => {
     const f = t25Fixture(t), { groups, db, groupId, clock } = f;
     const original = f.repositories.conversations.get(groupId), before = snapshot(db), revision = revisionOf(db, groupId);
+    // The fixture creates the group at the clock's starting instant; move forward so touch is a real timestamp update.
+    clock.advance();
     const result = t26Atomic(f, () => groups.touchConversation(groupId, clock.iso()));
     assert.deepEqual(result, { ...original, updated_at:clock.iso() });
     assert.deepEqual(changedTables(before, snapshot(db)), ['Conversations']);
