@@ -1,5 +1,6 @@
-/** Phase 12A negative probes. Deliberately excluded from *.test.ts regression discovery.
- * These assertions express the required protection and currently FAIL; see the team review.
+/** Phase 12A adversarial probes. Deliberately excluded from *.test.ts regression discovery.
+ * Phase 13A fixes the pin-cache probes; storage-alias probes remain blocked by the
+ * legacy watermark migration contract. See docs/security-findings-a1-a2.md.
  * Real DATA sessions and production client crypto; only the final server read is replayed.
  * Run: node --test --test-concurrency=1 test/manual/revision-watermark-review.check.ts
  */
@@ -37,7 +38,7 @@ async function pair(label: string) {
 }
 
 for (const [i, mode] of ['pin-edit', 'pin-unsend', 'rebind-edit', 'rebind-unsend'].entries()) {
-  test(`known defect: ${mode} must not expose an original after a newer account watermark`, async () => {
+  test(`${mode} must not expose an original after a newer account watermark`, async () => {
     const { a, b, cid } = await pair('wm' + i);
     const m = await a.session.send(cid, 'Alice', 'ORIGINAL_REVIEW_FIXTURE');
     let pins: any, replay = false;
@@ -70,3 +71,17 @@ for (const [i, mode] of ['pin-edit', 'pin-unsend', 'rebind-edit', 'rebind-unsend
     } finally { pins?.dispose(); }
   });
 }
+
+test('legacy deletion-only watermark cannot be bypassed by a new storage alias', async () => {
+  const {a,b,cid}=await pair('wm-empty-deletion');
+  const m=await a.session.send(cid,'Alice','ORIGINAL_UNSEEN_DELETION_FIXTURE');
+  await a.session.api.remove(m.storageId);
+  assert.equal((await b.session.history(cid)).items[0].message.state,'deleted');
+  // Historical clients could persist this without ever receiving the original ciphertext.
+  assert.deepEqual(await b.session.store.get('message-revision',m.storageId),{revision:0,hash:'',deleted:true});
+  await assert.rejects(b.session.decryptStoredMessage(m),(error:any)=>error.code==='invalid_proof');
+  const restored=new Session({...b.api,request:(path:string,options:any)=>path.includes('/messages?')
+    ?Promise.resolve({items:[{...m,storageId:'different-storage-id-deletion-only'}],nextCursor:null}):b.api.request(path,options)});
+  sessions.push(restored);
+  assert.equal((await restored.history(cid)).items[0].text,null,'A new format must preserve anonymous legacy tombstones instead of silently resetting them');
+});

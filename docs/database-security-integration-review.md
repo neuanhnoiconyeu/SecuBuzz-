@@ -1,5 +1,10 @@
 # Phase 12A: Database and Security integration review
 
+> Phase 13A follow-up: the pin-refresh cache bypass A2 is fixed with targeted
+> regression coverage; A1 remains reproducible and requires a reviewed browser
+> watermark identity/migration contract. See the [current A1/A2 review](security-findings-a1-a2.md).
+> The observations and test counts below are the historical Phase 12A record.
+
 Reviewed on 2026-11-22. **Ready for team review with blockers; not ready to merge.** Two reproduced client rollback-protection defects require fixes and Security approval. The normal authenticated server flows pass their regression tests. This review changes tests and documentation only; it does not fix or weaken runtime/schema protections.
 
 ## Branch and preservation
