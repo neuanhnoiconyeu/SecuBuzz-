@@ -13,7 +13,7 @@ const http = require('node:http');
 const express = require('express');
 const { setup } = require('./support/contract');
 const { assertGroupResponse } = require('./support/contract');
-const { snapshot, createClock, assertSecurityHeaders, createGroupBuilder } = require('./support/groups');
+const { snapshot, createClock, assertSecurityHeaders, createGroupBuilder, httpGroupFixture, actorRequest } = require('./support/groups');
 const { forAll } = require('./support/random');
 const { createGroupRouter, GROUP_ROUTES, assertRouteTable, MAX_BODY_BYTES } = require('../server/routes/groups');
 const { AuthError, sendError } = require('../server/auth/errors');
@@ -30,6 +30,8 @@ const PATHS = Object.freeze(['/api/groups', '/api/groups/', '/api/groups/some-gr
 const error503 = { code: 'FEATURE_UNAVAILABLE', fields: [] };
 const error404 = { code: 'NOT_FOUND', fields: [] };
 const error415 = { code: 'UNSUPPORTED_MEDIA_TYPE', fields: [] };
+const GROUP_TEST_FEATURES = Object.freeze({ groupApi:true, groups:Object.freeze({ maxMembers:50,
+    maxPendingInvitationsPerGroup:20, maxPendingInvitationsPerInvitee:20, directAdd:false }) });
 
 // A limiter that records every bucket list it is asked about, and answers allowed unless told to deny.
 function recordingLimiter() {
@@ -2169,4 +2171,42 @@ test('G06: concurrent adds serialize duplicate targets and the last configured s
     assert.deepEqual(lastSlot.map(response => response.status).sort(), [201, 409]);
     assert.equal(limited.db.prepare('SELECT count(*) AS n FROM ConversationMembers WHERE conversation_id=? AND left_at IS NULL').get(limited.groupId).n, 4);
     assert.equal(limited.db.prepare('SELECT membership_revision FROM GroupExtensions WHERE conversation_id=?').get(limited.groupId).membership_revision, revisionBefore + 1);
+});
+
+test('T-5C-51: canonical HTTP port of the standalone group scenario follows the frozen contracts', async t => {
+    const f = await httpGroupFixture(t, { features:GROUP_TEST_FEATURES });
+    const created = await actorRequest(f.actors.owner, 'POST', '/api/groups', { body:{
+        name:'Standalone scenario port', description:'Synthetic route replacement', idempotencyKey:'t5c51-http-port'
+    } });
+    assert.equal(created.status, 201);
+    const id = created.body.group.id;
+    const adminInvitation = await actorRequest(f.actors.owner, 'POST', `/api/groups/${id}/invitations`, { body:{ userId:f.actors.admin.id } });
+    const memberInvitation = await actorRequest(f.actors.owner, 'POST', `/api/groups/${id}/invitations`, { body:{ userId:f.actors.member.id } });
+    assert.equal(adminInvitation.status, 201);
+    assert.equal(memberInvitation.status, 201);
+    assert.equal((await actorRequest(f.actors.owner, 'GET', `/api/groups/${id}/invitations`)).body.items.length, 2);
+    assert.equal((await actorRequest(f.actors.admin, 'POST', `/api/groups/invitations/${adminInvitation.body.invitation.id}/accept`)).status, 200);
+    assert.equal((await actorRequest(f.actors.member, 'POST', `/api/groups/invitations/${memberInvitation.body.invitation.id}/accept`)).status, 200);
+    assert.equal((await actorRequest(f.actors.nonMember, 'GET', `/api/groups/${id}`)).status, 404);
+    assertError(await actorRequest(f.actors.member, 'PATCH', `/api/groups/${id}`, { body:{ name:'forbidden' } }),
+        403, { code:'FORBIDDEN', fields:[] });
+    assertError(await actorRequest(f.actors.owner, 'POST', `/api/groups/${id}/leave`), 409,
+        { code:'CONFLICT', fields:[] });
+    const directAdd = await actorRequest(f.actors.owner, 'POST', `/api/groups/${id}/members`, { body:{ userId:f.actors.member.id } });
+    assertError(directAdd, 503, error503);
+    const revision = f.db.prepare('SELECT membership_revision AS value FROM GroupExtensions WHERE conversation_id=?').get(id).value;
+    const transferred = await actorRequest(f.actors.owner, 'POST', `/api/groups/${id}/transfer`, {
+        body:{ userId:f.actors.admin.id, membershipRevision:revision }
+    });
+    assert.equal(transferred.status, 200);
+    assert.equal(transferred.body.group.id, id);
+    assertError(await actorRequest(f.actors.admin, 'POST', `/api/groups/${id}/leave`), 409,
+        { code:'CONFLICT', fields:[] });
+    assert.equal((await actorRequest(f.actors.owner, 'POST', `/api/groups/${id}/leave`)).status, 204,
+        'the former owner may leave after the ownership transfer');
+    assert.equal((await actorRequest(f.actors.admin, 'DELETE', `/api/groups/${id}/members/${f.actors.member.id}`)).status, 204);
+    assertError(await actorRequest(f.actors.removedMember, 'GET', `/api/groups/${id}`), 404, error404);
+    const after = await actorRequest(f.actors.admin, 'GET', `/api/groups/${id}`);
+    assert.equal(after.status, 200);
+    assert.equal(after.body.group.historyPolicy, 'from_joined');
 });

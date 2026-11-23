@@ -46,8 +46,54 @@ const P28_RUNS = 100;
 const P28_SEED = 28119;
 
 const MIGRATIONS = path.join(__dirname, '..', 'server', 'database', 'migrations');
-const PUBLISHED = Object.freeze(['0001-legacy.sql', '0002-foundation.sql', '0003-authentication.sql', '0004-profiles-friends.sql',
-    '0005-conversation-provenance.sql', '0006-encrypted-message-lifecycle.sql', '0007-recipient-keys.sql']);
+// The version-7 ledger is derived from the migration directory: the group migration marks the boundary between the
+// previously published schema and the DB-5C upgrade. Adding a later migration does not change this boundary.
+const allMigrations = loadMigrations();
+const groupMigration = allMigrations.find(migration => /CREATE TABLE\s+(?:IF NOT EXISTS\s+)?GroupExtensions\b/i.test(migration.sql));
+if (!groupMigration) throw new Error('the migration directory must identify the GroupExtensions boundary');
+const PUBLISHED_MIGRATIONS = Object.freeze(allMigrations.filter(migration => migration.version < groupMigration.version));
+const PUBLISHED = Object.freeze(PUBLISHED_MIGRATIONS.map(migration => migration.name));
+const BASELINE_VERSION = PUBLISHED_MIGRATIONS.at(-1)?.version;
+if (!Number.isInteger(BASELINE_VERSION)) throw new Error('the group migration must follow at least one published migration');
+const BASELINE_MANIFEST = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'baseline-d7cd40a.json'), 'utf8'));
+
+// T-5C-45: ordinary tests derive migration ledgers from the directory or runner. The baseline checksum test pins
+// migration hashes and is not a test ledger. Seven existing baseline lines are DC-01 exceptions recorded in the manifest.
+function hardCodedLedgerReferences(source) {
+    const violations = [];
+    const lines = source.split(/\r?\n/);
+    const fileNames = /(?:['"`]\d{4}-[a-z0-9-]+\.sql['"`])/gi;
+    const namedList = /(?:PUBLISHED|MIGRATION_FILES|APPLIED_MIGRATIONS|EXPECTED_MIGRATIONS)\s*=\s*(?:Object\.freeze\s*\()?\s*\[/i;
+    const appliedList = /\.applied\s*,?\s*\[\s*(?:['"`]?\d{4}-[a-z0-9-]+\.sql['"`]?|\d+)\s*,\s*(?:['"`]?\d{4}-[a-z0-9-]+\.sql['"`]?|\d+)/i;
+    const highestVersion = /(?:MAX\s*\(\s*version\s*\)[^\r\n]{0,100}?\.get\(\)\.[A-Za-z_$][\w$]*\s*,\s*\d+|(?:maxVersion|latestVersion)\s*=\s*\d+)/i;
+    for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index];
+        if (namedList.test(line) && (lines.slice(index, index + 8).join('\n').match(fileNames) || []).length >= 2) violations.push({ line:index + 1, kind:'migration-file-list' });
+        if (appliedList.test(line)) violations.push({ line:index + 1, kind:'applied-version-list' });
+        if (highestVersion.test(line)) violations.push({ line:index + 1, kind:'latest-version-number' });
+    }
+    return violations;
+}
+function checkTestLedgers() {
+    const baselineFiles = new Set(Object.keys(BASELINE_MANIFEST.tests));
+    const files = fs.readdirSync(__dirname, { withFileTypes:true }).filter(entry => entry.isFile() && entry.name.endsWith('.test.js')
+        && !baselineFiles.has(entry.name) && !['baseline-checksums.test.js', 'groups-migrations.test.js'].includes(entry.name));
+    const dc01 = new Map();
+    for (const entry of BASELINE_MANIFEST.dc01) {
+        if (!dc01.has(entry.file)) dc01.set(entry.file, new Set());
+        dc01.get(entry.file).add(entry.line);
+    }
+    const problems = [];
+    for (const file of files) {
+        const exempt = dc01.get(file.name) || new Set();
+        const lines = fs.readFileSync(path.join(__dirname, file.name), 'utf8').split(/\r?\n/);
+        for (let index = 0; index < lines.length; index += 1) {
+            if (exempt.has(index + 1)) continue;
+            for (const hit of hardCodedLedgerReferences(lines[index])) problems.push(`${file.name}:${index + 1}:${hit.kind}`);
+        }
+    }
+    return problems;
+}
 const NEW_TABLES = Object.freeze(['ConversationInvitations', 'GroupCreationKeys', 'GroupExtensions', 'GroupMembershipIntervals',
     'GroupReadPositions']);
 
@@ -56,12 +102,22 @@ function atVersionSeven(t) {
     const f = fixture(t, { migrate: false });
     guardPath(f.filename);
     const directory = temporary(t);
-    const published = loadMigrations().filter(migration => migration.version <= 7);
+    const published = PUBLISHED_MIGRATIONS;
     assert.deepEqual(published.map(migration => migration.name), PUBLISHED);
     for (const migration of published) fs.writeFileSync(path.join(directory, migration.name), migration.sql);
-    assert.deepEqual(migrate(f.db, { directory }), { version: 7, applied: PUBLISHED });
+    assert.deepEqual(migrate(f.db, { directory }), { version: BASELINE_VERSION, applied: PUBLISHED });
     return f;
 }
+
+test('T-5C-45: migration ledgers are derived, and the checker catches file, applied-list and latest-version literals', () => {
+    assert.deepEqual(checkTestLedgers(), [], 'no unapproved static migration ledger occurs in DATA tests');
+    const splitName = `\"0001-` + `legacy.sql\", \"0002-foundation.sql\"`;
+    assert.deepEqual(hardCodedLedgerReferences(`const PUBLISHED = [${splitName}];`), [{ line:1, kind:'migration-file-list' }]);
+    assert.deepEqual(hardCodedLedgerReferences('assert.deepEqual(migrate(db).applied, [1, 2]);'), [{ line:1, kind:'applied-version-list' }]);
+    assert.deepEqual(hardCodedLedgerReferences('db.prepare("SELECT max(version) AS v FROM SchemaMigrations").get().v,7'),
+        [{ line:1, kind:'latest-version-number' }]);
+    assert.deepEqual(hardCodedLedgerReferences('const latest = migrations.at(-1).version;'), []);
+});
 
 // Test-only insert; table and column names are literals of this file, every value is a bound parameter.
 function insert(db, table, row) {
@@ -228,7 +284,7 @@ function digest(db, table, where = '') {
     const rows = db.prepare(`SELECT * FROM ${table} ${where} ORDER BY rowid`).all();
     return { rows: rows.length, sha256: createHash('sha256').update(JSON.stringify(rows)).digest('hex') };
 }
-const laterNames = () => loadMigrations().filter(migration => migration.version > 7).map(migration => migration.name);
+const laterNames = () => allMigrations.filter(migration => migration.version > BASELINE_VERSION).map(migration => migration.name);
 
 test('upgrade from version 7: every group of any origin gets one from_joined extension row and each member one interval by the sequence rule', t => {
     const { db } = atVersionSeven(t);
@@ -289,7 +345,7 @@ test('upgrade from version 7 keeps every row and value of every version-7 table 
     seed(db);
     const tables = tableNames(db);
     const snapshot = () => Object.fromEntries(tables.map(table =>
-        [table, table === 'SchemaMigrations' ? digest(db, table, 'WHERE version <= 7') : digest(db, table)]));
+        [table, table === 'SchemaMigrations' ? digest(db, table, `WHERE version <= ${BASELINE_VERSION}`) : digest(db, table)]));
     const before = snapshot();
     for (const table of ['Users', 'UserProfiles', 'AccountCredentials', 'Sessions', 'SocialRevisions', 'FriendRequests', 'Friendships',
         'Blocks', 'Contacts', 'SecurityLogs', 'AuditLogs', 'Conversations', 'ConversationMembers', 'Messages', 'MessageReceipts',
@@ -348,7 +404,7 @@ function guardedDatabase(t, options = {}) {
 // A new guarded folder holding copies of 0001 to 0007, the runner's options.directory for a version-7 database.
 function publishedDirectory(t) {
     const directory = temporaryDirectory(t);
-    const published = loadMigrations().filter(migration => migration.version <= PUBLISHED.length);
+    const published = PUBLISHED_MIGRATIONS;
     assert.deepEqual(published.map(migration => migration.name), PUBLISHED);
     for (const migration of published) fs.writeFileSync(path.join(directory, migration.name), migration.sql);
     return directory;
@@ -356,7 +412,7 @@ function publishedDirectory(t) {
 function guardedVersionSeven(t) {
     const f = guardedDatabase(t, { migrate: false });
     const published = publishedDirectory(t);
-    assert.deepEqual(migrate(f.db, { directory: published }), { version: 7, applied: PUBLISHED });
+    assert.deepEqual(migrate(f.db, { directory: published }), { version: BASELINE_VERSION, applied: PUBLISHED });
     return { ...f, published };
 }
 // The seeded version-7 database of the upgrade example, upgraded with the real migration directory.
@@ -1477,7 +1533,7 @@ UPDATE Users SET display_name='P28 pending' WHERE user_id=(SELECT user_id FROM U
     return copy;
 }
 
-function p28AssertRollback(f, directory, parts, fault, pendingLedger = 7) {
+function p28AssertRollback(f, directory, parts, fault, pendingLedger = BASELINE_VERSION) {
     const before = databaseState(f.db), trace = [];
     f.db.function('p28_checkpoint', (index, rows, displayName, ledger) => {
         trace.push({ index, rows, displayName, ledger, inTransaction:f.db.inTransaction });
@@ -1547,7 +1603,7 @@ test('P-28: faults before the first and after the last 0008 statement also roll 
         p28AssertRollback(f, directory, parts, { ...fault, position });
         assert.equal(f.db.prepare('SELECT max(version) AS n FROM SchemaMigrations').get().n, 6, 'pending 0007 ledger insertion rolled back too');
     }
-    assert.deepEqual(migrate(f.db).applied, ['0007-recipient-keys.sql', ...laterNames()]);
+    assert.deepEqual(migrate(f.db).applied, [...PUBLISHED.slice(-1), ...laterNames()]);
     assert.equal(f.db.prepare('SELECT count(*) AS n FROM GroupExtensions').get().n, 1);
     assert.equal(f.db.prepare('SELECT count(*) AS n FROM GroupMembershipIntervals').get().n, 1);
     t.diagnostic('P-28-boundaries failures=6; pending 0007 and 0008 rolled back together');

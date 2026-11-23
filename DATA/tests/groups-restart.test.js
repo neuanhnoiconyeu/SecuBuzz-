@@ -4,10 +4,67 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { groupFixture, createClock, guardPath, snapshot, changedTables, INVITATION_EXPIRY_MS } = require('./support/groups');
+const { groupFixture, httpGroupFixture, actorRequest, createClock, guardPath, snapshot, changedTables, INVITATION_EXPIRY_MS, openLimiter } = require('./support/groups');
 const { forAll } = require('./support/random');
 const { openDatabase } = require('../server/database/connection');
 const { createGroupRepository, withMembershipTransaction, RepositoryError } = require('../server/database/groupRepository');
+const { startServer } = require('../server/start');
+const { envDefaults, Browser, PASSWORD } = require('./support/auth');
+const { createRandom } = require('./support/random');
+const API_RUNS = 20;
+const API_STEPS = 20;
+const API_SEED = 0x5c3242;
+const FEATURES = Object.freeze({ groupApi:true, groupMessaging:false, attachmentApi:false,
+    groups:Object.freeze({ maxMembers:50, maxPendingInvitationsPerGroup:20, maxPendingInvitationsPerInvitee:20, directAdd:false }), attachments:Object.freeze({}) });
+
+async function replacementServer(f, t) {
+    for (let attempt = 0; attempt < 16; attempt += 1) {
+        const db = openDatabase({ filename:guardPath(f.filename) });
+        f.connections.push(db);
+        const app = await startServer({ db, config:f.config, env:{ ...envDefaults, PORT:'0', DB_PATH:f.filename },
+            features:FEATURES, now:f.clock.now, limiter:openLimiter(), log:() => {} });
+        f.applications.push(app);
+        const address = app.server.address();
+        const browser = new Browser(`http://127.0.0.1:${address.port}`, f.config.origins[0]);
+        try {
+            await fetch(`${browser.origin}/__restart_probe__`, { method:'HEAD' });
+            return { app, db, browser };
+        } catch (error) {
+            await app.close(); db.close();
+            if (error?.cause?.message !== 'bad port') throw error;
+            t.diagnostic(`Node fetch rejected restart fixture port ${address.port}; retrying an OS-assigned port.`);
+        }
+    }
+    throw new Error('No Node-fetch-compatible restart test port after 16 OS-assigned attempts.');
+}
+
+function apiProbes(f, random) {
+    const users = Object.values(f.actors);
+    const routes = [
+        actor => ['GET', '/api/groups'],
+        actor => ['GET', `/api/groups/${f.groupId}`],
+        actor => ['GET', `/api/groups/${f.groupId}/members?former=true`],
+        actor => ['GET', `/api/groups/${f.groupId}/invitations`],
+        actor => ['GET', '/api/groups/invitations']
+    ];
+    return Array.from({ length:API_STEPS }, (_, index) => {
+        const actor = random.pick(users);
+        const [method, route] = routes[index % routes.length](actor);
+        return { actor, method, route };
+    });
+}
+
+async function runApiProbes(f, probes, origin) {
+    const results = [];
+    for (const probe of probes) {
+        const browser = probe.actor.id ? probe.actor.browser : f.actors.unauthenticated.browser;
+        browser.origin = origin;
+        const response = await browser.request(probe.route, { method:probe.method });
+        results.push({ actor:probe.actor.actorClass, method:probe.method, route:probe.route,
+            status:response.status, body:response.body });
+    }
+    return results;
+}
 
 const SEED = 5130;
 const RUNS = 20;
@@ -212,6 +269,71 @@ test('P-32: 20 seeded repository sequences retain every projection after close/o
     }
     t.diagnostic(`P-32 seed=${result.seed} sequences=${result.runs} operations=${executed} categories=${operations.size}; all reopen changes=0, ledgers/schema/projections identical`);
 });
+
+test('P-32 API: 20 generated sequences of 20 user/action probes and API projections survive startServer restart',
+    { timeout:300000 }, async t => {
+        const random = createRandom(API_SEED);
+        const coverage = new Set();
+        const routeCoverage = new Set();
+        let operations = 0;
+        for (let run = 0; run < API_RUNS; run += 1) {
+            const f = await httpGroupFixture(t, { clock:createClock('2030-01-01T00:00:00.000Z'), features:FEATURES,
+                group:{ conversationId:`p32-api-${run}`, historyPolicy:run % 2 ? 'all' : 'from_joined' } });
+            f.ids = [f.groupId];
+            f.users = Object.values(f.actors).map(actor => actor.id).filter(Boolean);
+            f.invitations = [f.invitationId];
+            f.keys = [];
+            const probes = apiProbes(f, random);
+            const before = await runApiProbes(f, probes, f.actors.owner.browser.origin);
+            for (const result of before) {
+                coverage.add(`${result.actor}:${result.route.split('?')[0]}`);
+                routeCoverage.add(result.route.split('?')[0].replace(/p32-api-\d+/, '{id}'));
+                operations += 1;
+            }
+            const expectedLedger = ledger(f.db);
+            const expectedSnapshot = snapshot(f.db);
+            const expectedProjection = projection(f.db, f, f.clock.iso());
+            const migrationRowsBefore = expectedLedger.length;
+            const oldApp = f.application;
+            const oldDb = f.db;
+            await oldApp.close();
+            oldDb.close();
+            const restarted = await replacementServer(f, t);
+            f.application = restarted.app;
+            f.db = restarted.db;
+            assert.equal(f.db.prepare('SELECT total_changes() AS n').get().n, 0, `seed=${API_SEED} run=${run} second start performs no migration writes`);
+            assert.deepEqual(ledger(f.db), expectedLedger, `seed=${API_SEED} run=${run} migration ledger`);
+            assert.equal(ledger(f.db).length, migrationRowsBefore);
+            assert.deepEqual(snapshot(f.db), expectedSnapshot, `seed=${API_SEED} run=${run} persisted tables`);
+            assert.deepEqual(projection(f.db, f, f.clock.iso()), expectedProjection, `seed=${API_SEED} run=${run} repository/API backing projections`);
+            const after = await runApiProbes(f, probes, restarted.browser.origin);
+            assert.deepEqual(after, before, `seed=${API_SEED} run=${run} API allow/refuse results`);
+            // Sessions and CSRF tokens persist with the same database. Expiry during downtime is a committed-time check.
+            const expiresAt = f.db.prepare('SELECT expires_at FROM ConversationInvitations WHERE invitation_id=?').get(f.invitationId).expires_at;
+            await restarted.app.close();
+            restarted.db.close();
+            f.clock.advance(Date.parse(expiresAt) - f.clock.now() + 1);
+            const expiredRestart = await replacementServer(f, t);
+            f.application = expiredRestart.app;
+            f.db = expiredRestart.db;
+            assert.equal(f.db.prepare('SELECT total_changes() AS n').get().n, 0, `seed=${API_SEED} run=${run} expiry restart performs no migration writes`);
+            assert.deepEqual(ledger(f.db), expectedLedger, `seed=${API_SEED} run=${run} expiry restart ledger`);
+            const renewedInvitee = { ...f.actors.pendingInvitee, browser:new Browser(expiredRestart.browser.origin, f.config.origins[0]) };
+            assert.equal((await renewedInvitee.browser.login(renewedInvitee.username, PASSWORD)).status, 200,
+                `seed=${API_SEED} run=${run} reauthenticate after session expiry during seven-day downtime`);
+            renewedInvitee.token = await renewedInvitee.browser.csrf();
+            const expired = await actorRequest(renewedInvitee, 'POST', `/api/groups/invitations/${f.invitationId}/accept`);
+            assert.equal(expired.status, 409, `seed=${API_SEED} run=${run} expired during downtime`);
+            assert.equal(expired.body.code, 'CONFLICT');
+            assert.equal(f.db.prepare('SELECT 1 FROM ConversationMembers WHERE conversation_id=? AND user_id=? AND left_at IS NULL')
+                .get(f.groupId, f.actors.pendingInvitee.id), undefined);
+            t.diagnostic(`P-32 API seed=${API_SEED} run=${run} operations=${API_STEPS} expired-accept=409 ledger-writes=0`);
+        }
+        assert.equal(operations, API_RUNS * API_STEPS);
+        assert.deepEqual([...routeCoverage].sort(), ['/api/groups', '/api/groups/{id}', '/api/groups/{id}/invitations',
+            '/api/groups/{id}/members', '/api/groups/invitations'].sort());
+        assert.ok(coverage.size > API_STEPS, 'generated actor and endpoint classes varied across sequences');
+    });
 
 test('P-32: closing an uncommitted immediate transaction restores message, invitation, settings and read state', t => {
     const f = fixture(t), g = f.groups, id = f.groupId;

@@ -22,6 +22,11 @@ const { DISABLED_FEATURES } = require('../server/features/config');
 const service = require('../server/groups/service');
 
 const { createGroupService, notFound, toAuthError, DEFAULT_RATE_LIMITS, AUDIT_EVENTS } = service;
+const P41_RUNS = 50;
+const P41_STEPS = 20;
+const P41_SEED = 0x5c5341;
+const P41_FEATURES = Object.freeze({ groupApi:true, groups:Object.freeze({ maxMembers:50,
+    maxPendingInvitationsPerGroup:50, maxPendingInvitationsPerInvitee:50, directAdd:false }) });
 
 const SENTINEL = 'SENTINEL-DB-TEXT-5c03';
 const thrown = work => {
@@ -74,6 +79,178 @@ test('P-03 prerequisite: member removal refusal precedes target lookup (DB5-R05.
     }
     assert.deepEqual(failures, [], 'member removal must return 403 FORBIDDEN for every target class');
 });
+
+test('P-41: seeded 50x20 API sequences preserve creation-time History_Policy through every operation',
+    { timeout:300000 }, async t => {
+        const random = createRandom(P41_SEED);
+        const invalidPolicies = [null, 'ALL', 'From_Joined', '', 7, {}, []];
+        const patchValues = ['all','from_joined','stored','other',null,7];
+        const patchActors = ['owner','admin','member','nonMember'];
+        const fixtureFeatures = P41_FEATURES;
+        const fixtureClockStart = '2031-01-01T00:00:00.000Z';
+        const template = await httpGroupFixture(t,{clock:createClock(fixtureClockStart),features:fixtureFeatures,createGroup:false});
+        await template.application.close();
+        template.db.pragma('wal_checkpoint(TRUNCATE)');
+        template.db.close();
+        const operationNames = ['invite-admin','accept-admin','invite-member','accept-member','patch-owner',
+            'sql-policy-update','invite-outsider','patch-admin','cancel','reinvite-outsider','decline-outsider',
+            'clock-advance','role-change','patch-member','transfer','sql-policy-update','remove','leave','archive','patch-archived-owner'];
+        const operationCoverage = new Set();
+        const valueCoverage = new Set();
+        const actorCoverage = new Set();
+        const groupCounts = new Set();
+
+        for (let run = 0; run < P41_RUNS; run += 1) {
+            const clock = createClock(fixtureClockStart);
+            const f = await httpGroupFixture(t, { clock, features:fixtureFeatures, createGroup:false,
+                databaseTemplate:template.filename,actorTemplate:template.actors });
+            const policy = random.pick([undefined,'all','from_joined']);
+            const key = `p41-create-${run}`;
+            const createBody = { name:`P41 group ${run}`, description:'fixed policy property', idempotencyKey:key };
+            if (policy !== undefined) createBody.historyPolicy = policy;
+            const create = await actorRequest(f.actors.owner, 'POST', '/api/groups', { body:createBody });
+            assert.equal(create.status, 201, `seed=${P41_SEED} run=${run} group create`);
+            const id = create.body.group.id;
+            const fixedPolicy = policy ?? 'from_joined';
+            const fixedPolicies = new Map([[id,fixedPolicy]]);
+            assert.equal(create.body.group.historyPolicy, fixedPolicy);
+            const extensionPolicy = () => f.db.prepare('SELECT history_policy FROM GroupExtensions WHERE conversation_id=?').get(id).history_policy;
+            const groupIds = [id];
+            if (run % 2 === 1) {
+                const otherPolicy = fixedPolicy === 'all' ? 'from_joined' : 'all';
+                const second = await actorRequest(f.actors.owner, 'POST', '/api/groups', { body:{
+                    name:`P41 secondary ${run}`, description:'second generated group', historyPolicy:otherPolicy,
+                    idempotencyKey:`p41-secondary-${run}`
+                } });
+                assert.equal(second.status, 201);
+                groupIds.push(second.body.group.id);
+                fixedPolicies.set(second.body.group.id,otherPolicy);
+                assert.equal(second.body.group.historyPolicy, otherPolicy);
+            }
+            groupCounts.add(groupIds.length);
+            // A same-key create must fingerprint the policy: different policy conflicts; the identical request replays.
+            const alternate = { ...createBody, historyPolicy:fixedPolicy === 'all' ? 'from_joined' : 'all' };
+            const conflict = await actorRequest(f.actors.owner, 'POST', '/api/groups', { body:alternate });
+            assert.deepEqual([conflict.status, conflict.body.code], [409, 'IDEMPOTENCY_CONFLICT'], `seed=${P41_SEED} run=${run} policy fingerprint`);
+            const replay = await actorRequest(f.actors.owner, 'POST', '/api/groups', { body:createBody });
+            assert.equal(replay.status, 200, `seed=${P41_SEED} run=${run} same-key replay`);
+            assert.equal(replay.body.group.id, id);
+
+            const invalid = invalidPolicies[run % invalidPolicies.length];
+            const invalidBefore = snapshot(f.db);
+            const invalidResponse = await actorRequest(f.actors.owner, 'POST', '/api/groups', { body:{
+                name:`P41 invalid ${run}`, idempotencyKey:`p41-invalid-${run}`, historyPolicy:invalid
+            } });
+            assert.equal(invalidResponse.status, 400);
+            assert.equal(invalidResponse.body.code, 'VALIDATION_ERROR');
+            assert.ok(invalidResponse.body.fields.includes('historyPolicy'));
+            assert.deepEqual(snapshot(f.db), invalidBefore, `seed=${P41_SEED} run=${run} invalid creation creates no group`);
+
+            const inviter = f.actors.owner;
+            let currentOwner = inviter;
+            const activeUsers = new Set([inviter.id]);
+            let pendingId = null;
+            let archived = false;
+            const stored = groupId => f.db.prepare('SELECT history_policy FROM GroupExtensions WHERE conversation_id=?').get(groupId).history_policy;
+            const assertPolicies = async operation => {
+                for (const groupId of groupIds) {
+                    const expected = fixedPolicies.get(groupId);
+                    assert.equal(stored(groupId), expected, `seed=${P41_SEED} run=${run} ${operation} SQL policy`);
+                    const reader = groupId === id ? currentOwner : inviter;
+                    const projection = await actorRequest(reader, 'GET', `/api/groups/${groupId}`);
+                    assert.equal(projection.status, 200, `seed=${P41_SEED} run=${run} ${operation} G03 visibility`);
+                    assert.equal(projection.body.group.historyPolicy, expected, `seed=${P41_SEED} run=${run} ${operation} G03 policy`);
+                }
+            };
+            const patchPolicy = async (position, actorName, value, selectedActor = f.actors[actorName]) => {
+                const actor = selectedActor;
+                const shown = value === 'stored' ? fixedPolicy : value;
+                const body = { historyPolicy:shown };
+                if ((run + position) % 2) body.name = `P41 attempted rename ${run}-${position}`;
+                const before = snapshot(f.db);
+                const response = await actorRequest(actor, 'PATCH', `/api/groups/${id}`, { body });
+                let expected;
+                if (archived && actor === currentOwner) expected = [409,'CONFLICT'];
+                else if (actor === currentOwner) expected = [400,'VALIDATION_ERROR'];
+                else if (activeUsers.has(actor.id)) expected = [403,'FORBIDDEN'];
+                else expected = [404,'NOT_FOUND'];
+                assert.deepEqual([response.status,response.body.code], expected, `seed=${P41_SEED} run=${run} step=${position} actor=${actorName}`);
+                if (response.status === 400) assert.ok(response.body.fields.includes('historyPolicy'));
+                assert.deepEqual(snapshot(f.db), before, `seed=${P41_SEED} run=${run} step=${position} refused PATCH is atomic`);
+                actorCoverage.add(actorName === 'currentOwner' ? 'owner' : actorName);
+                valueCoverage.add(shown === fixedPolicy ? 'stored' : String(shown));
+                await assertPolicies(`PATCH-${position}`);
+            };
+
+            const revisionNow = () => f.db.prepare('SELECT membership_revision FROM GroupExtensions WHERE conversation_id=?').get(id).membership_revision;
+            const inviteUser = async user => {
+                const response = await actorRequest(currentOwner, 'POST', `/api/groups/${id}/invitations`, { body:{ userId:user.id } });
+                return response;
+            };
+            for (let step = 0; step < P41_STEPS; step += 1) {
+                const operation = operationNames[step];
+                operationCoverage.add(operation);
+                if (operation === 'invite-admin') {
+                    const response = await inviteUser(f.actors.admin); assert.equal(response.status,201); pendingId=response.body.invitation.id;
+                } else if (operation === 'accept-admin') {
+                    assert.equal((await actorRequest(f.actors.admin,'POST',`/api/groups/invitations/${pendingId}/accept`)).status,200);
+                    activeUsers.add(f.actors.admin.id);
+                } else if (operation === 'invite-member') {
+                    const response = await inviteUser(f.actors.member); assert.equal(response.status,201); pendingId=response.body.invitation.id;
+                } else if (operation === 'accept-member') {
+                    assert.equal((await actorRequest(f.actors.member,'POST',`/api/groups/invitations/${pendingId}/accept`)).status,200);
+                    activeUsers.add(f.actors.member.id);
+                } else if (operation === 'patch-owner') {
+                    const value = patchValues[random.int(0,patchValues.length-1)]; await patchPolicy(step,'owner',value);
+                } else if (operation === 'sql-policy-update') {
+                    const before = stored(id); const proposed = before === 'all' ? 'from_joined' : 'all';
+                    assert.throws(() => f.db.prepare('UPDATE GroupExtensions SET history_policy=? WHERE conversation_id=?').run(proposed,id));
+                    assert.equal(stored(id),before,`seed=${P41_SEED} run=${run} direct policy UPDATE is rejected`);
+                } else if (operation === 'invite-outsider' || operation === 'reinvite-outsider') {
+                    const response = await inviteUser(f.actors.nonMember); assert.equal(response.status,201); pendingId=response.body.invitation.id;
+                    assert.equal((await actorRequest(currentOwner,'GET',`/api/groups/${id}/invitations`)).status,200);
+                } else if (operation === 'patch-admin') {
+                    const actorName = patchActors[run % patchActors.length]; await patchPolicy(step,actorName,patchValues[random.int(0,patchValues.length-1)]);
+                } else if (operation === 'cancel') {
+                    assert.ok(pendingId); assert.equal((await actorRequest(currentOwner,'DELETE',`/api/groups/${id}/invitations/${pendingId}`)).status,204);
+                } else if (operation === 'decline-outsider') {
+                    const response = await actorRequest(f.actors.nonMember,'POST',`/api/groups/invitations/${pendingId}/decline`);
+                    assert.equal(response.status,204);
+                } else if (operation === 'clock-advance') clock.advance(1000);
+                else if (operation === 'role-change') {
+                    assert.equal((await actorRequest(currentOwner,'PATCH',`/api/groups/${id}/members/${f.actors.admin.id}`, {
+                        body:{ role:'admin', membershipRevision:revisionNow() }
+                    })).status,200);
+                } else if (operation === 'patch-member') {
+                    const actorName = patchActors[(run + 1) % patchActors.length]; await patchPolicy(step,actorName,patchValues[random.int(0,patchValues.length-1)]);
+                } else if (operation === 'transfer') {
+                    assert.equal((await actorRequest(currentOwner,'POST',`/api/groups/${id}/transfer`, {
+                        body:{ userId:f.actors.member.id, membershipRevision:revisionNow() }
+                    })).status,200);
+                    currentOwner=f.actors.member;
+                } else if (operation === 'remove') {
+                    assert.equal((await actorRequest(currentOwner,'DELETE',`/api/groups/${id}/members/${f.actors.admin.id}`)).status,204);
+                    activeUsers.delete(f.actors.admin.id);
+                } else if (operation === 'leave') {
+                    assert.equal((await actorRequest(inviter,'POST',`/api/groups/${id}/leave`)).status,204);
+                    activeUsers.delete(inviter.id);
+                } else if (operation === 'archive') {
+                    assert.equal((await actorRequest(currentOwner,'POST',`/api/groups/${id}/archive`)).status,200); archived=true;
+                } else if (operation === 'patch-archived-owner') {
+                    await patchPolicy(step,'currentOwner',patchValues[random.int(0,patchValues.length-1)],currentOwner);
+                }
+                await assertPolicies(operation);
+            }
+            t.diagnostic(`P-41 seed=${P41_SEED} run=${run} operations=${P41_STEPS} groups=${groupIds.length} policy=${fixedPolicy}`);
+            await f.application.close();
+            for (const connection of f.connections) if(connection.open) connection.close();
+        }
+        assert.equal(operationCoverage.size, new Set(operationNames).size);
+        assert.deepEqual([...groupCounts].sort(), [1,2]);
+        assert.deepEqual([...actorCoverage].sort(), ['admin','member','nonMember','owner'].sort());
+        assert.ok(valueCoverage.has('stored') && valueCoverage.has('all') && valueCoverage.has('from_joined'));
+        t.diagnostic(`P-41 seed=${P41_SEED} sequences=${P41_RUNS} operations=${P41_RUNS*P41_STEPS} categories=${operationCoverage.size} group-counts=${[...groupCounts].join(',')}`);
+    });
 
 const P03_RUNS = 300;
 const P03_SEED = 0x5c032022;

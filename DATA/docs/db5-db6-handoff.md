@@ -861,6 +861,16 @@ Every item below is open and keeps its provisional default until the Project_Own
 | OP-19 | Per-source rate limit values in the Docker_Environment | Configurable, generous in development; no trust of forwarded headers (no `X-Forwarded-For`, no entry in `AUTH_TRUST_PROXY_IPS`) |
 | OP-20 | Requirement amendments OA-01 to OA-04 | None applied; the requirement text is unchanged and the defaults of OP-05, OP-03, OP-13 and OP-12 apply (table "Amendments awaiting owner approval" above) |
 
+### DB-5C owner response recorded for T-5C-49 (2026-11-23)
+
+The Project_Owner directed: “Keep both unset; retain provisional defaults.” Accordingly, `GROUP_MAX_PENDING_INVITATIONS_PER_GROUP` and `GROUP_MAX_PENDING_INVITATIONS_PER_INVITEE` remain unset, have no code or environment default, and keep the Group_API disabled outside tests until both approved values exist. This is not an approval to enable the Group_API.
+
+The provisional policy/defaults already listed above remain unchanged: no re-invite delay is selected by this plan; the OD-01 friendship sub-question retains its no-additional-friendship-rule default beyond blocks; OD-02, OD-03, OD-06, OD-07, OD-09, OD-10 and OD-11 remain as listed; PUT remains in the mutation bucket (OP-17); the existing configurable per-source rate limits and no-forwarded-header trust remain (OP-19); and the current production Gate_Record format acknowledgement (OP-11) remains in place. OP-19 current source buckets are 240 reads/minute, 120 mutations/minute, 60 invitation creations/hour and 60 group creations/hour; these are recorded as existing provisional implementation values, not newly approved product limits. No numerical amendments to OP-19 were supplied. CI-14 keeps the specified session, CSRF, switch, rate-limit order. The OD-05 consequences remain as recorded above and in the accepted API contract. Other provisional recommendations remain provisional; this response does not promote them to final product policy.
+
+### Superseding Project_Owner decision for T-5C-49 (2026-11-23)
+
+The Project_Owner approved `GROUP_MAX_PENDING_INVITATIONS_PER_GROUP=20` and `GROUP_MAX_PENDING_INVITATIONS_PER_INVITEE=10`, and approved no additional re-invite delay. This decision supersedes the earlier direction to leave both values unset for purposes of resolving OD-08; it does not create code or environment defaults, apply deployment configuration, enable `GROUPS_API_ENABLED`, or approve the `GROUP-MANAGEMENT` Gate_Record. Production remains fail-closed when either required setting is absent or invalid. These values are approved configuration policy, not defaults.
+
 ##### Provisional defaults that Kiro applies in DB-5B (OP-01, OP-07, OP-09)
 
 Reported to the Project_Owner. Kiro recommended these three defaults and the Project_Owner has not approved them. They stay PROVISIONAL, and DB-5B code and tests follow them until the Project_Owner approves them or decides otherwise. The Phase gate T-5B-37 records how each one was applied.
@@ -987,13 +997,49 @@ Task 2.13 still depends on this completed invitation HTTP surface and needs its 
 
 ### Proposed update of `docs/docker-development.md` (OP-18)
 
-The proposed update of the section "Data and future migrations" of `docs/docker-development.md` is carried here as text and is applied only after the Project_Owner approves it (OP-18; INFRA-01 owns that file). Until then the guide is not edited. The text below is a draft; its version numbers are set when 0008 ships (and again for 0009 in DB-6B).
+The Project_Owner has not approved editing `docs/docker-development.md`; the proposal remains in this handoff only. INFRA-01 owns the guide, so no Docker material is modified by this task.
 
-Proposed replacement of the second paragraph of "Data and future migrations" (the paragraph that says INFRA-01B contains versions 0001 through 0007 and calls 0008/0009 future migrations):
+Proposed replacement text for the section "Data and future migrations":
 
-> The unchanged canonical DATA connection applies its transactional, checksummed migrations before serving requests. The shipped versions are 0001 through 0008 (0009 is added by DB-6B). WARNING: the first start of an image that contains a new migration migrates the `sqlite-data` volume at once and permanently. Older code then refuses to start with `MIGRATION_HISTORY_MISMATCH`, and turning a feature switch off does not undo a migration. Before that first start against data to keep, stop every writer and take the cold backup below. Do not run `docker compose watch` while a migration file is a draft. The migration documents are `DATA/docs/migrations.md` and `DATA/docs/schema.md`; the DB-5/DB-6 handoff is `DATA/docs/db5-db6-handoff.md`. Migration failure stops startup; never initialize from legacy `schema.sql` or rewrite the ledger.
+> The shipped Canonical_DATA migration ledger contains versions 0001 through 0008 (`0008-groups.sql`). Version 0009 remains a future migration until DB-6B ships it. **WARNING: migrations are one-way.** A database migrated to 0008 or higher cannot start under code that does not contain those migrations: the runner rejects extra ledger rows with `MIGRATION_HISTORY_MISMATCH`. Before the first start of code containing a new migration against data to keep, stop every writer and take a cold backup of both volume roots using the cold-backup procedure in this guide. No backup helper is supplied or supported (DK-05 and DK-06). See `DATA/docs/migrations.md` and `DATA/docs/schema.md` for the canonical migration and schema details.
 
-Two related sentences for the owner to review in the same update (not edited):
+The same proposal asks the owner to review these two sentences in the guide (they are not edited):
 
-- Section "Images and environment": "No groups or canonical attachment implementation/migrations are supplied here." Proposed: "Group and canonical attachment code ships disabled behind its feature switches; `compose.yaml` enables none of them."
-- Section "Security and support boundary": "No DB-5/DB-6 implementation or new migrations are included." Proposed: "DB-5/DB-6 code and migrations are included, with every new function disabled; see `DATA/docs/db5-db6-handoff.md`."
+- Section "Images and environment": the existing sentence says no groups or canonical attachment implementation/migrations are supplied. Proposed replacement: "Group and canonical attachment code ships disabled behind its feature switches; `compose.yaml` enables none of them."
+- Section "Security and support boundary": the existing sentence says no DB-5/DB-6 implementation or new migrations are included. Proposed replacement: "DB-5/DB-6 code and migrations are included, with every new function disabled; see `DATA/docs/db5-db6-handoff.md`."
+
+**OP-18 owner answer: not yet approved.** The proposal above remains the exact text for review; `docs/docker-development.md`, `compose.yaml`, Dockerfiles, `docker/*`, `.dockerignore` and `README.md` remain unchanged. The owner may approve, amend or decline the guide edit separately.
+
+### DB-5C Batch 5 final validation (T-5C-52, Project_Owner accepted 2026-11-23)
+
+Branch `chuong-data`, HEAD `598ecb8f95cb3a73d648151f8e82995868926c75`. No Batch 5 files are staged or committed. The complete status snapshot is retained at `docker/artifacts/batch5-final/git-status.txt`.
+
+Linux Validation_Runner (gate of record), project `secubuzz-validation-b5-46c50c0d`; image `secubuzz-validation-b5-46c50c0d-runner:latest`. The runner used `--network none`, published no ports, mounted only ignored per-group evidence directories, and started no application container or Compose project. Results:
+
+| Gate | Exact runner command/group | Result | Elapsed |
+| --- | --- | --- | ---: |
+| C1 | `node docker/validate.cjs data` (`npm test` in DATA) | final documented-tree run: 836/836 passed, 0 failed, 0 skipped, 0 cancelled, 0 todo | 444.98 s |
+| C2 | `node docker/validate.cjs server` (`npm run type-check`) | exit 0 | 5.15 s |
+| C3 | `node docker/validate.cjs server` (`npm test`) | 547/547 passed, 0 failed, 0 skipped | 84.42 s |
+| C4 | `node docker/validate.cjs client` (`npm test -- --runInBand`) | 1,075/1,075 passed in 102 suites, 0 failed, 0 skipped | 94.98 s |
+| C5 | `node docker/validate.cjs client` (`npm run type-check`) | exit 0 | 9.60 s |
+| C5 | same client group (`npm run lint`) | exit 0 | 7.65 s |
+| C5 | same client group (`npm run build:verify`) | exit 0 | 41.17 s |
+
+Inside the final runner C1, P-01 passed 100 sequences / 5,000 operations in 132.81 s (the 120 s CI-30 target is advisory); P-41 passed 50 sequences x 20 operations in 48.42 s. The 240 s P-01 timeout was not reached. The groups-openapi, baseline checksum and migration tests passed within C1. An earlier full Linux C1 run on the same test/source tree passed 836/836 in 470.51 s; its P-01 duration was 148.10 s.
+
+Windows host, same source tree, additional evidence. C1 was the exact DATA `npm test` command with `NODE_ENV=test` and `DB_PATH` pointing at a new nonexistent temporary file: the final documented-tree run passed 836/836, 0 failed, 0 skipped, 0 cancelled, 0 todo; Node duration 660.87 s. P-01 was 100 sequences / 5,000 operations in 174.38 s, below the 240 s timeout and above the advisory 120 s target. A successful pre-final-doc C1 also passed 836/836 in 680.26 s, with P-01 at 185.34 s. Two earlier C1 attempts timed out at 240.117 s (reached run 70) and 240.225 s (reached run 97); all logs remain preserved under `docker/artifacts/`. C2 server type-check exited 0 (3.77 s); C3 passed 547/547 (106.16 s); C4 passed 1,075/1,075 in 102 suites (122.05 s), including both historically listed Windows AI tests; C5 type-check, lint and `build:verify` exited 0 (11.15 s, 13.88 s and 46.65 s). Client type-check redirected its incremental build-info to a unique temp path. Windows evidence and first-attempt logs are under `docker/artifacts/batch5-windows-host-20261123/`, `docker/artifacts/batch5-windows-host-first-attempt/` and `docker/artifacts/batch5-windows-c1-final-20261123/`.
+
+Focused Batch 5 results on disposable fixtures: P-31 1/1 (all prepared group-write steps and six repository error classes); P-32 5/5; P-25/P-26 57/57; migrations/OpenAPI/Gate_Record/synthetic-v7 focused files 40/40; HTTP plus invitation files 141/141; P-41 1/1 (50 x 20 generated operations). The complete C1 runs above include these suites and the P-01, P-04, P-09, P-10 and P-24 generated checks. No SQL migration or production source changed.
+
+G1-G9 final host results: G1/G2/G4/G6/G9 exit 0; G3/G5a/G7/G8 print nothing; G5b prints exactly the seven original DC-01 lines recorded by the unchanged baseline manifest. The initial G7 scan found one agent-created log under `server/docker/artifacts/`; it was moved intact to the ignored root evidence folder, and the final G7 scan printed nothing. The original baseline manifest is unchanged; the LF-normalized `DATA/tests/support/auth.js` SHA-256 is the approved `0d7996a8bef3be2703bfbb40dfe3c170efb3571a9bfdd6077832de2ef50bcc6f`, and C1's baseline verifier passed.
+
+The original `secubuzz-` Compose project remained running and healthy; its original `sqlite-data` and `private-storage` volumes remained present. No existing volume, database or application container was mounted, changed or removed. Validation images and logs remain under their unique names/ignored evidence paths; no cleanup or prune was run.
+
+Historical gate disposition before final Owner review: the `git diff --stat dc6c997 -- server client` comparison contained eight paths: six previously accepted DB-5B client test/config files introduced by `ae6c0ded874702a39529ea9a68ca6502551696f0`, `client/tsconfig.json`, and `server/src/data/main.ts` from T-5C-06. The owner-approved Task 2.54 reconciliation preserves that historical comparison and adds `git diff --exit-code 598ecb8 -- server client` for the Batch 5 tracked-source boundary. The latter is empty; the only untracked client paths are the two protected artifact directories named above. The original historical set does not authorize new production changes. OP-18 remains a proposal only; no guide edit was approved.
+
+### Project Owner acceptance of the DB-5C stage gate (2026-11-23)
+
+The Project Owner approved `GR-GROUP-MANAGEMENT-2026-11-23` and accepted DB-5C phase completion under T-5C-52, including the eight-path historical reconciliation and recorded C1-C5/G1-G9 evidence. The approved OD-08 decisions are `GROUP_MAX_PENDING_INVITATIONS_PER_GROUP=20`, `GROUP_MAX_PENDING_INVITATIONS_PER_INVITEE=10`, and no additional re-invite delay. These remain policy/configuration values, not defaults, and have not been applied to a production configuration. This stage-level approval does not authorize runtime feature activation or deployment. `GROUP-MANAGEMENT` remains disabled pending separate operational authorization; the required settings and production Gate_Record acknowledgement remain deployment prerequisites. No production code, migration, or Docker configuration was changed, and DB-6 has not started.
+
+Post-approval final-tree validation (2026-11-23): the fresh isolated Linux Validation_Runner C1 passed 836/836 with 0 failed, skipped, cancelled or todo in 511.52 s. P-01 passed 100 sequences / 5,000 operations in 175.90 s (120 s advisory target; 240 s timeout not reached; setup 47.69 s, sequence work 114.86 s, cleanup 11.22 s); P-41 passed 50 x 20 operations in 54.21 s. Project `secubuzz-validation-b5-final-cf1eec34` was built from the final implementation, documentation and checklist worktree, used `--network none`, mounted only its ignored evidence directory and started no application container. At the run, branch was `chuong-data`, HEAD was `598ecb8f95cb3a73d648151f8e82995868926c75`, and the post-run worktree snapshot is `docker/artifacts/secubuzz-validation-b5-final-cf1eec34-data/git-status.txt`. The Gate_Record verifier passed 4/4 after its pinned dependency baseline was embedded in the test; Gate_Record and OpenAPI documentation checks passed 7/7 after final wording changes. G1/G2/G4/G6/G9 exited 0, G3/G5a/G7/G8 had no matches, and G5b printed exactly seven approved DC-01 lines. Server/client C2-C5 evidence remains the already recorded final Linux and Windows evidence; no server/client implementation changed.

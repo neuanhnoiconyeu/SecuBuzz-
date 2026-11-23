@@ -2,6 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const config = require('../server/features/config');
+const { createRandom } = require('./support/random');
 
 const { DISABLED_FEATURES, GROUP_API_SETTINGS, FeatureConfigError, loadFeatureConfig } = config;
 
@@ -56,6 +57,30 @@ test('a switch is on only for the exact string true', () => {
             for (const [otherKey] of SWITCHES) if (otherKey !== key) assert.equal(features[otherKey], false, `${otherKey} stays off when ${variable} is ${label}`);
         }
     }
+});
+
+test('P-26: seeded environment maps enable only the exact string true', () => {
+    const seed = 0x5c2644;
+    const random = createRandom(seed);
+    const values = ['true','TRUE','1','','   ','-1','1.5','9007199254740992'];
+    const cases = new Set();
+    for (let run = 0; run < 128; run += 1) {
+        const env = { ...GROUP_VALUES };
+        const drawn = {};
+        for (const [key, variable] of SWITCHES) {
+            drawn[key] = random.pick(values);
+            env[variable] = drawn[key];
+        }
+        const actual = loadFeatureConfig(env);
+        for (const [key] of SWITCHES) assert.equal(actual[key], drawn[key] === 'true', `seed=${seed} run=${run} ${key}`);
+        cases.add(Object.values(drawn).join('|'));
+    }
+    for (const value of values) {
+        const env = { ...GROUP_VALUES, GROUPS_API_ENABLED:value, GROUP_MESSAGING_ENABLED:value, ATTACHMENTS_API_ENABLED:value };
+        const actual = loadFeatureConfig(env);
+        for (const [key] of SWITCHES) assert.equal(actual[key], value === 'true', `${key}=${JSON.stringify(value)}`);
+    }
+    assert.ok(cases.size > 100, 'the seeded maps cover broad switch combinations');
 });
 
 test('an empty environment yields everything disabled and no default for any setting', () => {
@@ -517,6 +542,7 @@ const { snapshot, temporaryDirectory } = require('./support/groups');
 const { openDatabase } = require('../server/database/connection');
 const { migrate } = require('../server/database/migrate');
 const { startServer, describeStartFailure, FeatureProvenanceError } = require('../server/start');
+const { GROUP_ROUTES } = require('../server/routes/groups');
 
 const DATA_ROOT = path.join(__dirname, '..');
 const PRODUCTION_ENV = Object.freeze({ NODE_ENV: 'production', AUTH_ALLOW_HTTP_LOCAL: 'false', AUTH_ALLOWED_ORIGINS: 'https://app.example.test' });
@@ -732,6 +758,68 @@ test('with every switch off no group operation is reachable, and no table change
     const withoutSession = await f.browser().request('/api/groups/some-group');
     assert.equal(withoutSession.status, 401, 'the session check still comes first');
     assert.deepEqual(snapshot(f.db), before);
+});
+
+test('P-25: generated disabled-route requests and a disable/restart cycle preserve every table', { timeout:120000 }, async t => {
+    const random = createRandom(0x5c2543);
+    const paths = Object.freeze({
+        G01:['POST','/api/groups',{name:'Synthetic gated group',historyPolicy:'from_joined'}],
+        G02:['GET','/api/groups'],G03:['GET','/api/groups/gated-group'],G04:['PATCH','/api/groups/gated-group',{name:'Changed'}],
+        G05:['GET','/api/groups/gated-group/members'],G06:['POST','/api/groups/gated-group/members',{userId:'synthetic-target'}],
+        G07:['DELETE','/api/groups/gated-group/members/synthetic-target'],G08:['PATCH','/api/groups/gated-group/members/synthetic-target',{role:'admin'}],
+        G09:['POST','/api/groups/gated-group/leave',{}],G10:['POST','/api/groups/gated-group/transfer',{userId:'synthetic-target'}],
+        G11:['POST','/api/groups/gated-group/archive',{}],G12:['POST','/api/groups/gated-group/invitations',{userId:'synthetic-target'}],
+        G13:['GET','/api/groups/gated-group/invitations'],G14:['DELETE','/api/groups/gated-group/invitations/synthetic-invitation'],
+        G15:['GET','/api/groups/invitations'],G16:['POST','/api/groups/invitations/synthetic-invitation/accept',{}],
+        G17:['POST','/api/groups/invitations/synthetic-invitation/decline',{}],
+    });
+    assert.equal(GROUP_ROUTES.filter(route => route.gated).length, Object.keys(paths).length,
+        'every frozen gated route has a valid request template');
+    for (const groupMessaging of ['false','true']) for (const attachmentApi of ['false','true']) {
+        const label = `disabled-${groupMessaging}-${attachmentApi}`;
+        const f = await setup(t, { env:{ GROUPS_API_ENABLED:'false', GROUP_MESSAGING_ENABLED:groupMessaging,
+            ATTACHMENTS_API_ENABLED:attachmentApi } });
+        const alice = await session(f, `p25-${label}`);
+        const before = snapshot(f.db);
+        const count = random.int(10,40);
+        for (let index = 0; index < count; index += 1) {
+            const [method,url,body] = paths[random.pick(Object.keys(paths))];
+            const response = await call(alice, method, url, ['GET','HEAD'].includes(method) ? undefined : body);
+            assert.equal(response.status,503,`${label} ${method} ${url}`);
+            assert.deepEqual(response.body,error503,`${label} ${method} ${url} response`);
+            assert.deepEqual(snapshot(f.db),before,`${label} ${method} ${url} changed a table`);
+        }
+        const status = await call(alice,'GET','/api/groups/feature-status');
+        assert.equal(status.status,200,'feature-status remains outside the disabled route family');
+        assert.deepEqual(snapshot(f.db),before,'feature-status is read-only');
+        t.diagnostic(`P-25 ${label}: ${count} valid-CSRF route requests refused without table changes`);
+    }
+
+    // Data created while enabled survives a same-file restart; disabling after restart restores the fail-closed route set.
+    const enabled = { ...GROUP_VALUES, GROUPS_API_ENABLED:'true' };
+    const f = await setup(t,{ env:enabled });
+    const alice = await session(f,'p25-restart-owner');
+    const created = await call(alice,'POST','/api/groups',{name:'Persisted gated group'});
+    assert.equal(created.status,201);
+    const before = snapshot(f.db);
+    const ledger = f.db.prepare('SELECT version,name,checksum FROM SchemaMigrations ORDER BY version').all();
+    await f.application.close();
+    f.db.close();
+    const restarted = await startServer({ env:{ ...envDefaults, DB_PATH:f.filename, GROUPS_API_ENABLED:'false',
+        GROUP_MESSAGING_ENABLED:'false', ATTACHMENTS_API_ENABLED:'false' }, config:f.config, log:()=>{} });
+    f.applications.push(restarted);
+    assert.deepEqual(restarted.db.prepare('SELECT version,name,checksum FROM SchemaMigrations ORDER BY version').all(),ledger,
+        'restart applies no migration or ledger change');
+    assert.equal(restarted.db.prepare('SELECT count(*) AS n FROM Conversations WHERE conversation_id=?').get(created.body.group.id).n,1,
+        'the synthetic group remains stored');
+    assert.deepEqual(snapshot(restarted.db),before,'the stored database is unchanged by restart');
+    alice.browser.origin=`http://127.0.0.1:${restarted.server.address().port}`;
+    for (const [method,url,body] of Object.values(paths)) {
+        const response = await call(alice,method,url,['GET','HEAD'].includes(method) ? undefined : body);
+        assert.equal(response.status,503,`${method} ${url} after disable/restart`);
+        assert.deepEqual(response.body,error503);
+        assert.deepEqual(snapshot(restarted.db),before,`${method} ${url} changed persisted tables after restart`);
+    }
 });
 
 // ---- the process boundary: server.js on a temporary database, stdout and stderr, exit code ----

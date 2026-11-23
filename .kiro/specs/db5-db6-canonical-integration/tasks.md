@@ -1085,7 +1085,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - **Local validation evidence (2026-11-23)**: `node --test tests/groups-random.test.js` 3/3 PASS, 159196.7607 ms (100 P-01 sequences, P-10 100 x 50 events, 500 SQL attempts, P-24 800 refused writes and 300 absent routes); `node --test tests/groups-invitations.test.js` 59/59 PASS, 109845.3258 ms; archived HTTP verifier 11/11 PASS, 11243.8912 ms; syntax, `git diff --check`, and migration integrity PASS.
 
-  - [ ] 2.31 Write property test P-07 and the AF-04 regression
+  - [x] 2.31 Write property test P-07 and the AF-04 regression
     - **ID**: T-5C-31
     - **Depends on**: T-5C-30, T-5C-16
     - **Property P-07: Accepting as a current member changes nothing**
@@ -1097,7 +1097,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-invitations.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 2.32 Add the AF-06 and AF-11 regressions and the `AUTH_MIDDLEWARE_MODULE` scan
+  - [x] 2.32 Add the AF-06 and AF-11 regressions and the `AUTH_MIDDLEWARE_MODULE` scan
     - **ID**: T-5C-32
     - **Depends on**: T-5C-17, T-5C-14
     - **Affected modules**: `DATA/tests/groups-http.test.js`
@@ -1109,7 +1109,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R03.5, DB5-R03.6, DB5-R03.7, DB5-R06.5, DB5-R06.6, DB5-R01.7, DB5-R13.4, DB5-R12.10, DB5-R15.3_
 
-  - [ ] 2.33 Write property test P-23 for create and update bodies
+  - [x] 2.33 Write property test P-23 for create and update bodies
     - **ID**: T-5C-33
     - **Depends on**: T-5C-09, T-5B-10
     - **Property P-23: Bodies are accepted exactly when the validators accept**
@@ -1121,7 +1121,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-http.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 2.34 Write property test P-14 for altered cursors and bad parameters
+  - [x] 2.34 Write property test P-14 for altered cursors and bad parameters
     - **ID**: T-5C-34
     - **Depends on**: T-5C-12, T-5C-10, T-5B-12
     - **Property P-14: A tampered or foreign cursor is refused with 400**
@@ -1133,7 +1133,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-pagination.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 2.35 Write property test P-15 for listing order and completeness
+  - [x] 2.35 Write property test P-15 for listing order and completeness
     - **ID**: T-5C-35
     - **Depends on**: T-5C-34
     - **Property P-15: Paged listings equal the sorted oracle (list endpoints)**
@@ -1145,7 +1145,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-pagination.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 2.36 Add the actor-class matrix over G01 to G17 and G26
+  - [x] 2.36 Add the actor-class matrix over G01 to G17 and G26
     - **ID**: T-5C-36
     - **Depends on**: T-5C-21, T-5C-17, T-5C-14
     - **Affected modules**: `DATA/tests/groups-security.test.js`
@@ -1157,7 +1157,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R15.2, DB5-R12.13, DB5-R04.7, DB5-R05.8, DB5-R13.10, DB5-R13.11_
 
-  - [ ] 2.37 Write property test P-21 for unchanged records on refusal
+  - [x] 2.37 Write property test P-21 for unchanged records on refusal
     - **ID**: T-5C-37
     - **Depends on**: T-5C-36
     - **Property P-21: A refused request changes no record**
@@ -1169,7 +1169,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-security.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 2.38 Write property test P-22 for error shape and uniform 404
+  - [x] 2.38 Write property test P-22 for error shape and uniform 404
     - **ID**: T-5C-38
     - **Depends on**: T-5C-37
     - **Property P-22: Errors are safe, listed and indistinguishable where required**
@@ -1182,7 +1182,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-security.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 2.39 Add the rate-limit tests
+  - [x] 2.39 Add the rate-limit tests
     - **ID**: T-5C-39
     - **Depends on**: T-5C-17, T-5C-21
     - **Affected modules**: `DATA/tests/groups-security.test.js`
@@ -1194,7 +1194,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R12.4, DB5-R12.2, DB5-R13.2_
 
-  - [ ] 2.40 Write property test P-30 for audit rows
+  - [x] 2.40 Write property test P-30 for audit rows
     - **ID**: T-5C-40
     - **Depends on**: T-5C-17, T-5B-20, T-5B-10
     - **Property P-30: Each committed operation writes one safe audit row**
@@ -1206,7 +1206,9 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/audit-metadata.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 2.41 Write property test P-31 for atomicity
+    - **Local completion evidence (owner-accepted Batch 4)**: Windows C1 `npm test` 822/822 PASS, zero cancelled/skipped/todo; P-01 100 sequences / 5,000 operations in 217.3 s under the unchanged 240 s timeout. Linux C1 822/822 PASS; server 547/547; client 1,075/1,075. Baseline checksums 11/11; migration integrity 63/63; security 9/9; audit 6/6; invitations 61/61; HTTP 79/79; pagination 9/9; group model 44/44; generated random 3/3. Checkpoint commit: `598ecb8` (`test(db5c): complete batch 4 validation and security properties`).
+
+  - [x] 2.41 Write property test P-31 for atomicity
     - **ID**: T-5C-41
     - **Depends on**: T-5C-17, T-5B-10
     - **Property P-31: A failure at any write step leaves every table unchanged**
@@ -1218,7 +1220,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-atomicity.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 2.42 Write property test P-32 at API level
+  - [x] 2.42 Write property test P-32 at API level
     - **ID**: T-5C-42
     - **Depends on**: T-5C-17, T-5B-30, T-5C-05
     - **Property P-32: Stop and start on the same file changes nothing (API level)**
@@ -1230,7 +1232,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-restart.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 2.43 Write property test P-25 for disabled switches
+  - [x] 2.43 Write property test P-25 for disabled switches
     - **ID**: T-5C-43
     - **Depends on**: T-5C-17, T-5C-21
     - **Property P-25: A disabled function answers 503 and changes nothing**
@@ -1242,7 +1244,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-gate.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 2.44 Write property test P-26 for configuration and feature-status
+  - [x] 2.44 Write property test P-26 for configuration and feature-status
     - **ID**: T-5C-44
     - **Depends on**: T-5C-43, T-5C-05
     - **Property P-26: Switches follow the exact string and feature-status reports them**
@@ -1254,7 +1256,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-gate.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 2.45 Make the new migration tests independent of a hard-coded ledger
+  - [x] 2.45 Make the new migration tests independent of a hard-coded ledger
     - **ID**: T-5C-45
     - **Depends on**: T-5B-19, T-5C-44
     - **Affected modules**: `DATA/tests/groups-migrations.test.js`
@@ -1265,7 +1267,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: ARCH-R02.1, DB5-R15.11, DB5-R14.6, DB5-R14.9_
 
-  - [ ] 2.46 Write `groups-openapi.json` and its conformance test
+  - [x] 2.46 Write `groups-openapi.json` and its conformance test
     - **ID**: T-5C-46
     - **Depends on**: T-5C-21, T-5C-17
     - **Affected modules**: `DATA/docs/groups-openapi.json` (new), `DATA/tests/groups-openapi.test.js` (new)
@@ -1277,7 +1279,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R13.2, DB5-R13.6, DB5-R13.7, DB5-R13.9, DB5-R13.11, DB5-R01.15, DB5-R02.13, COMP-02_
 
-  - [ ] 2.47 Write `groups-api.md`
+  - [x] 2.47 Write `groups-api.md`
     - **ID**: T-5C-47
     - **Depends on**: T-5C-46
     - **Affected modules**: `DATA/docs/groups-api.md` (new), `DATA/tests/groups-openapi.test.js`
@@ -1290,7 +1292,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R13.2, DB5-R13.6, DB5-R13.8, DB5-R09.11, DB5-R09.12, DB5-R01.14, DB5-R02.13, DB5-R12.4, DB5-R14.22, DB5-R14.23_
 
-  - [ ] 2.48 Add `.env.example` entries, `gate-records.md` and `gate-records.test.js`
+  - [x] 2.48 Add `.env.example` entries, `gate-records.md` and `gate-records.test.js`
     - **ID**: T-5C-48
     - **Depends on**: T-5C-47, T-5C-01
     - **Affected modules**: `DATA/.env.example` (names and safe defaults only; `DATA/.env` is never read or edited), `DATA/docs/gate-records.md` (new), `DATA/tests/gate-records.test.js` (new)
@@ -1303,7 +1305,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R16.8, DB5-R16.11, DB5-R16.7, DB5-R15.16, COMP-08, COMP-10, ARCH-R03.1, ARCH-R03.2, NFR-09_
 
-  - [ ] 2.49 Record the Project_Owner decisions needed to approve GROUP-MANAGEMENT
+  - [x] 2.49 Record the Project_Owner decisions needed to approve GROUP-MANAGEMENT
     - **ID**: T-5C-49
     - **Depends on**: T-5C-47
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (decision log)
@@ -1316,7 +1318,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Project_Owner
     - _Requirements: DB5-R16.7, DB5-R16.8, DB5-R04.18, DB5-R12.2, DB5-R12.4, DB5-R12.11, DB5-R13.10, DB5-R01.15, DB5-R02.13_
 
-  - [ ] 2.50 Draft the GROUP-MANAGEMENT Gate_Record
+  - [x] 2.50 Draft the GROUP-MANAGEMENT Gate_Record
     - **ID**: T-5C-50
     - **Depends on**: T-5C-48, T-5C-49
     - **Affected modules**: `DATA/docs/gate-records.md`
@@ -1327,7 +1329,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R16.8_
 
-  - [ ] 2.51 Port the group scenario of `server/test/db5_db6.test.cjs` into the canonical suite
+  - [x] 2.51 Port the group scenario of `server/test/db5_db6.test.cjs` into the canonical suite
     - **ID**: T-5C-51
     - **Depends on**: T-5C-17, T-5C-13, T-5B-32
     - **Affected modules**: `server/test/db5_db6.test.cjs` (read-only), `DATA/tests/groups-http.test.js`, `DATA/tests/groups-invitations.test.js`, `DATA/docs/standalone-inventory.md`
@@ -1339,7 +1341,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: ARCH-R03.4, ARCH-R03.10, ARCH-R03.11, DB5-R15.12_
 
-  - [ ] 2.52 Add the History_Policy creation-choice and immutability tests
+  - [x] 2.52 Add the History_Policy creation-choice and immutability tests
     - **ID**: T-5C-53
     - **Depends on**: T-5C-07, T-5C-09, T-5C-17, T-5B-10
     - **Property P-41: The History_Policy is fixed at creation and never changes**
@@ -1353,7 +1355,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-model.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 2.53 Prepare the OP-18 proposal for the "Data and future migrations" section in the handoff
+  - [x] 2.53 Prepare the OP-18 proposal for the "Data and future migrations" section in the handoff
     - **ID**: T-5C-54
     - **Depends on**: T-5B-33, T-5C-47
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (proposal text and decision-log entry); `docs/docker-development.md` is not edited unless the Project_Owner has approved OP-18
@@ -1365,18 +1367,18 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: COMP-10, DB5-R14.15_
 
-  - [ ] 2.54 Phase gate DB-5C
+  - [x] 2.54 Phase gate DB-5C
     - **ID**: T-5C-52
     - **Depends on**: T-5C-01 to T-5C-51, T-5C-53, T-5C-54
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md`, `DATA/docs/gate-records.md`
     - **Acceptance criteria**:
-      - C1 to C5 run in the Validation_Runner (the gate of record) on the final tree, and each result is recorded with command and group, passed, failed and skipped counts, date, `git rev-parse HEAD` and `git status --short`. C1 passes (at least 321 plus the new tests, 0 failed, 0 skipped, 0 cancelled, 0 todo) and `groups-openapi` passes inside it. C2 and C5 exit 0, and the lint and `build:verify` steps of the client group exit 0. C3 and C4 show 0 failed and 0 skipped with at least the counts of T-5B-01 and T-5B-02 (the phase changes nothing under `client/`, and under `server/` only as T-5C-06 records). The same C1 to C5 run on the Windows host as additional evidence and are recorded beside the runner results: C1 and C3 pass. For Windows C4, the two named Known_Baseline_Failure tests and their prior failure signatures remain historical evidence; a current all-pass result is acceptable. No tests may be skipped, and any unlisted test failure fails the gate. The historical exact-two-failure count is not a required current outcome.
-      - G1 to G9 run at the repository root: G1, G2, G4, G6 and G9 exit 0; G3, G5a, G7 and G8 print nothing; G5b prints only the seven DC-01 lines; and `git diff --stat dc6c997 -- server client` lists only the preserved `client/tsconfig.json` entry and the change that T-5C-06 records, if any.
+      - C1 to C5 run in the Validation_Runner (the gate of record) on the final tree, and each result is recorded with command and group, passed, failed and skipped counts, date, `git rev-parse HEAD` and `git status --short`. C1 passes (at least 321 plus the new tests, 0 failed, 0 skipped, 0 cancelled, 0 todo) and `groups-openapi` passes inside it. C2 and C5 exit 0, and the lint and `build:verify` steps of the client group exit 0. C3 and C4 show 0 failed and 0 skipped with at least the counts of T-5B-01 and T-5B-02. The historical comparison from `dc6c997` contains the six previously accepted DB-5B client test/config changes and `client/tsconfig.json`; the DB-5C phase adds no other client changes. Under `server/`, the historical T-5C-06 `server/src/data/main.ts` change is preserved, and the Batch 5 tracked delta from `598ecb8` is empty. The same C1 to C5 run on the Windows host as additional evidence and are recorded beside the runner results: C1 and C3 pass. For Windows C4, the two named Known_Baseline_Failure tests and their prior failure signatures remain historical evidence; a current all-pass result is acceptable. No tests may be skipped, and any unlisted test failure fails the gate. The historical exact-two-failure count is not a required current outcome.
+      - G1 to G9 run at the repository root: G1, G2, G4, G6 and G9 exit 0; G3, G5a, G7 and G8 print nothing; G5b prints only the seven DC-01 lines. Preserve the historical comparison `git diff --stat dc6c997 -- server client` and record its eight-path result: `client/jest.config.js`, `client/jest.setup.js`, `client/src/app/friends.test.tsx`, `client/src/app/page.test.tsx`, `client/src/realtime/__tests__/workspaceRealtime.test.tsx`, `client/src/voice/__tests__/voiceWorkspace.test.tsx` (the six previously accepted DB-5B paths introduced by `ae6c0ded874702a39529ea9a68ca6502551696f0`), `client/tsconfig.json`, and `server/src/data/main.ts` (T-5C-06). This historical set does not authorize new production changes. The Batch 5 tracked server/client delta must be empty under `git diff --exit-code 598ecb8 -- server client`; inspect untracked server/client paths and reject any new unapproved source files. Preserve the pre-existing `client/artifacts/phase8-8/` and `client/artifacts/phase8-8-hotfix/` directories; they are protected artifacts, not Batch 5 source changes.
       - With every switch off, every `/api/groups` route except feature-status answers 503, and no committed environment or Docker file enables a switch (G8 and `gate-records.test.js`).
       - The handoff records each run, the C1 run time, the run time of `groups-random.test.js` against the 120 s target and of the new group files against 5 minutes, the contract documents as merged, the values recorded by T-5C-49, the OP-18 outcome of T-5C-54, and the Known_Baseline_Failure list kept apart from the counts, with the Linux pass of the two tests read from `client-jest.json`. A failure that is not on that list keeps the phase open (DB5-R15.15).
       - No application container is started by the gate, and Compose Watch is off while a migration file is a draft (`git status --short -- DATA/server/database/migrations` prints nothing before any `docker compose watch`; DB5-R14.22). Every group test ran on a temporary database, never on the live database or a Docker volume (DB5-R14.17, DB5-R14.21). This phase adds no migration and runs no rehearsal; any rehearsal runs only on synthetic fixtures or an isolated cold-backup copy in a Disposable_Project (DB5-R14.24). A manual start of this code against data to keep needs the cold backup of both volumes first (DB5-R14.23). No Docker file or `README.md` is changed, and `docs/docker-development.md` only as T-5C-54 records.
       - The Gate_Record `GR-GROUP-MANAGEMENT-<date>` carries the Project_Owner's approval. This task stays unchecked until that approval is recorded.
-    - **Verify**: C1 to C5 in the Validation_Runner (groups `data`, `server`, `client`); G1; G2; G3; G4; G5a; G5b; G6; G7; G8; G9; `git diff --stat dc6c997 -- server client`
+    - **Verify**: C1 to C5 in the Validation_Runner (groups `data`, `server`, `client`); G1; G2; G3; G4; G5a; G5b; G6; G7; G8; G9; `git diff --stat dc6c997 -- server client`; `git diff --exit-code 598ecb8 -- server client`; inspect untracked server/client source paths
     - **Agent**: Kiro, with the Project_Owner approving the Gate_Record
     - _Requirements: DB5-R15.10, DB5-R15.11, DB5-R15.13, DB5-R15.14, DB5-R15.15, DB5-R15.16, DB5-R16.8, DB5-R14.17, DB5-R14.21, DB5-R14.22, DB5-R14.23, DB5-R14.24, ARCH-R02.1, COMP-01, COMP-10_
 

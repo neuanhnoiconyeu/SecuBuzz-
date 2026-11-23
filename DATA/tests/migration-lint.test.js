@@ -19,8 +19,9 @@ const LINT_PROPERTY_SEED = 29110;
 
 const LINT_FILE = require.resolve('./support/migration-lint');
 const MIGRATIONS = path.join(__dirname, '..', 'server', 'database', 'migrations');
-const PUBLISHED = Object.freeze(['0001-legacy.sql', '0002-foundation.sql', '0003-authentication.sql', '0004-profiles-friends.sql',
-    '0005-conversation-provenance.sql', '0006-encrypted-message-lifecycle.sql', '0007-recipient-keys.sql']);
+const migrationNames = () => fs.readdirSync(MIGRATIONS).filter(name => /^\d{4}-[a-z0-9-]+\.sql$/.test(name)).sort();
+const nextMigrationName = (label, offset = 1) => `${String(migrationNames().length + offset).padStart(4, '0')}-${label}.sql`;
+const PUBLISHED = Object.freeze(migrationNames());
 const rulesOf = result => result.violations.map(violation => violation.rule);
 const statementHits = result => result.violations.filter(v => v.rule === 'FORBIDDEN_STATEMENT').map(v => [v.keyword, v.line]);
 
@@ -107,17 +108,17 @@ test('lint: ON DELETE CASCADE, SET NULL and SET DEFAULT are reported from versio
 
 test('lint: file names outside ^\\d{4}-[a-z0-9-]+\\.sql$ and versions that are not contiguous from 1 are reported', () => {
     assert.deepEqual(lint.lintFileNames([...PUBLISHED]).violations, []);
-    assert.deepEqual(lint.lintFileNames([...PUBLISHED, '0008-groups.sql', '0009-attachment-lifecycle.sql']).violations, []);
+    assert.deepEqual(lint.lintFileNames([...PUBLISHED, nextMigrationName('future-one'), nextMigrationName('future-two', 2)]).violations, []);
     assert.deepEqual(lint.lintFileNames([...PUBLISHED].reverse()).names, PUBLISHED, 'names are taken in runner order');
     const cases = [
-        [['0008-Groups.sql'], [['FILE_NAME', '0008-Groups.sql']]],
-        [['0008_groups.sql'], [['FILE_NAME', '0008_groups.sql']]],
-        [['0008-groups.SQL'], [['FILE_NAME', '0008-groups.SQL']]],
+        [[nextMigrationName('Groups')], [['FILE_NAME', nextMigrationName('Groups')]]],
+        [[nextMigrationName('bad_name')], [['FILE_NAME', nextMigrationName('bad_name')]]],
+        [[nextMigrationName('groups', 1).replace('.sql', '.SQL')], [['FILE_NAME', nextMigrationName('groups', 1).replace('.sql', '.SQL')]]],
         [['8-groups.sql'], [['FILE_NAME', '8-groups.sql']]],
         [['0008-groups.sql.txt'], [['FILE_NAME', '0008-groups.sql.txt']]],
         [['README.md'], [['FILE_NAME', 'README.md']]],
-        [['0009-attachment-lifecycle.sql'], [['NOT_CONTIGUOUS', '0009-attachment-lifecycle.sql']]],
-        [['0008-groups.sql', '0008-other.sql'], [['NOT_CONTIGUOUS', '0008-other.sql']]],
+        [[nextMigrationName('future', 2)], [['NOT_CONTIGUOUS', nextMigrationName('future', 2)]]],
+        [[nextMigrationName('groups', 1), nextMigrationName('other', 1)], [['NOT_CONTIGUOUS', nextMigrationName('other', 1)]]],
     ];
     for (const [extra, expected] of cases) {
         assert.deepEqual(lint.lintFileNames([...PUBLISHED, ...extra]).violations.map(v => [v.rule, v.file]), expected, extra.join(','));

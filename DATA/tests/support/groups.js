@@ -393,13 +393,23 @@ async function httpGroupFixture(t, { clock = createClock(), limiter = openLimite
         const username = USERNAMES[actorClass];
         if (!actorTemplate) {
             assert.equal((await browser.register(username, { displayName:DISPLAY_NAMES[actorClass] })).status, 201, `register ${actorClass}`);
+            const login = await browser.login(username);
+            assert.equal(login.status, 200, `login ${actorClass}`);
+            actors[actorClass] = Object.freeze({ actorClass, id:login.body.user.id, username, browser, token:await browser.csrf() });
         } else {
             assert.equal(actorTemplate[actorClass]?.username,username,`reused synthetic ${actorClass} fixture identity`);
+            const saved = actorTemplate[actorClass];
+            // databaseTemplate is an immutable, synthetic copy containing these exact sessions. Clone the cookie jar
+            // into the new server origin and verify it against this sequence's database instead of repeating login and
+            // CSRF HTTP round trips for every generated sequence.
+            browser.cookies = new Map(saved.browser.cookies);
+            const sessionToken = browser.cookies.get(f.config.sessionCookie);
+            const session = f.application.auth.resolveToken(sessionToken);
+            assert.equal(session.status,'authenticated',`reused synthetic ${actorClass} session is valid in the isolated database`);
+            assert.equal(session.row.user_id,saved.id,`reused synthetic ${actorClass} session identity`);
+            assert.doesNotThrow(()=>f.application.auth.csrfProof(sessionToken,null,saved.token),`reused synthetic ${actorClass} CSRF proof`);
+            actors[actorClass] = Object.freeze({ actorClass, id:saved.id, username, browser, token:saved.token });
         }
-        const login = await browser.login(username);
-        assert.equal(login.status, 200, `login ${actorClass}`);
-        if(actorTemplate)assert.equal(login.body.user.id,actorTemplate[actorClass].id,`reused synthetic ${actorClass} identity id`);
-        actors[actorClass] = Object.freeze({ actorClass, id:login.body.user.id, username, browser, token:await browser.csrf() });
     }
     const repositories = createRepositories(f.db);
     const builder = createGroupBuilder({ db:f.db, repositories, clock });

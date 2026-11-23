@@ -1,0 +1,114 @@
+'use strict';
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const DATA = path.resolve(__dirname, '..');
+const ROOT = path.resolve(DATA, '..');
+const gates = fs.readFileSync(path.join(DATA, 'docs/gate-records.md'), 'utf8');
+const handoff = fs.readFileSync(path.join(DATA, 'docs/db5-db6-handoff.md'), 'utf8');
+// Pinned from d7cd40a so the Validation_Runner can check dependency drift without requiring .git or an external fixture.
+const baseline = Object.freeze({
+    'DATA/package.json': {
+        dependencies: { argon2:'0.45.2', 'better-sqlite3':'^13.0.3', dotenv:'^18.0.10', express:'^5.3.0' },
+        devDependencies: { nodemon:'^3.1.14' }
+    },
+    'server/package.json': {
+        dependencies: { 'better-sqlite3':'^13.0.3', express:'^5.3.0', 'livekit-server-sdk':'^2.19.3', 'socket.io':'^4.8.4' },
+        devDependencies: { '@types/node':'^24.19.2', 'socket.io-client':'^4.8.4', tsx:'^4.23.15', typescript:'~5.9.3' }
+    },
+    'client/package.json': {
+        dependencies: { '@hpke/core':'1.10.1', 'emoji-picker-react':'^5.1.4', 'livekit-client':'^2.24.1',
+            'lucide-react':'^1.67.0', 'nes.css':'^2.2.1', next:'^14.0.0', react:'^18.2.0',
+            'react-dom':'^18.2.0', 'socket.io-client':'^4.8.4', typescript:'^5.0.0' },
+        devDependencies: { '@playwright/test':'1.65.1', '@testing-library/jest-dom':'^6.1.0',
+            '@testing-library/react':'^14.0.0', '@types/jest':'^30.0.0', '@types/node':'^20.0.0',
+            '@types/react':'^18.2.0', '@types/react-dom':'^18.2.0', autoprefixer:'^10.4.0', eslint:'^8.50.0',
+            'eslint-config-next':'^14.0.0', 'fake-indexeddb':'6.2.8', jest:'^29.7.0',
+            'jest-environment-jsdom':'^29.7.0', postcss:'^8.4.0', tailwindcss:'^3.3.0' }
+    }
+});
+
+function dependencies(file) {
+    const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, file), 'utf8'));
+    return Object.fromEntries(['dependencies','devDependencies','optionalDependencies','peerDependencies']
+        .filter(key => pkg[key]).map(key => [key, pkg[key]]));
+}
+function rootDockerFiles() {
+    const found = [];
+    const candidate = file => /^(?:compose(?:\..*)?\.ya?ml|docker-compose.*\.ya?ml|.*\.env\.example(?:\..*)?)$/i.test(path.basename(file));
+    for (const name of fs.readdirSync(ROOT)) {
+        const full = path.join(ROOT, name);
+        if (fs.statSync(full).isFile() && candidate(full)) found.push(name);
+    }
+    const docker = path.join(ROOT, 'docker');
+    if (fs.existsSync(docker)) for (const name of fs.readdirSync(docker)) {
+        const full = path.join(docker, name);
+        if (fs.statSync(full).isFile() && candidate(full)) found.push(path.join('docker', name));
+    }
+    return found;
+}
+
+test('T-5C-48: environment examples keep every Group API and messaging switch off', () => {
+    const example = fs.readFileSync(path.join(DATA, '.env.example'), 'utf8');
+    assert.match(example, /^GROUPS_API_ENABLED=false$/m);
+    assert.match(example, /^GROUP_MESSAGING_ENABLED=false$/m);
+    assert.match(example, /^GROUP_MAX_MEMBERS=50$/m);
+    assert.match(example, /^GROUPS_API_GATE_RECORD=$/m);
+    assert.match(example, /^GROUP_MESSAGING_GATE_RECORD=$/m);
+    assert.match(example, /^# GROUP_MAX_PENDING_INVITATIONS_PER_GROUP=$/m);
+    assert.match(example, /^# GROUP_MAX_PENDING_INVITATIONS_PER_INVITEE=$/m);
+    assert.doesNotMatch(example, /^GROUP_INVITATION_TTL_SECONDS=/m);
+});
+
+test('T-5C-48: committed environment and Docker examples never enable a switch or premature client flag', () => {
+    if (process.env.SECUBUZZ_DOCKER_VALIDATION === 'true') {
+        assert.deepEqual(rootDockerFiles(), [], 'Validation_Runner image intentionally contains no root Docker files');
+        return;
+    }
+    const files = rootDockerFiles();
+    assert.ok(files.includes('compose.yaml'), 'host context includes the root Compose file');
+    assert.ok(files.includes(path.join('docker','compose.env.example.yaml')), 'host context includes the Docker environment example');
+    for (const relative of files) {
+        const source = fs.readFileSync(path.join(ROOT, relative), 'utf8');
+        for (const setting of ['GROUPS_API_ENABLED','GROUP_MESSAGING_ENABLED','ATTACHMENTS_API_ENABLED',
+            'NEXT_PUBLIC_ATTACHMENT_API_READY','NEXT_PUBLIC_GROUPS_UI_READY']) {
+            assert.doesNotMatch(source, new RegExp(`(?:^|\\s)${setting}\\s*[:=]\\s*['\"]?true(?:['\"]|\\s|$)`, 'im'), `${relative}: ${setting} stays off`);
+        }
+        for (const setting of ['GROUPS_API_GATE_RECORD','GROUP_MESSAGING_GATE_RECORD','ATTACHMENTS_API_GATE_RECORD'])
+            assert.doesNotMatch(source, new RegExp(`(?:^|\\s)${setting}\\s*[:=]`, 'im'), `${relative}: no gate record is configured`);
+    }
+});
+
+test('T-5C-48: Gate_Record identifiers, stages, approval boundary and inventory records are explicit', () => {
+    const ids = [...gates.matchAll(/\b(GR-[A-Z0-9-]{3,48})\b/g)].map(match => match[1]);
+    for (const id of ids) assert.match(id, /^GR-[A-Z0-9-]{3,48}$/);
+    for (const stage of ['GROUP-MANAGEMENT','GROUP-MESSAGING','GROUP-REALTIME','GROUP-FRONTEND',
+        'ATTACHMENTS-PROTECTED','DB5-ACCEPTANCE','DB6-ACCEPTANCE']) assert.ok(gates.includes(stage));
+    assert.match(gates, /## GR-GROUP-MANAGEMENT-2026-11-23 .* APPROVED \(DB-5C stage gate; runtime disabled\)/);
+    assert.match(gates, /Project_Owner approval: APPROVED — authority: Project Owner; date: 2026-11-23\./);
+    assert.match(gates, /Operational activation: NOT AUTHORIZED\./);
+    assert.match(gates, /Validation_Runner.*gate of record/i);
+    assert.match(gates, /Windows host.*additional evidence/i);
+    assert.match(gates, /Known_Baseline_Failure/i);
+    const inventory = fs.readFileSync(path.join(DATA, 'docs/standalone-inventory.md'), 'utf8');
+    const row = inventory.split(/\r?\n/).find(line => line.startsWith('| B-01 |'));
+    assert.ok(row);
+    assert.match(row, /groups-http\.test\.js/);
+    assert.match(row, /groups-invitations\.test\.js/);
+    assert.match(row, /ARCH-R03\.10/);
+});
+
+test('T-5C-48: package dependency sets match d7cd40a unless handoff records an exception', () => {
+    for (const file of ['DATA/package.json','server/package.json','client/package.json']) {
+        const current = dependencies(file);
+        const allowed = handoff.includes(`Dependency exception: ${file}`);
+        if (!allowed) assert.deepEqual(current, baseline[file], `${file} dependencies remain at d7cd40a`);
+    }
+    for (const file of ['client/authProxy.cjs','client/next.config.js']) {
+        const source = fs.readFileSync(path.join(ROOT, file), 'utf8');
+        assert.doesNotMatch(source, /\/api\/(?:groups|attachments|files)/, `${file} has no premature feature rewrite`);
+    }
+});
