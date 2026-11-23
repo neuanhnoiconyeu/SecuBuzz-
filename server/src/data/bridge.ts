@@ -7,11 +7,17 @@ import { createDataAuthorizer } from './authorizer.ts';
 import { createDataConnectionBinder } from './binder.ts';
 import { observeDataChanges } from './changes.ts';
 import { assertDataApplication, DataBridgeError } from './types.ts';
+import {createDataCallResolver} from './calls.ts';
+import {loadLiveKitConfig,createDirectCallMediaLifecycle,createLiveKitHttpHandler,type LiveKitConfig} from '../livekit/index.ts';
+import {extractSessionCookie} from '../realtime/cookies.ts';
+import type {DirectCallOptions} from '../calls/config.ts';
 
 /** Session revalidation and grant refresh period. Also the worst-case staleness of typing and presence grants. */
 export const DATA_REVALIDATION_INTERVAL_MS = 15_000;
 
 export interface DataRealtimeOptions {
+  readonly livekit?:LiveKitConfig;
+  readonly directCalls?:Omit<DirectCallOptions,'conversationResolver'>;
   readonly logger?: RealtimeLogger;
   readonly path?: string;
   readonly namespace?: string;
@@ -60,6 +66,8 @@ export function attachRealtimeToData(httpServer: HttpServer | HttpsServer, appli
   const maxBlockedUsers = options.limits?.maxBlockedUsersPerUser ?? DEFAULT_LIMITS.maxBlockedUsersPerUser;
   const authorizer = createDataAuthorizer(data, { maxConversations, maxBlockedUsers });
   const logger = options.logger;
+  const livekit=options.livekit??loadLiveKitConfig(process.env);
+  if(livekit.directCallsReady&&!data.setDirectCallTokenHandler)throw new DataBridgeError('DATA does not expose the authenticated direct-call token integration.');
   if (options.observeChanges !== undefined && typeof options.observeChanges !== 'boolean') {
     throw new DataBridgeError('observeChanges must be a boolean.');
   }
@@ -71,6 +79,9 @@ export function attachRealtimeToData(httpServer: HttpServer | HttpsServer, appli
     connectionBinder: createDataConnectionBinder(data),
     resolveTransportSecurity: transportSecurityFor(config),
     authorizer,
+    buzzConversationResolver: createDataCallResolver(data),
+    ...(livekit.directCallsReady||options.directCalls?{directCalls:{...options.directCalls,conversationResolver:createDataCallResolver(data),
+      ...(options.directCalls?.media?{media:options.directCalls.media}:livekit.directCallsReady?{media:createDirectCallMediaLifecycle(livekit)}:{})}}:{}),
     ...(options.path !== undefined ? { path: options.path } : {}),
     ...(options.namespace !== undefined ? { namespace: options.namespace } : {}),
     ...(options.limits !== undefined ? { limits: options.limits } : {}),
@@ -79,6 +90,18 @@ export function attachRealtimeToData(httpServer: HttpServer | HttpsServer, appli
     ...(logger !== undefined ? { logger } : {}),
     timing: { revalidationIntervalMs: DATA_REVALIDATION_INTERVAL_MS, ...options.timing },
   });
+
+  const tokenHandler=createLiveKitHttpHandler({config:livekit,allowedOrigins:config.origins,sessionCookieName:config.sessionCookie,
+    sessionResolver:data.adapters.sessionResolver as NonNullable<RealtimeServerOptions['sessionResolver']>,authorizer,directCalls:realtime,
+    resolveTransportSecurity:request=>transportSecurityFor(config)({remoteAddress:request.socket.remoteAddress??'',encrypted:'encrypted' in request.socket&&request.socket.encrypted===true,
+      forwardedProto:typeof request.headers['x-forwarded-proto']==='string'?request.headers['x-forwarded-proto']:null}),
+    verifyCsrf:async(request,actor)=>{
+      const cookie=extractSessionCookie(request.headers.cookie,config.sessionCookie),token=request.headers['x-csrf-token'];
+      if(cookie.status!=='present'||typeof token!=='string')return false;
+      const proof=data.auth.csrfProof(cookie.value,null,token);
+      return proof.type==='session'&&'sessionId'in proof&&proof.sessionId===actor.sessionId&&'userId'in proof&&proof.userId===actor.userId;
+    }});
+  data.setDirectCallTokenHandler?.(tokenHandler);
 
   const observer = options.observeChanges === false
     ? null
@@ -93,6 +116,7 @@ export function attachRealtimeToData(httpServer: HttpServer | HttpsServer, appli
     close() {
       closing ??= (async () => {
         observer?.dispose();
+        data.setDirectCallTokenHandler?.(null);
         await realtime.close();
       })();
       return closing;

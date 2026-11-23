@@ -255,11 +255,17 @@ export class HttpAuthService implements AuthService {
     const identity = { id: actor.id, username: actor.username };
     const controllers = new Set<AbortController>();
     let disposed = false;
-    const request = async (path: string, options: ApiRequest = {}): Promise<unknown> => {
+    const request = async (path: string, options: ApiRequest = {}, binary?: {body?:Blob}): Promise<unknown> => {
       const handshake = path === this.endpoints.csrf && (options.method ?? 'GET') === 'GET' && options.body === undefined;
       const social = /^\/api\/(?:users|friends|blocks)(?:[/?][A-Za-z0-9._~%/?=&:-]*)?$/.test(path);
-      const secure = /^\/api\/(?:keys\/devices(?:\/[A-Za-z0-9_-]{22}\/revoke)?|conversations(?:\/dm|\/[A-Za-z0-9._:-]+(?:\/(?:messages|keys(?:\/epochs(?:\/[A-Za-z0-9_-]{22})?)?))?)?|messages\/[A-Za-z0-9-]+(?:\/read)?)(?:\?[A-Za-z0-9._~%=&-]+)?$/.test(path);
-      if ((!social && !secure && !handshake) || path.includes('..') || path.includes('//')) {
+      const secure = /^\/api\/(?:keys\/devices(?:\/[A-Za-z0-9_-]{22}\/revoke)?|conversations(?:\/dm|\/[A-Za-z0-9._:-]+(?:\/(?:messages|pins|reactions|keys(?:\/epochs(?:\/[A-Za-z0-9_-]{22})?)?))?)?|messages\/[A-Za-z0-9-]+(?:\/(?:read|pin|reaction))?)(?:\?[A-Za-z0-9._~%=&-]+)?$/.test(path);
+      const attachmentJson=(path==='/api/attachments/limits'&&(options.method??'GET')==='GET')||
+        (/^\/api\/attachments\/[0-9a-f-]{36}$/.test(path)&&options.method==='DELETE')||
+        (/^\/api\/attachments\/batches\/[A-Za-z0-9._:-]+\/[0-9a-f-]{36}$/.test(path)&&options.method==='POST');
+      const attachmentBinary=binary!==undefined&&((options.method==='POST'&&/^\/api\/attachments\?conversation_id=[A-Za-z0-9._:%-]+&message_id=[0-9a-f-]{36}&id=[0-9a-f-]{36}$/.test(path)&&binary.body instanceof Blob&&binary.body.size<=50*1024*1024+16)||
+        (options.method==='GET'&&/^\/api\/attachments\/[0-9a-f-]{36}\/download$/.test(path)&&binary.body===undefined));
+      const callToken=path==='/api/calls/token'&&options.method==='POST';
+      if ((binary!==undefined ? !attachmentBinary : !social && !secure && !handshake && !attachmentJson&&!callToken) || path.includes('..') || path.includes('//')) {
         throw new ApiError('unavailable');
       }
       const controller = new AbortController();
@@ -271,7 +277,7 @@ export class HttpAuthService implements AuthService {
       let timer: ReturnType<typeof setTimeout> | undefined;
       const canceled = new Promise<never>((_resolve, reject) => {
         controller.signal.addEventListener('abort', () => reject(new ApiError('cancelled')), { once: true });
-        timer = setTimeout(() => reject(new ApiError('unavailable')), 15_000);
+        timer = setTimeout(() => reject(new ApiError('unavailable')), binary?120_000:15_000);
       });
       const verifyIdentity = async () => {
         if (!active()) throw new ApiError('cancelled');
@@ -301,17 +307,30 @@ export class HttpAuthService implements AuthService {
           if (!headers['X-CSRF-Token']) throw new ApiError('csrf_invalid');
         }
         if (options.body !== undefined) headers['Content-Type'] = 'application/json';
+        if(binary){
+          headers.Accept=options.method==='GET'?'application/octet-stream':'application/json';
+          if(binary.body)headers['Content-Type']='application/octet-stream';
+          await verifyIdentity();
+        }
         if (!active()) throw new ApiError('cancelled');
         const response = await this.requestFetch(path, { method, credentials: 'same-origin', mode: 'same-origin',
           redirect: 'error', cache: 'no-store', signal: controller.signal, headers,
-          ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }) });
+          ...(binary?.body ? {body:binary.body} : options.body === undefined ? {} : { body: JSON.stringify(options.body) }) });
         if (!active()) throw new ApiError('cancelled');
         if (response.status === 401) { this.invalidate(); throw new ApiError('unauthorized'); }
         const statuses = Array.isArray(options.status) ? options.status : [options.status ?? 200];
         if (!statuses.includes(response.status)) {
           return this.apiFailure(response, controller.signal);
         }
-        const result = response.status === 204 ? undefined : await this.json(response, controller.signal);
+        let result:unknown;
+        if(binary&&options.method==='GET'){
+          const max=50*1024*1024+16;
+          if(response.headers.get('Content-Type')?.split(';')[0]!=='application/octet-stream'||Number(response.headers.get('Content-Length'))>max||!response.body)throw new ApiError('invalid_response');
+          const reader=response.body.getReader(),chunks:Uint8Array[]=[];let size=0;
+          try{for(;;){const chunk=await reader.read();if(chunk.done)break;size+=chunk.value.length;if(size>max)throw new ApiError('resource_limit');chunks.push(chunk.value);}}
+          finally{await reader.cancel().catch(()=>{});}
+          const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}result=bytes.buffer;
+        }else result=response.status===204?undefined:await this.json(response,controller.signal);
         await verifyIdentity();
         if (!active()) throw new ApiError('cancelled');
         return result;
@@ -332,6 +351,7 @@ export class HttpAuthService implements AuthService {
       }
     };
     return { actor: identity, request,
+      binary:(path,options)=>request(path,{method:options.method,signal:options.signal,...(options.method==='POST'?{status:201 as const}:{})},{...(options.body?{body:options.body}:{})}),
       realtimeAuth: () => request(this.endpoints.csrf) as Promise<{ csrfToken: string }>,
       invalidateSession: () => { if (!disposed && epoch === this.apiEpoch) this.invalidate(); },
       dispose() { disposed = true; for (const controller of controllers) controller.abort(); controllers.clear(); } };

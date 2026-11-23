@@ -40,6 +40,7 @@ out/
 # Database
 .uploads/
 private-attachments/
+encrypted-attachments/
 *.db
 *.sqlite
 *.sqlite3

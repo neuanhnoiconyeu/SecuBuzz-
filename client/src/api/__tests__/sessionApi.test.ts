@@ -30,6 +30,51 @@ function setup(...responses: Response[]) {
   return { service, fetcher, api: service.createSessionApi(alice) };
 }
 
+test('direct-call tokens use scoped DATA identity, fresh CSRF and canonical POST routing',async()=>{
+  const details={token:'test-only-signed-token'};
+  const {api,fetcher}=setup(response(200,{user:alice}),response(200,proof),response(200,details),response(200,{user:alice}));
+  const body={callId:'11111111-2222-4333-8444-555555555555',connectionId:'owned-socket'};
+  await expect(api.request('/api/calls/token',{method:'POST',body})).resolves.toEqual(details);
+  expect(fetcher.mock.calls[2]).toEqual(['/api/calls/token',expect.objectContaining({method:'POST',credentials:'same-origin',body:JSON.stringify(body),
+    headers:expect.objectContaining({'X-CSRF-Token':proof.csrfToken})})]);
+  for(const path of ['/api/calls/token/','/api/calls/token?userId=other','https://other.test/api/calls/token'])
+    await expect(api.request(path,{method:'POST',body})).rejects.toMatchObject({code:'unavailable'});
+  await expect(api.request('/api/calls/token')).rejects.toMatchObject({code:'unavailable'});api.dispose();
+});
+
+test('direct-call token responses are discarded after cookie account replacement',async()=>{
+  const {api}=setup(response(200,{user:alice}),response(200,proof),response(200,{token:'do-not-use'}),response(200,{user:bob}));
+  await expect(api.request('/api/calls/token',{method:'POST',body:{}})).rejects.toMatchObject({code:'cancelled'});api.dispose();
+});
+
+test('binary ciphertext upload shares session cookies, fresh CSRF and identity checks without JSON-encoding bytes',async()=>{
+  const blob=new Blob([new Uint8Array(32)],{type:'application/octet-stream'}),path='/api/attachments?conversation_id=chat&message_id=00000000-0000-4000-8000-000000000000&id=00000000-0000-4000-8000-000000000001';
+  const {api,fetcher}=setup(response(200,{user:alice}),response(200,proof),response(200,{user:alice}),response(201,{v:1}),response(200,{user:alice}));
+  await expect(api.binary!(path,{method:'POST',body:blob})).resolves.toEqual({v:1});
+  expect(fetcher.mock.calls[3]).toEqual([path,expect.objectContaining({credentials:'same-origin',redirect:'error',body:blob,
+    headers:{Accept:'application/json','Content-Type':'application/octet-stream','X-CSRF-Token':proof.csrfToken}})]);
+  api.dispose();
+});
+test('binary upload rejects an account switch during CSRF bootstrap before sending file bytes',async()=>{
+  const {api,fetcher}=setup(response(200,{user:alice}),response(200,proof),response(200,{user:bob}));
+  await expect(api.binary!('/api/attachments?conversation_id=chat&message_id=00000000-0000-4000-8000-000000000000&id=00000000-0000-4000-8000-000000000001',{method:'POST',body:new Blob(['ciphertext'])})).rejects.toBeInstanceOf(ApiError);
+  expect(fetcher).toHaveBeenCalledTimes(3);api.dispose();
+});
+test('binary download is bounded and identity-checked after reading ciphertext',async()=>{
+  let read=false;const cancel=jest.fn(async()=>{}),bytes=new Uint8Array([1,2,3]);
+  const binary={status:200,headers:{get:(name:string)=>name==='Content-Type'?'application/octet-stream':'3'},body:{getReader:()=>({read:async()=>{if(read)return{done:true};read=true;return{done:false,value:bytes};},cancel})}} as unknown as Response;
+  const {api,fetcher}=setup(response(200,{user:alice}),response(200,{user:alice}),binary,response(200,{user:alice}));
+  await expect(api.binary!('/api/attachments/00000000-0000-4000-8000-000000000000/download',{method:'GET'})).resolves.toEqual(bytes.buffer);
+  expect(fetcher).toHaveBeenCalledTimes(4);expect(cancel).toHaveBeenCalled();api.dispose();
+});
+test('binary transport rejects oversize responses and noncanonical or foreign routes',async()=>{
+  const binary={status:200,headers:{get:(name:string)=>name==='Content-Type'?'application/octet-stream':String(60*1024*1024)},body:{}} as unknown as Response;
+  const {api}=setup(response(200,{user:alice}),response(200,{user:alice}),binary);
+  await expect(api.binary!('/api/attachments/00000000-0000-4000-8000-000000000000/download',{method:'GET'})).rejects.toMatchObject({code:'invalid_response'});
+  for(const path of ['https://other.test/api/attachments','/api/files','/api/attachments/../download'])await expect(api.binary!(path,{method:'GET'})).rejects.toMatchObject({code:'unavailable'});
+  api.dispose();
+});
+
 test('social writes share DB-2 bootstrap and cookie policy; server actor is checked before and after', async () => {
   const { api, fetcher } = setup(response(200, { user: alice }), response(200, proof), response(204), response(200, { user: alice }));
   await api.request('/api/blocks', { method: 'POST', body: { userId: bob.id }, status: 204 });
@@ -37,6 +82,31 @@ test('social writes share DB-2 bootstrap and cookie policy; server actor is chec
   for (const [, options] of fetcher.mock.calls) expect(options).toMatchObject({ credentials: 'same-origin', mode: 'same-origin', redirect: 'error', cache: 'no-store' });
   expect(fetcher.mock.calls[2]?.[1]).toMatchObject({ headers: { 'X-CSRF-Token': proof.csrfToken }, body: JSON.stringify({ userId: bob.id }) });
   api.dispose();
+});
+
+test('pin routes keep the same account checks, cookie policy and CSRF protection', async () => {
+  const { api, fetcher } = setup(response(200, { user: alice }), response(200, { conversationId: 'chat', version: 0, items: [] }), response(200, { user: alice }),
+    response(200, { user: alice }), response(200, proof), response(200, { pinned: true }), response(200, { user: alice }));
+  await api.request('/api/conversations/chat/pins');
+  const body = { pinned: true, expectedVersion: 0, operationId: '00000000-0000-4000-8000-000000000000' };
+  await api.request('/api/messages/storage-id/pin', { method: 'POST', body });
+  expect(fetcher.mock.calls.map(([path]) => path)).toEqual(['/api/auth/me', '/api/conversations/chat/pins', '/api/auth/me', '/api/auth/me', '/api/auth/csrf', '/api/messages/storage-id/pin', '/api/auth/me']);
+  expect(fetcher.mock.calls[5]?.[1]).toMatchObject({ credentials: 'same-origin', mode: 'same-origin', headers: { 'X-CSRF-Token': proof.csrfToken }, body: JSON.stringify(body) });
+  api.dispose();
+});
+
+test('reaction routes retain identity checks and authenticated CSRF writes',async()=>{
+  const {api,fetcher}=setup(response(200,{user:alice}),response(200,{items:[]}),response(200,{user:alice}),response(200,{user:alice}),response(200,proof),response(200,{emoji:'👍'}),response(200,{user:alice}));
+  await api.request('/api/conversations/chat/reactions?ids=first%2Csecond');await api.request('/api/messages/storage-id/reaction',{method:'POST',body:{emoji:'👍',expectedRevision:0,operationId:'test'}});
+  expect(fetcher.mock.calls[5]?.[1]).toMatchObject({credentials:'same-origin',headers:{'X-CSRF-Token':proof.csrfToken}});api.dispose();
+});
+
+test.each(['/api/messages/storage-id/pin/extra', '/api/conversations/chat/pins/extra', '/api/messages/storage-id/pins'])('pin allowlist rejects unintended routes: %s', async path => {
+  const { api, fetcher } = setup(); await expect(api.request(path)).rejects.toMatchObject({ code: 'unavailable' }); expect(fetcher).not.toHaveBeenCalled(); api.dispose();
+});
+
+test.each(['/api/attachments','/api/attachments/file-id/download','/api/files'])('unintegrated binary routes cannot use the JSON authenticated messaging transport: %s',async path=>{
+  const {api,fetcher}=setup();await expect(api.request(path)).rejects.toMatchObject({code:'unavailable'});expect(fetcher).not.toHaveBeenCalled();api.dispose();
 });
 
 test.each([['https://evil.test/api/users/me'], ['//evil.test/api/users/me'], ['/api/auth/login'], ['/api/users/../blocks']])(

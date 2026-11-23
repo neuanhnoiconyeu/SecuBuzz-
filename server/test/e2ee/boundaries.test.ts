@@ -16,20 +16,22 @@ test('the e2ee entry point exports the protocol API and no test doubles', async 
     'canonicalJson', 'createRecipientKeyVerifier', 'decodeBase64Url', 'deviceKeyIdFor', 'envelopeV2Fingerprint', 'epochStatement', 'evaluateRecipientKeys',
     'isCanonicalTimestamp', 'isP256PublicKey', 'messageAadV2', 'parseConversationKeyState', 'parseMessageEnvelopeV2', 'parseStoredDeviceKey', 'parseStoredEpoch',
     'planDeviceRegistration', 'planDeviceRevocation', 'planEpochPublication', 'recipientSetDigest', 'registrationStatement', 'validateDeviceRegistration',
-    'verifyRecipientKeysSync', 'wrapInfo',
+    'verifyRecipientKeysSync', 'wrapInfo','validateMessageEdit','editProofHash','parseMessageEditProof',
   ].sort());
   const manifest = JSON.parse(readFileSync(join(serverRoot, 'package.json'), 'utf8'));
   assert.equal(manifest.exports['./e2ee'], './src/e2ee/index.ts');
 });
 
-test('e2ee sources import only node:crypto and small realtime helpers, never sockets, AI or tests', () => {
-  const allowed = new Set(['node:crypto', '../realtime/validation.ts', '../realtime/adapterCall.ts', '../realtime/logger.ts', '../realtime/contracts.ts']);
+test('e2ee sources import only node:crypto, small realtime helpers and the pure shared revision contract, never sockets, AI or tests', () => {
+  const allowed = new Set(['node:crypto', '../realtime/validation.ts', '../realtime/adapterCall.ts', '../realtime/logger.ts', '../realtime/contracts.ts','./messageEdits.ts','../../../shared/messageRevisions.ts']);
   for (const name of sources) {
     const source = readFileSync(join(e2eeRoot, name), 'utf8');
     for (const [, specifier] of source.matchAll(/from\s+'([^']+)'/g)) {
       assert.ok(allowed.has(specifier as string) || /^\.\/[a-z]+\.ts$/.test(specifier as string), `${name} imports ${specifier}`);
     }
   }
+  const shared=readFileSync(join(serverRoot,'..','shared','messageRevisions.ts'),'utf8');
+  assert.doesNotMatch(shared,/\bimport\b|\brequire\s*\(|process\.env/);
 });
 
 test('no environment variable can enable verification: the only check refuses test-only directories in production', () => {

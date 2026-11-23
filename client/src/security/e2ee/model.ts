@@ -19,9 +19,11 @@ export interface EncryptionV2 { version: 2; algorithm: 'AES-256-GCM'; encoding: 
 export interface EnvelopeV2 {
   id: string; conversationId: string; senderId: string; senderName: string; timestamp: string; type: 'text'; encryption: EncryptionV2;
 }
+export interface MessageEditSnapshot {v:1;proofs:{proof:import('../../../../shared/messageRevisions').EditProof;signer:DeviceRecord}[];envelope:EnvelopeV2}
 export interface StoredMessage extends Omit<EnvelopeV2, 'encryption'> {
   encryption: EncryptionV2 | null; storageId: string; storedAt: string; updatedAt: string;
   sequence: number; revision: number; state: 'active' | 'deleted'; deletedAt: string | null;
+  edit?:MessageEditSnapshot;
 }
 export interface DirectConversation {
   id: string; type: 'direct'; participants: { id: string; username: string; displayName: string; avatar: string }[];

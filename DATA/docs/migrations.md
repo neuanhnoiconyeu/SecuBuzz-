@@ -2,7 +2,7 @@
 
 Use Node 24 (verified with 24.20.0), the existing dependencies and the Database Team workspace:
 
-Before any migration of an existing database, satisfy the cold-backup precondition in [Version 8 group migration](#version-8-group-migration). The commands below apply pending migrations; they are not a backup procedure.
+Before any migration of an existing database, satisfy the cold-backup precondition in [Version 12 group migration](#version-12-group-migration). The commands below apply pending migrations; they are not a backup procedure.
 
 ```powershell
 cd D:\Projects\SecuBuzz-\DATA
@@ -34,7 +34,11 @@ Starting the existing `npm start` also applies pending migrations before mountin
 | `0005-conversation-provenance.sql` | Adds Conversations.origin defaulting to legacy and an authenticated direct-list index. Preserves all IDs, members, ciphertext, timestamps and earlier checksums; only an explicit friendship-approved API operation activates an existing legacy pair. |
 | `0006-encrypted-message-lifecycle.sql` | Adds message provenance, stable per-conversation sequence, tombstone/revision metadata and partial wire-ID/sequence uniqueness/history indexes to Messages. All prior columns/receipts and migration versions are preserved; no legacy envelope is relabeled authenticated and no record is deleted. |
 | `0007-recipient-keys.sql` | Adds immutable public DeviceKeys, signed ConversationKeyEpochs and opaque ConversationKeyWraps with permanent status transitions and ownership FKs. Rebuilds Messages to support v1/v2 plus immutable key_id. Preserves all original values, receipts, attachment references, named indexes/triggers and migration checksums. |
-| `0008-groups.sql` | Version 8 (DB-5B draft): additive group extensions, membership intervals, Invitations, read positions and creation keys; backfills existing groups and adds immutable-history, overlap and replacement guards. No pre-existing row or published migration changes. |
+| `0008-authenticated-message-pins.sql` | Shared pin metadata, participant eligibility and atomic Unsend cleanup. |
+| `0009-authenticated-message-reactions.sql` | Per-user reactions, revision counters and atomic Unsend cleanup. |
+| `0010-encrypted-attachments.sql` | Encrypted attachment batch association, staging/retention metadata and Unsend revocation; voice reuses this contract. |
+| `0011-encrypted-message-revisions.sql` | Append-only signed encrypted edits; original ciphertext and identity remain immutable. |
+| `0012-groups.sql` | Version 12 (DB-5B draft): additive group extensions, membership intervals, Invitations, read positions and creation keys; backfills existing groups and adds immutable-history, overlap and replacement guards. No pre-existing row or published migration changes. |
 
 The runner obtains a `BEGIN IMMEDIATE` writer lock, validates existing history, applies **all** pending versions and checks foreign keys within one transaction. Failures roll back the entire pending batch, including the migration ledger and Messages rebuild. Already committed earlier versions remain intact. Success records each version once. Repeating the command reports zero migrations applied.
 
@@ -69,11 +73,15 @@ There is no automated down-migration. Before a committed upgrade, failure is tra
 
 SQLite files and sidecars are ignored locally. This repository already tracked `DATA/server/database/database.sqlite`, `database.sqlite-wal` and `database.sqlite-shm` before DB-1. Ignore rules cannot untrack existing files; this task deliberately neither removes nor stages them. Coordinate their eventual removal from version control separately without deleting anyone's working database.
 
-## Version 8 group migration
+## Version 12 group migration
 
-`0008-groups.sql` is the version 8 DB-5B draft. Keep the migration draft isolated until the phase validation is accepted; running the application or Migration_Runner against an existing database still applies pending SQL immediately.
+`0012-groups.sql` is the version 12 DB-5B draft. Keep the migration draft isolated until the phase validation is accepted; running the application or Migration_Runner against an existing database still applies pending SQL immediately.
 
-A database migrated to 0008 or higher cannot start under code without that migration, because the runner rejects extra ledger rows with `MIGRATION_HISTORY_MISMATCH`.
+Merge integration: Groups was previously an unapplied `0008-groups.sql`. The team confirmed no applied Groups history needs preservation, so only its filename/version moved to 0012; the SQL body is unchanged. Messaging migrations 0008–0011 keep their existing names, checksums and contracts. Databases already at messaging version 11 append only Groups. Do not rewrite migration ledger rows in an environment with a different applied history.
+
+Merge verification (2026-11-22): 589 DATA tests passed with `node --test --test-concurrency=1`, including fresh/upgrade/rollback property checks and a populated version-11-to-12 failure/retry fixture retaining pins, reactions, encrypted attachment metadata and revisions. The backend's 584 tests and frontend's 1,349 tests passed, along with client/server TypeScript and frontend lint. The realtime Chrome acceptance flow passed, including authenticated encryption, reconnect, device revocation and the merged dark-theme assertion. Development databases and the existing stash were not used or changed. Docker files received static validation only; no Docker executable was available for a merged-image startup test. Earlier parallel DATA runs had loopback connection resets; the complete serial run passed without retries or weakened assertions.
+
+A database migrated to 0012 or higher cannot start under code without that migration, because the runner rejects extra ledger rows with `MIGRATION_HISTORY_MISMATCH`.
 
 Before running the Migration_Runner on an existing database, take a cold backup while no process has the database open (every connection is closed).
 
@@ -81,11 +89,11 @@ For a host database, take a cold copy of `database.sqlite`, `database.sqlite-wal
 
 For Docker data, use [Cold backup commands](../../docs/docker-development.md#cold-backup-commands-powershell) and [Restore into new volumes first](../../docs/docker-development.md#restore-into-new-volumes-first-powershell). That procedure stops every writer and archives both complete volume roots, `sqlite-data` and `private-storage`, together. The commands are cited here, not duplicated. Keep both archives as a pair; a database-only archive is not this backup.
 
-The first start of an image that contains 0008 migrates `sqlite-data` at once and permanently. A failed migration stops startup. Compose Watch is not used while a migration file is a draft. Rollback after a committed upgrade is a cold-backup restore into fresh volumes using the saved application/migration revision, following the cited restore procedure (COMP-05). Retain the source volumes; do not overwrite a running database or mount upgraded data under older code. On a host, restore the pre-migration file and its retained companions with every connection closed. There is no down-migration and no backup helper or backup script is supplied (DK-06).
+The first start of an image that contains 0012 migrates `sqlite-data` at once and permanently. A failed migration stops startup. Compose Watch is not used while a migration file is a draft. Rollback after a committed upgrade is a cold-backup restore into fresh volumes using the saved application/migration revision, following the cited restore procedure (COMP-05). Retain the source volumes; do not overwrite a running database or mount upgraded data under older code. On a host, restore the pre-migration file and its retained companions with every connection closed. There is no down-migration and no backup helper or backup script is supplied (DK-06).
 
-### Named objects added by 0008
+### Named objects added by 0012
 
-The following inventory contains all 38 explicitly named objects. SQLite also supplies implicit primary-key indexes; the key definitions and full constraints are described in [schema.md](schema.md#version-8-group-migration).
+The following inventory contains all 38 explicitly named objects. SQLite also supplies implicit primary-key indexes; the key definitions and full constraints are described in [schema.md](schema.md#version-12-group-migration).
 
 | Kind | Names |
 | --- | --- |

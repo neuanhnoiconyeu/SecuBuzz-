@@ -56,6 +56,24 @@ export class BrowserKeyStore {
     });
   }
   /** The unique IDB key reserves a nonce across refresh, restored CryptoKeys and all tabs. */
+  observeRevision(storageId:string,hashes:string[],deleted=false):Promise<boolean>{
+    return this.transaction('records','readwrite',(store,set)=>{
+      const key=this.key('message-revision',storageId),request=store.get(key);
+      request.onsuccess=()=>{
+        const old=request.result as {revision:number;hash:string;deleted:boolean}|undefined;
+        if(old&&(!Number.isInteger(old.revision)||old.revision<0||typeof old.hash!=='string'||typeof old.deleted!=='boolean')){set(false);return;}
+        if(deleted){store.put({revision:old?.revision??0,hash:old?.hash??'',deleted:true},key);set(true);return;}
+        if(!hashes.length||(old&&(old.deleted||old.revision>=hashes.length||hashes[old.revision]!==old.hash))){set(false);return;}
+        store.put({revision:hashes.length-1,hash:hashes.at(-1)!,deleted:false},key);set(true);
+      };
+    });
+  }
+  clearPendingEdit(storageId:string,operationId:string):Promise<void>{
+    return this.transaction('records','readwrite',(store,set)=>{
+      const key=this.key('pending-edit',storageId),r=store.get(key);
+      r.onsuccess=()=>{if(r.result?.request?.proof?.operationId===operationId)store.delete(key);set(undefined);};
+    });
+  }
   async reserveNonce(materialId: string, iv: string): Promise<boolean> {
     return this.transaction('nonces', 'readwrite', (store, set) => {
       const r = store.add(true, this.key('nonce', JSON.stringify([materialId, iv])));

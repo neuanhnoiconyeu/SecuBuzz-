@@ -98,7 +98,7 @@ test('lint: ON DELETE CASCADE, SET NULL and SET DEFAULT are reported from versio
     const expected = [['FORBIDDEN_FOREIGN_KEY_ACTION', 'ON DELETE CASCADE', 1], ['FORBIDDEN_FOREIGN_KEY_ACTION', 'SET NULL', 2],
         ['FORBIDDEN_FOREIGN_KEY_ACTION', 'SET DEFAULT', 2]];
     assert.deepEqual(actions(lint.lintSql(sql, { version: 8 })), expected);
-    assert.deepEqual(actions(lint.lintSql(sql, { file: '0008-groups.sql' })), expected);
+    assert.deepEqual(actions(lint.lintSql(sql, { file: '0008-example.sql' })), expected);
     assert.deepEqual(actions(lint.lintSql(sql)), expected, 'without a version the rules of version 8 and later apply');
     assert.deepEqual(lint.lintSql(sql, { version: 7 }).violations, []);
     assert.deepEqual(lint.lintSql(sql, { file: '0007-recipient-keys.sql' }).violations, []);
@@ -107,17 +107,17 @@ test('lint: ON DELETE CASCADE, SET NULL and SET DEFAULT are reported from versio
 
 test('lint: file names outside ^\\d{4}-[a-z0-9-]+\\.sql$ and versions that are not contiguous from 1 are reported', () => {
     assert.deepEqual(lint.lintFileNames([...PUBLISHED]).violations, []);
-    assert.deepEqual(lint.lintFileNames([...PUBLISHED, '0008-groups.sql', '0009-attachment-lifecycle.sql']).violations, []);
+    assert.deepEqual(lint.lintFileNames([...PUBLISHED, '0008-example.sql', '0009-attachment-lifecycle.sql']).violations, []);
     assert.deepEqual(lint.lintFileNames([...PUBLISHED].reverse()).names, PUBLISHED, 'names are taken in runner order');
     const cases = [
         [['0008-Groups.sql'], [['FILE_NAME', '0008-Groups.sql']]],
         [['0008_groups.sql'], [['FILE_NAME', '0008_groups.sql']]],
-        [['0008-groups.SQL'], [['FILE_NAME', '0008-groups.SQL']]],
+        [['0008-example.SQL'], [['FILE_NAME', '0008-example.SQL']]],
         [['8-groups.sql'], [['FILE_NAME', '8-groups.sql']]],
-        [['0008-groups.sql.txt'], [['FILE_NAME', '0008-groups.sql.txt']]],
+        [['0008-example.sql.txt'], [['FILE_NAME', '0008-example.sql.txt']]],
         [['README.md'], [['FILE_NAME', 'README.md']]],
         [['0009-attachment-lifecycle.sql'], [['NOT_CONTIGUOUS', '0009-attachment-lifecycle.sql']]],
-        [['0008-groups.sql', '0008-other.sql'], [['NOT_CONTIGUOUS', '0008-other.sql']]],
+        [['0008-example.sql', '0008-other.sql'], [['NOT_CONTIGUOUS', '0008-other.sql']]],
     ];
     for (const [extra, expected] of cases) {
         assert.deepEqual(lint.lintFileNames([...PUBLISHED, ...extra]).violations.map(v => [v.rule, v.file]), expected, extra.join(','));
@@ -134,7 +134,7 @@ test('lint: the 0001 exemption covers exactly PRAGMA foreign_keys = ON in 0001-l
         ['PRAGMA foreign_keys = OFF;', { file: '0001-legacy.sql' }],
         ['PRAGMA journal_mode = WAL;', { file: '0001-legacy.sql' }],
         ['COMMIT;', { file: '0001-legacy.sql' }],
-        ['PRAGMA foreign_keys = ON;', { file: '0008-groups.sql' }],
+        ['PRAGMA foreign_keys = ON;', { file: '0008-example.sql' }],
         ['PRAGMA foreign_keys = ON;', {}],
     ];
     for (const [sql, options] of refused) assert.deepEqual(rulesOf(lint.lintSql(sql, options)), ['FORBIDDEN_STATEMENT'], `${sql} ${JSON.stringify(options)}`);

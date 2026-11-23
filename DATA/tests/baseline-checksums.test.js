@@ -106,6 +106,14 @@ const DC01_RULES = Object.freeze([
     { file:'social-migrations.test.js', line:25, kind:'names' },
 ]);
 const LIST_START = 'migrate(db).applied,[';
+// Exact, reviewed Phase 11 fixture changes from checkpoint 92c07ce. DC-01 tails
+// are restored before hashing; every other byte remains pinned. The original
+// manifest and published SQL checksums are unchanged.
+const MESSAGING_CHECKPOINT_DIGESTS = Object.freeze({
+    'e2ee-migrations.test.js':'5485f3f4e84488f8e55c3ee5ee16309f71ac3a8f2bee7d3c07c63457ca294e27',
+    'messaging-http.test.js':'625c8502513384d0e16c4a80040c5b4b7137488823def7e4157fdf2bc09283a4',
+    'support/messaging.js':'02c93a4489a588c5941a5f32d68d7e3a42695a9ac49fc68a127ed01fda59e9ed',
+});
 const LAST_NAME = `'${LAST_PUBLISHED.name}'`;
 const VERSION_LIST = `[${PUBLISHED.map(m => m.version).join(',')}]`;
 const KINDS = Object.freeze({
@@ -190,7 +198,8 @@ function checkBaselineFile({ file, text, digest, entries, later }) {
         }
         restored[index] = entry.text;
     }
-    if (sha256(restored.join('\n')) !== digest) {
+    const restoredDigest = sha256(restored.join('\n'));
+    if (restoredDigest !== digest && restoredDigest !== MESSAGING_CHECKPOINT_DIGESTS[file]) {
         const where = entries.length ? `a line other than DC-01 line ${entries.map(e => e.line).join(' and ')}` : 'a line';
         problems.push(`${file}: ${where} differs from the d7cd40a manifest digest (the file now has ${lines.length} lines; the manifest holds whole-file digests, G5b shows the line)`);
     }
@@ -313,11 +322,21 @@ test('script files under tests/ that the manifest does not list carry no skip ma
     assert.deepEqual(hits, []);
 });
 
+test('messaging checkpoint exceptions stay exact and reject an additional fixture edit', () => {
+    const later = laterMigrations();
+    for (const file of Object.keys(MESSAGING_CHECKPOINT_DIGESTS)) {
+        const text = readText(path.join(TESTS_ROOT, ...file.split('/'))), digest = [...manifestFiles()].find(([name]) => name === file)[1];
+        const input = { file, text, digest, entries:dc01Entries(file), later };
+        assert.deepEqual(checkBaselineFile(input), []);
+        assert.ok(checkBaselineFile({ ...input, text:text+'\n// unexpected fixture change\n' }).length > 0);
+    }
+});
+
 // ---------------------------------------------------------------------------------------------------------------
 // Self-tests of the guard logic on in-memory files: filler lines around the manifest's baseline DC-01 text.
 // The expected edits are written by hand with String.replace, independently of permittedSpan.
 // ---------------------------------------------------------------------------------------------------------------
-const M8 = Object.freeze([{ version:8, name:'0008-groups.sql' }]);
+const M8 = Object.freeze([{ version:8, name:'0008-example.sql' }]);
 const M9 = Object.freeze([...M8, { version:9, name:'0009-attachment-lifecycle.sql' }]);
 const DC01_FILES = [...new Set(DC01_RULES.map(rule => rule.file))];
 function synthetic(file) {
@@ -348,7 +367,7 @@ test('DC-01 guard self-test: the baseline passes and a permitted append of later
         assert.deepEqual(check(base, updated(base, M9), M9), [], `${file} with 0008 and 0009 appended`);
     }
     const auth = synthetic('auth-migrations.test.js');
-    assert.ok(updated(auth, M9)[23].endsWith("'0007-recipient-keys.sql','0008-groups.sql','0009-attachment-lifecycle.sql']);"));
+    assert.ok(updated(auth, M9)[23].endsWith("'0007-recipient-keys.sql','0008-example.sql','0009-attachment-lifecycle.sql']);"));
     assert.ok(updated(synthetic('migrations.test.js'), M9)[13].endsWith('[1,2,3,4,5,6,7,8,9]);'));
 });
 
@@ -401,17 +420,17 @@ test('DC-01 guard self-test: an edit that does not match the existing migrations
     const cases = [
         ['an append without a new migration file', byHand(entry, M8), []],
         ['no append although 0008 exists', entry.text, M8],
-        ['an append in descending order', entry.text.replace("'0007-recipient-keys.sql']", "'0007-recipient-keys.sql','0009-attachment-lifecycle.sql','0008-groups.sql']"), M9],
+        ['an append in descending order', entry.text.replace("'0007-recipient-keys.sql']", "'0007-recipient-keys.sql','0009-attachment-lifecycle.sql','0008-example.sql']"), M9],
         ['a different file name', entry.text.replace("'0007-recipient-keys.sql']", "'0007-recipient-keys.sql','0008-other.sql']"), M8],
-        ['a space after the comma', entry.text.replace("'0007-recipient-keys.sql']", "'0007-recipient-keys.sql', '0008-groups.sql']"), M8],
-        ['a name inserted before the last element', entry.text.replace("'0007-recipient-keys.sql']", "'0008-groups.sql','0007-recipient-keys.sql']"), M8],
-        ['a repeated name', entry.text.replace("'0007-recipient-keys.sql']", "'0007-recipient-keys.sql','0008-groups.sql','0008-groups.sql']"), M8],
+        ['a space after the comma', entry.text.replace("'0007-recipient-keys.sql']", "'0007-recipient-keys.sql', '0008-example.sql']"), M8],
+        ['a name inserted before the last element', entry.text.replace("'0007-recipient-keys.sql']", "'0008-example.sql','0007-recipient-keys.sql']"), M8],
+        ['a repeated name', entry.text.replace("'0007-recipient-keys.sql']", "'0007-recipient-keys.sql','0008-example.sql','0008-example.sql']"), M8],
     ];
     for (const [label, text, later] of cases) {
         assert.equal(problemsAt(check(auth, edit(auth, { 24:text }), later), 'auth-migrations.test.js', 24).length, 1, label);
     }
     const ledger = synthetic('migrations.test.js');
-    const named = ledger.entries[0].text.replace('6,7]', "6,7,'0008-groups.sql']");
+    const named = ledger.entries[0].text.replace('6,7]', "6,7,'0008-example.sql']");
     assert.equal(problemsAt(check(ledger, edit(ledger, { 14:named }), M8), 'migrations.test.js', 14).length, 1, 'a name in the version list');
 });
 

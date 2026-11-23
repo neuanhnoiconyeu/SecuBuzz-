@@ -1,6 +1,6 @@
 # DATA schema and ERD
 
-Current working-tree schema is version 8 (`0008-groups.sql`); its additive group
+Current working-tree schema is version 12 (`0012-groups.sql`); its additive group
 schema is documented below. The existing DB-4B key schema is unchanged:
 `0007-recipient-keys.sql` adds DeviceKeys
 (public signing/agreement points, self-signature, account ownership, stable deviceId,
@@ -84,9 +84,9 @@ erDiagram
 
 Encryption metadata is stored unchanged: algorithm, version, encoding, IV, ciphertext including its tag, sender name, client timestamp and type. The server stores no private keys or decrypted message content. Legacy ciphertext has no authenticated sender-name/client-timestamp metadata; those fields remain NULL and must not be invented or passed off as a modern envelope. Modern format/base64 validation and key-distribution verification remain the Security/Realtime owner's responsibility.
 
-## Version 8 group migration
+## Version 12 group migration
 
-`0008-groups.sql` is the DB-5B draft migration. It adds sibling group tables and guards without rebuilding or changing any pre-existing row or value. Versions 1-7 remain unchanged. Applying the schema does not enable Group Chat, File Sharing or any feature gate. Messages and attachments remain in their existing shared tables; this migration changes no E2EE, key distribution or realtime security design.
+`0012-groups.sql` is the DB-5B draft migration. It adds sibling group tables and guards without rebuilding or changing any pre-existing row or value. Versions 1-7 remain unchanged. Applying the schema does not enable Group Chat, File Sharing or any feature gate. Messages and attachments remain in their existing shared tables; this migration changes no E2EE, key distribution or realtime security design.
 
 | Version | Migration file |
 | --- | --- |
@@ -97,7 +97,11 @@ Encryption metadata is stored unchanged: algorithm, version, encoding, IV, ciphe
 | 5 | `0005-conversation-provenance.sql` |
 | 6 | `0006-encrypted-message-lifecycle.sql` |
 | 7 | `0007-recipient-keys.sql` |
-| 8 | `0008-groups.sql` |
+| 8 | `0008-authenticated-message-pins.sql` |
+| 9 | `0009-authenticated-message-reactions.sql` |
+| 10 | `0010-encrypted-attachments.sql` |
+| 11 | `0011-encrypted-message-revisions.sql` |
+| 12 | `0012-groups.sql` |
 
 ### Added tables
 

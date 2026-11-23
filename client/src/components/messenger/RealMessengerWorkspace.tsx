@@ -16,6 +16,8 @@ import { MainNavigation, type MessengerSection } from './MainNavigation';
 import { SecureMessagingSession } from '@/security/e2ee/session';
 import { SecureConversationPanel } from './SecureConversationPanel';
 import { SecureRealtimeWorkspace } from '@/realtime/SecureRealtimeWorkspace';
+import {DirectCallsRuntime} from '@/components/calls/DirectCallsRuntime';
+import {REAL_ACCOUNT_MESSAGING_CAPABILITIES} from '@/messaging/messagingCapabilities';
 
 interface Resources { version: number; api: SessionApi; profiles: RemoteProfileService; friends: RemoteFriendsService; secure: SecureMessagingSession; live?: SecureRealtimeWorkspace }
 function sectionFromHash(): MessengerSection {
@@ -39,7 +41,10 @@ export function RealMessengerWorkspace({ onOpenVoiceRooms, active = true }: { on
     setResources({ version: ++resourceVersion.current, api, profiles: new RemoteProfileService(api), friends: new RemoteFriendsService(api), secure, ...(live ? { live } : {}) });
     return () => { live?.dispose(); secure.dispose(); api.dispose(); };
   }, [actor, createApi]);
-  return resources ? <ConnectedMessenger key={resources.version} resources={resources} active={active} {...(onOpenVoiceRooms ? { onOpenVoiceRooms } : {})} /> : <p role="status">Opening your workspace…</p>;
+  if(!resources)return <p role="status">Opening your workspace…</p>;
+  // Hide the conversation workspace, while the single call layer stays visible over Voice Rooms.
+  const content=<div hidden={!active}><ConnectedMessenger key={resources.version} resources={resources} active={active} {...(onOpenVoiceRooms ? { onOpenVoiceRooms } : {})}/></div>;
+  return resources.live&&actor?<DirectCallsRuntime key={resources.version} client={resources.live.transport} user={actor} sessionApi={resources.api} enabled={REAL_ACCOUNT_MESSAGING_CAPABILITIES.directCalls}>{content}</DirectCallsRuntime>:content;
 }
 
 function ConnectedMessenger({ resources, onOpenVoiceRooms, active }: { resources: Resources; onOpenVoiceRooms?: () => void; active: boolean }) {

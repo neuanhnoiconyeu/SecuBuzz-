@@ -27,4 +27,6 @@ export type { PublicationContext, PublicationPlan, PublishedEpoch } from './epoc
 export { evaluateRecipientKeys, verifyRecipientKeysSync } from './evaluation.ts';
 export type { RecipientKeyCheck, RecipientKeyContext } from './evaluation.ts';
 export { createRecipientKeyVerifier, RecipientKeyServiceUnavailableError } from './verifier.ts';
+export {validateMessageEdit,editProofHash} from './messageEdits.ts';
+export {parseEditProof as parseMessageEditProof} from '../../../shared/messageRevisions.ts';
 export type { RecipientKeyDirectory, RecipientKeyVerifierHandle, RecipientKeyVerifierOptions } from './verifier.ts';

@@ -27,6 +27,22 @@ export const MAX_CONCURRENT_DECRYPTS = 64;
 export const MAX_QUEUED_DECRYPTS = 256;
 export const MAX_QUEUED_DECRYPT_BYTES = 16 * 1024 * 1024;
 
+interface ForwardDelivery {
+  message: ChatMessage & { encryption: MessageEncryptionMetadata };
+  accepted: boolean;
+}
+interface ForwardProgress {
+  attachments?: MessageAttachment[];
+  forwarded?: ForwardDelivery;
+  note?: ForwardDelivery;
+}
+interface ForwardOperation {
+  sourceId: string;
+  conversationId: string;
+  note: string;
+  targets: Map<string, ForwardProgress>;
+}
+
 export interface UseConversationMessagesOptions {
   conversationId: string;
   currentUserId: string;
@@ -60,12 +76,13 @@ export interface UseConversationMessagesResult {
   forwardMessage(
   source: ChatMessage,
   targetConversationIds: string[],
-  note?: string
-  ): Promise<{ succeeded: string[]; failed: string[] }>;
+  note?: string,
+  operationId?: string
+  ): Promise<{ succeeded: string[]; failed: string[]; noteFailed: string[] }>;
   editMessage(messageId: string, newContent: string): Promise<boolean>;
   canEdit: boolean;
   deleteMessage(messageId: string): void;
-  removeMessage(messageId: string): void;
+  removeMessage(messageId: string): boolean;
   unsendMessage(messageId: string): Promise<boolean>;
   canUnsend: boolean;
   togglePin(messageId: string): void;
@@ -84,6 +101,10 @@ function cryptoContext(message: Pick<ChatMessage, 'conversationId' | 'id' | 'sen
     senderName: message.senderName,
     timestamp: message.timestamp,
   };
+}
+
+function messageObjectUrls(message: Pick<ChatMessage, 'attachments' | 'voice'>): string[] {
+  return [...new Set([...(message.attachments ?? []).map(file => file.url), ...(message.voice ? [message.voice.audioUrl] : [])])];
 }
 
 function isIncomingMessage(value: unknown): value is IncomingMessage {
@@ -118,10 +139,28 @@ export function useConversationMessages({
   const messagesStateRef = useRef(messagesByConversation);
   messagesStateRef.current = messagesByConversation;
   const localAttachmentUrls = useRef(new Set<string>());
-  useEffect(() => () => {
-    localAttachmentUrls.current.forEach(releaseAttachmentUrl);
-    localAttachmentUrls.current.clear();
+  const mediaActive = useRef(true);
+  const retainMessageMedia = useCallback((message: ChatMessage) => {
+    if (!mediaActive.current) return;
+    for (const url of messageObjectUrls(message)) {
+      if (!localAttachmentUrls.current.has(url) && retainAttachmentUrl(url)) localAttachmentUrls.current.add(url);
+    }
   }, []);
+  useEffect(() => {
+    mediaActive.current = true;
+    const urls = localAttachmentUrls.current;
+    return () => {
+      mediaActive.current = false;
+      urls.forEach(releaseAttachmentUrl);
+      urls.clear();
+    };
+  }, []);
+  useEffect(() => {
+    const referenced = new Set(Object.values(messagesByConversation).flatMap(history => history.filter(message => !message.isDeleted).flatMap(messageObjectUrls)));
+    for (const url of localAttachmentUrls.current) {
+      if (!referenced.has(url)) { localAttachmentUrls.current.delete(url); releaseAttachmentUrl(url); }
+    }
+  }, [messagesByConversation]);
   const [presence, setPresence] = useState<PresenceStatus | undefined>(initialPresence);
   const initialPresenceRef = useRef(initialPresence);
   initialPresenceRef.current = initialPresence;
@@ -131,6 +170,8 @@ export function useConversationMessages({
   const [securityStatus, setSecurityStatus] = useState<ConversationSecurityStatus | null>(null);
   const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({});
   const sendLocks = useRef(new Set<string>());
+  const unsendLocks = useRef(new Set<string>());
+  const forwardOperations = useRef(new Map<string, ForwardOperation>());
   const [typingUsers, setTypingUsers] = useState<Array<{ userId: string; displayName: string }>>([]);
   const incomingTypers = useRef(new Map<string, { displayName: string; timestamp: number; expiresAt: number; isTyping: boolean }>());
   const outgoingTyping = useRef({ active: false, sentAt: 0, timer: null as ReturnType<typeof setTimeout> | null });
@@ -462,6 +503,8 @@ export function useConversationMessages({
     const trimmedContent = content.trim() || (hasVoice ? '🎤 Voice message' : hasAttachments ? `📎 ${options!.attachments![0].name}` : '');
     if (!trimmedContent || sendLocks.current.has(conversationId) || transport.canSendMessages === false) return false;
     sendLocks.current.add(conversationId);
+    // Keep draft media alive while encryption/persistence runs, including a composer unmount.
+    const pendingMedia = messageObjectUrls(options ?? {}).filter(url => retainAttachmentUrl(url));
     setPendingCounts((counts) => ({ ...counts, [conversationId]: (counts[conversationId] ?? 0) + 1 }));
 
     try {
@@ -494,11 +537,7 @@ export function useConversationMessages({
       };
 
       setMessagesByConversation((state) => appendMessage(state, localMessage));
-      for (const attachment of options?.attachments ?? []) {
-        if (!localAttachmentUrls.current.has(attachment.url) && retainAttachmentUrl(attachment.url)) {
-          localAttachmentUrls.current.add(attachment.url);
-        }
-      }
+      retainMessageMedia(localMessage);
       notifyActivity(localMessage, 'outgoing');
       try {
         await transport.sendMessage(outbound);
@@ -516,13 +555,14 @@ export function useConversationMessages({
       // Encryption failure produces neither a plaintext local message nor a transport send.
       return false;
     } finally {
+      pendingMedia.forEach(releaseAttachmentUrl);
       sendLocks.current.delete(conversationId);
       setPendingCounts((counts) => ({
         ...counts,
         [conversationId]: Math.max(0, (counts[conversationId] ?? 1) - 1),
       }));
     }
-  }, [conversationId, cryptoService, currentUserId, currentUserName, keyContext, notifyActivity, persistAttachmentMessage, transport]);
+  }, [conversationId, cryptoService, currentUserId, currentUserName, keyContext, notifyActivity, persistAttachmentMessage, retainMessageMedia, transport]);
 
   const retryMessage = useCallback(async (messageId: string) => {
     const message = (messagesByConversation[conversationId] ?? []).find((candidate) => candidate.id === messageId);
@@ -557,18 +597,31 @@ export function useConversationMessages({
     const forwardMessage = useCallback(async (
       source: ChatMessage,
       targetConversationIds: string[],
-      note = ''
+      note = '',
+      operationId = createClientMessageId()
     ) => {
       const succeeded: string[] = [];
       const failed: string[] = [];
+      const noteFailed: string[] = [];
       const forwardedFrom = source.forwardedFrom ?? source.senderName;
+      const operationKey = JSON.stringify([currentUserId, operationId]);
+      let operation = forwardOperations.current.get(operationKey);
+      if (!operation) {
+        operation = { sourceId: source.id, conversationId: source.conversationId, note: note.trim(), targets: new Map() };
+        forwardOperations.current.set(operationKey, operation);
+        // Retain recent dialog operations so retries reuse accepted steps and exact failed envelopes.
+        if (forwardOperations.current.size > 100) forwardOperations.current.delete(forwardOperations.current.keys().next().value!);
+      }
+      if (operation.sourceId !== source.id || operation.conversationId !== source.conversationId || operation.note !== note.trim()) {
+        return { succeeded, failed: [...new Set(targetConversationIds)], noteFailed };
+      }
 
-      const deliver = async (
+      const prepareDelivery = async (
         targetId: string,
         targetKeyContext: ConversationKeyContext,
         content: string,
         extra: Partial<Pick<ChatMessage, 'forwardedFrom' | 'attachments' | 'voice'>>
-      ): Promise<boolean> => {
+      ): Promise<ForwardDelivery> => {
         const message: ChatMessage = {
           id: createClientMessageId(),
           conversationId: targetId,
@@ -580,37 +633,39 @@ export function useConversationMessages({
           deliveryStatus: 'sending',
           ...extra,
         };
-        let encryption: MessageEncryptionMetadata;
-        try {
-          const plaintext = transport.mode === 'realtime' ? encodeAttachmentContent(content, extra.attachments) : content;
-          const encrypted = await cryptoService.encrypt(targetKeyContext, plaintext, cryptoContext(message));
-          encryption = { ...encrypted, scope: 'browser-demo' };
-        } catch {
-          return false;
-        }
-        const localMessage = { ...message, encryption };
+        const plaintext = transport.mode === 'realtime' ? encodeAttachmentContent(content, extra.attachments) : content;
+        const encrypted = await cryptoService.encrypt(targetKeyContext, plaintext, cryptoContext(message));
+        return { message: { ...message, encryption: { ...encrypted, scope: 'browser-demo' } }, accepted: false };
+      };
+
+      const deliver = async (delivery: ForwardDelivery): Promise<boolean> => {
+        if (delivery.accepted) return true;
+        const localMessage = delivery.message;
+        const targetId = localMessage.conversationId;
         await persistAttachmentMessage(localMessage);
-        setMessagesByConversation((state) => appendMessage(state, localMessage));
+        setMessagesByConversation((state) => updateMessageDeliveryStatus(appendMessage(state, localMessage), targetId, localMessage.id, 'sending'));
+        retainMessageMedia(localMessage);
         notifyActivity(localMessage, 'outgoing');
         try {
           await transport.sendMessage({
-            id: message.id,
+            id: localMessage.id,
             conversationId: targetId,
             senderId: currentUserId,
             senderName: currentUserName,
-            timestamp: message.timestamp,
+            timestamp: localMessage.timestamp,
             type: 'text',
-            encryption,
+            encryption: localMessage.encryption,
           });
-          setMessagesByConversation((state) => updateMessageDeliveryStatus(state, targetId, message.id, 'sent'));
+          delivery.accepted = true;
+          setMessagesByConversation((state) => updateMessageDeliveryStatus(state, targetId, localMessage.id, 'sent'));
           return true;
         } catch {
-          setMessagesByConversation((state) => updateMessageDeliveryStatus(state, targetId, message.id, 'failed'));
+          setMessagesByConversation((state) => updateMessageDeliveryStatus(state, targetId, localMessage.id, 'failed'));
           return false;
         }
       };
 
-      for (const targetId of targetConversationIds) {
+      for (const targetId of new Set(targetConversationIds)) {
         // File grants are scoped to the original conversation. Re-upload for another room.
         if (transport.mode === 'realtime' && source.attachments?.length && targetId !== source.conversationId) {
           failed.push(targetId);
@@ -621,6 +676,8 @@ export function useConversationMessages({
           continue;
         }
         sendLocks.current.add(targetId);
+        const progress = operation.targets.get(targetId) ?? {};
+        operation.targets.set(targetId, progress);
         try {
           const targetKeyContext: ConversationKeyContext = { conversationId: targetId, localUserId: currentUserId };
           const status = await cryptoService.prepareConversation(targetKeyContext);
@@ -628,56 +685,67 @@ export function useConversationMessages({
             failed.push(targetId);
             continue;
           }
-          const attachments = transport.mode === 'local-demo' && source.attachments
-            ? await localAttachmentStore.copyAttachments(currentUserId, source.conversationId, targetId, source.attachments) : source.attachments;
-          const ok = await deliver(targetId, targetKeyContext, source.content, {
-            forwardedFrom,
-            ...(attachments ? { attachments } : {}),
-            ...(source.voice ? { voice: source.voice } : {}),
-          });
-          if (ok && note.trim()) await deliver(targetId, targetKeyContext, note.trim(), {});
+          if (!progress.forwarded) {
+            if (source.attachments && !progress.attachments) progress.attachments = transport.mode === 'local-demo'
+              ? await localAttachmentStore.copyAttachments(currentUserId, source.conversationId, targetId, source.attachments) : source.attachments;
+            progress.forwarded = await prepareDelivery(targetId, targetKeyContext, source.content, {
+              forwardedFrom,
+              ...(progress.attachments ? { attachments: progress.attachments } : {}),
+              ...(source.voice ? { voice: source.voice } : {}),
+            });
+          }
+          let ok = await deliver(progress.forwarded);
+          if (ok && operation.note) {
+            progress.note ??= await prepareDelivery(targetId, targetKeyContext, operation.note, {});
+            ok = await deliver(progress.note);
+            if (!ok) noteFailed.push(targetId);
+          }
           (ok ? succeeded : failed).push(targetId);
         } catch {
           failed.push(targetId);
+          if (progress.forwarded?.accepted && operation.note) noteFailed.push(targetId);
         } finally {
           sendLocks.current.delete(targetId);
         }
       }
-      return { succeeded, failed };
-    }, [cryptoService, currentUserId, currentUserName, notifyActivity, persistAttachmentMessage, transport]);
+      return { succeeded, failed, noteFailed };
+    }, [cryptoService, currentUserId, currentUserName, notifyActivity, persistAttachmentMessage, retainMessageMedia, transport]);
 
     const removeMessage = useCallback((messageId: string) => {
+      if (transport.mode !== 'local-demo' || !messagesStateRef.current[conversationId]?.some(message => message.id === messageId)) return false;
       setMessagesByConversation((state) => removeMessageById(state, conversationId, messageId));
-    }, [conversationId]);
+      return true;
+    }, [conversationId, transport]);
 
     const unsendMessage = useCallback(async (messageId: string) => {
-      const message = (messagesByConversation[conversationId] ?? []).find((candidate) => candidate.id === messageId);
+      const message = (messagesStateRef.current[conversationId] ?? []).find((candidate) => candidate.id === messageId);
       if (!message || message.senderId !== currentUserId || message.isDeleted) return false;
-      if (message.deliveryStatus === 'failed') {
-        setMessagesByConversation((state) => removeMessageById(state, conversationId, messageId));
-        return true;
-      }
-      if (message.deliveryStatus === 'sending' || !transport.deleteMessage || transport.canSendMessages === false) return false;
+      if (message.deliveryStatus === 'sending' || message.deliveryStatus === 'failed' || transport.mode !== 'local-demo' ||
+        !transport.deleteMessage || transport.canSendMessages === false) return false;
+      const lock = JSON.stringify([conversationId, messageId]);
+      if (unsendLocks.current.has(lock)) return false;
+      unsendLocks.current.add(lock);
       try {
         await transport.deleteMessage(conversationId, messageId);
+        setMessagesByConversation((state) => deleteMessageBySender(state, conversationId, messageId, currentUserId));
+        return true;
       } catch {
         return false;
+      } finally {
+        unsendLocks.current.delete(lock);
       }
-      setMessagesByConversation((state) => deleteMessageBySender(state, conversationId, messageId, currentUserId));
-      return true;
-    }, [conversationId, currentUserId, messagesByConversation, transport]);
+    }, [conversationId, currentUserId, transport]);
 
     const editMessage = useCallback(async (messageId: string, newContent: string): Promise<boolean> => {
-      const content = newContent.trim();
+      const content = newContent;
       const message = (messagesStateRef.current[conversationId] ?? []).find((m) => m.id === messageId);
-      if (!content || !message || message.senderId !== currentUserId || message.isDeleted) return false;
+      if (!content.trim() || !message || message.senderId !== currentUserId || message.isDeleted) return false;
       if (message.deliveryStatus === 'sending' || message.deliveryStatus === 'failed') return false;
+      if (transport.mode !== 'local-demo' || !transport.editMessage || transport.canSendMessages === false) return false;
       if (content === message.content) return true;
-      if (!transport.editMessage || transport.canSendMessages === false) return false;
 
       try {
-        const plaintext = transport.mode === 'realtime' ? encodeAttachmentContent(content, message.attachments) : content;
-        const encrypted = await cryptoService.encrypt(keyContext, plaintext, cryptoContext(message));
+        const encrypted = await cryptoService.encrypt(keyContext, content, cryptoContext(message));
         const encryption: MessageEncryptionMetadata = { ...encrypted, scope: 'browser-demo' };
         const editedAt = new Date().toISOString();
         await transport.editMessage(conversationId, messageId, encryption, editedAt);
@@ -697,16 +765,18 @@ export function useConversationMessages({
     }, [conversationId]);
 
     const togglePin = useCallback((messageId: string) => {
+      if (transport.mode !== 'local-demo') return;
       setMessagesByConversation((state) =>
         toggleMessagePin(state, conversationId, messageId)
       );
-    }, [conversationId]);
+    }, [conversationId, transport]);
 
     const toggleReaction = useCallback((messageId: string, emoji: string) => {
+      if (transport.mode !== 'local-demo') return;
       setMessagesByConversation((state) =>
         toggleMessageReaction(state, conversationId, messageId, emoji, currentUserId)
       );
-    }, [conversationId, currentUserId]);
+    }, [conversationId, currentUserId, transport]);
 
   return {
     messages,
@@ -724,13 +794,13 @@ export function useConversationMessages({
     deleteMessage,
     removeMessage,
     unsendMessage,
-    canUnsend: Boolean(transport.deleteMessage) && transport.canSendMessages !== false,
+    canUnsend: transport.mode === 'local-demo' && Boolean(transport.deleteMessage) && transport.canSendMessages !== false,
     togglePin,
     toggleReaction,
     typingUsers,
     notifyTypingActivity,
     stopTyping,
     canRetryMessage: (messageId: string) => transport.canRetryMessage?.(conversationId, messageId) ?? true,
-    canEdit: Boolean(transport.editMessage) && transport.canSendMessages !== false,
+    canEdit: transport.mode === 'local-demo' && Boolean(transport.editMessage) && transport.canSendMessages !== false,
   };
 }

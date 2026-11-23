@@ -1,6 +1,7 @@
 import type { AuthUser } from '@/auth/authModel';
 import type { AuthService } from '@/auth/authService';
 import type { Room } from 'livekit-client';
+import {ApiError,type SessionApi} from '@/api/sessionApi';
 import { LIVEKIT_CALL_ID, LIVEKIT_CALL_TOKEN_PATH, LIVEKIT_ROOM_ID, LIVEKIT_TOKEN_PATH, parseLiveKitUrl, type LiveKitConnectionDetails } from '../../../shared/livekit';
 
 export type LiveKitErrorCode = 'disabled' | 'configuration_missing' | 'authentication_required' | 'csrf_unavailable' |
@@ -30,6 +31,7 @@ export interface LiveKitRoomPort {
   off(event: 'connectionStateChanged', listener: (state: string) => void): unknown;
 }
 interface ConnectionOptions {
+  requestToken?: (roomId:string,connectionId:string,signal:AbortSignal)=>Promise<unknown>;
   purpose?: 'voice-room' | 'direct-call';
   getConnectionId?: () => string | null;
   user: AuthUser | null;
@@ -106,6 +108,18 @@ export class LiveKitConnectionService {
   }
 
   async #token(roomId: string, signal: AbortSignal): Promise<LiveKitConnectionDetails> {
+    if(this.#options.purpose==='direct-call'&&this.#options.requestToken){
+      const id=this.#options.getConnectionId?.();if(!id)throw new LiveKitConnectionError('authentication_required');
+      try{return parseDetails(await this.#options.requestToken(roomId,id,signal),roomId,this.#url!,true);}
+      catch(error){
+        if(error instanceof LiveKitConnectionError)throw error;
+        if(error instanceof ApiError){
+          const code=error.code==='unauthorized'?'authentication_required':error.code==='csrf_invalid'?'csrf_unavailable':error.code==='cancelled'?'cancelled':
+            error.code==='conflict'?'media_in_use':error.code==='forbidden'||error.code==='not_found'?'room_forbidden':error.code==='rate_limited'?'rate_limited':'unavailable';
+          throw new LiveKitConnectionError(code);
+        }throw new LiveKitConnectionError('unavailable');
+      }
+    }
     let csrf: string | null;
     try { csrf = this.#options.getCsrfToken(); } catch { throw new LiveKitConnectionError('csrf_unavailable'); }
     if (!csrf || !/^[\x21-\x7e]{1,512}$/.test(csrf)) throw new LiveKitConnectionError('csrf_unavailable');
@@ -204,10 +218,12 @@ async function createSdkRoom(): Promise<LiveKitRoomPort> {
 }
 
 /** Uses the existing cookie-session identity and CSRF bootstrap; never falls back to demo. */
-export function createSessionLiveKitConnection(user: AuthUser | null, authMode: AuthService['mode'], onAuthenticationRequired?: () => void, purpose: 'voice-room' | 'direct-call' = 'voice-room', getConnectionId?: () => string | null) {
-  return new LiveKitConnectionService({ user, authMode, enabled: process.env.NEXT_PUBLIC_LIVEKIT_ENABLED === 'true',
+export function createSessionLiveKitConnection(user: AuthUser | null, authMode: AuthService['mode'], onAuthenticationRequired?: () => void, purpose: 'voice-room' | 'direct-call' = 'voice-room', getConnectionId?: () => string | null,secure?:{api:SessionApi;enabled:boolean}) {
+  const enabled = purpose === 'direct-call' ? process.env.NEXT_PUBLIC_DIRECT_CALLS_ENABLED ?? process.env.NEXT_PUBLIC_LIVEKIT_ENABLED : process.env.NEXT_PUBLIC_LIVEKIT_ENABLED;
+  return new LiveKitConnectionService({ user, authMode, enabled: enabled === 'true'&&secure?.enabled!==false,
     purpose,
     ...(getConnectionId ? { getConnectionId } : {}),
+    ...(secure&&purpose==='direct-call'?{requestToken:(callId:string,connectionId:string,signal:AbortSignal)=>secure.api.request('/api/calls/token',{method:'POST',body:{callId,connectionId},signal})}:{}),
     serverUrl: process.env.NEXT_PUBLIC_LIVEKIT_URL,
     getCsrfToken: () => typeof document === 'undefined' ? null : document.querySelector<HTMLMetaElement>('meta[name="secubuzz-csrf-token"]')?.content ?? null,
     ...(onAuthenticationRequired ? { onAuthenticationRequired } : {}) });

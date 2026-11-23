@@ -58,7 +58,9 @@ export function useAttachmentDrafts({ disabled, uploadAttachment, discardAttachm
         const { file, svgPreview } = await prepareAttachmentFile(inputFile);
         if (!alive.current) { staged.forEach(release); return; }
         const url = createAttachmentUrl(file);
-        const previewUrl = svgPreview ? createAttachmentUrl(svgPreview) : url;
+        let previewUrl = url;
+        try { if (svgPreview) previewUrl = createAttachmentUrl(svgPreview); }
+        catch (failure) { releaseAttachmentUrl(url); throw failure; }
         const rule = getAttachmentRule(file.name)!;
         staged.push({ file, previewUrl, attachment: { id: crypto.randomUUID(), name: file.name,
           type: rule.kind, mimeType: rule.mimeTypes[0]!, url, sizeBytes: file.size } });

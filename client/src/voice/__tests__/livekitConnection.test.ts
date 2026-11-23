@@ -1,5 +1,6 @@
 import { LiveKitConnectionService, createSessionLiveKitConnection, type LiveKitRoomPort, type LiveKitStatus } from '../livekitConnection';
 import { createDemoProfile } from '@/profiles/profileModel';
+import {ApiError,type SessionApi} from '@/api/sessionApi';
 
 const user = { ...createDemoProfile(), id: 'user-one', isDemo: false };
 const details = () => ({ roomId: 'lounge', roomName: `voice:${'a'.repeat(64)}`, participantIdentity: 'b'.repeat(64),
@@ -27,6 +28,42 @@ function create(overrides: Partial<ConstructorParameters<typeof LiveKitConnectio
     getCsrfToken: () => 'csrf-token', fetch: fetcher, createRoom, ...overrides });
   return { service, room, fetcher, createRoom };
 }
+
+test('authenticated direct calls use SessionApi instead of a static CSRF meta tag or a parallel fetch',async()=>{
+  const previousEnabled=process.env.NEXT_PUBLIC_LIVEKIT_ENABLED,previousUrl=process.env.NEXT_PUBLIC_LIVEKIT_URL;
+  process.env.NEXT_PUBLIC_LIVEKIT_ENABLED='true';process.env.NEXT_PUBLIC_LIVEKIT_URL='wss://media.example.invalid';
+  const api={actor:user,request:jest.fn().mockResolvedValue({}),dispose:jest.fn()} as unknown as SessionApi;
+  const id='11111111-2222-4333-8444-555555555555';
+  try{
+    const service=createSessionLiveKitConnection(user,'api',undefined,'direct-call',()=> 'owned-socket',{api,enabled:true});
+    await expect(service.connect(id)).rejects.toMatchObject({code:'invalid_response'});
+    expect(api.request).toHaveBeenCalledWith('/api/calls/token',{method:'POST',body:{callId:id,connectionId:'owned-socket'},signal:expect.any(AbortSignal)});
+    await service.dispose();(api.request as jest.Mock).mockClear();
+    const disabled=createSessionLiveKitConnection(user,'api',undefined,'direct-call',()=> 'owned-socket',{api,enabled:false});
+    await expect(disabled.connect(id)).rejects.toMatchObject({code:'disabled'});expect(api.request).not.toHaveBeenCalled();await disabled.dispose();
+  }finally{
+    if(previousEnabled===undefined)delete process.env.NEXT_PUBLIC_LIVEKIT_ENABLED;else process.env.NEXT_PUBLIC_LIVEKIT_ENABLED=previousEnabled;
+    if(previousUrl===undefined)delete process.env.NEXT_PUBLIC_LIVEKIT_URL;else process.env.NEXT_PUBLIC_LIVEKIT_URL=previousUrl;
+  }
+});
+
+test('scoped token cancellation and authorization failures never create a media room',async()=>{
+  const id='11111111-2222-4333-8444-555555555555';
+  for(const [failure,expected]of [['unauthorized','authentication_required'],['csrf_invalid','csrf_unavailable'],['forbidden','room_forbidden'],['conflict','media_in_use'],['cancelled','cancelled'],['unavailable','unavailable']] as const){
+    const {service,fetcher,createRoom}=create({purpose:'direct-call',getConnectionId:()=> 'owned-socket',requestToken:jest.fn().mockRejectedValue(new ApiError(failure))});
+    await expect(service.connect(id)).rejects.toMatchObject({code:expected});expect(fetcher).not.toHaveBeenCalled();expect(createRoom).not.toHaveBeenCalled();await service.dispose();
+  }
+});
+
+test('authenticated scoped tokens connect the existing SDK room and clean up without publishing devices',async()=>{
+  const id='11111111-2222-4333-8444-555555555555',room=new FakeRoom();
+  Object.assign(room,{media:{localParticipant:{identity:'b'.repeat(64)}}});
+  const requestToken=jest.fn().mockResolvedValue({...details(),roomId:id,roomName:`direct:${'a'.repeat(64)}`,peerIdentity:'c'.repeat(64)});
+  const h=create({purpose:'direct-call',getConnectionId:()=> 'owned-socket',requestToken,createRoom:async()=>room});
+  await h.service.connect(id);expect(requestToken).toHaveBeenCalledWith(id,'owned-socket',expect.any(AbortSignal));
+  expect(h.service.getParticipantIds()).toEqual(new Set(['b'.repeat(64),'c'.repeat(64)]));expect(h.fetcher).not.toHaveBeenCalled();
+  await h.service.dispose();expect(room.disconnect).toHaveBeenCalledWith(true);expect(h.service.getParticipantIds()).toBeNull();
+});
 
 test('disabled configuration, demo identities, and missing URLs never fetch a token or construct the SDK', async () => {
   for (const [options, error] of [[{ enabled: false }, 'disabled'], [{ user: createDemoProfile() }, 'authentication_required'],

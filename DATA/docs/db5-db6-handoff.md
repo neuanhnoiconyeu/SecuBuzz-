@@ -1,5 +1,7 @@
 # DB-5 / DB-6 canonical integration handoff
 
+Merge integration note: the unapplied Groups migration is now `0012-groups.sql`, after messaging migrations 0008?0011. Its SQL is unchanged. Historical version-8 rehearsal references below describe the original DB-5B snapshot, not the current migration order. Use [the current migration guidance](migrations.md#version-12-group-migration) for deployment. The combined tests retain the original baseline recording and pin three exact Phase 11 fixture changes from checkpoint `92c07ce`; only the historical V1 sender-edit response changes to 404. The authenticated attachment service reuses DB6 binary storage without importing the standalone database or routes. These integration adjustments require team review. Historical Docker timing results do not verify startup of the merged 0001?0012 chain; Docker was unavailable on the merge-review host. Current ignore rules also exclude the Phase 8B encrypted binary directory from Git and Docker contexts. Future attachment-lifecycle migration numbers mentioned in the historical plan are not allocated in the current chain.
+
 WARNING (one-way migration): a database migrated to 0008 or higher cannot start under code without that migration, because the migration runner rejects extra ledger rows and stops with `MIGRATION_HISTORY_MISMATCH`. Starting a version that contains 0008 (and 0009 once DB-6B ships) against an existing database applies the migration at once, when the database opens and before the server listens. In the Docker_Environment the first start of an image that contains 0008 migrates the volume `sqlite-data` at once and permanently. Turning a feature switch off does not undo a migration. The only way back is to restore the cold backup taken before the first start, with every process stopped.
 
 Precondition before the first start of code that contains a new migration against data to keep. For a Docker_Environment project, take the cold backup by the procedure of `docs/docker-development.md`, sections "Cold backup commands (PowerShell)" and "Restore into new volumes first (PowerShell)". This handoff cites those sections and does not copy them. In short: stop every process that writes to either volume, archive both complete volume roots (`sqlite-data` and `private-storage`), restore only into fresh volumes, and validate the restore with `docker/database-check.cjs`, run with the image of the revision that took the backup. For a database file on a host, take a cold copy of `database.sqlite`, `database.sqlite-wal` and `database.sqlite-shm` with every connection to the database closed. A copy of a live database file alone is not a backup, and a backup taken after the migration does not restore the earlier version. Rehearse a migration only on synthetic fixtures or on an isolated copy of the cold backup restored into fresh volumes of a Disposable_Project. No backup helper or script exists for this work (DK-06).
@@ -45,7 +47,7 @@ Later DB-5B tasks add their rows. The Phase gate T-5B-37 records the final list 
 ## Migration instructions and environment variables
 
 - Migrations 0001 to 0007 stay unchanged; their SHA-256 checksums are pinned in the design (Data Models).
-- Migration `0008-groups.sql` (T-5B-15) adds `GroupExtensions`, `GroupMembershipIntervals`, `ConversationInvitations`, `GroupReadPositions`, `GroupCreationKeys` and the backfill of one `GroupExtensions` row with the History_Policy `from_joined` for every existing group conversation. It does not exist yet when this skeleton is written. `DATA/docs/schema.md` and `DATA/docs/migrations.md` record it when it is added (DB5-R14.15).
+- Migration `0012-groups.sql` (T-5B-15) adds `GroupExtensions`, `GroupMembershipIntervals`, `ConversationInvitations`, `GroupReadPositions`, `GroupCreationKeys` and the backfill of one `GroupExtensions` row with the History_Policy `from_joined` for every existing group conversation. It does not exist yet when this skeleton is written. `DATA/docs/schema.md` and `DATA/docs/migrations.md` record it when it is added (DB5-R14.15).
 - How the migration runs: `openDatabase` runs the migration runner when the application opens the database, before the server listens. A failing file rolls back the whole pending batch and the process exits with code 1; the database stays at the earlier version. The one-way warning and the cold-backup precondition are the first two paragraphs of this document.
 - Environment variables: DB-5B adds none. The DATA database path stays `DB_PATH`. The group switches and settings arrive in DB-5C and the attachment ones in DB-6B, all off in `.env.example`. No committed environment file, `compose.yaml`, `docker/compose.env.example.yaml` or Docker override file turns a switch on or sets a group or attachment setting (G8).
 - The proposed update of `docs/docker-development.md` (OP-18) is carried in the section "Docker development environment" below.
@@ -279,7 +281,7 @@ G7 and G8 printed nothing and G9 exited 0, so nothing stops the phase.
 
 Project: `secubuzz-disposable-7ff8793e`. The backend and frontend images were built from the current working tree with migration 0008, using the existing Dockerfiles and pinned Node v24.20.0. An override outside the repository selected unique image tags, removed published ports and used an internal network. The two new volumes were `secubuzz-disposable-7ff8793e_sqlite-data` and `secubuzz-disposable-7ff8793e_private-storage`. Project and unique ownership labels were checked before use and removal. The latter volume held only a synthetic marker. Both restored roots had UID/GID 1000:1000 and mode 0700. No Compose Watch ran; feature switches and repository Docker configuration were unchanged.
 
-The restored database was verified at version 7 before `docker compose -p <project> -f compose.yaml -f <temporary-override> up -d --wait --wait-timeout 180`. Startup applied only `0008-groups.sql`, and both services became healthy. The backend log contained no migration failure. The unchanged `docker/database-check.cjs`, executed with the new backend image, reported integrity `ok`, zero foreign-key violations and ledger versions 1 through 8 matching the migration files. Requests inside the shared network namespace returned HTTP 200 for backend `/healthz` and frontend `/login`; no host port was published.
+The restored database was verified at version 7 before `docker compose -p <project> -f compose.yaml -f <temporary-override> up -d --wait --wait-timeout 180`. Startup applied only `0012-groups.sql`, and both services became healthy. The backend log contained no migration failure. The unchanged `docker/database-check.cjs`, executed with the new backend image, reported integrity `ok`, zero foreign-key violations and ledger versions 1 through 8 matching the migration files. Requests inside the shared network namespace returned HTTP 200 for backend `/healthz` and frontend `/login`; no host port was published.
 
 Every row and value of all 21 pre-existing application tables matched the before-upgrade digests. Their counts were unchanged:
 
@@ -396,7 +398,7 @@ Existing work and all eight migration hashes, feature gates, transaction guards,
 ?? DATA/docs/db5-db6-handoff.md
 ?? DATA/docs/standalone-inventory.md
 ?? DATA/server/database/groupRepository.js
-?? DATA/server/database/migrations/0008-groups.sql
+?? DATA/server/database/migrations/0012-groups.sql
 ?? DATA/server/features/
 ?? DATA/server/groups/
 ?? DATA/tests/audit-metadata.test.js
@@ -513,7 +515,7 @@ G1 to G9 at the repository root:
 - G6 exit 0. G7 no output. G8 no output. G9 exit 0 (the protected `messengerAI.test.tsx` is unchanged from d7cd40a).
 - `git diff d7cd40a -- DATA/server/app.js` has no output (app.js unchanged).
 
-Migration and scale: the SHA-256 of `0008-groups.sql` now is `114B86A02899AAD730E450F5A423D54F01098C051D397A9DC0E77B1125AC3C9E`. The same value is in the scale rehearsal manifest (`docker/artifacts/db5b-1-39/manifest.json`), so the rehearsal used the migration of the final tree. Scale result (`scale-before.log`, `scale-after.log`): Messages 100,036 before and after; GroupMembershipIntervals 10,014; GroupExtensions 103; backfill rows verified 10,117; integrity ok; 0 foreign-key violations. Task 1.36 artifacts are present in `docker/artifacts/db5b-1-36/`. The eight application volumes listed before (`secubuzz-infra01b-*`, `secubuzz-infra01c1-*`, `secubuzz-infra01c-*`) are unchanged, and no disposable volume or container remains.
+Migration and scale: the SHA-256 of `0012-groups.sql` now is `114B86A02899AAD730E450F5A423D54F01098C051D397A9DC0E77B1125AC3C9E`. The same value is in the scale rehearsal manifest (`docker/artifacts/db5b-1-39/manifest.json`), so the rehearsal used the migration of the final tree. Scale result (`scale-before.log`, `scale-after.log`): Messages 100,036 before and after; GroupMembershipIntervals 10,014; GroupExtensions 103; backfill rows verified 10,117; integrity ok; 0 foreign-key violations. Task 1.36 artifacts are present in `docker/artifacts/db5b-1-36/`. The eight application volumes listed before (`secubuzz-infra01b-*`, `secubuzz-infra01c1-*`, `secubuzz-infra01c-*`) are unchanged, and no disposable volume or container remains.
 
 Blocking acceptance criterion. The Task 1.39 criterion states that `git diff --stat dc6c997 -- server client` lists only `client/tsconfig.json`. It currently lists eight files: `client/jest.config.js` (Jest exclusion of `tmp/`, approved), `client/jest.setup.js` (global asyncUtilTimeout, approved), `client/src/app/page.test.tsx`, `client/src/realtime/__tests__/workspaceRealtime.test.tsx` and `client/src/voice/__tests__/voiceWorkspace.test.tsx` (file-scoped 20 s timeouts, approved), `client/src/app/friends.test.tsx` (20 s timeout, approved, plus region-scoped queries from an earlier recovery that the owner's approvals do not list), `client/tsconfig.json` (exclusion of `tmp`, approved) and `client/tsconfig.tsbuildinfo` (build cache modified by an earlier host type-check, not a planned change). The owner must either amend the criterion to list the approved client changes, or revert the unplanned ones. Until then Task 1.39 stays unchecked.
 
@@ -537,7 +539,7 @@ Owner decisions recorded here:
 
 Final diff verification. `git diff --stat dc6c997 -- server client` lists exactly seven files, 38 insertions and 19 deletions: `client/jest.config.js`, `client/jest.setup.js`, `client/tsconfig.json`, `client/src/app/friends.test.tsx`, `client/src/app/page.test.tsx`, `client/src/realtime/__tests__/workspaceRealtime.test.tsx`, `client/src/voice/__tests__/voiceWorkspace.test.tsx`. No server file differs. `client/src/components/ai/__tests__/messengerAI.test.tsx` is unchanged against d7cd40a (G9 exit 0). `DATA/server/app.js` is unchanged against d7cd40a.
 
-Evidence validity. No tracked or untracked file was written after the runner image was built (checked by file timestamps), so the Linux C1 to C5 results of `e7c51d1a` remain valid for the resulting tree. The Windows C1 to C5 runs used the same source. The restore of the generated build-info file changes no test or type-check input. G1 to G9 were rerun after the restore, and each result is unchanged from the gate run. The Task 1.36 rehearsal and the scale evidence are valid: the SHA-256 of `0008-groups.sql` (`114B86A02899AAD730E450F5A423D54F01098C051D397A9DC0E77B1125AC3C9E`) equals the value in the rehearsal manifest.
+Evidence validity. No tracked or untracked file was written after the runner image was built (checked by file timestamps), so the Linux C1 to C5 results of `e7c51d1a` remain valid for the resulting tree. The Windows C1 to C5 runs used the same source. The restore of the generated build-info file changes no test or type-check input. G1 to G9 were rerun after the restore, and each result is unchanged from the gate run. The Task 1.36 rehearsal and the scale evidence are valid: the SHA-256 of `0012-groups.sql` (`114B86A02899AAD730E450F5A423D54F01098C051D397A9DC0E77B1125AC3C9E`) equals the value in the rehearsal manifest.
 
 Linux Validation_Runner, final tree (`node docker/validate.cjs <group>`):
 
@@ -673,7 +675,7 @@ The approval reads: "permit updating exactly the seven migration-ledger test lit
 
 What the decision permits:
 
-- Exactly seven assertions of the baseline tests at d7cd40a may change, and no other baseline line. They change only when a migration is added: `0008-groups.sql` now (T-5B-15, DB-5B) and `0009-attachment-lifecycle.sql` later (DB-6B; file name as given in the design).
+- Exactly seven assertions of the baseline tests at d7cd40a may change, and no other baseline line. They change only when a migration is added: `0012-groups.sql` now (T-5B-15, DB-5B) and `0009-attachment-lifecycle.sql` later (DB-6B; file name as given in the design).
 - Each change is made in the same commit as the migration that forces it. While nothing is committed, that means the same change set as the new migration file.
 - The change is limited to the new migration file name or version number, as listed per line below. The rest of each line stays byte-identical, and the line keeps its line number: no line is added, removed, split or joined.
 - The changed assertions stay exact `deepEqual` or `equal` checks against the real output of the migration runner, so no assertion is relaxed.
@@ -683,13 +685,13 @@ The seven lines (files under `DATA/tests/`). The insertion or replacement is rel
 
 | # | File | Line | What the line asserts | With 0008 | With 0009 |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `auth-migrations.test.js` | 24 | applied list | insert `,'0008-groups.sql'` after `'0007-recipient-keys.sql'` | insert `,'0008-groups.sql','0009-attachment-lifecycle.sql'` after `'0007-recipient-keys.sql'` |
-| 2 | `conversations-migrations.test.js` | 21 | applied list | insert `,'0008-groups.sql'` after `'0007-recipient-keys.sql'` | insert `,'0008-groups.sql','0009-attachment-lifecycle.sql'` after `'0007-recipient-keys.sql'` |
-| 3 | `e2ee-migrations.test.js` | 12 | applied list | insert `,'0008-groups.sql'` after `'0007-recipient-keys.sql'` | insert `,'0008-groups.sql','0009-attachment-lifecycle.sql'` after `'0007-recipient-keys.sql'` |
+| 1 | `auth-migrations.test.js` | 24 | applied list | insert `,'0012-groups.sql'` after `'0007-recipient-keys.sql'` | insert `,'0012-groups.sql','0009-attachment-lifecycle.sql'` after `'0007-recipient-keys.sql'` |
+| 2 | `conversations-migrations.test.js` | 21 | applied list | insert `,'0012-groups.sql'` after `'0007-recipient-keys.sql'` | insert `,'0012-groups.sql','0009-attachment-lifecycle.sql'` after `'0007-recipient-keys.sql'` |
+| 3 | `e2ee-migrations.test.js` | 12 | applied list | insert `,'0012-groups.sql'` after `'0007-recipient-keys.sql'` | insert `,'0012-groups.sql','0009-attachment-lifecycle.sql'` after `'0007-recipient-keys.sql'` |
 | 4 | `e2ee-migrations.test.js` | 29 | highest ledger version, literal `7` | replace `7` by `8` | replace `7` by `9` |
-| 5 | `messaging-migrations.test.js` | 11 | applied list | insert `,'0008-groups.sql'` after `'0007-recipient-keys.sql'` | insert `,'0008-groups.sql','0009-attachment-lifecycle.sql'` after `'0007-recipient-keys.sql'` |
+| 5 | `messaging-migrations.test.js` | 11 | applied list | insert `,'0012-groups.sql'` after `'0007-recipient-keys.sql'` | insert `,'0012-groups.sql','0009-attachment-lifecycle.sql'` after `'0007-recipient-keys.sql'` |
 | 6 | `migrations.test.js` | 14 | ledger version list | insert `,8` after the last element `7` | insert `,8,9` after the last element `7` |
-| 7 | `social-migrations.test.js` | 25 | applied list | insert `,'0008-groups.sql'` after `'0007-recipient-keys.sql'` | insert `,'0008-groups.sql','0009-attachment-lifecycle.sql'` after `'0007-recipient-keys.sql'` |
+| 7 | `social-migrations.test.js` | 25 | applied list | insert `,'0012-groups.sql'` after `'0007-recipient-keys.sql'` | insert `,'0012-groups.sql','0009-attachment-lifecycle.sql'` after `'0007-recipient-keys.sql'` |
 
 Baseline text of the seven lines, quoted from `DATA/tests/fixtures/baseline-d7cd40a.json` (T-5B-03, array `dc01`), in the order of the table, each with its four leading spaces:
 
@@ -736,13 +738,13 @@ Consequences, derived from OD-05, confirmed at the DB-5C API contract approval:
 - The idempotent create fingerprint includes the History_Policy: `sha256(JSON.stringify(["secubuzz-group-create-v2", trimmedName, description ?? null, historyPolicy]))`, where an omitted `historyPolicy` is replaced by `from_joined` before hashing (DB5-R01.10; design, "Concurrency and consistency design", item 7). A repeat with the same key within 24 hours that differs only in the policy is a different payload and gets 409 `IDEMPOTENCY_CONFLICT` (DB5-R01.11). A repeat that omits the policy matches an earlier request that sent `from_joined`. The label moved from v1 to v2 because the fingerprint input changed, so no fingerprint made under the earlier label equals a v2 fingerprint.
 - The role matrix of DB5-R06.13 refuses the row "Change History_Policy" for the owner, the admin and the member, whether the group is archived or not (`roleMatrix` in `DATA/server/groups/policy.js`, T-5B-09). An owner's PATCH that carries `historyPolicy` meets the 400 of DB5-R02.13; an admin or a member meets the 403 of DB5-R02.11 first.
 
-Properties that `0008-groups.sql` must show for `GroupExtensions.history_policy`:
+Properties that `0012-groups.sql` must show for `GroupExtensions.history_policy`:
 
 1. `CHECK (history_policy IN ('all','from_joined'))`. An INSERT with any other value fails with a constraint error.
 2. The default `from_joined`.
 3. Immutability after insert through the trigger `group_extensions_update`. `history_policy` is in the trigger's `UPDATE OF` column list and in its condition, so an UPDATE that changes `history_policy` is aborted by `RAISE(ABORT, ...)` and leaves the row unchanged, for an archived and an unarchived group alike. An UPDATE that assigns the stored value is not a change and passes, but no repository function issues one (`updateSettings` never writes `history_policy`). An UPDATE of `description` on the same row passes.
 
-Reference text: the DDL of the design (Data Models, `0008-groups.sql`) for the table and the trigger. This entry fixes only the three properties above; the rest of this DDL is governed by the design and T-5B-15.
+Reference text: the DDL of the design (Data Models, `0012-groups.sql`) for the table and the trigger. This entry fixes only the three properties above; the rest of this DDL is governed by the design and T-5B-15.
 
 ```sql
 CREATE TABLE GroupExtensions (
@@ -761,10 +763,10 @@ END;
 
 Who creates, tests and confirms the properties:
 
-- T-5B-15 creates them in the DDL of `0008-groups.sql`.
+- T-5B-15 creates them in the DDL of `0012-groups.sql`.
 - T-5B-16 adds the 0008 backfill. Every group conversation that exists before 0008, of any origin, gets one `GroupExtensions` row with `history_policy = 'from_joined'`, `membership_revision = 1`, `description = NULL` and `created_at` copied from the conversation (DB5-R14.13). The backfill only inserts, so `group_extensions_update` is not involved and the value stays fixed afterwards. A legacy-origin group gets a row but stays invisible to the Group_API (DB5-R14.18).
 - Case (i) of T-5B-17 tests them on a temporary database at the latest version: a direct UPDATE from `from_joined` to `all`, and from `all` to `from_joined`, is aborted by `group_extensions_update` and leaves the row unchanged; an UPDATE of `description` on the same row succeeds; an INSERT with a value outside `all` and `from_joined` fails the CHECK; every backfilled row holds `from_joined`; a value set at insert persists.
-- The Phase gate T-5B-37 confirms in this handoff that `0008-groups.sql` matches this entry: CHECK `all` and `from_joined`, default `from_joined`, immutable after insert.
+- The Phase gate T-5B-37 confirms in this handoff that `0012-groups.sql` matches this entry: CHECK `all` and `from_joined`, default `from_joined`, immutable after insert.
 
 Open until T-5B-15 and T-5B-17 pass: the guard on `history_policy` was added to the design DDL after the prototype run of F18 and has not yet run through the Migration_Runner (design CI-38; listed under known gaps above). The CHECK is one-way: another option set would need a new Project_Owner decision and a later Schema_Migration that rebuilds `GroupExtensions` under DB5-R14.4.
 

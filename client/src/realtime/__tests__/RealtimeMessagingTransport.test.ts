@@ -255,4 +255,12 @@ describe('RealtimeMessagingTransport', () => {
     await expect(bridge.sendMessage(outbound)).rejects.toMatchObject({ code: 'session_ended' });
     await expect(bridge.connect(outbound.conversationId)).rejects.toMatchObject({ code: 'session_ended' });
   });
+
+  test('legacy real-mode edit and delete placeholders cannot report success even when sending is enabled', async () => {
+    const client = new Client(); client.mode = 'realtime'; client.canSendMessages = true;
+    const bridge = new RealtimeMessagingTransport(client, createDemoConversations());
+    await expect(bridge.deleteMessage(outbound.conversationId, outbound.id)).rejects.toMatchObject({ code: 'recipient_keys_unavailable' });
+    await expect(bridge.editMessage(outbound.conversationId, outbound.id, outbound.encryption, timestamp)).rejects.toMatchObject({ code: 'recipient_keys_unavailable' });
+    expect(client.sendMessage).not.toHaveBeenCalled(); bridge.dispose();
+  });
 });

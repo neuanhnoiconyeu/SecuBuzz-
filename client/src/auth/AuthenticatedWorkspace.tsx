@@ -33,8 +33,8 @@ function ApiWorkspace({ user }: { user: AuthUser }) {
   // Keep the DATA session and drafts mounted while browsing the separate media workspace.
   // The legacy calling socket must not replace DATA's authenticated v2 messaging transport.
   return <>
-    <div hidden={voiceOpen}><RealMessengerWorkspace active={!voiceOpen} onOpenVoiceRooms={() => setVoiceOpen(true)} /></div>
-    {voiceOpen && <ApiRealtimeConnection user={user}><VoiceRoomsWorkspace user={user}
+    <RealMessengerWorkspace active={!voiceOpen} onOpenVoiceRooms={() => setVoiceOpen(true)} />
+    {voiceOpen && <ApiRealtimeConnection user={user} enableDirectCalls={false}><VoiceRoomsWorkspace user={user}
       onClose={() => setVoiceOpen(false)} onLogout={auth.logout}
       isLoggingOut={auth.pending === 'logout'} logoutError={auth.error?.message ?? null} /></ApiRealtimeConnection>}
   </>;

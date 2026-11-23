@@ -27,7 +27,10 @@ export interface MessageReplyReference {
 export interface VoiceMessageMetadata {
   audioUrl: string;
   durationSeconds: number;
+  /** Only authenticated messages use this verified encrypted file reference. */
+  attachment?: MessageAttachment;
 }
+export interface RecordedVoiceDraft extends VoiceMessageMetadata {blob:Blob}
 
 export interface MessageEncryptionMetadata extends EncryptedMessagePayload {
   /** Indicates browser-only demo encryption, not multi-user E2EE. */
@@ -70,6 +73,7 @@ export interface ChatMessage {
   isDeleted?: boolean | undefined;
   isPinned?: boolean | undefined;
   forwardedFrom?: string | undefined;
+  isForwarded?: boolean | undefined;
   attachments?: MessageAttachment[] | undefined;
   voice?: VoiceMessageMetadata | undefined;
 }

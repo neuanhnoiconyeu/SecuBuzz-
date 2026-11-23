@@ -20,7 +20,7 @@ function createMessageRouters(service,middleware){
         req=>req.method==='POST'?/^\/[^/]+\/read\/?$/.test(req.path):['DELETE','PATCH'].includes(req.method)&&/^\/[^/]+\/?$/.test(req.path));
     lifecycle.post('/:id/read',(req,res)=>{query(req.query,[]);res.json(service.readReceipt(req.auth,req.csrfProof,req.params.id,req.body));});
     lifecycle.delete('/:id',(req,res)=>{query(req.query,[]);res.json(service.remove(req.auth,req.csrfProof,req.params.id,req.body));});
-    lifecycle.patch('/:id',(req,res)=>{query(req.query,[]);res.json(service.edit(req.auth,req.csrfProof,req.params.id));});
+    lifecycle.patch('/:id',async(req,res)=>{query(req.query,[]);res.json(await service.edit(req.auth,req.csrfProof,req.params.id,req.body));});
     return {history,lifecycle};
 }
 module.exports={createMessageRouters};

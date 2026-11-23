@@ -10,7 +10,7 @@ import type {
 import { COOKIE_NAME } from './cookies.ts';
 import { createConsoleLogger } from './logger.ts';
 import type { RateSetting } from './rateLimiter.ts';
-import type { DirectCallOptions } from '../calls/config.ts';
+import type { DirectCallOptions, DirectCallConversationResolver } from '../calls/config.ts';
 
 /** What the server knows about the transport of one handshake. Header values are untrusted input. */
 export interface TransportEvidence {
@@ -67,6 +67,8 @@ export interface RealtimeTiming {
 }
 
 export interface RealtimeServerOptions {
+  /** Authoritative, current DATA direct-conversation policy; Buzz fails closed without it. */
+  readonly buzzConversationResolver?: DirectCallConversationResolver;
   /** Disabled unless the host supplies its authoritative direct-conversation resolver. */
   readonly directCalls?: DirectCallOptions;
   /** Exact browser origins allowed to connect. An empty list rejects every handshake. */

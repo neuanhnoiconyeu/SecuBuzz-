@@ -2,6 +2,7 @@ import type { Server as HttpServer } from 'node:http';
 import type { Server as HttpsServer } from 'node:https';
 import { Server, type DefaultEventsMap, type Namespace } from 'socket.io';
 import { callAdapter, forEachLimited } from './adapterCall.ts';
+import { mayReceive } from './authority.ts';
 import { HandshakeAuthenticator, isAllowedOrigin } from './authentication.ts';
 import { rememberBounded } from './bounded.ts';
 import { ServerClock } from './clock.ts';
@@ -24,6 +25,7 @@ import {
 } from './registry.ts';
 import { conversationRoom, isConversationRoom, RoomManager } from './rooms.ts';
 import { TypingRouter } from './typing.ts';
+import { BuzzRouter } from './buzz.ts';
 import { resolveDirectCallOptions } from '../calls/config.ts';
 import { DirectCallRouter } from '../calls/router.ts';
 import { CALL_CLIENT_EVENTS, CALL_CLIENT_EVENT_NAMES, callError, type CallClientEventName } from '../calls/protocol.ts';
@@ -90,6 +92,11 @@ export interface RealtimeServerHandle {
    * the key directory. Returns the number of sockets emitted to.
    */
   notifyKeysChanged(conversationId: string): Promise<number>;
+  /** Server-only post-commit hint; each connected recipient is freshly authorized. */
+  notifyMessageDeleted(conversationId: string, messageId: string): Promise<number>;
+  notifyMessageEdited(conversationId:string,messageId:string):Promise<number>;
+  notifyPinsChanged(conversationId: string): Promise<number>;
+  notifyReactionsChanged(conversationId: string, messageId: string): Promise<number>;
   getStats(): RealtimeStats;
   /** Stops accepting handshakes and closes every transport. Leaves the HTTP server open. Idempotent. */
   close(): Promise<void>;
@@ -176,6 +183,7 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
   };
 
   const gate = new EventGate(config, terminate);
+  const buzz = new BuzzRouter(config, registry, clock, gate, options.buzzConversationResolver);
   const typing = new TypingRouter(nsp, registry, clock, timing.typingTtlMs);
   const rooms = new RoomManager((user, conversationId) => {
     const first = user.connections.values().next();
@@ -393,6 +401,18 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     if (ack) onceAck(ack)(response);
   };
 
+  const onBuzz = async (connection: Connection, args: unknown[]): Promise<void> => {
+    const parts = gate.split(connection, args, 'required');
+    if (!parts) return;
+    if (!gate.admit(connection, 'send') || connection.pendingAcks >= limits.maxPendingAcksPerConnection) return reply(parts.ack, errorAck('rate_limited'));
+    const body = parseTypingBody(parts.body);
+    if (!body) { gate.invalid(connection, 'buzz_body'); return reply(parts.ack, errorAck('invalid_payload')); }
+    connection.pendingAcks++;
+    try { reply(parts.ack, await buzz.handle(connection, body.conversationId)); }
+    catch { reply(parts.ack, errorAck('unavailable')); }
+    finally { connection.pendingAcks--; }
+  };
+
   const onTyping = (connection: Connection, args: unknown[], isTyping: boolean): void => {
     const event: ClientEventName = isTyping ? CLIENT_EVENTS.typingStart : CLIENT_EVENTS.typingStop;
     const parts = gate.split(connection, args, 'forbidden');
@@ -547,6 +567,7 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     socket.on(CLIENT_EVENTS.presenceSubscribe, (...args: unknown[]) => onPresenceSubscribe(connection, args));
     socket.on(CLIENT_EVENTS.messageRead, (...args: unknown[]) => void onRead(connection, args));
     socket.on(CLIENT_EVENTS.messageSend, (...args: unknown[]) => void onSend(connection, args));
+    socket.on(CLIENT_EVENTS.buzzSend, (...args: unknown[]) => void onBuzz(connection, args));
     for (const event of Object.values(CALL_CLIENT_EVENTS)) socket.on(event, (...args: unknown[]) => void onCall(connection, event, args));
     socket.on('disconnect', (reason: string) => cleanup(connection, reason));
 
@@ -578,6 +599,17 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
     allowedOrigins: config.allowedOrigins.size,
   });
 
+  const notifyAuthorizedMetadata = async (conversationId: string, event: string, payload: object): Promise<number> => {
+    const members = nsp.adapter.rooms.get(conversationRoom(conversationId));
+    if (!members || closing) return 0;
+    let emitted = 0;
+    await forEachLimited([...members], 8, async socketId => {
+      const connection = registry.connection(socketId);
+      if (!connection || connection.closed || !(await mayReceive(config, connection, conversationId)) || closing) return;
+      connection.socket.emit(event, payload); emitted++;
+    });
+    return emitted;
+  };
   return {
     authorizeCallMedia(actor, callId, connectionId) { return calls.authorizeMedia(actor, callId, connectionId); },
     revokeSession(sessionId) {
@@ -628,6 +660,22 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
       if (!isIdentifier(conversationId)) invalidArgument('conversationId');
       return notifyKeysChanged(conversationId);
     },
+    async notifyMessageDeleted(conversationId, messageId) {
+      if (!isIdentifier(conversationId) || !isIdentifier(messageId)) invalidArgument('message identity');
+      return notifyAuthorizedMetadata(conversationId, SERVER_EVENTS.messageDeleted, { conversationId, messageId });
+    },
+    async notifyMessageEdited(conversationId,messageId){
+      if(!isIdentifier(conversationId)||!isIdentifier(messageId))invalidArgument('message identity');
+      return notifyAuthorizedMetadata(conversationId,SERVER_EVENTS.messageEdited,{conversationId,messageId});
+    },
+    async notifyPinsChanged(conversationId) {
+      if (!isIdentifier(conversationId)) invalidArgument('conversationId');
+      return notifyAuthorizedMetadata(conversationId, SERVER_EVENTS.pinsChanged, { conversationId });
+    },
+    async notifyReactionsChanged(conversationId, messageId) {
+      if (!isIdentifier(conversationId) || !isIdentifier(messageId)) invalidArgument('message identity');
+      return notifyAuthorizedMetadata(conversationId, SERVER_EVENTS.reactionsChanged, { conversationId, messageId });
+    },
     getStats() {
       let conversationRooms = 0;
       for (const room of nsp.adapter.rooms.keys()) if (isConversationRoom(room)) conversationRooms += 1;
@@ -667,6 +715,7 @@ export function attachRealtimeServer(httpServer: HttpServer | HttpsServer, optio
         for (const connection of registry.allConnections()) cleanup(connection, 'shutdown');
         nsp.removeAllListeners('connection');
         typing.clear();
+        buzz.clear();
         presence.clear();
         messages.clear();
         revokedSessions.clear();

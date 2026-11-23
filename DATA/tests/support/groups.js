@@ -16,7 +16,7 @@
 // assertSecurityHeaders The headers createApp sets on every response (NFR-08).
 //
 // TEMPORARY until T-5B-22: the Group_Repository does not exist yet. The builder writes Conversations and
-// ConversationMembers through repositories.conversations.create and repositories.members.*, and writes the 0008 rows
+// ConversationMembers through repositories.conversations.create and repositories.members.*, and writes the 0012 rows
 // (GroupExtensions, GroupMembershipIntervals, ConversationInvitations, GroupReadPositions, GroupCreationKeys) with
 // parameter-bound INSERT and UPDATE statements that exist in this helper and nowhere else. T-5B-22 and later tasks switch
 // these writes to createGroupRepository(db) (insertGroup, addMember, openIntervalAt, closeInterval, bumpRevision,
@@ -40,10 +40,11 @@ const { setup } = require('./auth');
 // ---------------------------------------------------------------------------------------------------------------
 // Snapshot (P-21; design, Testing Strategy section 3).
 // ---------------------------------------------------------------------------------------------------------------
-// The twelve tables of P-21, in the order of the design. AttachmentReservations is created by 0009 (DB-6B).
+// The original P-21 tables plus messaging metadata; future AttachmentReservations remains optional.
 const SNAPSHOT_TABLES = Object.freeze(['Conversations', 'ConversationMembers', 'GroupExtensions', 'GroupMembershipIntervals',
     'ConversationInvitations', 'GroupReadPositions', 'GroupCreationKeys', 'Messages', 'MessageReceipts', 'Attachments',
-    'AttachmentReservations', 'AuditLogs']);
+    'AttachmentReservations', 'AuditLogs', 'ConversationPinVersions', 'MessagePins', 'MessagePinOperations',
+    'MessageReactionVersions', 'MessageReactionActors', 'MessageReactionOperations', 'EncryptedAttachmentBatches', 'MessageEditRevisions']);
 // Limiter counters may change on a refused request (P-21), so they are never hashed.
 const SNAPSHOT_EXCLUDED = Object.freeze(['AuthRateLimits']);
 const LAST_PUBLISHED_VERSION = 7;

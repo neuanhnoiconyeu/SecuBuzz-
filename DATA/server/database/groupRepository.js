@@ -394,7 +394,7 @@ function createGroupRepository(db) {
                 DELETE FROM GroupCreationKeys WHERE user_id=@user AND idempotency_key=@key AND created_at=@previous
                     AND julianday(created_at)<julianday(@at,'-24 hours') RETURNING *
             `), { user, key, previous:expired.created_at, at });
-            // Migration 0008 makes key rows immutable. Explicitly
+            // Migration 0012 makes key rows immutable. Explicitly
             // delete an expired row, then insert within this write's savepoint;
             // no implicit replacement or UPDATE bypass is used. Live key
             // collisions keep the existing primary-key DUPLICATE class.

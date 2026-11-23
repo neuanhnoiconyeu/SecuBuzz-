@@ -37,7 +37,7 @@ export function MessageAttachmentView({ attachment, compact = false, ...options 
         <span className="message-attachment-details">
           <span className="message-attachment-name" title={attachment.name}>{attachment.name}</span>
           <span className="message-attachment-size">{formatAttachmentSize(attachment.sizeBytes)}</span>
-          {!compact && <span className="attachment-storage-label">{attachment.storage === 'indexeddb' ? 'Saved on this device' : attachment.url.startsWith('blob:') ? 'Local preview' : 'Server file'}</span>}
+          {!compact && <span className="attachment-storage-label">{attachment.encrypted?'End-to-end encrypted':attachment.storage === 'indexeddb' ? 'Saved on this device' : attachment.url.startsWith('blob:') ? 'Local preview' : 'Server file'}</span>}
         </span>
         {source.downloadUrl && <div className="attachment-actions">
           {canPreview && attachment.type !== 'image' && <button type="button" className="attachment-action" onClick={() => setPreview(true)} aria-label={`Preview ${attachment.name}`}><Eye size={16} aria-hidden="true" /></button>}
