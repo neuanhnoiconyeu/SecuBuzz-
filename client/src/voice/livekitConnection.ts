@@ -219,7 +219,8 @@ async function createSdkRoom(): Promise<LiveKitRoomPort> {
 
 /** Uses the existing cookie-session identity and CSRF bootstrap; never falls back to demo. */
 export function createSessionLiveKitConnection(user: AuthUser | null, authMode: AuthService['mode'], onAuthenticationRequired?: () => void, purpose: 'voice-room' | 'direct-call' = 'voice-room', getConnectionId?: () => string | null,secure?:{api:SessionApi;enabled:boolean}) {
-  return new LiveKitConnectionService({ user, authMode, enabled: process.env.NEXT_PUBLIC_LIVEKIT_ENABLED === 'true'&&secure?.enabled!==false,
+  const enabled = purpose === 'direct-call' ? process.env.NEXT_PUBLIC_DIRECT_CALLS_ENABLED ?? process.env.NEXT_PUBLIC_LIVEKIT_ENABLED : process.env.NEXT_PUBLIC_LIVEKIT_ENABLED;
+  return new LiveKitConnectionService({ user, authMode, enabled: enabled === 'true'&&secure?.enabled!==false,
     purpose,
     ...(getConnectionId ? { getConnectionId } : {}),
     ...(secure&&purpose==='direct-call'?{requestToken:(callId:string,connectionId:string,signal:AbortSignal)=>secure.api.request('/api/calls/token',{method:'POST',body:{callId,connectionId},signal})}:{}),

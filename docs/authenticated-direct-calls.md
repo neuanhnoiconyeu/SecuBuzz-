@@ -1,6 +1,142 @@
 # Authenticated direct calls — Phase 10 integration
 
-Status: integration implemented; **media acceptance is blocked**. No LiveKit server URL, API key/secret, or local LiveKit server was available in this checkout. Real-account `directCalls` remains `false`. Signaling/JWT tests and mocked SDK tests do not establish successful microphone/camera delivery. Calls are not advertised as end-to-end encrypted.
+Current status (Phase 10C): local real-LiveKit voice and video transmission has been verified using synthetic browser microphone/camera sources. The optional local Docker overlay below enables the existing authenticated runtime. Physical hardware and non-local deployment are separate acceptance tasks. Calls are not advertised as end-to-end encrypted. Earlier Phase 10/10B infrastructure findings below are historical.
+
+## Phase 10C — local Docker calling
+
+Use the existing default project and its existing named volumes:
+
+```powershell
+Set-Location 'D:\Project\SecuBuzz-'
+node docker/init-livekit.cjs
+docker compose -p secubuzz- -f compose.yaml -f compose.calls.yaml up -d --wait --wait-timeout 180
+docker compose -p secubuzz- -f compose.yaml -f compose.calls.yaml ps
+```
+
+Open **http://localhost:3001** in two separate browser profiles, sign in with
+different accounts, and open their eligible direct conversation. Click Voice call
+or Video call, accept in the other profile, and allow microphone/camera access.
+Use the existing microphone, camera and Hang up controls. Browser-held messaging
+keys are not copied or reset; call media remains separate from message E2EE.
+
+The overlay adds the official LiveKit **1.13.11** server pinned by image digest.
+LiveKit shares the backend/frontend network namespace, so both server room APIs
+and browser signaling can use `ws://localhost:7880`. Ports 7880/TCP, 7881/TCP and
+7882/UDP are published only on `127.0.0.1`; the advertised ICE address is also
+loopback. No new database/attachment volumes, Redis, TURN or second persistent
+Compose project are introduced. This is a single-host development configuration,
+not a LAN/production deployment. See the official
+[local-server guide](https://docs.livekit.io/transport/self-hosting/local/) and
+[RTC configuration](https://github.com/livekit/livekit/blob/master/config-sample.yaml).
+
+`docker/init-livekit.cjs` generates random local API credentials once in
+`docker/secrets/livekit/backend.env` and a matching SFU config. Existing files are
+preserved; incomplete setup fails instead of rotating credentials. These paths
+are excluded by both Git and Docker build-context rules. Only the backend receives
+the API key/secret. The browser receives its public URL and existing short-lived,
+room/participant-scoped token. Do not publish the generated directory or expanded
+Compose environment. Keep local credential files private on shared machines.
+
+The base `compose.yaml` is unchanged and still disables LiveKit. Keep the overlay
+in the daily command when calling is wanted. The overlay uses the dedicated
+`NEXT_PUBLIC_DIRECT_CALLS_ENABLED=true` flag and a configured URL, leaving the
+existing public Voice Rooms flag false. Existing deployments without the new
+override retain the prior shared-flag fallback. The
+existing connection service, authenticated signaling and DATA authorization still
+decide whether a call can proceed. Demo Mode and Voice Rooms retain their current
+paths. No new calling implementation or token API was added.
+
+Calls use WebRTC transport encryption to the SFU. Local signaling uses loopback
+HTTP/WS; the SFU is within the media trust boundary. **There is no true media
+E2EE.** Remote deployment needs its own HTTPS/WSS, ICE/TURN and security review.
+The existing short token lifetime does not establish universal instant JWT
+revocation; existing room lifecycle and owner/session checks remain in place.
+
+### Verification scope and retained evidence
+
+The primary Docker app successfully exchanged real bidirectional microphone
+audio, including mute/unmute and hang-up cleanup, between synthetic authenticated
+accounts. Subsequent diagnostics reached DATA's unchanged five-registrations-per-
+hour limit, so further runs used disposable real DATA/Next services and fresh
+synthetic accounts while continuing to use the **same real Docker LiveKit SFU**.
+No rate limit or other security control was weakened. These temporary services
+stop when the browser runner exits; they are not additional persistent projects.
+
+The headless camera required a deterministic, valid Y4M fixture: the default
+Chromium synthetic device failed camera reacquisition with `NotFoundError`.
+The fixture exercises genuine browser capture, LiveKit publication/subscription,
+remote inbound RTP, decoded audio energy/samples, HTML audio playback and decoded
+video frames in both directions. It is not a stubbed media server or a claim of
+manual physical microphone/camera testing. The existing call media runtime needed
+no rewrite.
+
+The native permission test targets the actual isolated browser context and then
+restores that context's permissions. Cleanup requires all captured tracks ended,
+all negotiated peer connections closed and remote audio elements removed. An
+SDK-created unused transport with no SDP and no sender track is distinguished
+from an active/negotiated session; closing the browser context releases it too.
+
+Commands for repeatable isolated acceptance and focused checks:
+
+```powershell
+node client/scripts/verify-authenticated-calls.cjs --isolated
+node --test docker/init-livekit.test.cjs
+```
+
+The browser runner without `--isolated` intentionally targets the primary Docker
+app and creates synthetic accounts. Prefer isolated runs to avoid filling normal
+registration limits. Five synthetic primary accounts and two test conversations
+were added during initial diagnostics and retained; no account was deleted or
+password changed. Existing accounts, all three existing messages, both existing
+device records, encrypted key material and all 12 migration ledger rows remain
+unchanged. Read-only before/after snapshots confirmed preservation of original
+rows across 32 business/security-data tables. Session/challenge/rate-limit rows
+underwent normal authentication, expiry and logout changes.
+
+Private snapshots and test logs are under ignored `.cache/phase10c-U4cVeL/`.
+The complete real-SFU browser evidence is
+`.cache/phase10c-calls-7c0aad0a/evidence.json` (isolated DATA/Next, real Docker SFU,
+direct calls enabled while Voice Rooms remains disabled).
+Final results:
+
+| Check | Result |
+| --- | --- |
+| Real LiveKit Chrome acceptance | 29 checks passed, 0 failed; 0 runtime exceptions and 0 attachment transfer requests |
+| Focused frontend calls/Voice Rooms/flag/Delete/A2 regressions | 157 passed, 0 failed; 15 suites |
+| Backend/DATA authenticated calling, broker, media lifecycle and token suites | 49 passed, 0 failed |
+| Local configuration generator/preservation/exposure checks | 4 passed, 0 failed |
+| Client/server TypeScript, frontend lint, isolated production build | Passed |
+| Primary database preservation | Integrity OK, no FK violations, original rows preserved across 32 non-transient tables, migration ledger/checksums unchanged |
+
+The browser run covers voice and video in both directions, decoded remote audio
+and video-frame playback, mute/unmute, camera restart, end, reject, cancel,
+native permission denial and recovery, failed token delivery and a successful
+subsequent call, plus capture/negotiated-connection cleanup. Original failed runs
+remain in the other ignored evidence directories. The camera fixture, correctly
+scoped/restored permission override and unused SDK transport classification fixed
+test-environment/assertion issues; no production media code was changed to force
+passing results. These checks do not establish physical hardware, LAN access,
+long network interruptions or media E2EE acceptance.
+
+### Safe stop and rollback
+
+To stop development, preserve all volumes and use the same overlay to start later:
+
+```powershell
+docker compose -p secubuzz- -f compose.yaml -f compose.calls.yaml stop frontend livekit backend
+```
+
+To return to the original development configuration with calls disabled:
+
+```powershell
+docker compose -p secubuzz- -f compose.yaml -f compose.calls.yaml stop livekit
+docker compose -p secubuzz- -f compose.yaml up -d --wait --wait-timeout 180
+```
+
+Do not remove volumes or restore the backup over the live database for this
+configuration rollback. Keep the generated local credentials and preserved
+legacy environment/stash. A1 stays explicitly deferred and High/P1; this call
+integration neither changes its protocol nor provides overall security clearance.
 
 ## Integrated path
 
