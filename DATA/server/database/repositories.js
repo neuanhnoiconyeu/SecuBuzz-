@@ -117,21 +117,26 @@ function createRepositories(db) {
         },
         conversations: {
             create(input) {
-                fields(input, ['conversation_id','kind','title','created_by','dm_user_low','dm_user_high','origin']);
+                fields(input, ['conversation_id','kind','title','created_by','dm_user_low','dm_user_high','origin',
+                    'created_at','updated_at','member_joined_at']);
                 return atomic(() => {
                     const id = input.conversation_id ?? randomUUID();
+                    const columns = ['conversation_id','kind','title','created_by','dm_user_low','dm_user_high'];
                     const values = [id,input.kind,input.title ?? null,input.created_by ?? null,input.dm_user_low ?? null,input.dm_user_high ?? null];
-                    // Legacy callers also run against earlier migration versions in upgrade tests.
-                    if (Object.prototype.hasOwnProperty.call(input,'origin')) {
-                        run(`INSERT INTO Conversations(conversation_id,kind,title,created_by,dm_user_low,dm_user_high,origin) VALUES(?,?,?,?,?,?,?)`,...values,input.origin);
-                    } else {
-                        run(`INSERT INTO Conversations(conversation_id,kind,title,created_by,dm_user_low,dm_user_high) VALUES(?,?,?,?,?,?)`,...values);
+                    for (const column of ['created_at','updated_at']) if (input[column] !== undefined) {
+                        columns.push(column); values.push(input[column]);
                     }
+                    // Legacy callers also run against earlier migration versions in upgrade tests.
+                    if (Object.prototype.hasOwnProperty.call(input,'origin')) { columns.push('origin'); values.push(input.origin); }
+                    run(`INSERT INTO Conversations(${columns.join(',')}) VALUES(${columns.map(()=>'?').join(',')})`,...values);
                     if (input.kind === 'direct') {
-                        repositories.members.insert({conversation_id:id,user_id:input.dm_user_low});
-                        repositories.members.insert({conversation_id:id,user_id:input.dm_user_high});
+                        repositories.members.insert({conversation_id:id,user_id:input.dm_user_low,
+                            ...(input.member_joined_at === undefined ? {} : {joined_at:input.member_joined_at})});
+                        repositories.members.insert({conversation_id:id,user_id:input.dm_user_high,
+                            ...(input.member_joined_at === undefined ? {} : {joined_at:input.member_joined_at})});
                     } else if (input.created_by) {
-                        repositories.members.insert({conversation_id:id,user_id:input.created_by,role:'owner'});
+                        repositories.members.insert({conversation_id:id,user_id:input.created_by,role:'owner',
+                            ...(input.member_joined_at === undefined ? {} : {joined_at:input.member_joined_at})});
                     }
                     return repositories.conversations.get(id);
                 });
@@ -155,8 +160,13 @@ function createRepositories(db) {
         },
         members: {
             insert(input) {
-                fields(input, ['conversation_id','user_id','role']);
-                run('INSERT INTO ConversationMembers(conversation_id,user_id,role) VALUES(?,?,?)',input.conversation_id,input.user_id,input.role ?? 'member');
+                fields(input, ['conversation_id','user_id','role','joined_at']);
+                if (input.joined_at === undefined) {
+                    run('INSERT INTO ConversationMembers(conversation_id,user_id,role) VALUES(?,?,?)',input.conversation_id,input.user_id,input.role ?? 'member');
+                } else {
+                    run('INSERT INTO ConversationMembers(conversation_id,user_id,role,joined_at) VALUES(?,?,?,?)',
+                        input.conversation_id,input.user_id,input.role ?? 'member',input.joined_at);
+                }
                 return repositories.members.get(input.conversation_id,input.user_id);
             },
             get: (conversation,id) => get('SELECT * FROM ConversationMembers WHERE conversation_id=? AND user_id=?',conversation,id),
@@ -235,7 +245,7 @@ function createRepositories(db) {
         },
         audit: {
             insert(input) {
-                fields(input, ['audit_id','actor_user_id','event_type','severity','source','subject_id','metadata']);
+                fields(input, ['audit_id','actor_user_id','event_type','severity','source','subject_id','metadata','created_at']);
                 const metadata = input.metadata ?? {};
                 // Only explicit scalar metadata, never prompts, message bodies, credentials or keys.
                 const allowed = ['reason_code','operation','outcome','count','duration_ms','target_id','role'];
@@ -244,8 +254,13 @@ function createRepositories(db) {
                     ['count','duration_ms'].includes(key) ? !Number.isFinite(value) || value < 0 :
                         typeof value !== 'string' || !/^[a-zA-Z0-9_.:-]{1,64}$/.test(value))) throw new RepositoryError('INVALID');
                 const id = input.audit_id ?? randomUUID();
-                run(`INSERT INTO AuditLogs(audit_id,actor_user_id,event_type,severity,source,subject_id,metadata_json) VALUES(?,?,?,?,?,?,?)`,
-                id,input.actor_user_id ?? null,input.event_type,input.severity ?? 'info',input.source,input.subject_id ?? null,JSON.stringify(metadata));
+                if (input.created_at === undefined) {
+                    run(`INSERT INTO AuditLogs(audit_id,actor_user_id,event_type,severity,source,subject_id,metadata_json) VALUES(?,?,?,?,?,?,?)`,
+                        id,input.actor_user_id ?? null,input.event_type,input.severity ?? 'info',input.source,input.subject_id ?? null,JSON.stringify(metadata));
+                } else {
+                    run(`INSERT INTO AuditLogs(audit_id,actor_user_id,event_type,severity,source,subject_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)`,
+                        id,input.actor_user_id ?? null,input.event_type,input.severity ?? 'info',input.source,input.subject_id ?? null,JSON.stringify(metadata),input.created_at);
+                }
                 return repositories.audit.get(id);
             },
             get: id => get('SELECT * FROM AuditLogs WHERE audit_id=?',id),

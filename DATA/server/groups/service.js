@@ -340,7 +340,8 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
             return transaction('write', token => withMembershipTransaction(db, () => {
                 const session = authenticate(context, token);
                 verifyCsrf(proof, session);
-                const result = synchronousResult(run(session.userId, iso()));
+                const at = token.at = iso();
+                const result = synchronousResult(run(session.userId, at));
                 if (token.auditFailed) throw internalError();
                 for (const groupId of token.groups) assertGroupInvariants(groupId);
                 return result;
@@ -391,7 +392,8 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
                     if (!ROLES.includes(details.role)) throw new TypeError('audit role');
                     metadata.role = details.role;
                 }
-                groups.repositories.audit.insert({ actor_user_id: actor, event_type: eventType, source: 'groups', subject_id: groupId, metadata });
+                groups.repositories.audit.insert({ actor_user_id: actor, event_type: eventType, source: 'groups', subject_id: groupId,
+                    metadata, created_at: current.at });
             } catch (error) {
                 if (current !== null) current.auditFailed = true;
                 throw internalError();
@@ -430,7 +432,8 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
                         return { created: false, group: projectGroup(seen.group, seen.member.role, groups.countActiveMembers(claimed.conversation_id)) };
                     }
                 }
-                const inserted = groups.insertGroup({ created_by: user, title: input.name, description: input.description, historyPolicy: input.historyPolicy });
+                const inserted = groups.insertGroup({ created_by: user, title: input.name, description: input.description,
+                    historyPolicy: input.historyPolicy, at });
                 const id = inserted.conversation_id;
                 if (input.idempotencyKey !== null) groups.claimCreationKey(user, input.idempotencyKey, fingerprint, id, at);
                 service.audit(user, 'group.created', id);
