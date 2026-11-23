@@ -9,6 +9,7 @@ const {createGroupRepository}=require('../server/database/groupRepository');
 const {httpGroupFixture,groupFixture,openLimiter,snapshot,changedTables,createClock,INVITATION_EXPIRY_MS}=require('./support/groups');
 const {withMembershipTransaction}=require('../server/database/groupRepository');
 const {createRandom,forAll}=require('./support/random');
+const {performance}=require('node:perf_hooks');
 
 const P01_SEQUENCES=100;
 const P01_OPERATIONS=50;
@@ -24,6 +25,7 @@ const INVITATION_IMMUTABLE_FIELDS=['invitation_id','conversation_id','invitee_id
 const invitationQueriesByDatabase=new WeakMap();
 const describeSequence=sequence=>sequence.map((op,index)=>`${index}:${op.op}(a=${op.actorClass},t=${op.targetClass},g=${op.groupSlot},stale=${op.revisionMode||'no'},replay=${op.replay})`);
 const stateQueriesByDatabase=new WeakMap();
+const sequenceFixtureTimings={count:0,setupMs:0,sequenceMs:0,cleanupMs:0};
 
 function makeActorContext(f,actor) {
     const token=actor.browser.cookies.get(f.config.sessionCookie);
@@ -423,15 +425,32 @@ function chooseActor(random,actors,group,operation,invitation) {
     return actors[random.pick(Object.keys(actors))];
 }
 
-async function withIsolatedSequenceFixture(work) {
+async function createSequenceFixtureTemplate(t) {
+    const template=await httpGroupFixture(t,{clock:createClock(),createGroup:false,features:{groupApi:true,
+        groups:{directAdd:true,maxMembers:6,maxPendingInvitationsPerGroup:10000,maxPendingInvitationsPerInvitee:10000}}});
+    await template.application.close();
+    template.db.pragma('wal_checkpoint(TRUNCATE)');
+    template.db.close();
+    return {filename:template.filename,actors:template.actors};
+}
+
+async function withIsolatedSequenceFixture(template,work) {
     const cleanups=[];
     const fixtureScope={after(callback){cleanups.push(callback);}};
+    let f;
+    let phaseStarted=performance.now();
     try {
-        const f=await httpGroupFixture(fixtureScope,{clock:createClock(),features:{groupApi:true,
+        f=await httpGroupFixture(fixtureScope,{clock:createClock(),databaseTemplate:template.filename,actorTemplate:template.actors,features:{groupApi:true,
             groups:{directAdd:true,maxMembers:6,maxPendingInvitationsPerGroup:10000,maxPendingInvitationsPerInvitee:10000}}});
-        return await work(f);
+        sequenceFixtureTimings.setupMs+=performance.now()-phaseStarted;
+        sequenceFixtureTimings.count++;
+        phaseStarted=performance.now();
+        try { return await work(f); }
+        finally { sequenceFixtureTimings.sequenceMs+=performance.now()-phaseStarted; }
     } finally {
+        phaseStarted=performance.now();
         for(const cleanup of cleanups.reverse())await cleanup();
+        sequenceFixtureTimings.cleanupMs+=performance.now()-phaseStarted;
     }
 }
 
@@ -729,6 +748,7 @@ test('P-01: generated operation sequences preserve the owner and group state mod
     const coverage={operations:new Set(),actors:new Set(),targets:new Set(),roles:new Set(),archived:new Set(),stale:new Set(),wrongActor:0,replays:0,
         accepted:0,committedRefusals:0,ordinaryRefusals:0,createdGroups:new Set(),p24:{sequences:0,refusedWrites:0,absentRoutes:0},p09:{requests:0,directSqlAttempts:0,noopAssignments:0,preconditions:new Set(),operations:new Set()},p04:{transitions:new Set(),snapshots:0,
             sqlAttemptSlots:0,sqlMutationKinds:new Set(),clockPeriods:new Set()}};
+    const fixtureTemplate=await createSequenceFixtureTemplate(t);
     await forAll('P-01',{runs:P01_SEQUENCES,seed:P01_SEED,onRun:line=>t.diagnostic(line),describe:describeSequence},
         (random,info)=>{const maxGroups=1+random.int(0,2);return Array.from({length:P01_OPERATIONS},(_,index)=>({
             op:index===0?'create':index===10?'archive':random.weighted(index<10?OP_WEIGHTS.filter(([op])=>op!=='archive'):OP_WEIGHTS),forceOwner:index===10,
@@ -736,7 +756,7 @@ test('P-01: generated operation sequences preserve the owner and group state mod
             revisionMode:random.weighted([['none',0.55],['current',0.2],['stale',0.25]]),
             maxGroups,groupSlot:index===10?0:random.int(0,2),replay:index===10?false:random.bool(0.2),advanceMs:index<10?0:random.int(0,3)*INVITATION_EXPIRY_MS,
             wrongActor:index===10?false:random.bool(0.2),run:info.run,index
-        }));},async(plan,info)=>withIsolatedSequenceFixture(f=>runSequence(f,plan,info,coverage)));
+        }));},async(plan,info)=>withIsolatedSequenceFixture(fixtureTemplate,f=>runSequence(f,plan,info,coverage)));
     t.diagnostic(`P-01 coverage ${JSON.stringify(Object.fromEntries(Object.entries(coverage).map(([key,value])=>[key,value instanceof Set?[...value]:value])))}`);
     t.diagnostic(`P-04 coverage ${JSON.stringify({transitions:[...coverage.p04.transitions],snapshots:coverage.p04.snapshots,
         sqlAttemptSlots:coverage.p04.sqlAttemptSlots,sqlMutationKinds:[...coverage.p04.sqlMutationKinds],
@@ -744,6 +764,7 @@ test('P-01: generated operation sequences preserve the owner and group state mod
     t.diagnostic(`P-09 coverage ${JSON.stringify({generatedUpdates:coverage.p09.requests,directSqlAttempts:coverage.p09.directSqlAttempts,
         noopAssignments:coverage.p09.noopAssignments,operations:[...coverage.p09.operations],preconditions:[...coverage.p09.preconditions]})}`);
     t.diagnostic(`P-24 coverage ${JSON.stringify(coverage.p24)}`);
+    t.diagnostic(`P-01 timing ${JSON.stringify(sequenceFixtureTimings)}`);
     if(process.env.PROPERTY_SEED===undefined) {
         assert.equal(coverage.operations.size,12);assert.ok([...coverage.createdGroups].every(n=>n>=1&&n<=3));
         assert.ok(coverage.actors.size>=5);assert.ok(coverage.targets.size>=5);assert.equal(coverage.roles.size,2);

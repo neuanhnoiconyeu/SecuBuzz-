@@ -807,6 +807,40 @@ test('G16: an invitee who is already an Active_Member leaves the member row unto
     assert.deepEqual(invariants(w), { activeOwners: 1, activeMembers: 3, openIntervals: 3, mismatches: 0 });
 });
 
+test('P-07: accepting while the invitee is an active owner, admin or member cancels only the Invitation', { timeout: 240000 }, async t => {
+    const roles = ['owner', 'admin', 'member'], coverage = new Set();
+    await forAll('P-07', { runs: 30, seed: 0x5c070031, onRun: line => t.diagnostic(line), describe: role => [role] },
+        (_random, info) => roles[info.run % roles.length], async role => {
+            const w = await world(t), invitee = w.who.pendingInvitee, owner = w.who.owner;
+            const svc = w.service({ groupApi: true, groups: { ...FEATURES.groups, directAdd: true } });
+            const id = w.invitationId;
+            svc.addMember(owner.context, owner.proof, w.groupId, { userId: invitee.id });
+            if (role === 'admin') svc.changeMemberRole(owner.context, owner.proof, w.groupId, invitee.id, { role: 'admin' });
+            if (role === 'owner') svc.transferOwnership(owner.context, owner.proof, w.groupId, { userId: invitee.id });
+            const before = memberState(w.db, w.groupId), ownerIds = before.members.filter(row => row.role === 'owner' && row.left_at === null).map(row => row.user_id);
+            assert.equal(before.members.find(row => row.user_id === invitee.id).role, role);
+            assert.equal(ownerIds.length, 1);
+            assertCommittedRefusal(w, invitee, id, 'cancelled', 'group.invitation.cancelled', w.groupId, svc);
+            assert.deepEqual(memberState(w.db, w.groupId), before, `P-07 ${role} membership, intervals and revision unchanged`);
+            assert.deepEqual(memberState(w.db, w.groupId).members.filter(row => row.role === 'owner' && row.left_at === null).map(row => row.user_id), ownerIds);
+            coverage.add(role);
+        });
+    assert.deepEqual([...coverage].sort(), roles.slice().sort());
+});
+
+test('AF-04: a stale invitation accepted by the current owner leaves exactly one owner', async t => {
+    for (const transition of ['transfer', 'role-change']) {
+        const w = await world(t), owner = w.who.owner, invitee = w.who.pendingInvitee;
+        const svc = w.service({ groupApi: true, groups: { ...FEATURES.groups, directAdd: true } });
+        svc.addMember(owner.context, owner.proof, w.groupId, { userId: invitee.id });
+        if (transition === 'transfer') svc.transferOwnership(owner.context, owner.proof, w.groupId, { userId: invitee.id });
+        else svc.changeMemberRole(owner.context, owner.proof, w.groupId, invitee.id, { role: 'admin' });
+        assertCommittedRefusal(w, invitee, w.invitationId, 'cancelled', 'group.invitation.cancelled', w.groupId, svc);
+        assert.equal(invariants(w).activeOwners, 1, `AF-04 ${transition} preserves exactly one active owner`);
+        assert.equal(createGroupRepository(w.db).getMember(w.groupId, invitee.id).role, transition === 'transfer' ? 'owner' : 'admin');
+    }
+});
+
 test('G16: expiry is decided by the server time: one second before it the Invitation is accepted, at exactly expires_at it is expired', async t => {
     const early = await world(t);
     early.clock.advance(INVITATION_EXPIRY_MS - 1000);

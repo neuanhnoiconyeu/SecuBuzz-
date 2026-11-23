@@ -10,6 +10,8 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { fixture, temporary, users, Database } = require('./support/database');
 const { RepositoryError, translate } = require('../server/database/repositories');
+const { httpGroupFixture, createClock, openLimiter } = require('./support/groups');
+const { createGroupService } = require('../server/groups/service');
 
 const ALLOWED_KEYS = ['reason_code', 'operation', 'outcome', 'count', 'duration_ms', 'target_id', 'role'];
 const NEW_KEYS = ['target_id', 'role'];
@@ -154,4 +156,60 @@ test('translate is exported and keeps its error classes for real SQLite errors w
         assert.equal(translate(mapped), mapped, `${label}: a RepositoryError passes through unchanged`);
     }
     db.exec('ROLLBACK');
+});
+
+test('P-30: committed group operations write one safe audit row and refusals write none', {timeout:120000}, async t => {
+    const f=await httpGroupFixture(t,{clock:createClock(),features:{groupApi:true,groups:{directAdd:true,maxMembers:50,
+        maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50}}});
+    const service=createGroupService({db:f.db,auth:f.application.auth,limiter:openLimiter(),features:{groupApi:true,
+        groups:{directAdd:true,maxMembers:50,maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50}},now:f.clock.now});
+    const context=actor=>{
+        const token=actor.browser.cookies.get(f.config.sessionCookie),row=f.application.auth.resolveToken(token).row;
+        return{context:{userId:row.user_id,sessionId:row.session_id},proof:f.application.auth.csrfProof(token,null,actor.token)};
+    };
+    const actors=Object.fromEntries(['owner','admin','member','nonMember','pendingInvitee','removedMember'].map(name=>[name,context(f.actors[name])]));
+    const canary='P30 hostile ../quoted" group name';
+    const stderr=[];const originalWrite=process.stderr.write;
+    process.stderr.write=function(chunk,...args){stderr.push(String(chunk));return originalWrite.call(this,chunk,...args);};
+    let groupId;
+    const groupRows=id=>f.db.prepare("SELECT * FROM AuditLogs WHERE source='groups' AND subject_id=? ORDER BY rowid").all(id);
+    const record=async(label,action)=>{
+        const before=groupId?groupRows(groupId).length:0,result=await action();
+        if(!groupId&&result?.group?.id)groupId=result.group.id;
+        assert.ok(groupId,`${label}: operation produced group id`);
+        const rows=groupRows(groupId);assert.equal(rows.length,before+1,`${label}: one committed audit row`);
+        const row=rows.at(-1);assert.equal(row.source,'groups');assert.equal(row.subject_id,groupId);
+        const metadata=JSON.parse(row.metadata_json);assert.ok(Object.keys(metadata).every(key=>ALLOWED_KEYS.includes(key)),`${label}: allow-listed metadata keys`);
+        for(const value of Object.values(metadata)){
+            if(typeof value==='string')assert.match(value,/^[a-zA-Z0-9_.:-]{1,64}$/,`${label}: safe metadata string`);
+            else assert.ok(typeof value==='number'&&Number.isFinite(value)&&value>=0,`${label}: safe metadata number`);
+        }
+        return result;
+    };
+    try{
+        const created=await record('create',()=>service.createGroup(actors.owner.context,actors.owner.proof,{name:canary,description:canary,historyPolicy:'all'},'203.0.113.9'));
+        groupId=created.group.id;
+        await record('update',()=>service.updateGroup(actors.owner.context,actors.owner.proof,groupId,{name:`${canary} updated`,description:canary}));
+        await record('direct add admin',()=>service.addMember(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.admin.id}));
+        await record('direct add member',()=>service.addMember(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.member.id}));
+        await record('direct add target',()=>service.addMember(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.nonMember.id}));
+        await record('role change',()=>service.changeMemberRole(actors.owner.context,actors.owner.proof,groupId,f.actors.admin.id,{role:'admin'}));
+        const cancelled=await record('invitation create for cancel',()=>service.createInvitation(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.removedMember.id},'203.0.113.9'));
+        await record('invitation cancel',()=>service.cancelInvitation(actors.owner.context,actors.owner.proof,groupId,cancelled.invitation.id));
+        const accepted=await record('invitation create for accept',()=>service.createInvitation(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.removedMember.id},'203.0.113.9'));
+        await record('invitation accept',()=>service.acceptInvitation(actors.removedMember.context,actors.removedMember.proof,accepted.invitation.id));
+        const declined=await record('invitation create for decline',()=>service.createInvitation(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.pendingInvitee.id},'203.0.113.9'));
+        await record('invitation decline',()=>service.declineInvitation(actors.pendingInvitee.context,actors.pendingInvitee.proof,declined.invitation.id));
+        await record('ownership transfer',()=>service.transferOwnership(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.admin.id}));
+        await record('member removal',()=>service.removeMember(actors.admin.context,actors.admin.proof,groupId,f.actors.nonMember.id));
+        await record('member leave',()=>service.leaveGroup(actors.removedMember.context,actors.removedMember.proof,groupId));
+        await record('archive',()=>service.archiveGroup(actors.admin.context,actors.admin.proof,groupId));
+        const beforeRefusal=groupRows(groupId).length;
+        assert.throws(()=>service.changeMemberRole(actors.member.context,actors.member.proof,groupId,f.actors.owner.id,{role:'admin'}));
+        assert.equal(groupRows(groupId).length,beforeRefusal,'refusal writes no audit row');
+    }finally{process.stderr.write=originalWrite;}
+    const all=groupRows(groupId),serialized=JSON.stringify(all);
+    assert.ok(!serialized.includes(canary),'audit metadata and event rows exclude hostile canary text');
+    assert.ok(!stderr.join('').includes(canary),'stderr excludes hostile canary text');
+    t.diagnostic(`P-30 committedOperations=${all.length} refusedOperations=1`);
 });

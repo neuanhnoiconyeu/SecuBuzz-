@@ -12,7 +12,8 @@ const fs = require('node:fs');
 const { createHash } = require('node:crypto');
 const { AuthError } = require('../server/auth/errors');
 const cursor = require('../server/groups/cursor');
-const { forAll } = require('./support/random');
+const { createRandom, forAll } = require('./support/random');
+const { httpGroupFixture, snapshot, createClock, actorRequest } = require('./support/groups');
 
 const P13_RUNS = 200; // generated cases of P-13 (at least 100)
 const P13_SEED = 13013;
@@ -229,4 +230,153 @@ test('P-13: decode(encode(payload, context), context) equals the payload; the to
         assert.deepEqual(decode(token, copy), payload);
     });
     t.diagnostic(`P-13 seed=${summary.seed} runs=${summary.runs} longest token ${longest} characters`);
+});
+
+test('P-14: altered or foreign real listing cursors and bad list parameters are refused without writes', { timeout: 240000 }, async t => {
+    const f = await httpGroupFixture(t, { clock: createClock(), features: { groupApi: true, groups: { maxMembers: 50,
+        maxPendingInvitationsPerGroup: 50, maxPendingInvitationsPerInvitee: 50 } } }), b = f.builder, owner = f.actors.owner, admin = f.actors.admin;
+    const second = b.createGroup({ ownerId: owner.id, title: 'P14 second group', idempotencyKey: null });
+    b.addMember(second, admin.id);
+    // Distinct recipients need registered accounts because the database foreign key is real.
+    for (let index = 0; index < 3; index++) {
+        const user = f.repositories.users.create({ user_id: `p14-user-${index}`, username: `p14-user-${index}`, display_name: `P14 ${index}` });
+        b.invite(f.groupId, owner.id, user.user_id);
+    }
+    const ownGroup = b.createGroup({ ownerId: admin.id, title: 'P14 invite group', idempotencyKey: null });
+    b.invite(ownGroup, admin.id, f.actors.pendingInvitee.id);
+    const paths = [
+        { key: 'G02', actor: owner, path: '/api/groups?limit=1' },
+        { key: 'G05', actor: owner, path: `/api/groups/${f.groupId}/members?limit=1` },
+        { key: 'G13', actor: owner, path: `/api/groups/${f.groupId}/invitations?limit=1` },
+        { key: 'G15', actor: f.actors.pendingInvitee, path: '/api/groups/invitations?limit=1' },
+    ];
+    const pages = new Map();
+    for (const row of paths) {
+        const page = await actorRequest(row.actor, 'GET', row.path);
+        assert.equal(page.status, 200, `${row.key} first page`);
+        assert.ok(page.body.nextCursor, `${row.key} has a real next cursor`);
+        pages.set(row.key, { ...row, cursor: page.body.nextCursor });
+    }
+    const targets = [...pages.values()];
+    const mutate = (token, kind) => {
+        if (kind === 'overlong') return `${token}${'A'.repeat(2049)}`;
+        if (kind === 'truncate') return token.slice(0, -1);
+        if (kind === 'append') return `${token}!`;
+        if (kind === 'outside') return `!${token.slice(1)}`;
+        if (kind === 'context') {
+            const payload = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+            payload.context = `${payload.context.slice(0, -1)}${payload.context.endsWith('0') ? '1' : '0'}`;
+            return Buffer.from(JSON.stringify(payload)).toString('base64url');
+        }
+        if (kind === 'insert') return `${token.slice(0, 2)}!${token.slice(2)}`;
+        if (kind === 'delete') return token.slice(0, 2) + token.slice(3);
+        if (kind === 'change-case') return token.replace(/[A-Za-z]/, letter => letter === letter.toLowerCase() ? letter.toUpperCase() : letter.toLowerCase());
+        return `${token}A`;
+    };
+    const mutationKinds = ['overlong', 'truncate', 'append', 'outside', 'context', 'insert', 'delete', 'change-case'];
+    const coverage = new Set();
+    await forAll('P-14', { runs: 64, seed: 0x5c140034, onRun: line => t.diagnostic(line), describe: item => `${item.source}:${item.kind}` },
+        (_random, info) => ({ source: ['G02', 'G05', 'G13', 'G15'][Math.floor(info.run / 16)], kind: mutationKinds[info.run % mutationKinds.length] }), async (item, info) => {
+            const source = pages.get(item.source), url = source.path.replace(/([?&])limit=1/, `$1limit=1&cursor=${encodeURIComponent(mutate(source.cursor, item.kind))}`);
+            const before = snapshot(f.db), response = await actorRequest(source.actor, 'GET', url);
+            assert.deepEqual([response.status, response.body], [400, { code: 'VALIDATION_ERROR', fields: ['cursor'] }],
+                `P-14 seed=${info.seed} run=${info.run} ${item.source}/${item.kind}`);
+            assert.deepEqual(snapshot(f.db), before, 'invalid cursor changes no row'); coverage.add(`${item.source}:${item.kind}`);
+        });
+    for (const [sourceName, other] of [['G02 as another user', { ...pages.get('G02'), actor: admin }],
+        ['G05 on another group', { ...pages.get('G05'), path: `/api/groups/${second}/members?limit=1` }],
+        ['G13 on another group', { ...pages.get('G13'), actor: admin, path: `/api/groups/${ownGroup}/invitations?limit=1` }],
+        ['G15 as another user', { ...pages.get('G15'), actor: owner }]]) {
+        const before = snapshot(f.db), url = other.path.replace(/([?&])limit=1/, `$1limit=1&cursor=${encodeURIComponent(other.cursor)}`);
+        const response = await actorRequest(other.actor, 'GET', url);
+        assert.deepEqual([response.status, response.body], [400, { code: 'VALIDATION_ERROR', fields: ['cursor'] }], sourceName);
+        assert.deepEqual(snapshot(f.db), before, `${sourceName} changes no row`);
+    }
+    for (const source of pages.values()) for (const query of ['&unknown=1', '&limit=0', '&limit=51', '&limit=1.5']) {
+        const before = snapshot(f.db), response = await actorRequest(source.actor, 'GET', `${source.path}${query}`);
+        const field = query.startsWith('&unknown') ? 'unknown' : 'limit';
+        assert.deepEqual([response.status, response.body], [400, { code: 'VALIDATION_ERROR', fields: [field] }]);
+        assert.deepEqual(snapshot(f.db), before, 'bad list parameters change no row');
+    }
+    assert.equal(coverage.size, 32, 'eight deterministic mutation kinds ran against all four real cursor sources');
+});
+
+test('P-15: paged listings concatenate to the independent sorted oracle', { timeout: 240000 }, async t => {
+    const f = await httpGroupFixture(t, { clock: createClock(), features: { groupApi: true, groups: { maxMembers: 50,
+        maxPendingInvitationsPerGroup: 1000, maxPendingInvitationsPerInvitee: 1000 } } });
+    const { builder, db, actors, groupId } = f, owner = actors.owner, invitee = actors.pendingInvitee;
+    const emptyGroup = builder.createGroup({ ownerId: actors.admin.id, conversationId: 'p15-empty-group', title: 'P15 empty', idempotencyKey: null });
+    const population = 150;
+    // Groups and own invitations have exactly 150 rows; one separate actor and group provide empty-list boundaries.
+    for (let index = 0; index < population - 1; index++) {
+        const id = `p15-group-${String(index).padStart(3, '0')}`;
+        builder.createGroup({ ownerId: owner.id, conversationId: id, title: `P15 ${index}`, idempotencyKey: null });
+        builder.invite(id, owner.id, invitee.id);
+    }
+    // The default group is the 150th group and holds 150 pending group Invitations for distinct synthetic users.
+    for (let index = 0; index < population - 1; index++) {
+        const userId = `p15-target-${String(index).padStart(3, '0')}`;
+        f.repositories.users.create({ user_id: userId, username: userId, display_name: `P15 target ${index}` });
+        builder.invite(groupId, owner.id, userId);
+    }
+    // Create exactly 150 active and 150 former rows in the listing group without using API limits as a fixture shortcut.
+    for (let index = 0; index < population - 3; index++) {
+        const userId = `p15-active-${String(index).padStart(3, '0')}`;
+        f.repositories.users.create({ user_id: userId, username: userId, display_name: `P15 active ${index}` });
+        builder.addMember(groupId, userId);
+    }
+    for (let index = 0; index < population - 1; index++) {
+        const userId = `p15-former-${String(index).padStart(3, '0')}`;
+        f.repositories.users.create({ user_id: userId, username: userId, display_name: `P15 former ${index}` });
+        builder.addMember(groupId, userId); builder.removeMember(groupId, userId);
+    }
+
+    const random = createRandom(0x5c150035), traversal = async (actor, path, key, expected) => {
+        const items = [], seen = new Set(); let cursorValue = null, pages = 0;
+        do {
+            const limit = random.int(1, 50), query = new URLSearchParams({ limit: String(limit) });
+            if (cursorValue !== null) query.set('cursor', cursorValue);
+            const response = await actorRequest(actor, 'GET', `${path}${path.includes('?') ? '&' : '?'}${query}`);
+            assert.equal(response.status, 200, `${key} page ${pages}`);
+            assert.ok(response.body.items.length <= limit);
+            for (const item of response.body.items) {
+                assert.ok(!seen.has(item.id), `${key} duplicate ${item.id}`); seen.add(item.id); items.push(item);
+            }
+            cursorValue = response.body.nextCursor;
+            pages++;
+            assert.ok(pages <= population + 1, `${key} cursor traversal terminates`);
+            if (cursorValue === null) assert.equal(response.body.nextCursor, null, `${key} final page has no cursor`);
+        } while (cursorValue !== null);
+        assert.deepEqual(items.map(item => item.id), expected, `${key} pages equal the SQL-derived sorted oracle`);
+        return items;
+    };
+    const expectedGroups = db.prepare(`SELECT conversation.conversation_id AS id FROM ConversationMembers member
+        JOIN Conversations conversation ON conversation.conversation_id=member.conversation_id JOIN GroupExtensions extension ON extension.conversation_id=conversation.conversation_id
+        WHERE member.user_id=? AND member.left_at IS NULL AND conversation.kind='group' AND conversation.origin='authenticated'
+        ORDER BY conversation.updated_at DESC,conversation.conversation_id DESC`).all(owner.id).map(row => row.id);
+    assert.equal(expectedGroups.length, population, 'the owner has exactly 150 populated groups');
+    const groupRows = await traversal(owner, '/api/groups', 'G02', expectedGroups);
+    assert.equal(groupRows.length, population);
+    assert.deepEqual(await traversal(actors.nonMember, '/api/groups', 'G02 empty', []), []);
+
+    const expectedActive = db.prepare(`SELECT member.user_id AS id FROM GroupMembershipIntervals period JOIN ConversationMembers member
+        ON member.conversation_id=period.conversation_id AND member.user_id=period.user_id WHERE period.conversation_id=? AND period.left_at IS NULL AND member.left_at IS NULL
+        ORDER BY period.joined_at,member.user_id`).all(groupId).map(row => row.id);
+    assert.equal(expectedActive.length, population);
+    await traversal(owner, `/api/groups/${groupId}/members`, 'G05 active', expectedActive);
+    const expectedFormer = db.prepare(`SELECT user_id AS id FROM ConversationMembers WHERE conversation_id=? AND left_at IS NOT NULL ORDER BY left_at,user_id`).all(groupId).map(row => row.id);
+    assert.equal(expectedFormer.length, population);
+    await traversal(owner, `/api/groups/${groupId}/members?former=true`, 'G05 former', expectedFormer);
+    assert.deepEqual(await traversal(actors.admin, `/api/groups/${emptyGroup}/members?former=true`, 'G05 former empty', []), []);
+
+    const expectedGroupInvites = db.prepare(`SELECT invitation_id AS id FROM ConversationInvitations WHERE conversation_id=? AND state='pending'
+        AND julianday(expires_at)>julianday(?) ORDER BY created_at DESC,invitation_id DESC`).all(groupId, f.clock.iso()).map(row => row.id);
+    assert.equal(expectedGroupInvites.length, population);
+    await traversal(owner, `/api/groups/${groupId}/invitations`, 'G13', expectedGroupInvites);
+    const expectedOwnInvites = db.prepare(`SELECT invitation_id AS id FROM ConversationInvitations WHERE invitee_id=? AND state='pending'
+        AND julianday(expires_at)>julianday(?) ORDER BY created_at DESC,invitation_id DESC`).all(invitee.id, f.clock.iso()).map(row => row.id);
+    assert.equal(expectedOwnInvites.length, population);
+    await traversal(invitee, '/api/groups/invitations', 'G15', expectedOwnInvites);
+    assert.deepEqual(await traversal(actors.nonMember, '/api/groups/invitations', 'G15 empty', []), []);
+    assert.ok(groupRows.length >= 150 && expectedActive.length === 150 && expectedFormer.length === 150 && expectedGroupInvites.length === 150 && expectedOwnInvites.length === 150);
 });

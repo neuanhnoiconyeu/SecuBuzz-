@@ -33,7 +33,7 @@ const Database = require('better-sqlite3');
 const { openDatabase } = require('../../server/database/connection');
 const { createRepositories } = require('../../server/database/repositories');
 const { loadMigrations } = require('../../server/database/migrate');
-const { setup } = require('./contract');
+const { setup, Browser } = require('./contract');
 
 // ---------------------------------------------------------------------------------------------------------------
 // Snapshot (P-21; design, Testing Strategy section 3).
@@ -372,22 +372,39 @@ function groupFixture(t, { clock = createClock(), group = {} } = {}) {
 // HTTP level: the createApp of support/auth.js on loopback with the injected clock and limiter. Every user class is
 // registered and logged in, so it holds a session cookie and a session CSRF token; the unauthenticated class is a
 // browser without cookies.
-async function httpGroupFixture(t, { clock = createClock(), limiter = openLimiter(), group = {}, ...options } = {}) {
+async function httpGroupFixture(t, { clock = createClock(), limiter = openLimiter(), group = {},
+    databaseTemplate = null, actorTemplate = null, createGroup = true, ...options } = {}) {
     const f = await setup(t, { now:clock.now, limiter, ...options });
     guardPath(f.directory);
     guardPath(f.filename);
+    if(databaseTemplate) {
+        guardPath(databaseTemplate);
+        await f.application.close();
+        f.db.close();
+        fs.copyFileSync(databaseTemplate,f.filename);
+        const browser=await f.anotherServer();
+        f.db=f.connections.at(-1);
+        f.application=f.applications.at(-1);
+        f.browser=()=>new Browser(browser.origin,f.config.origins[0]);
+    }
     const actors = { unauthenticated:Object.freeze({ actorClass:'unauthenticated', id:null, username:null, browser:f.browser(), token:null }) };
     for (const actorClass of USER_CLASSES) {
         const browser = f.browser();
         const username = USERNAMES[actorClass];
-        assert.equal((await browser.register(username, { displayName:DISPLAY_NAMES[actorClass] })).status, 201, `register ${actorClass}`);
+        if (!actorTemplate) {
+            assert.equal((await browser.register(username, { displayName:DISPLAY_NAMES[actorClass] })).status, 201, `register ${actorClass}`);
+        } else {
+            assert.equal(actorTemplate[actorClass]?.username,username,`reused synthetic ${actorClass} fixture identity`);
+        }
         const login = await browser.login(username);
         assert.equal(login.status, 200, `login ${actorClass}`);
+        if(actorTemplate)assert.equal(login.body.user.id,actorTemplate[actorClass].id,`reused synthetic ${actorClass} identity id`);
         actors[actorClass] = Object.freeze({ actorClass, id:login.body.user.id, username, browser, token:await browser.csrf() });
     }
     const repositories = createRepositories(f.db);
     const builder = createGroupBuilder({ db:f.db, repositories, clock });
-    return { ...f, clock, limiter, repositories, builder, ...buildActorGroup(builder, actors, group), actors:Object.freeze(actors) };
+    const groupFixture= createGroup ? buildActorGroup(builder, actors, group) : {groupId:null,invitationId:null};
+    return { ...f, clock, limiter, repositories, builder, ...groupFixture, actors:Object.freeze(actors) };
 }
 
 // A request as one actor; a state-changing method carries the actor's CSRF token unless csrf is false.

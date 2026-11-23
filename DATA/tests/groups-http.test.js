@@ -14,6 +14,7 @@ const express = require('express');
 const { setup } = require('./support/contract');
 const { assertGroupResponse } = require('./support/contract');
 const { snapshot, createClock, assertSecurityHeaders, createGroupBuilder } = require('./support/groups');
+const { forAll } = require('./support/random');
 const { createGroupRouter, GROUP_ROUTES, assertRouteTable, MAX_BODY_BYTES } = require('../server/routes/groups');
 const { AuthError, sendError } = require('../server/auth/errors');
 const { DISABLED_FEATURES } = require('../server/features/config');
@@ -866,6 +867,80 @@ test('G01: a bad body, name, description, policy or key is a 400 that names the 
     const several = await create(alice, { name: '', historyPolicy: 'x', description: 5 });
     assert.deepEqual(several.body.fields, ['name', 'description', 'historyPolicy'], 'every offending field is named, in the documented order');
     assert.deepEqual(rowCounts(db), before, 'no refusal created a record');
+});
+
+test('P-23: generated create and update bodies match the independent body oracle', { timeout: 240000 }, async t => {
+    const clock = createClock(SINCE), f = await application(t, { features: ON, users: ['p23-owner'], clock }), owner = f.actors['p23-owner'];
+    const randomBody = (random, index, patch = false) => {
+        const mode = random.int(0, 17), name = `Generated ${index}`;
+        if (mode === 0) return { body: patch ? {} : { name: '' }, fields: patch ? [] : ['name'] };
+        if (mode === 1) return { body: { name: ' \t\n ' }, fields: ['name'] };
+        if (mode === 2) return { body: { name: 'n'.repeat(101) }, fields: ['name'] };
+        if (mode === 3) return { body: { name: 'a\u0000b' }, fields: ['name'] };
+        if (mode === 4) return { body: { name, description: 7 }, fields: ['description'] };
+        if (mode === 5) return { body: { name, description: 'd'.repeat(1001) }, fields: ['description'] };
+        if (mode === 6) return { body: { name, description: 'a\u000bb' }, fields: ['description'] };
+        if (mode === 7) return { body: { name, historyPolicy: 'ALL' }, fields: ['historyPolicy'] };
+        if (mode === 8) return { body: { name, unexpected: true }, fields: ['unexpected'] };
+        if (mode === 9) return { body: patch ? { name, idempotencyKey: `p23-${index}` } : { name, idempotencyKey: '' }, fields: ['idempotencyKey'] };
+        if (mode === 10) return { body: { name, historyPolicy: null }, fields: ['historyPolicy'] };
+        if (mode === 11) return { body: { name, historyPolicy: [] }, fields: ['historyPolicy'] };
+        if (mode === 12) return { body: { name, idempotencyKey: 7 }, fields: ['idempotencyKey'] };
+        if (mode === 13) return { body: { name, idempotencyKey: null }, fields: ['idempotencyKey'] };
+        if (mode === 14) return { body: { name, idempotencyKey: 'k'.repeat(257) }, fields: ['idempotencyKey'] };
+        if (mode === 15) return { body: { name, idempotencyKey: ['key'] }, fields: ['idempotencyKey'] };
+        if (mode === 16) return { body: { name, idempotencyKey: '\ud800' }, fields: ['idempotencyKey'] };
+        return { body: patch ? { name: `Valid ${index}`, description: index % 2 ? null : 'line\tbreak\nallowed' } :
+            { name: `${'😀'.repeat(random.int(1, 100))}`, description: null, historyPolicy: random.pick(['all', 'from_joined']), idempotencyKey: `p23-${index}` }, fields: null };
+    };
+    const validName = value => typeof value === 'string' && value.isWellFormed() && value.trim().length > 0 &&
+        Array.from(value.trim()).length <= 100 && !/[\u0000-\u001f\u007f-\u009f]/u.test(value.trim());
+    const validDescription = value => value === null || typeof value === 'string' && value.isWellFormed() && Array.from(value).length <= 1000 &&
+        !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u.test(value);
+
+    const createCoverage = new Set();
+    await forAll('P-23-create', { runs: 100, seed: 0x5c230033, onRun: line => t.diagnostic(line), describe: value => JSON.stringify(value) },
+        (random, info) => randomBody(random, info.run), async (sample, info) => {
+            const body = sample.body, before = snapshot(f.db), groupCount = tableCount(f.db, 'Conversations');
+            const fields = sample.fields ?? (!validName(body.name) ? ['name'] : body.description !== undefined && !validDescription(body.description) ? ['description'] :
+                body.historyPolicy !== undefined && !['all', 'from_joined'].includes(body.historyPolicy) ? ['historyPolicy'] : null);
+            const response = await create(owner, body);
+            if (fields) {
+                assert.deepEqual([response.status, response.body], [400, error400(fields)], `P-23 create seed=${info.seed} run=${info.run}`);
+                assert.deepEqual(snapshot(f.db), before, 'invalid create body changes no row'); createCoverage.add('refused');
+            } else {
+                assert.equal(response.status, 201, `P-23 create seed=${info.seed} run=${info.run}`);
+                const id = response.body.group.id, policy = body.historyPolicy ?? 'from_joined';
+                assert.equal(tableCount(f.db, 'Conversations'), groupCount + 1);
+                assert.equal(f.db.prepare('SELECT history_policy FROM GroupExtensions WHERE conversation_id=?').get(id).history_policy, policy);
+                assert.equal(f.db.prepare('SELECT membership_revision FROM GroupExtensions WHERE conversation_id=?').get(id).membership_revision, 1);
+                assert.equal(f.db.prepare("SELECT count(*) AS n FROM ConversationMembers WHERE conversation_id=? AND user_id=? AND role='owner' AND left_at IS NULL").get(id, owner.id).n, 1);
+                assert.equal(f.db.prepare('SELECT count(*) AS n FROM GroupMembershipIntervals WHERE conversation_id=? AND user_id=? AND interval_no=1 AND first_seq=1 AND last_seq IS NULL').get(id, owner.id).n, 1);
+                assert.equal(f.db.prepare("SELECT count(*) AS n FROM AuditLogs WHERE subject_id=? AND source='groups' AND event_type='group.created'").get(id).n, 1);
+                createCoverage.add('created');
+            }
+        });
+    assert.ok(createCoverage.has('created') && createCoverage.has('refused'));
+
+    const initial = await create(owner, { name: 'P23 patch target', description: null, historyPolicy: 'from_joined' });
+    assert.equal(initial.status, 201);
+    const id = initial.body.group.id, patchCoverage = new Set();
+    await forAll('P-23-patch', { runs: 100, seed: 0x5c230133, onRun: line => t.diagnostic(line), describe: value => JSON.stringify(value) },
+        (random, info) => randomBody(random, info.run, true), async (sample, info) => {
+            const before = snapshot(f.db), body = sample.body;
+            const fields = sample.fields ?? (Object.hasOwn(body, 'historyPolicy') ? ['historyPolicy'] :
+                Object.hasOwn(body, 'unexpected') ? ['unexpected'] : body.name !== undefined && !validName(body.name) ? ['name'] :
+                    body.description !== undefined && !validDescription(body.description) ? ['description'] : null);
+            const response = await send(owner, 'PATCH', `/api/groups/${id}`, { body });
+            if (fields) {
+                assert.deepEqual([response.status, response.body], [400, error400(fields)], `P-23 patch seed=${info.seed} run=${info.run}`);
+                assert.deepEqual(snapshot(f.db), before, 'invalid patch body changes no row'); patchCoverage.add('refused');
+            } else {
+                assert.equal(response.status, 200, `P-23 patch seed=${info.seed} run=${info.run}`);
+                patchCoverage.add('updated');
+            }
+        });
+    assert.ok(patchCoverage.has('updated') && patchCoverage.has('refused'));
 });
 
 test('G01: a missing session answers 401 before the body is read, and a missing or foreign CSRF proof answers 403 and creates nothing', async t => {
@@ -1951,6 +2026,49 @@ test('G06: default direct add is disabled; the test-injected path enforces rules
     assertError(await send(f.actors.owner, 'POST', `/api/groups/${f.groupId}/members`, { body: { userId: f.actors.removedMember.id } }), 404, error404);
     f.db.prepare("UPDATE AccountCredentials SET status='disabled' WHERE user_id=?").run(f.actors.removedMember.id);
     assertError(await send(f.actors.owner, 'POST', `/api/groups/${f.groupId}/members`, { body: { userId: f.actors.removedMember.id } }), 404, error404);
+});
+
+test('AF-06: direct add grants no role', async t => {
+    const disabled = await invitationHttp(t), path = `/api/groups/${disabled.groupId}/members`, beforeDisabled = snapshot(disabled.db);
+    for (const body of [{ userId: disabled.actors.nonMember.id }, { userId: disabled.actors.nonMember.id, role: 'admin' }]) {
+        assertError(await send(disabled.actors.owner, 'POST', path, { body }), 503, error503);
+        assert.deepEqual(snapshot(disabled.db), beforeDisabled, 'the disabled direct-add gate refuses both request shapes without a write');
+    }
+
+    const f = await invitationHttp(t, DIRECT_ADD_FEATURES), addPath = `/api/groups/${f.groupId}/members`;
+    const invalidBefore = snapshot(f.db);
+    assertError(await send(f.actors.owner, 'POST', addPath, { body: { userId: f.actors.nonMember.id, role: 'admin' } }), 400,
+        { code: 'VALIDATION_ERROR', fields: ['role'] });
+    assert.deepEqual(snapshot(f.db), invalidBefore, 'role assignment is refused without a write');
+    const added = await send(f.actors.owner, 'POST', addPath, { body: { userId: f.actors.nonMember.id } });
+    assert.equal(added.status, 201); assert.equal(added.body.member.role, 'member');
+
+    const memberBefore = snapshot(f.db);
+    assertError(await send(f.actors.member, 'POST', addPath, { body: { userId: f.actors.removedMember.id } }), 403, { code: 'FORBIDDEN', fields: [] });
+    assert.deepEqual(snapshot(f.db), memberBefore, 'member refusal changes no row');
+
+    const unknownBefore = snapshot(f.db), unknown = await send(f.actors.owner, 'POST', addPath, { body: { userId: 'unknown-account' } });
+    assertError(unknown, 404, error404); assert.deepEqual(snapshot(f.db), unknownBefore);
+    f.repositories.blocks.insert(f.actors.owner.id, f.actors.removedMember.id);
+    const blockedBefore = snapshot(f.db), blocked = await send(f.actors.owner, 'POST', addPath, { body: { userId: f.actors.removedMember.id } });
+    assertError(blocked, 404, error404); assert.deepEqual(blocked.body, unknown.body, 'a block reveals no target information');
+    assert.deepEqual(snapshot(f.db), blockedBefore, 'blocked-target refusal changes no row');
+
+    const adminBefore = snapshot(f.db);
+    assertError(await send(f.actors.admin, 'PATCH', `/api/groups/${f.groupId}/members/${f.actors.member.id}`, { body: { role: 'admin' } }),
+        403, { code: 'FORBIDDEN', fields: [] });
+    assert.deepEqual(snapshot(f.db), adminBefore, 'admin role-change refusal changes no row');
+});
+
+test('AF-11: create group malformed body shapes return 400, never 500', async t => {
+    const f = await application(t, { features: ON, users: ['af11-owner'] }), owner = f.actors['af11-owner'];
+    for (const [label, options] of [['no body', {}], ['empty body', { rawBody: '{}', headers: { 'Content-Type': 'application/json' } }],
+        ['malformed JSON', { rawBody: '{bad', headers: { 'Content-Type': 'application/json' } }],
+        ['non-object JSON', { rawBody: '[]', headers: { 'Content-Type': 'application/json' } }]]) {
+        const before = snapshot(f.db), response = await send(owner, 'POST', '/api/groups', options);
+        assertError(response, 400, { code: 'VALIDATION_ERROR', fields: label === 'empty body' ? ['name'] : [] });
+        assert.deepEqual(snapshot(f.db), before, `${label} creates no row`);
+    }
 });
 
 test('G06: rejoin preserves the member row and opens a high-water interval; capacity and audit failures roll back', async t => {

@@ -21,6 +21,16 @@ const MIGRATIONS = path.join(__dirname, '..', 'server', 'database', 'migrations'
 const MANIFEST_FILE = path.join(__dirname, 'fixtures', 'baseline-d7cd40a.json');
 // SHA-256 of the LF-normalised manifest as T-5B-03 recorded it; the recorder never replaces an existing manifest.
 const MANIFEST_SHA256 = 'fa6d3c1d72d8f5d8bce227341952ef3ca71fa963a99f4f3ea0431fbefd7e76ab';
+// Later owner-approved exception for the exact Task 2.24 fixture-only change. The manifest remains the immutable
+// d7cd40a record; this one file may match either its original digest or this exact approved commit digest.
+const APPROVED_POST_BASELINE_EXCEPTIONS = Object.freeze({
+    'support/auth.js':Object.freeze({
+        baselineSha256:'e9910b540e2078a34ff77763c95a00090a02a9d323fe239ecb40a96e69ac08d7',
+        approvedSha256:'0d7996a8bef3be2703bfbb40dfe3c170efb3571a9bfdd6077832de2ef50bcc6f',
+        commit:'85730dd442a570a0b4756847ce34f9300ecfb71f',
+        scope:'Node fetch-rejected ephemeral-port diagnostics and retry in the test fixture',
+    }),
+});
 // Design, Data Models: SHA-256 of the LF-normalised text of each published migration at d7cd40a.
 const PUBLISHED = Object.freeze([
     { version:1, name:'0001-legacy.sql', sha256:'7ac0d3b5695135a3f8b2a2bc747e707b211899ee6651aff63d0aeb4ea49a006f' },
@@ -190,9 +200,15 @@ function checkBaselineFile({ file, text, digest, entries, later }) {
         }
         restored[index] = entry.text;
     }
-    if (sha256(restored.join('\n')) !== digest) {
+    const restoredDigest=sha256(restored.join('\n'));
+    if (restoredDigest !== digest) {
         const where = entries.length ? `a line other than DC-01 line ${entries.map(e => e.line).join(' and ')}` : 'a line';
-        problems.push(`${file}: ${where} differs from the d7cd40a manifest digest (the file now has ${lines.length} lines; the manifest holds whole-file digests, G5b shows the line)`);
+        const exception=APPROVED_POST_BASELINE_EXCEPTIONS[file];
+        const currentDigest=sha256(text);
+        const isExactApprovedException=exception && digest===exception.baselineSha256 && currentDigest===exception.approvedSha256;
+        if (!isExactApprovedException) {
+            problems.push(`${file}: ${where} differs from the d7cd40a manifest digest (the file now has ${lines.length} lines; the manifest holds whole-file digests, G5b shows the line)`);
+        }
     }
     return problems;
 }
@@ -303,6 +319,24 @@ test('baseline test and support files hash to the manifest once the permitted DC
     }
     assert.deepEqual(problems, []);
     assert.equal(checked, 35);
+});
+
+test('later owner-approved Task 2.24 fixture exception accepts only the exact auth.js digest', () => {
+    const file='support/auth.js',exception=APPROVED_POST_BASELINE_EXCEPTIONS[file],baselineDigest=manifest.support[file];
+    const current=readText(path.join(TESTS_ROOT,'support','auth.js'));
+    assert.equal(baselineDigest,exception.baselineSha256,'the original manifest digest remains pinned');
+    assert.equal(sha256(current),exception.approvedSha256,`the fixture matches approved commit ${exception.commit}`);
+    assert.deepEqual(checkBaselineFile({file,text:current,digest:baselineDigest,entries:[],later:[]}),[],
+        'the exact approved fixture revision is accepted');
+
+    const changed=current.replace('retrying with a new OS-assigned port','retrying with a new OS-assigned port!');
+    assert.notEqual(sha256(changed),exception.approvedSha256);
+    assert.ok(checkBaselineFile({file,text:changed,digest:baselineDigest,entries:[],later:[]}).length>0,
+        'any other auth.js digest remains rejected');
+    assert.ok(checkBaselineFile({file:'support/other.js',text:current,digest:baselineDigest,entries:[],later:[]}).length>0,
+        'the auth.js exception does not apply to another baseline file');
+    assert.ok(checkBaselineFile({file,text:current,digest:'0'.repeat(64),entries:[],later:[]}).length>0,
+        'the exception cannot replace or bypass the original baseline digest');
 });
 
 test('script files under tests/ that the manifest does not list carry no skip marker', () => {
