@@ -547,6 +547,10 @@ function createGroupService({ db, auth, limiter, features, now, rates } = {}) {
         removeMember(context, proof, id, targetId) {
             return service.groupWrite(context, proof, (actor, at) => {
                 const seen = service.visibleGroup(actor, id);
+                // DB5-R05.16: an active member cannot remove anyone. Check this
+                // before target lookup so unknown and former targets do not turn
+                // the member's forbidden operation into a target-dependent 404.
+                if (seen.member.role === 'member') forbidden();
                 const target = pathId(targetId);
                 if (target === null) notFound();
                 const targetMember = groups.getMember(seen.group.conversation_id, target);

@@ -82,6 +82,7 @@ async function main() {
         if (text) {
             try { body = JSON.parse(text); } catch { body = { invalidJson:true }; }
         }
+        require('./contract').assertGroupResponse(input.method, input.path, {status:response.status, body});
         await new Promise(resolve => process.stdout.write(`${JSON.stringify({ status:response.status, body })}\n`, resolve));
         application.server.closeAllConnections();
     } finally {

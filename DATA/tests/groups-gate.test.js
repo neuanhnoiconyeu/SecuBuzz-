@@ -511,7 +511,8 @@ test('gate.js has no environment access, logging, randomness or clock, and only 
 // os.tmpdir(), never on DATA/server/database/database.sqlite or a Docker volume (DB5-R14.17).
 const path = require('node:path');
 const { spawn } = require('node:child_process');
-const { setup, envDefaults } = require('./support/auth');
+const { setup } = require('./support/contract');
+const { envDefaults } = require('./support/auth');
 const { snapshot, temporaryDirectory } = require('./support/groups');
 const { openDatabase } = require('../server/database/connection');
 const { migrate } = require('../server/database/migrate');

@@ -9,11 +9,14 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const Database = require('better-sqlite3');
 const { httpGroupFixture, snapshot, createClock, openLimiter } = require('./support/groups');
-const { setup } = require('./support/auth');
+const { setup } = require('./support/contract');
 const { createRepositories } = require('../server/database/repositories');
 const { createGroupRepository, RepositoryError } = require('../server/database/groupRepository');
 const { openDatabase } = require('../server/database/connection');
 const { createSqliteRateLimiter } = require('../server/auth/rateLimiter');
+const { actorRequest } = require('./support/groups');
+const { createRandom, forAll } = require('./support/random');
+const { roleMatrix, removalDecision, transferDecision } = require('../server/groups/policy');
 const { AuthError } = require('../server/auth/errors');
 const { DISABLED_FEATURES } = require('../server/features/config');
 const service = require('../server/groups/service');
@@ -44,6 +47,334 @@ function actorContext(f, actor) {
     });
 }
 const laterThan = (...times) => new Date(Math.max(...times.filter(Boolean).map(time => Date.parse(time))) + 1000).toISOString();
+
+// First P-03 boundary: a member cannot remove anyone. The role refusal must
+// precede target lookup (DB5-R05.16 and design Operations and their refusal order).
+// Keep this failing evidence if an existing service violates the canonical rule;
+// do not derive the oracle from the service's observed response.
+test('P-03 prerequisite: member removal refusal precedes target lookup (DB5-R05.16)', async t => {
+    const seed = 0x5c032023;
+    const random = createRandom(seed);
+    t.diagnostic(`property=P-03 seed=${seed}`);
+    const f = await httpGroupFixture(t, { features: { groupApi:true, groups: { maxMembers:10,
+        directAdd:true, maxPendingInvitationsPerGroup:20, maxPendingInvitationsPerInvitee:20 } } });
+    const permission = roleMatrix('member', 'removeMember');
+    assert.equal(permission.refusal, 'role');
+    const failures = [];
+    const targets = [f.actors.owner.id, f.actors.admin.id, f.actors.member.id,
+        f.actors.nonMember.id, f.actors.removedMember.id, 'unknown-target'];
+    for (const target of random.shuffle(targets)) {
+        const before = snapshot(f.db);
+        const response = await actorRequest(f.actors.member, 'DELETE', `/api/groups/${f.groupId}/members/${target}`);
+        assert.equal(snapshot(f.db).total, before.total, 'refusal changes no group or audit row');
+        if (response.status !== 403 || response.body.code !== 'FORBIDDEN') {
+            failures.push({ targetClass: target === 'unknown-target' ? 'unknown' :
+                Object.keys(f.actors).find(key => f.actors[key].id === target), status:response.status, body:response.body });
+        }
+    }
+    assert.deepEqual(failures, [], 'member removal must return 403 FORBIDDEN for every target class');
+});
+
+const P03_RUNS = 300;
+const P03_SEED = 0x5c032022;
+test('P-03: generated group role/state operations agree with the pure policy model', {timeout:180000}, async t => {
+    const f=await httpGroupFixture(t);
+    const base=createRepositories(f.db), repository=createGroupRepository(f.db);
+    const pool=[f.actors.owner,f.actors.admin,f.actors.member];
+    for(let i=0;i<5;i++) {
+        const browser=f.browser(),name=`p03-extra-${i}`;
+        assert.equal((await browser.register(name)).status,201);
+        const login=await browser.login(name);assert.equal(login.status,200);
+        pool.push({id:login.body.user.id,browser,token:await browser.csrf()});
+    }
+    const operations=['remove','leave','role','transfer','archive','update','invite','cancel','add','former'];
+    const classes=['owner','admin','member','former','nonMember','pendingInvitee'];
+    const coverage={operations:new Set(),actors:new Set(),targets:new Set(),sizes:new Set(),blocks:new Set(),maxima:new Set(),archive:new Set(),spoofs:new Set(),success:new Set(),refused:new Set()};
+    const rows=id=>f.db.prepare('SELECT * FROM ConversationMembers WHERE conversation_id=? ORDER BY user_id').all(id);
+    // This is the specification's policy oracle, deliberately independent of service
+    // validators and SQL. Policy literals themselves are pinned in groups-policy.
+    function expected(c) {
+        if(c.operation==='add'&&!c.directAdd)return [503,'FEATURE_UNAVAILABLE'];
+        const action={remove:'removeMember',leave:'leave',role:'changeRole',transfer:'transferOwnership',archive:'archive',update:'updateMetadata',invite:'invite',cancel:'cancelInvitation',add:'addMember',former:'read'}[c.operation];
+        const permission=roleMatrix(c.actorRole,action,{archived:c.archived});
+        if(permission.refusal==='notMember')return [404,'NOT_FOUND'];
+        if(c.operation==='leave'&&c.actorRole==='owner')return [409,'CONFLICT'];
+        if(permission.refusal==='role')return [403,'FORBIDDEN'];
+        if(c.operation==='former'&&c.actorRole==='member')return [403,'FORBIDDEN'];
+        if(permission.refusal==='archived')return [409,'CONFLICT'];
+        if(c.spoof&&['role','transfer','update','invite','add'].includes(c.operation))return [400,'VALIDATION_ERROR'];
+        if(c.operation==='remove') {
+            if(!c.targetRole)return [404,'NOT_FOUND'];
+            const decision=removalDecision(c.actorRole,c.targetRole);
+            if(decision!=='allow')return decision==='forbidden'?[403,'FORBIDDEN']:[409,'CONFLICT'];
+        }
+        if(c.operation==='role') {
+            if(!c.targetRole)return [404,'NOT_FOUND'];
+            if(c.stale)return [409,'STALE_STATE'];
+            if(c.targetRole==='owner'||c.targetRole===c.newRole)return [409,'CONFLICT'];
+        }
+        if(c.operation==='transfer') {
+            const decision=transferDecision({actorId:c.actor.id,actorRole:c.actorRole,targetId:c.target.id,
+                targetRole:c.targetRole,archived:c.archived,revision:c.revision,precondition:c.stale?c.revision+1:c.revision});
+            const refusals={notFound:[404,'NOT_FOUND'],forbidden:[403,'FORBIDDEN'],conflict:[409,'CONFLICT'],invalid:[400,'VALIDATION_ERROR'],stale:[409,'STALE_STATE']};
+            if(refusals[decision.decision])return refusals[decision.decision];
+        }
+        if(c.operation==='update'&&c.stale)return [409,'STALE_STATE'];
+        if(['add','invite'].includes(c.operation)) {
+            if(c.blocked)return [404,'NOT_FOUND'];
+            if(c.targetRole)return [409,'CONFLICT'];
+            if(c.operation==='add'&&c.size>=c.maximum)return [409,'CONFLICT'];
+            if(c.operation==='invite'&&c.targetClass==='pendingInvitee')return [409,'CONFLICT'];
+        }
+        return [{remove:204,leave:204,role:200,transfer:200,archive:200,update:200,invite:201,cancel:204,add:201,former:200}[c.operation],null];
+    }
+    const describe=c=>JSON.stringify(Object.fromEntries(Object.entries(c).filter(([,value])=>value===null||['string','number','boolean'].includes(typeof value))));
+    await forAll('P-03',{runs:P03_RUNS,seed:P03_SEED,onRun:line=>t.diagnostic(line),describe},(r,info)=>{
+        const c={
+        operation:r.pick(info.run%10===0?['role','transfer','update','invite','add']:operations),actorClass:r.pick(classes),targetClass:r.pick(classes),size:r.int(2,8),
+        maximum:r.int(2,10),blockCount:r.int(0,3),archived:r.bool(),newRole:r.pick(['admin','member']),
+        stale:r.bool(),directAdd:r.bool(0.8),roles:Array.from({length:7},()=>r.pick(['admin','member']))
+        };
+        c.validDraw=r.bool();
+        if(c.validDraw) {
+            c.actorClass='owner';c.archived=false;c.stale=false;c.directAdd=true;c.blockCount=0;
+            c.targetClass=['add','invite'].includes(c.operation)?r.pick(['former','nonMember']):r.pick(['admin','member']);
+            if(c.operation==='leave')c.actorClass=r.pick(['admin','member']);
+            c.maximum=r.int(c.size+1,10);
+        }
+        const needed=[...new Set([c.actorClass,c.targetClass].filter(role=>['admin','member'].includes(role)))];
+        c.size=Math.max(c.size,needed.length+1);
+        needed.forEach((role,i)=>{c.roles[i]=role;});
+        if(c.validDraw&&c.operation==='role')c.newRole=c.targetClass==='member'?'admin':'member';
+        return c;
+    },async(c,info)=>{
+        // All rows belong exclusively to this test's guarded temporary fixture.
+        // Reset synthetic block edges so every generated case has exactly 0..3.
+        f.db.prepare('DELETE FROM Blocks').run();
+        const id=f.builder.createGroup({ownerId:pool[0].id,idempotencyKey:`p03-${info.run}`});
+        for(let i=1;i<c.size;i++)f.builder.addMember(id,pool[i].id,{role:c.roles[i-1]});
+        f.builder.addMember(id,f.actors.removedMember.id);f.builder.removeMember(id,f.actors.removedMember.id);
+        const invitation=f.builder.invite(id,pool[0].id,f.actors.pendingInvitee.id);
+        f.clock.advance(2000);
+        if(c.archived)base.conversations.archive(id,f.clock.iso());
+        const active=rows(id).filter(row=>row.left_at===null);
+        const resolve=kind=>kind==='owner'?pool[0]:kind==='former'?f.actors.removedMember:
+            kind==='nonMember'?f.actors.nonMember:kind==='pendingInvitee'?f.actors.pendingInvitee:
+            pool.find(user=>active.some(row=>row.user_id===user.id&&row.role===kind));
+        c.actor=resolve(c.actorClass);c.target=resolve(c.targetClass);
+        c.actorRole=active.find(row=>row.user_id===c.actor.id)?.role||null;
+        c.targetRole=active.find(row=>row.user_id===c.target.id)?.role||null;
+        const edges=[];
+        if(c.blockCount&&c.actor.id!==c.target.id)edges.push([c.actor.id,c.target.id]);
+        for(const a of [...pool,f.actors.nonMember])for(const b of pool)if(edges.length<c.blockCount&&a.id!==b.id&&!edges.some(([x,y])=>x===a.id&&y===b.id))edges.push([a.id,b.id]);
+        for(const[a,b]of edges)f.db.prepare("INSERT INTO Blocks(blocker_id,blocked_id,origin,created_at) VALUES(?,?,'authenticated',?)").run(a,b,f.clock.iso());
+        c.blocked=edges.some(([a,b])=>(a===c.actor.id&&b===c.target.id)||(b===c.actor.id&&a===c.target.id));
+        c.revision=f.db.prepare('SELECT membership_revision AS n FROM GroupExtensions WHERE conversation_id=?').get(id).n;
+        c.spoof=info.run%10===0?['actorId','ownerId','createdBy'][Math.floor(info.run/10)%3]:null;
+        const features={groupApi:true,groups:{directAdd:c.directAdd,maxMembers:c.maximum,maxPendingInvitationsPerGroup:1000,maxPendingInvitationsPerInvitee:1000}};
+        const svc=createGroupService({db:f.db,auth:f.application.auth,limiter:openLimiter(),now:f.clock.now,features});
+        const who=actorContext(f,c.actor),body={};
+        if(c.spoof)body[c.spoof]=pool[0].id;
+        const rev=c.stale?c.revision+1:c.revision;
+        const beforeRows=rows(id),before=snapshot(f.db),at=f.clock.iso();
+        const expectedRows=beforeRows.map(row=>({...row}));
+        const answer=expected(c);
+        let status,code=null;
+        try {
+            const args=[who.context,who.proof,id];
+            switch(c.operation) {
+            case 'remove':svc.removeMember(...args,c.target.id);break;
+            case 'leave':svc.leaveGroup(...args);break;
+            case 'role':svc.changeMemberRole(...args,c.target.id,{role:c.newRole,membershipRevision:rev,...body});break;
+            case 'transfer':svc.transferOwnership(...args,{userId:c.target.id,membershipRevision:rev,...body});break;
+            case 'archive':svc.archiveGroup(...args);break;
+            case 'update':svc.updateGroup(...args,{name:`model-${info.run}`,membershipRevision:rev,...body});break;
+            case 'invite':svc.createInvitation(...args,{userId:c.target.id,...body},'127.0.0.1');break;
+            case 'cancel':svc.cancelInvitation(...args,invitation);break;
+            case 'add':svc.addMember(...args,{userId:c.target.id,...body});break;
+            case 'former':svc.listMembers(who.context,id,{former:'true'});break;
+            }
+            status={remove:204,leave:204,invite:201,cancel:204,add:201}[c.operation]||200;
+        } catch(error) { if(!(error instanceof AuthError))throw error;status=error.status;code=error.code; }
+        assert.deepEqual([status,code],answer,describe(c));
+        if(status>=400) {
+            assert.equal(snapshot(f.db).total,before.total,'refused operation changes no row');coverage.refused.add(c.operation);
+        } else {
+            const find=user=>expectedRows.find(row=>row.user_id===user.id);
+            if(c.operation==='remove')find(c.target).left_at=at;
+            if(c.operation==='leave')find(c.actor).left_at=at;
+            if(c.operation==='role')find(c.target).role=c.newRole;
+            if(c.operation==='transfer'){find(c.actor).role='admin';find(c.target).role='owner';}
+            if(c.operation==='add') {
+                const old=find(c.target);
+                if(old){old.role='member';old.left_at=null;}
+                else expectedRows.push({conversation_id:id,user_id:c.target.id,role:'member',joined_at:at,left_at:null});
+            }
+            assert.deepEqual(rows(id),expectedRows.sort((a,b)=>a.user_id<b.user_id?-1:a.user_id>b.user_id?1:0),'exact membership transition');
+            const audits=f.db.prepare("SELECT actor_user_id FROM AuditLogs WHERE subject_id=? AND source='groups'").all(id);
+            assert.ok(audits.every(row=>row.actor_user_id===c.actor.id),'audit actor is always the session user');
+            coverage.success.add(c.operation);
+        }
+        const report=repository.invariantReport(id);
+        assert.equal(report.activeOwners,1);assert.equal(report.mismatches,0);assert.equal(report.activeMembers,report.openIntervals);
+        assert.deepEqual(f.db.pragma('foreign_key_check'),[]);
+        for(const[key,value]of Object.entries({operations:c.operation,actors:c.actorClass,targets:c.targetClass,sizes:c.size,blocks:c.blockCount,maxima:c.maximum,archive:c.archived}))coverage[key].add(value);
+        if(c.spoof)coverage.spoofs.add(c.spoof);
+    });
+    t.diagnostic(JSON.stringify(Object.fromEntries(Object.entries(coverage).map(([key,value])=>[key,[...value]]))));
+    if(process.env.PROPERTY_RUN===undefined) {
+        assert.equal(coverage.operations.size,10);assert.equal(coverage.actors.size,6);assert.equal(coverage.targets.size,6);
+        assert.equal(coverage.sizes.size,7);assert.equal(coverage.blocks.size,4);assert.equal(coverage.maxima.size,9);
+        assert.equal(coverage.archive.size,2);assert.equal(coverage.spoofs.size,3);
+        assert.equal(coverage.success.size,10,'every generated operation has successful transition evidence');
+        assert.equal(coverage.refused.size,10,'every generated operation has refusal evidence');
+    }
+});
+
+// P-20 request-chain oracle: literal order from design Request-level failures
+// and DB5-R12. This intentionally imports no router/validator decision logic.
+const P20_REQUEST_ORDER = Object.freeze([
+    ['origin',403,'FORBIDDEN'],['session',401,'UNAUTHENTICATED'],['csrf',403,'CSRF_INVALID'],
+    ['gate',503,'FEATURE_UNAVAILABLE'],['rate',429,'RATE_LIMITED'],
+    ['oversized',413,'PAYLOAD_TOO_LARGE'],['nonJson',400,'VALIDATION_ERROR'],
+    ['charset',415,'UNSUPPORTED_MEDIA_TYPE'],['malformed',400,'VALIDATION_ERROR'],
+    ['empty',400,'VALIDATION_ERROR'],['unknownField',400,'VALIDATION_ERROR']
+]);
+test('P-20: generated overlapping request-chain refusals follow the canonical ordered oracle', {timeout:120000}, async t => {
+    let limited=false;
+    const limiter={consume:()=>({allowed:!limited,retryAfter:1})};
+    // AF-12: the standalone module hook is configured but must not bypass the
+    // real Origin, session, or CSRF chain on the canonical application.
+    const env={AUTH_MIDDLEWARE_MODULE:'./synthetic-untrusted-auth-hook.cjs'};
+    const on=await httpGroupFixture(t,{env,limiter,features:{groupApi:true,groups:{directAdd:true,maxMembers:10,
+        maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50}}});
+    const off=await httpGroupFixture(t,{env,limiter,features:{groupApi:false}});
+    const operations=['create','patch','add','role','transfer'];
+    const requestCoverage={sizes:new Set(),operations:new Set(),first:new Set()};
+    await forAll('P-20-request',{runs:200,seed:0x5c202023,onRun:line=>t.diagnostic(line)},(r,info)=>{
+        // One body representation is drawn, with independent header/identity
+        // faults. This avoids contradictory inputs such as both absent and huge.
+        const bodyFault=r.pick(['oversized','nonJson','malformed','empty','unknownField']);
+        const faults=r.shuffle(['origin','session','csrf','gate','rate','charset',bodyFault]).slice(0,r.int(1,5));
+        // Exercise adjacent parser checks without an earlier fault masking them.
+        // Remaining runs retain the full generated 1..5-condition distribution.
+        if(info.run===0)return {operation:r.pick(operations),faults:r.shuffle(['malformed','charset'])};
+        if(info.run<=P20_REQUEST_ORDER.length)return {operation:r.pick(operations),faults:[P20_REQUEST_ORDER[info.run-1][0]]};
+        return {operation:r.pick(operations),faults};
+    },async c=>{
+        const has=name=>c.faults.includes(name),f=has('gate')?off:on;
+        const actor=has('session')?f.actors.unauthenticated:f.actors.owner;
+        const paths={create:'/api/groups',patch:`/api/groups/${f.groupId}`,add:`/api/groups/${f.groupId}/members`,
+            role:`/api/groups/${f.groupId}/members/${f.actors.member.id}`,transfer:`/api/groups/${f.groupId}/transfer`};
+        const bodies={create:{name:'P20 synthetic'},patch:{name:'P20 changed'},add:{userId:f.actors.nonMember.id},
+            role:{role:'admin'},transfer:{userId:f.actors.member.id}};
+        let body=JSON.stringify({...bodies[c.operation],...(has('unknownField')?{spoofedActor:'untrusted'}:{})});
+        if(has('empty'))body='';
+        if(has('malformed'))body='{';
+        if(has('oversized'))body='{'+ ' '.repeat(9000);
+        const headers={'Content-Type':`${has('nonJson')?'text/plain':'application/json'}${has('charset')?'; charset=utf-7':''}`};
+        if(has('origin'))headers.Origin='https://untrusted.example';
+        const before=snapshot(f.db);
+        limited=has('rate');
+        let response;
+        try { response=await actorRequest(actor,['patch','role'].includes(c.operation)?'PATCH':'POST',paths[c.operation],
+            {rawBody:body,headers,csrf:!has('csrf')}); }
+        finally { limited=false; }
+        // The canonical table explicitly limits charset checks to a present body.
+        const expected=P20_REQUEST_ORDER.find(([name])=>has(name)&&!(name==='charset'&&has('empty')));
+        assert.equal(snapshot(f.db).total,before.total,'request refusal changes no group, membership or audit row');
+        assert.deepEqual([response.status,response.body.code],expected.slice(1),JSON.stringify(c));
+        requestCoverage.sizes.add(c.faults.length);requestCoverage.operations.add(c.operation);requestCoverage.first.add(expected[0]);
+    });
+    t.diagnostic(JSON.stringify(Object.fromEntries(Object.entries(requestCoverage).map(([key,value])=>[key,[...value]]))));
+    if(process.env.PROPERTY_RUN===undefined){assert.equal(requestCoverage.sizes.size,5);assert.equal(requestCoverage.operations.size,5);assert.equal(requestCoverage.first.size,P20_REQUEST_ORDER.length);}
+});
+
+// T-5C-23: literal operation-level refusal lists transcribed from DB5-R02.15,
+// R03.17 and R06.17 (archive guards from R07). No production decision helper.
+const P20_OPERATION_ORDER = Object.freeze({
+    patch:[['invisible',404,'NOT_FOUND'],['role',403,'FORBIDDEN'],['archived',409,'CONFLICT'],
+        ['body',400,'VALIDATION_ERROR'],['historyPolicy',400,'VALIDATION_ERROR'],['stale',409,'STALE_STATE']],
+    add:[['disabled',503,'FEATURE_UNAVAILABLE'],['invisible',404,'NOT_FOUND'],['role',403,'FORBIDDEN'],
+        ['archived',409,'CONFLICT'],['body',400,'VALIDATION_ERROR'],['target',404,'NOT_FOUND'],
+        ['blocked',404,'NOT_FOUND'],['active',409,'CONFLICT'],['capacity',409,'CONFLICT']],
+    role:[['invisible',404,'NOT_FOUND'],['role',403,'FORBIDDEN'],['archived',409,'CONFLICT'],
+        ['body',400,'VALIDATION_ERROR'],['target',404,'NOT_FOUND'],['stale',409,'STALE_STATE'],['ownerTarget',409,'CONFLICT'],['sameRole',409,'CONFLICT']],
+    transfer:[['invisible',404,'NOT_FOUND'],['role',403,'FORBIDDEN'],['archived',409,'CONFLICT'],
+        ['body',400,'VALIDATION_ERROR'],['target',400,'VALIDATION_ERROR'],['self',400,'VALIDATION_ERROR'],['stale',409,'STALE_STATE']]
+});
+test('P-20: generated operation refusals preserve visibility, role, archive, body and revision precedence', {timeout:120000},async t=>{
+    const make=directAdd=>httpGroupFixture(t,{features:{groupApi:true,groups:{directAdd,maxMembers:4,
+        maxPendingInvitationsPerGroup:1000,maxPendingInvitationsPerInvitee:1000}}});
+    const enabled=await make(true),disabled=await make(false);
+    const coverage={operations:new Set(),sizes:new Set(),first:new Set(),actors:new Set(),targets:new Set()};
+    const singletons=Object.entries(P20_OPERATION_ORDER).flatMap(([operation,rows])=>rows.map(([fault])=>({operation,fault})));
+    await forAll('P-20-operations',{runs:400,seed:0x5c202024,onRun:line=>t.diagnostic(line)},(r,info)=>{
+        const pinned=singletons[info.run];
+        const operation=pinned?pinned.operation:r.pick(Object.keys(P20_OPERATION_ORDER));
+        const names=P20_OPERATION_ORDER[operation].map(([name])=>name);
+        // A target cannot simultaneously be missing, blocked, and already active
+        // in one fixture. Draw one target condition; other checks remain combinable.
+        const targetFaults=['target','blocked','active','sameRole','ownerTarget','self'];
+        const target=r.pick(names.filter(name=>targetFaults.includes(name)).concat(['none']));
+        const candidates=names.filter(name=>!targetFaults.includes(name));
+        if(target!=='none')candidates.push(target);
+        return {operation,faults:pinned?[pinned.fault]:r.shuffle(candidates).slice(0,r.int(1,Math.min(5,candidates.length))),
+            actorClass:r.pick(['admin','member']),hiddenClass:r.pick(['nonMember','pendingInvitee','removedMember']),targetClass:operation==='add'?'unknown':r.pick(['unknown','former']),policy:r.pick(['all','from_joined'])};
+    },async(c,info)=>{
+        const has=name=>c.faults.includes(name),f=has('disabled')?disabled:enabled;
+        f.db.prepare('DELETE FROM Blocks').run(); // synthetic fixture only
+        const id=f.builder.createGroup({ownerId:f.actors.owner.id,idempotencyKey:`p20-${info.run}`});
+        f.builder.addMember(id,f.actors.admin.id,{role:'admin'});f.builder.addMember(id,f.actors.member.id);
+        f.builder.addMember(id,f.actors.removedMember.id);f.builder.removeMember(id,f.actors.removedMember.id);
+        f.clock.advance(2000);
+        if(has('capacity')) {
+            const filler=f.repositories.users.create({user_id:`p20-capacity-${info.run}`,username:`p20-capacity-${info.run}`,display_name:'P20 synthetic capacity'});
+            f.builder.addMember(id,filler.user_id);
+        }
+        if(has('archived'))f.repositories.conversations.archive(id,f.clock.iso());
+        // For add, both manager roles are allowed; a member is the refusing role.
+        const actor=has('invisible')?f.actors[c.hiddenClass]:has('role')?f.actors[c.operation==='add'?'member':c.actorClass]:f.actors.owner;
+        const target=has('self')?actor.id:has('ownerTarget')?f.actors.owner.id:has('blocked')?(actor.id===f.actors.removedMember.id?f.actors.nonMember.id:f.actors.removedMember.id):has('target')?(c.targetClass==='former'?f.actors.removedMember.id:'unknown-target'):
+            has('active')||has('sameRole')||['role','transfer'].includes(c.operation)?f.actors.member.id:f.actors.nonMember.id;
+        if(has('blocked'))f.db.prepare("INSERT INTO Blocks(blocker_id,blocked_id,origin,created_at) VALUES(?,?,'authenticated',?)").run(actor.id,target,f.clock.iso());
+        const revision=f.db.prepare('SELECT membership_revision AS n FROM GroupExtensions WHERE conversation_id=?').get(id).n;
+        const body=c.operation==='patch'?{name:'P20 update',...(has('historyPolicy')?{historyPolicy:c.policy}:{})}:
+            c.operation==='role'?{role:has('sameRole')?'member':'admin'}:{userId:target};
+        if(has('stale'))body.membershipRevision=revision+1;
+        if(c.operation==='add')delete body.membershipRevision;
+        if(has('body')) {
+            if(c.operation==='patch')body.name=42;
+            else if(c.operation==='role')body.role='owner';
+            else body.userId=42;
+        }
+        const path=`/api/groups/${id}`+({patch:'',add:'/members',role:`/members/${target}`,transfer:'/transfer'})[c.operation];
+        const before=snapshot(f.db);
+        const response=await actorRequest(actor,['patch','role'].includes(c.operation)?'PATCH':'POST',path,{body});
+        const expected=P20_OPERATION_ORDER[c.operation].find(([name])=>has(name));
+        assert.equal(snapshot(f.db).total,before.total,'refusal changes no database or audit row');
+        assert.deepEqual([response.status,response.body.code],expected.slice(1),JSON.stringify(c));
+        if(c.operation==='patch'&&expected[0]==='historyPolicy')assert.deepEqual(response.body.fields,['historyPolicy']);
+        coverage.operations.add(c.operation);coverage.sizes.add(c.faults.length);coverage.first.add(`${c.operation}:${expected[0]}`);
+        coverage.actors.add(has('invisible')?c.hiddenClass:has('role')?(c.operation==='add'?'member':c.actorClass):'owner');
+        if(has('target'))coverage.targets.add(c.targetClass);
+    });
+    t.diagnostic(JSON.stringify(Object.fromEntries(Object.entries(coverage).map(([key,value])=>[key,[...value]]))));
+    if(process.env.PROPERTY_RUN===undefined){assert.equal(coverage.operations.size,4);assert.equal(coverage.sizes.size,5);assert.equal(coverage.targets.size,2);assert.equal(coverage.actors.size,6);assert.equal(coverage.first.size,singletons.length);}
+});
+
+test('P-20: supported and unsupported charset with valid and malformed JSON',async t=>{
+    const f=await httpGroupFixture(t,{features:{groupApi:true,groups:{maxMembers:10,
+        maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50}}});
+    for(const charset of ['utf-8','utf-7'])for(const malformed of [false,true]) {
+        const before=snapshot(f.db);
+        // Invalid policy supplies a safe terminal 400 even when JSON syntax is valid.
+        const response=await actorRequest(f.actors.owner,'PATCH',`/api/groups/${f.groupId}`,{
+            rawBody:malformed?'{':JSON.stringify({historyPolicy:'all'}),headers:{'Content-Type':`application/json; charset=${charset}`}});
+        assert.deepEqual([response.status,response.body.code],charset==='utf-7'?[415,'UNSUPPORTED_MEDIA_TYPE']:[400,'VALIDATION_ERROR']);
+        assert.equal(snapshot(f.db).total,before.total);
+    }
+});
 
 test('Group_Service infrastructure (T-5C-03)', async t => {
     const f = await httpGroupFixture(t);

@@ -35,7 +35,7 @@ const Database = require('better-sqlite3');
 const { openDatabase } = require('../../server/database/connection');
 const { createRepositories } = require('../../server/database/repositories');
 const { loadMigrations } = require('../../server/database/migrate');
-const { setup } = require('./auth');
+const { setup } = require('./contract');
 
 // ---------------------------------------------------------------------------------------------------------------
 // Snapshot (P-21; design, Testing Strategy section 3).
@@ -371,7 +371,10 @@ async function httpGroupFixture(t, { clock = createClock(), limiter = openLimite
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 function actorRequest(actor, method, url, { body, rawBody, headers = {}, csrf = true } = {}) {
     const proof = csrf && actor.token && !SAFE_METHODS.has(method) ? { 'X-CSRF-Token':actor.token } : {};
-    return actor.browser.request(url, { method, body, rawBody, headers:{ ...proof, ...headers } });
+    return actor.browser.request(url, { method, body, rawBody, headers:{ ...proof, ...headers } }).then(response => {
+        require('./contract').assertGroupResponse(method,url,response);
+        return response;
+    });
 }
 
 // ---------------------------------------------------------------------------------------------------------------

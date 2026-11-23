@@ -11,7 +11,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
 const express = require('express');
-const { setup } = require('./support/auth');
+const { setup } = require('./support/contract');
+const { assertGroupResponse } = require('./support/contract');
 const { snapshot, createClock, assertSecurityHeaders, createGroupBuilder } = require('./support/groups');
 const { createGroupRouter, GROUP_ROUTES, assertRouteTable, MAX_BODY_BYTES } = require('../server/routes/groups');
 const { AuthError, sendError } = require('../server/auth/errors');
@@ -75,7 +76,10 @@ function chunked(app, actor, url, chunks, headers = {}) {
             Origin: actor.browser.sourceOrigin, Cookie: cookie, 'X-CSRF-Token': actor.token, 'Content-Type': 'application/json', 'Transfer-Encoding': 'chunked', ...headers } }, response => {
             let text = '';
             response.on('data', piece => { text += piece; });
-            response.on('end', () => resolve({ status: response.statusCode, text, body: text ? JSON.parse(text) : null, headers: response.headers }));
+            response.on('end', () => {
+                try { resolve(assertGroupResponse('POST',url,{ status: response.statusCode, text, body: text ? JSON.parse(text) : null, headers: response.headers })); }
+                catch(error) { reject(error); }
+            });
         });
         request.on('error', reject);
         for (const chunk of chunks) request.write(chunk);
@@ -139,6 +143,7 @@ test('Batch 2A adapters: exact session/proof/target/query calls, socket source, 
             headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': '203.0.113.99' },
             ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
         const text = await response.text();
+        assertGroupResponse(method,'/api/groups'+route,{status:response.status,body:text?JSON.parse(text):null});
         assert.equal(response.status, status, name);
         assert.deepEqual(text ? JSON.parse(text) : null, expected, name);
         if (status === 204) assert.equal(text, '', 'the service return value is not exposed');
@@ -298,7 +303,7 @@ async function isolated(t, features) {
         order.length = 0;
         const response = await fetch(base + url, { method, headers: { ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), ...headers }, body });
         const text = await response.text();
-        return { status: response.status, text, body: text ? JSON.parse(text) : null, order: [...order] };
+        return assertGroupResponse(method,url,{ status: response.status, text, body: text ? JSON.parse(text) : null, order: [...order] });
     };
     return { call };
 }

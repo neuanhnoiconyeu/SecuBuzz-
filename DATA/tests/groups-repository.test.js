@@ -339,7 +339,7 @@ const {
     createGroupRepository, withMembershipTransaction, readFunction, writeFunction, compareAndSet, normaliseError, ERROR_CLASSES, ERROR_CLASS_BY_CODE,
 } = require('../server/database/groupRepository');
 const { openLimiter } = require('./support/groups');
-const { setup } = require('./support/auth');
+const { setup } = require('./support/contract');
 
 const { SqliteError } = Database;
 const SERVER_ROOT = path.join(DATA_ROOT, 'server');
