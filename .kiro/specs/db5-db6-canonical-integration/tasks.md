@@ -2143,7 +2143,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
   **Decisions and their gates.** None is selected here: each stays on its provisional default until the Project_Owner records it. OA-01 (CI-02, OP-05: the blocked direct pair, 404 for a block and 403 for a pair that is not friends) and OA-02 (CI-03, OP-03: the wording of the upload frame) are decided at this phase (T-6A-10, T-6A-05); the text of `requirements.md` stays unchanged until the Project_Owner approves each amendment. OP-04 (the upload timeout) is recorded at T-6A-12 with the measurement of T-6A-24 as evidence. OD-14 and OD-15 have no default and are recorded before the Attachment_API can be on outside tests (T-6A-11, T-6A-12); they do not block DB-6B coding, which injects the settings. OD-16, OD-17, OD-18, OD-20 and OD-21 run on their provisional defaults until recorded (T-6A-13 to T-6A-17), OD-21 and OP-02 until the DB-6C review, and OP-08 as proposed in T-6A-11. Later gates: OP-10 at DB-6C, OP-12 at DB-6D (T-6D-01) with OA-04 (CI-11, OP-12) at DB-5F and DB-6F, OA-03 (CI-10, OP-13) at DB-6E.
   **Docker (COMP-10).** The gate of record is the Validation_Runner (DB5-R15.10, DK-01); Docker must be running, and the runner starts no application container. The one container step of this phase is the 50 MiB measurement of T-6A-24. It runs only in a Disposable_Project (DK-03: name `secubuzz-disposable-` plus 8 lowercase hexadecimal characters, explicit `-p`, own volumes, no published port through a temporary override file kept outside the repository), never on the running project, with no repository file edited and no Compose Watch. The four documents live under `DATA/docs` and the document checks under `DATA/tests`; Compose Watch does not sync either folder, and the Validation_Runner builds from the working tree. No Docker file, `compose.yaml` or `docs/docker-development.md` is edited (Explicit Exclusion 11).
 
-  - [ ] 7.1 Read the standalone attachment sources and the 13 attachment server tests (CI-25)
+  - [x] 7.1 Read the standalone attachment sources and the 13 attachment server tests (CI-25)
     - **ID**: T-6A-01
     - **Depends on**: T-5B-37
     - **Affected modules**: `server/test/integration/attachments.test.ts` (read-only), `server/test/db5_db6.test.cjs` (read-only), `server/src/routes/attachment.cjs` (read-only), `server/src/storage/attachmentStorage.cjs` (read-only), `server/src/db5db6/cleanup.cjs` (read-only), `server/src/attachments/db6Transport.ts` (read-only), `DATA/docs/standalone-inventory.md` (observable-step notes)
@@ -2155,7 +2155,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: ARCH-R03.1, ARCH-R03.4, ARCH-R03.10, ARCH-R03.11, DB5-R15.12_
 
-  - [ ] 7.2 Write the storage contract document
+  - [x] 7.2 Write the storage contract document
     - **ID**: T-6A-02
     - **Depends on**: T-5B-37
     - **Affected modules**: `DATA/docs/attachments-storage-contract.md` (new; file name chosen here)
@@ -2168,7 +2168,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R02.1, DB6-R02.2, DB6-R02.3, DB6-R02.4, DB6-R02.5, DB6-R02.6, DB6-R02.7, DB6-R02.9, DB6-R02.12, DB6-R02.13, DB6-R02.15, DB6-R04.10, COMP-09, COMP-10, NFR-05_
 
-  - [ ] 7.3 Add the Storage_Provider contract test plan to the storage contract document
+  - [x] 7.3 Add the Storage_Provider contract test plan to the storage contract document
     - **ID**: T-6A-03
     - **Depends on**: T-6A-02
     - **Affected modules**: `DATA/docs/attachments-storage-contract.md`
@@ -2181,7 +2181,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R02.11, DB6-R02.6, DB6-R02.13, DB6-R04.12, ARCH-R03.4, ARCH-R03.10, DB5-R15.16, COMP-09, NFR-05_
 
-  - [ ] 7.4 Write the upload frame wire format (DC-03, ADR-09)
+  - [x] 7.4 Write the upload frame wire format (DC-03, ADR-09)
     - **ID**: T-6A-04
     - **Depends on**: T-6A-01
     - **Affected modules**: `DATA/docs/attachments-upload-frame.md` (new; file name chosen here)
@@ -2193,7 +2193,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R03.1, DB6-R04.2, DB6-R04.3, DB6-R04.12, DB6-R05.3, DB6-R05.4, DB6-R05.12, ARCH-R03.4_
 
-  - [ ] 7.5 Record the Project_Owner decision on the upload frame (OP-03)
+  - [x] 7.5 Record the Project_Owner decision on the upload frame (OP-03)
     - **ID**: T-6A-05
     - **Depends on**: T-6A-04, T-6A-24
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (decision log)
@@ -2205,7 +2205,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Project_Owner
     - _Requirements: DB6-R03.1, DB6-R05.12, DB6-R04.2_
 
-  - [ ] 7.6 Write the attachment endpoint contract A01 to A06
+  - [x] 7.6 Write the attachment endpoint contract A01 to A06
     - **ID**: T-6A-06
     - **Depends on**: T-6A-03, T-6A-04
     - **Affected modules**: `DATA/docs/attachments-api.md` (new; file name chosen here)
@@ -2217,7 +2217,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.7, DB6-R01.8, DB6-R03.1, DB6-R03.5, DB6-R03.6, DB6-R03.7, DB6-R03.9, DB6-R03.10, DB6-R03.12, DB6-R03.16, DB6-R03.19, DB6-R03.20, DB6-R03.21, DB6-R04.5, DB6-R04.6, DB5-R16.4, DB5-R13.2, COMP-10, NFR-08_
 
-  - [ ] 7.7 Document the protected-content declaration descriptors and the server's no-key rules
+  - [x] 7.7 Document the protected-content declaration descriptors and the server's no-key rules
     - **ID**: T-6A-07
     - **Depends on**: T-6A-06
     - **Affected modules**: `DATA/docs/attachments-protected-content.md` (new; file name chosen here)
@@ -2229,7 +2229,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R05.1, DB6-R05.2, DB6-R05.3, DB6-R05.4, DB6-R05.5, DB6-R05.8, DB6-R05.9, DB6-R05.10, DB6-R05.11, DB6-R05.12, DB6-R05.13_
 
-  - [ ] 7.8 Draft the residual-risk statement for the DB-6C review
+  - [x] 7.8 Draft the residual-risk statement for the DB-6C review
     - **ID**: T-6A-08
     - **Depends on**: T-6A-07
     - **Affected modules**: `DATA/docs/attachments-protected-content.md`
@@ -2240,7 +2240,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R05.6, DB6-R05.1, DB6-R05.8, DB6-R05.10_
 
-  - [ ] 7.9 Write the DC-02 amendment text for the blocked-pair rule
+  - [x] 7.9 Write the DC-02 amendment text for the blocked-pair rule
     - **ID**: T-6A-09
     - **Depends on**: T-6A-06
     - **Affected modules**: `DATA/docs/attachments-api.md` (section "Direct pair rule")
@@ -2251,7 +2251,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R03.2, DB5-R15.9, DB6-R03.19_
 
-  - [ ] 7.10 Record the Project_Owner decision on the blocked-pair rule (OP-05, DC-02)
+  - [x] 7.10 Record the Project_Owner decision on the blocked-pair rule (OP-05, DC-02)
     - **ID**: T-6A-10
     - **Depends on**: T-6A-09
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (decision log)
@@ -2262,7 +2262,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Project_Owner
     - _Requirements: DB6-R03.2, DB5-R15.9_
 
-  - [ ] 7.11 Record the Project_Owner decision on attachment retention (OD-14, OP-08)
+  - [x] 7.11 Record the Project_Owner decision on attachment retention (OD-14, OP-08)
     - **ID**: T-6A-11
     - **Depends on**: T-6A-06
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (decision log)
@@ -2273,7 +2273,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Project_Owner
     - _Requirements: DB6-R01.2, DB6-R03.13, DB6-R03.14, DB6-R03.15, DB5-R16.7_
 
-  - [ ] 7.12 Record the Project_Owner decision on quotas, limits and the upload timeout (OD-15, OP-04, DC-04)
+  - [x] 7.12 Record the Project_Owner decision on quotas, limits and the upload timeout (OD-15, OP-04, DC-04)
     - **ID**: T-6A-12
     - **Depends on**: T-6A-06, T-6A-24
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (decision log)
@@ -2285,7 +2285,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Project_Owner
     - _Requirements: DB6-R04.1, DB6-R04.4, DB6-R04.5, DB6-R04.6, DB6-R04.7, DB5-R16.7_
 
-  - [ ] 7.13 Record the Project_Owner decision on plaintext attachments (OD-16)
+  - [x] 7.13 Record the Project_Owner decision on plaintext attachments (OD-16)
     - **ID**: T-6A-13
     - **Depends on**: T-6A-07
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (decision log)
@@ -2296,7 +2296,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Project_Owner
     - _Requirements: DB6-R05.3, DB6-R05.7_
 
-  - [ ] 7.14 Record the Project_Owner decision on file search scope (OD-17)
+  - [x] 7.14 Record the Project_Owner decision on file search scope (OD-17)
     - **ID**: T-6A-14
     - **Depends on**: T-6A-06
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (decision log)
@@ -2307,7 +2307,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Project_Owner
     - _Requirements: DB6-R03.9, DB6-R03.10, DB6-R03.11_
 
-  - [ ] 7.15 Record the Project_Owner decision on attachment access and deletion (OD-18, with OD-03, OD-07 and OD-13)
+  - [x] 7.15 Record the Project_Owner decision on attachment access and deletion (OD-18, with OD-03, OD-07 and OD-13)
     - **ID**: T-6A-15
     - **Depends on**: T-6A-06
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (decision log)
@@ -2318,7 +2318,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Project_Owner
     - _Requirements: DB6-R03.18, DB6-R03.8, DB6-R03.12_
 
-  - [ ] 7.16 Record the OD-20 decision for the standalone attachment table
+  - [x] 7.16 Record the OD-20 decision for the standalone attachment table
     - **ID**: T-6A-16
     - **Depends on**: T-6A-06
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (decision log)
@@ -2329,7 +2329,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Project_Owner
     - _Requirements: DB6-R01.10, ARCH-R03.12_
 
-  - [ ] 7.17 Record that OD-21 and OP-02 stay provisional until the DB-6C review
+  - [x] 7.17 Record that OD-21 and OP-02 stay provisional until the DB-6C review
     - **ID**: T-6A-17
     - **Depends on**: T-6A-06
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (decision log)
@@ -2340,7 +2340,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Project_Owner
     - _Requirements: DB6-R01.4, DB6-R01.9, DB6-R04.11_
 
-  - [ ] 7.18 List the decisions and their defaults in the attachment contract
+  - [x] 7.18 List the decisions and their defaults in the attachment contract
     - **ID**: T-6A-18
     - **Depends on**: T-6A-09
     - **Affected modules**: `DATA/docs/attachments-api.md` (section "Decisions and defaults")
@@ -2351,7 +2351,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.9, DB6-R01.10, DB6-R03.18, DB6-R04.5, DB6-R05.3, DB6-R05.7, ARCH-R03.12_
 
-  - [ ] 7.19 Plan the 50 MiB proxy measurement (CI-27, R-07)
+  - [x] 7.19 Plan the 50 MiB proxy measurement (CI-27, R-07)
     - **ID**: T-6A-19
     - **Depends on**: T-6A-04
     - **Affected modules**: `client/authProxy.cjs` (read-only), `client/next.config.js` (read-only), `DATA/docs/db5-db6-handoff.md` (planned-measurement note)
@@ -2362,7 +2362,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Codex
     - _Requirements: DB5-R16.11, DB6-R04.10, NFR-05_
 
-  - [ ] 7.20 Complete the inventory entries for the attachment artifacts
+  - [x] 7.20 Complete the inventory entries for the attachment artifacts
     - **ID**: T-6A-20
     - **Depends on**: T-6A-01
     - **Affected modules**: `DATA/docs/standalone-inventory.md`
@@ -2373,7 +2373,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: ARCH-R03.1, ARCH-R03.2, ARCH-R03.3, ARCH-R03.7, DB5-R15.12_
 
-  - [ ] 7.21 Complete the per-test port plan for the 14 server tests and the 76 client tests
+  - [x] 7.21 Complete the per-test port plan for the 14 server tests and the 76 client tests
     - **ID**: T-6A-21
     - **Depends on**: T-6A-20
     - **Affected modules**: `DATA/docs/standalone-inventory.md`
@@ -2385,7 +2385,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: ARCH-R03.4, ARCH-R03.9, ARCH-R03.10, ARCH-R03.11, DB5-R15.12_
 
-  - [ ] 7.22 Add the DB-6A document checks to `gate-records.test.js`
+  - [x] 7.22 Add the DB-6A document checks to `gate-records.test.js`
     - **ID**: T-6A-22
     - **Depends on**: T-6A-08, T-6A-18, T-6A-21, T-6A-24
     - **Affected modules**: `DATA/tests/gate-records.test.js`
@@ -2398,7 +2398,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: ARCH-R03.1, ARCH-R03.2, ARCH-R03.3, ARCH-R03.10, DB6-R05.6, DB5-R15.12, COMP-10_
 
-  - [ ] 7.23 Measure a 50 MiB framed upload through the Next.js rewrite proxy in a Disposable_Project (CI-27, R-07, R-22)
+  - [x] 7.23 Measure a 50 MiB framed upload through the Next.js rewrite proxy in a Disposable_Project (CI-27, R-07, R-22)
     - **ID**: T-6A-24
     - **Depends on**: T-6A-04, T-6A-19
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (measurement result note); no repository file is edited (the throwaway receiver, the body generator and the override file live in the system temporary directory)
@@ -2412,7 +2412,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro, with the proxy settings read by Codex in T-6A-19
     - _Requirements: DB5-R16.11, DB6-R04.10, COMP-10, NFR-05_
 
-  - [ ] 7.24 Phase gate DB-6A
+  - [x] 7.24 Phase gate DB-6A
     - **ID**: T-6A-23
     - **Depends on**: T-6A-01 to T-6A-10, T-6A-18 to T-6A-22, T-6A-24
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md`

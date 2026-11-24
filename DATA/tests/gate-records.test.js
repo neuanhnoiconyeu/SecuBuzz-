@@ -112,3 +112,87 @@ test('T-5C-48: package dependency sets match d7cd40a unless handoff records an e
         assert.doesNotMatch(source, /\/api\/(?:groups|attachments|files)/, `${file} has no premature feature rewrite`);
     }
 });
+
+test('T-6A-22: attachment contract documents contain required sections and decision tables', () => {
+    const storage = fs.readFileSync(path.join(DATA, 'docs/attachments-storage-contract.md'), 'utf8');
+    const frame = fs.readFileSync(path.join(DATA, 'docs/attachments-upload-frame.md'), 'utf8');
+    const api = fs.readFileSync(path.join(DATA, 'docs/attachments-api.md'), 'utf8');
+    const protectedContent = fs.readFileSync(path.join(DATA, 'docs/attachments-protected-content.md'), 'utf8');
+
+    for (const operation of ['write(key, readable, { maxBytes })','read(key)','stat(key)','exists(key)',
+        'delete(key)','usage()','sweepTemporary(olderThanMs)','listKeys()']) assert.ok(storage.includes(operation), operation);
+    for (const code of ['STORAGE_KEY','STORAGE_EXISTS','STORAGE_SIZE','STORAGE_MISSING','STORAGE_IO']) assert.ok(storage.includes(code), code);
+    assert.match(storage, /## Contract tests/i);
+    assert.match(storage, /## .*Docker_Environment/i);
+    assert.match(storage, /sweepTemporary.*listKeys/s);
+
+    assert.match(frame, /four-byte unsigned big-endian/i);
+    assert.match(frame, /131,072 bytes/);
+    assert.match(frame, /exactly `byteSize` opaque content bytes/);
+    assert.match(frame, /52,428,800/);
+    assert.match(frame, /00000062[0-9a-f]+/i);
+    assert.match(frame, /00000063[0-9a-f]+/i);
+
+    for (const id of ['A01','A02','A03','A04','A05','A06']) assert.match(api, new RegExp(`\\| ${id} \\|`), `${id} route row`);
+    assert.match(api, /## Direct pair rule/i);
+    assert.match(api, /uniform `404 NOT_FOUND`/i);
+    for (let n=14;n<=21;n++) assert.match(api, new RegExp(`OD-${n}`), `OD-${n}`);
+    for (const id of ['OA-01','OA-02','OA-03','OA-04']) assert.ok(api.includes(id), id);
+    for (const id of ['OP-02','OP-03','OP-04','OP-05','OP-08','OP-10','OP-12','OP-13']) assert.ok(api.includes(id), id);
+    assert.match(protectedContent, /declared_algorithm/);
+    assert.match(protectedContent, /declared_format_version/);
+    assert.match(protectedContent, /## Residual risk/i);
+    assert.match(protectedContent, /DRAFT/);
+});
+
+test('T-6A-22: standalone artifact and port inventory covers every required server and client row', () => {
+    const inventory = fs.readFileSync(path.join(DATA, 'docs/standalone-inventory.md'), 'utf8');
+    const rows = inventory.split(/\r?\n/).filter(line => /^\| [ABCD]-\d{2} \|/.test(line));
+    for (const prefix of ['A','B','C','D']) {
+        const expected = prefix === 'A' ? 16 : prefix === 'B' ? 14 : prefix === 'C' ? 10 : 1;
+        const group = rows.filter(line => line.startsWith(`| ${prefix}-`));
+        assert.equal(group.length, expected, `${prefix} inventory row count`);
+        for (const row of group) {
+            assert.match(row, /\| (adapt|replace|retire|reuse as is) \|/i, row);
+            const cols = row.split('|').map(value => value.trim());
+            assert.ok(cols[6], `non-empty reason: ${row.slice(0,80)}`);
+            assert.match(cols[7], /(?:ARCH|DB[56]|COMP|NFR|CI|AF|ADR)-R?\d/i, `requirement id: ${row.slice(0,80)}`);
+        }
+    }
+    const serverRows = rows.filter(line => line.startsWith('| B-'));
+    for (let n=1;n<=14;n++) assert.ok(serverRows.some(row => row.startsWith(`| B-${String(n).padStart(2,'0')} |`)), `server test ${n}`);
+    const retiredAlias = serverRows.find(row => row.startsWith('| B-09 |'));
+    assert.ok(retiredAlias);
+    assert.match(retiredAlias, /\| retire \|/);
+
+    const clientFiles = [
+        ['YahooChatWindow.attachments.test.tsx',3], ['MessageAttachmentView.test.tsx',6],
+        ['MessageComposer.attachments.test.tsx',22], ['useAttachmentSource.test.tsx',9],
+        ['attachmentContent.test.ts',5], ['attachmentFiles.test.ts',3],
+        ['attachmentUpload.test.ts',23], ['localAttachmentStore.test.ts',5]
+    ];
+    for (const [name,count] of clientFiles) {
+        const row = rows.find(line => line.startsWith('| C-') && line.includes(name));
+        assert.ok(row, `client test row ${name}`);
+        assert.match(row, new RegExp(`: ${count} tests`), `client test count ${name}`);
+    }
+    assert.match(inventory, /76 client attachment tests/);
+    assert.match(inventory, /stricter replacement/i);
+});
+
+test('T-6A-22: handoff records the T-6A-24 project, digest, size, memory, time and timeout result or fallback', () => {
+    const section = handoff.split(/## DB-6A attachment contract and decision preparation/)[1];
+    assert.ok(section, 'T-6A handoff section exists');
+    const measurement = section.split('**Resumed T-6A-24 measurement')[1]?.split('#### DB-6A current-tree')[0];
+    assert.ok(measurement, 'T-6A-24 measurement note exists');
+    assert.match(measurement, /secubuzz-disposable-[0-9a-f]{8}\b/);
+    const measured = /receiver byte count: [\d,]+/i.test(measurement) &&
+        /SHA-256 digest: `[a-f0-9]{64}`/i.test(measurement) &&
+        /HTTP \d{3} in [\d.]+ s/i.test(measurement) &&
+        /timeout/i.test(measurement) && /docker stats samples: [\d.]+ MiB/i.test(measurement) &&
+        /peak [\d,]+ bytes/i.test(measurement);
+    const failedWithFallback = /failed measurement/i.test(measurement) && /fallback/i.test(measurement) &&
+        ['byte count', 'SHA-256', 'peak memory', 'elapsed time', 'timeout behavior'].every(field =>
+            measurement.toLowerCase().includes(field.toLowerCase()));
+    assert.ok(measured || failedWithFallback, 'measurement has results or explicit failure and fallback');
+});

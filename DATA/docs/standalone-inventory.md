@@ -173,3 +173,15 @@ For C-02 to C-09, the planned replacement is the same file, adapted in place at 
 - G4 (command above) printed nothing and exited 0.
 - `git diff --exit-code d7cd40a -- server/database/schema.sql server/database/db.js server/src/attachments/db6Transport.ts shared/attachmentPolicy.ts` exited 0.
 - The 14 server test titles were read from the two files, and the 76 client tests were counted per file by reading the files (see the count table in section C). No standalone or client file was edited, run or moved by this task.
+
+## T-6A attachment observable-step audit (2026-11-23)
+
+Read-only review of all 13 cases in `server/test/integration/attachments.test.ts` and the attachment scenario in `server/test/db5_db6.test.cjs` records the reproduction points below. They supplement the per-test port plan; they do not alter the standalone tests.
+
+| Source case | Observable request and response | Observable state / bytes | Canonical port consequence |
+|---|---|---|---|
+| `db5_db6.test.cjs` attachment scenario | `POST /api/attachments?recipient_user_id=...`, 201, response includes `original_name`; `GET /api/files/search`, 200; outsider download 404; authorized download 200 | Stored/downloaded bytes equal the submitted bytes; metadata row is checked | A01 uses the conversation-scoped frame and protected declaration; no filename header or plaintext name; A06 remains `GET /api/files/search`; preserve uniform unauthorized 404 and byte equality. |
+| `attachments.test.ts` protected-looking/plain upload | Upload returns 201 and response `original_name` is null on the protected-looking path; plaintext path is also exercised | Row and stored bytes are checked | Canonical OD-16 rejects uploads without required protected declarations with 400; no plaintext fallback or persisted plaintext filename. |
+| `attachments.test.ts` remaining cases | The inventory rows B-02 through B-14 preserve each individual method/path, status, asserted headers, response fields, database rows and storage-file observations | Each row identifies the relevant body/byte and persisted-state assertions | Follow the stated replacement phase and contract differences; in particular removed uploader access is denied, names are inside encrypted metadata, name search is 400, direct add is 503, and test 8 remains retired. |
+
+The deliberate standalone/canonical differences identified during this audit are: plaintext upload and MIME allow-list are retired (DB6-R05.3-.4); filename headers and plaintext `original_name` are retired (DB6-R05.4, ADR-09); `?group_id` and `?recipient_user_id` scopes become conversation scope (DB6-R03.1); blocked direct pairs follow the owner-approved OA-01 rule and existing direct-path evidence (DB6-R03.2); removed uploader access is denied under the canonical rule (DB6-R03.18); name search is refused (DB6-R03.10-.11); the `/api/files` upload/download alias is retired; direct add remains unavailable (OD-01). The exact per-test rows remain authoritative for porting and include test 8's retired disposition.
