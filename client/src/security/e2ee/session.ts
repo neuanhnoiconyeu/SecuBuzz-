@@ -6,6 +6,8 @@ import { decryptV2, encryptV2 } from './messages';
 import { openKey, sealKey } from './hpke';
 import { base64url, digest, epochStatement, importPoint, parseEnvelope, parseEpoch, recipientOrder, sign, verifyDevice, verifySignature, wrapInfo } from './protocol';
 import { E2eeError, type DeviceIdentity, type DeviceRecord, type DirectConversation, type EnvelopeV2, type KeyEpoch, type KeyState, type SecurityErrorCode, type StoredMessage } from './model';
+import {MAX_MESSAGE_EDITS,editCore,editStatement,revisionEnvelopeStatement,type EditProof} from '../../../../shared/messageRevisions';
+import {editDigest,editedContent,messageEditHead,messageEditVersion,protectedEditContent,verifyEditedContent} from './edits';
 
 interface CachedEpoch { epoch: KeyEpoch; creator: DeviceRecord; key: CryptoKey }
 interface TrustedPeer { ids: string[] }
@@ -146,11 +148,12 @@ export class SecureMessagingSession {
         JSON.stringify([2, envelope.encryption.keyId, envelope.encryption.iv, envelope.encryption.ciphertext]))) throw new E2eeError('invalid_message');
     await this.store.clearPending(envelope.conversationId, envelope.id); this.assert(); return message;
   }
-  async send(cid: string, displayName: string, text: string, submit?: EncryptedSubmit, progress?: SendProgress): Promise<StoredMessage> {
+  async send(cid: string, displayName: string, text: string, submit?: EncryptedSubmit, progress?: SendProgress, messageId?:string): Promise<StoredMessage> {
     this.assert(); if (await this.pending(cid)) throw new E2eeError('pending_message');
     progress?.('Encrypting');
     const prepared = await this.prepare(cid); this.assert();
-    const envelope = await encryptV2(prepared.key, this.store, { id: crypto.randomUUID(), conversationId: cid, senderId: this.api.session.actor.id, senderName: displayName, timestamp: new Date().toISOString(), type: 'text' }, prepared.keyId, text); this.assert();
+    if(messageId!==undefined&&!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(messageId))throw new E2eeError('invalid_message');
+    const envelope = await encryptV2(prepared.key, this.store, { id: messageId??crypto.randomUUID(), conversationId: cid, senderId: this.api.session.actor.id, senderName: displayName, timestamp: new Date().toISOString(), type: 'text' }, prepared.keyId, text); this.assert();
     const stored = await this.store.putIfAbsent('pending', cid, envelope); this.assert(); if (stored.id !== envelope.id) throw new E2eeError('pending_message');
     return this.confirmed(envelope, submit, progress);
   }
@@ -211,20 +214,87 @@ export class SecureMessagingSession {
     const keys = new Map<string, Promise<CryptoKey>>();
     const items = await Promise.all(result.items.map(async message => {
       if (!conversation.participants.some(p => p.id === message.senderId)) throw new E2eeError('invalid_message');
-      if (message.state === 'deleted') return { message, text: null, error: null };
+      if (message.state === 'deleted') {await this.store.observeRevision(message.storageId,[],true);return { message, text: null, error: null };}
       try {
         if (message.encryption?.version !== 2) throw new E2eeError('missing_key');
         const keyId = message.encryption.keyId;
         if (!keys.has(keyId)) keys.set(keyId, this.historyKey(conversation, keyId));
         const wire = { id: message.id, conversationId: cid, senderId: message.senderId, senderName: message.senderName, timestamp: message.timestamp, type: message.type, encryption: message.encryption };
-        const text = await decryptV2(await keys.get(keyId)!, wire); return { message, text, error: null };
+        const original = await decryptV2(await keys.get(keyId)!, wire);
+        const text=await verifyEditedContent(message,original,conversation,this.store,k=>this.historyKey(conversation,k));this.assert();return { message, text, error: null };
       } catch (e) { return { message, text: null, error: e instanceof E2eeError ? e.message : 'Unable to decrypt this message.', ...(e instanceof E2eeError ? { errorCode: e.code } : {}) }; }
     }));
     this.assert(); return { items, nextCursor: result.nextCursor };
+  }
+  /** Only for previously verified, unchanged DTOs. This never authenticates new plaintext.
+   * Read the shared persisted head before reusing a caller's cache; do not create/reset it.
+   */
+  async isCachedMessageCurrent(message:StoredMessage):Promise<boolean>{
+    this.assert();if(message.state!=='active'||message.encryption?.version!==2)return false;
+    const hash=await messageEditHead(message);this.assert();
+    const known=await this.store.get<unknown>('message-revision',message.storageId);this.assert();
+    if(!known||typeof known!=='object'||Array.isArray(known))return false;
+    const head=known as Record<string,unknown>;
+    return Number.isSafeInteger(head.revision)&&head.revision===messageEditVersion(message)&&head.hash===hash&&head.deleted===false;
+  }
+  async decryptStoredMessage(input:StoredMessage):Promise<DecryptedRow>{
+    this.assert();const m=this.api.stored(input,input.conversationId),c=await this.api.getConversation(m.conversationId);this.assert();
+    if(!c.interactionAllowed||!c.participants.some(p=>p.id===m.senderId))throw new ApiError('forbidden');
+    if(m.state!=='active'||m.encryption?.version!==2)throw new E2eeError('invalid_message');
+    const wire={id:m.id,conversationId:m.conversationId,senderId:m.senderId,senderName:m.senderName,timestamp:m.timestamp,type:m.type,encryption:m.encryption};
+    const original=await decryptV2(await this.historyKey(c,m.encryption.keyId),wire);
+    const text=await verifyEditedContent(m,original,c,this.store,k=>this.historyKey(c,k));this.assert();return {message:m,text,error:null};
   }
   async revokeCurrentDevice(): Promise<void> {
     const local = await this.initialize(); await this.api.revoke(local.deviceId); this.assert(); this.initialization = undefined;
     throw new E2eeError('device_revoked');
   }
+  private async editRow(message:StoredMessage):Promise<DecryptedRow>{
+    let cursor:string|undefined;
+    for(let page=0;page<100;page++){
+      const history=await this.history(message.conversationId,cursor),found=history.items.find(r=>r.message.storageId===message.storageId);
+      if(found)return found;if(!history.nextCursor)break;cursor=history.nextCursor;
+    }throw new ApiError('not_found');
+  }
+  async editMessage(original:StoredMessage,text:string):Promise<DecryptedRow>{
+    this.assert();if(original.senderId!==this.api.session.actor.id||original.state!=='active'||messageEditVersion(original)>=MAX_MESSAGE_EDITS)throw new ApiError('forbidden');
+    const current=await this.editRow(original);this.assert();
+    if(current.message.senderId!==this.api.session.actor.id)throw new ApiError('forbidden');
+    if(current.message.state!=='active'||current.error||current.text===null)throw new E2eeError('invalid_message');
+    const content=editedContent(current.text,text),contentHash=await editDigest(content);
+    type Pending={contentHash:string;request:{proof:EditProof;envelope:EnvelopeV2}};
+    let pending=await this.store.get<Pending>('pending-edit',original.storageId);
+    if(pending&&current.message.edit?.proofs.some(p=>p.proof.operationId===pending!.request.proof.operationId)){
+      await this.store.clearPendingEdit(original.storageId,pending.request.proof.operationId);
+      if(pending.contentHash===contentHash)return current;pending=undefined;
+    }
+    if(pending&&pending.contentHash!==contentHash)throw new ApiError('conflict');
+    if(!pending){
+      if(await messageEditHead(current.message)!==await messageEditHead(original))throw new ApiError('stale_state');
+      const prepared=await this.prepare(original.conversationId),device=await this.initialize();
+      const core={v:1 as const,storageId:original.storageId,messageId:original.id,conversationId:original.conversationId,senderId:original.senderId,
+        revision:messageEditVersion(current.message)+1,operationId:crypto.randomUUID(),previousHash:await messageEditHead(current.message),keyId:prepared.keyId,signerDeviceKeyId:device.deviceKeyId,editedAt:new Date().toISOString()};
+      const envelope=await encryptV2(prepared.key,this.store,{id:core.operationId,conversationId:core.conversationId,senderId:core.senderId,senderName:original.senderName,timestamp:core.editedAt,type:'text'},prepared.keyId,protectedEditContent(core,content));
+      const fields={...editCore(core),envelopeHash:await editDigest(revisionEnvelopeStatement(envelope))},signature=await sign(device.signing.privateKey,editStatement(fields));
+      pending=await this.store.putIfAbsent<Pending>('pending-edit',original.storageId,{contentHash,request:{proof:{...fields,signature},envelope}});
+      if(pending.contentHash!==contentHash)throw new ApiError('conflict');
+    }
+    this.assert();
+    let response:unknown;
+    try{response=await this.api.session.request(`/api/messages/${encodeURIComponent(original.storageId)}`,{method:'PATCH',body:pending.request});}
+    catch(e){
+      if(e instanceof ApiError&&['forbidden','not_found','validation','stale_state','conflict','key_proof_invalid','recipient_keys_changed','recipient_keys_unverified'].includes(e.code))await this.store.clearPendingEdit(original.storageId,pending.request.proof.operationId);
+      throw e;
+    }this.assert();
+    const result=objectEditReceipt(response),p=pending.request.proof;
+    if(result.storageId!==original.storageId||result.messageId!==original.id||result.conversationId!==original.conversationId||result.senderId!==original.senderId||result.revision!==p.revision||result.operationId!==p.operationId||result.proofHash!==await editDigest(JSON.stringify([editStatement(p),p.signature])))throw new E2eeError('invalid_message');
+    const confirmed=await this.editRow(original);this.assert();
+    if(confirmed.message.state!=='active'||confirmed.error||!confirmed.message.edit?.proofs.some(r=>r.proof.signature===p.signature&&r.proof.operationId===p.operationId))throw new E2eeError('invalid_message');
+    await this.store.clearPendingEdit(original.storageId,p.operationId);return confirmed;
+  }
   dispose(): void { this.active = false; this.initialization = undefined; this.identity = undefined; this.review = undefined; this.store.close(); }
+}
+function objectEditReceipt(value:unknown):Record<string,unknown>{
+  if(!value||typeof value!=='object'||!('outcome'in value)||!['created','duplicate'].includes(value.outcome as string)||!('edit'in value)||!value.edit||typeof value.edit!=='object')throw new E2eeError('invalid_message');
+  return value.edit as Record<string,unknown>;
 }

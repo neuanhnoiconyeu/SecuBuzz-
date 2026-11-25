@@ -73,6 +73,7 @@ async function startServer({env=process.env,db,config=loadAuthConfig(env),featur
     const database=db || openDatabase(databaseConfig(env));
     let server;
     let retentionJob=null;
+    let attachmentRetention=null;
     try {
         let attachmentStorage=dependencies.storage;
         if (featureConfig.attachmentApi === true && !attachmentStorage) {
@@ -92,6 +93,9 @@ async function startServer({env=process.env,db,config=loadAuthConfig(env),featur
         }
         await application.auth.ready;
         if (retentionJob) await retentionJob.start();
+        // Private file retention uses the same service as authenticated uploads; no plaintext/key access.
+        attachmentRetention=setInterval(()=>{try{application.encryptedAttachments.cleanup();}catch{/* Retry next interval; never log private storage paths. */}},60000);
+        attachmentRetention.unref();
         server=createServer({maxHeaderSize:16384},application.app);
         const uploadTimeoutMs=application.features.attachmentApi === true
             ? (featureConfig.attachments.uploadTimeoutSeconds === undefined ? 15000 : featureConfig.attachments.uploadTimeoutSeconds*1000) : null;
@@ -115,6 +119,7 @@ async function startServer({env=process.env,db,config=loadAuthConfig(env),featur
             server.listen(Number(env.PORT || 5000),env.HOST || '127.0.0.1',()=>{server.off('error',reject);resolve();});
         });
         return {...application,server,db:database,retentionJob,async close() {
+            clearInterval(attachmentRetention);
             try {
                 await new Promise((resolve,reject)=>{
                     server.close(error=>error ? reject(error) : resolve());
@@ -126,6 +131,7 @@ async function startServer({env=process.env,db,config=loadAuthConfig(env),featur
             }
         }};
     } catch (error) {
+        clearInterval(attachmentRetention);
         if (retentionJob) await retentionJob.stop().catch(()=>{});
         if (server?.listening) server.close();
         if (owned && database.open) database.close();

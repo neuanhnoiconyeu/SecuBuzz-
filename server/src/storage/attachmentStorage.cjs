@@ -4,9 +4,11 @@ const { randomUUID, createHash } = require('node:crypto');
 const { Transform } = require('node:stream');
 const { pipeline } = require('node:stream/promises');
 
-const storageRoot = path.resolve(process.env.ATTACHMENT_STORAGE_DIR || path.join(process.cwd(),'private-attachments'));
+function createAttachmentStorage({directory=process.env.ATTACHMENT_STORAGE_DIR || path.join(process.cwd(),'private-attachments'),maxBytes=Number.parseInt(process.env.MAX_ATTACHMENT_BYTES || String(25*1024*1024),10)}={}) {
+const storageRoot = path.resolve(directory);
 fs.mkdirSync(storageRoot,{recursive:true,mode:0o700});
-const MAX_BYTES = Number.parseInt(process.env.MAX_ATTACHMENT_BYTES || String(25*1024*1024),10);
+const MAX_BYTES = maxBytes;
+if(!Number.isSafeInteger(MAX_BYTES)||MAX_BYTES<1)throw new TypeError('Invalid attachment storage limit');
 
 async function storeRequestStream(request) {
   const storageKey=randomUUID();
@@ -38,4 +40,6 @@ function removeStoredFile(storageKey) {
   try { fs.unlinkSync(resolveStoragePath(storageKey)); return true; }
   catch(error) { if(error.code==='ENOENT') return false; throw error; }
 }
-module.exports={storeRequestStream,resolveStoragePath,removeStoredFile,MAX_BYTES};
+return {storeRequestStream,resolveStoragePath,removeStoredFile,MAX_BYTES,storageRoot};
+}
+module.exports={...createAttachmentStorage(),createAttachmentStorage};

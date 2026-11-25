@@ -236,7 +236,7 @@ test('T-6B-19 attachment writes require a transaction, use compare-and-set and r
 
 test('T-6B-20 confines attachment SQL to repository modules and uses fixed prepared SQL', t => {
     const serverRoot = require('node:path').resolve(__dirname, '../server');
-    const allowed = new Set(['database/repositories.js','database/attachmentRepository.js']);
+    const allowed = new Set(['database/repositories.js','database/attachmentRepository.js','messaging/attachments.js','messaging/edits.js']);
     const files = [];
     const visit = directory => {
         for (const entry of require('node:fs').readdirSync(directory, { withFileTypes:true })) {

@@ -1,5 +1,7 @@
 # LiveKit infrastructure
 
+Authenticated **direct-call** host integration is now described in [authenticated-direct-calls.md](authenticated-direct-calls.md). Its capability remains gated pending real audio/video acceptance. The group Voice Rooms integration requirements below remain separate; Phase 10 does not supply their owner-specific media policy.
+
 The browser SDK (`livekit-client`) and Node SDK (`livekit-server-sdk`) are installed. Real accounts can open the LiveKit-backed Voice Rooms UI from their signed-in account screen. Demo accounts retain the explicitly local preview. The standalone server exposes `POST /api/voice/token`, but returns `503 livekit_unavailable` until real authentication, authorization, CSRF and voice-policy adapters are injected. Environment flags and LiveKit credentials cannot bypass that requirement.
 
 ## Configuration

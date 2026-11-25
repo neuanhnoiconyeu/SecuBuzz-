@@ -14,15 +14,21 @@ const { createConversationRouter }=require('./routes/conversations');
 const { createMessageService }=require('./messaging/service');
 const { createGroupMessageService }=require('./messaging/group');
 const { createMessageRouters }=require('./routes/messaging');
+const { createPinService }=require('./messaging/pins');
+const { createPinRouters }=require('./routes/pins');
+const { createReactionService }=require('./messaging/reactions');
+const { createReactionRouters }=require('./routes/reactions');
 const { createKeyService }=require('./e2ee/service');
 const { createKeyRouters }=require('./routes/keys');
 const { createGroupService }=require('./groups/service');
 const { createGroupRouter }=require('./routes/groups');
-const { createAttachmentRouters }=require('./routes/attachments');
+const { createAttachmentRouters }=require('./routes/canonicalAttachments');
 const { createAttachmentService }=require('./attachments/service');
 const { createFilesystemProvider }=require('./attachments/storage/filesystem');
 const { DISABLED_FEATURES }=require('./features/config');
 const { createFeatureGate }=require('./features/gate');
+const {createEncryptedAttachmentService}=require('./messaging/attachments');
+const {createEncryptedAttachmentRouter}=require('./routes/attachments');
 
 function isPlainFeatureObject(value) {
     if (value===null || typeof value!=='object' || Array.isArray(value)) return false;
@@ -45,6 +51,13 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},features=DISABL
     app.get(['/', '/healthz'],(req,res)=>res.json({status:'ok'}));
     app.use('/api',(req,res,next)=>requestAllowed(req,config) ? next() : sendError(res,'FORBIDDEN',403));
     app.use('/api/auth',createAuthRouter(auth,middleware));
+    // The combined DATA/realtime host installs the existing LiveKit handler here, before body parsing.
+    // DATA still enforces its own Origin/transport/session/CSRF policy on every request.
+    let directCallTokens=null;
+    app.all('/api/calls/token',middleware.requireAuth,(req,res,next)=>['GET','HEAD'].includes(req.method)?next():middleware.requireCsrf(req,res,next),(req,res,next)=>{
+        if(!directCallTokens)return sendError(res,'FEATURE_UNAVAILABLE',503);
+        Promise.resolve(directCallTokens(req,res)).then(handled=>{if(!handled&&!res.headersSent)sendError(res,'FEATURE_UNAVAILABLE',503);},next);
+    });
     const social=createSocialService({db,auth,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
     const socialRouters=createSocialRouters(social,middleware);
     app.use('/api/users',socialRouters.users);
@@ -55,9 +68,18 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},features=DISABL
     const keyRouters=createKeyRouters(keys,middleware);
     app.use('/api/keys',keyRouters.devices);
     app.use('/api/conversations',keyRouters.conversations);
-    const messaging=createMessageService({recipientKeyVerifier:keys.verifier,...messageOptions,db,auth,conversations,
+    const encryptedAttachments=createEncryptedAttachmentService({db,auth,conversations,options:dependencies.attachmentOptions,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
+    const messaging=createMessageService({recipientKeyVerifier:keys.verifier,...messageOptions,db,auth,conversations,attachments:encryptedAttachments,
         verifyKeysInTransaction:keys.verifyInTransaction,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
     const messageRouters=createMessageRouters(messaging,middleware);
+    const pins=createPinService({db,auth,conversations,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
+    const pinRouters=createPinRouters(pins,middleware);
+    app.use('/api/conversations',pinRouters.conversations);
+    app.use('/api/messages',pinRouters.messages);
+    const reactions=createReactionService({db,auth,conversations,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
+    const reactionRouters=createReactionRouters(reactions,middleware);
+    app.use('/api/conversations',reactionRouters.conversations);
+    app.use('/api/messages',reactionRouters.messages);
     // Exact history routes precede the metadata router; every other path falls through.
     app.use('/api/conversations',messageRouters.history);
     app.use('/api/conversations',createConversationRouter(conversations,middleware));
@@ -75,13 +97,20 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},features=DISABL
         ...(messageOptions.groupRecipientKeyVerifier ? {groupRecipientKeyVerifier:messageOptions.groupRecipientKeyVerifier} : {}),
         ...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
     app.use('/api/groups',createGroupRouter({groups,groupMessages,features:groups.features},middleware));
-    const attachmentStorage=dependencies.storage || (featureGate.enabled('attachmentApi')
+    const canonicalEnabled=featureGate.enabled('attachmentApi');
+    const attachmentStorage=dependencies.storage || (canonicalEnabled
         ? createFilesystemProvider({root:features.attachments.storageDir,repositoryRoot:path.resolve(__dirname,'../..')}) : null);
-    const attachments=featureGate.enabled('attachmentApi') ? createAttachmentService({db,auth,features:runtimeFeatures,
+    const canonicalAttachments=canonicalEnabled ? createAttachmentService({db,auth,features:runtimeFeatures,
         storage:attachmentStorage,settings:features.attachments,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})}) : null;
-    const attachmentRouters=createAttachmentRouters(attachments,middleware);
-    app.use('/api/attachments',attachmentRouters.attachments);
-    app.use('/api/files',attachmentRouters.files);
+    const attachmentRouters=createAttachmentRouters(canonicalAttachments,middleware);
+    // One authoritative owner per endpoint: the canonical DB-6B API takes over only when its
+    // default-off switch is on; otherwise main's encrypted attachment API remains mounted.
+    if (canonicalEnabled) {
+        app.use('/api/attachments',attachmentRouters.attachments);
+        app.use('/api/files',attachmentRouters.files);
+    } else {
+        app.use('/api/attachments',createEncryptedAttachmentRouter(encryptedAttachments,middleware));
+    }
     // The legacy APIs have no object-level authorization. Do not expose them merely because
     // authentication now exists. DB-3/4/7 must replace/adapt them before mounting real data routes.
     app.use(['/api/messages','/api/logs'],middleware.requireAuth,(req,res,next)=>{
@@ -105,6 +134,14 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},features=DISABL
         // Never log raw errors, bodies, cookies, SQL, password hashes or session/CSRF material.
         return sendError(res,'INTERNAL_ERROR',500);
     });
-    return {app,auth,social,conversations,keys,messaging,groups,groupMessages,attachments,features:groups.features,adapters:createAuthAdapters(auth),middleware};
+    return {app,auth,social,conversations,keys,messaging,groups,groupMessages,
+        attachments:canonicalEnabled ? canonicalAttachments : encryptedAttachments,
+        encryptedAttachments,canonicalAttachments,
+        features:groups.features,adapters:createAuthAdapters(auth),middleware,
+        setDirectCallTokenHandler(handler){
+            if(handler!==null&&typeof handler!=='function')throw new TypeError('Invalid direct call token handler');
+            if(handler&&directCallTokens)throw new TypeError('Direct call token handler is already installed');
+            directCallTokens=handler;
+        }};
 }
 module.exports={createApp};

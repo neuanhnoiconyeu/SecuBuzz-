@@ -140,3 +140,12 @@ test('loopback WS is development-only and room identifiers remain stable between
   assert.equal(loadLiveKitConfig({ ...environment, LIVEKIT_URL: 'ws://127.0.0.1:7880' }).status, 'unconfigured');
   assert.deepEqual(loadLiveKitConfig(environment).room('lounge'), loadLiveKitConfig(environment).room('lounge'));
 });
+
+test('the host transport decision reaches session verification without trusting arbitrary forwarded headers',async()=>{
+  for(const secure of [true,false]){
+    const instance=await start({resolveTransportSecurity:()=>secure,sessionResolver:{async resolveSession(context){
+      return context.secure?{status:'authenticated',session:{...actor,expiresAt:new Date(Date.now()+90_000)}}:{status:'invalid'};
+    }}});
+    assert.equal((await instance.post(undefined,{'x-forwarded-proto':'https'})).status,secure?200:401);
+  }
+});

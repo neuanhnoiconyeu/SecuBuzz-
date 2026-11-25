@@ -1,0 +1,33 @@
+# Optional local-only calling in the existing default project; no additional data volumes.
+# node docker/init-livekit.cjs
+# docker compose -p secubuzz- -f compose.yaml -f compose.calls.yaml up -d --wait
+services:
+  backend:
+    env_file: ./docker/secrets/livekit/backend.env
+    ports:
+      - "127.0.0.1:7880:7880"
+      - "127.0.0.1:7881:7881"
+      - "127.0.0.1:7882:7882/udp"
+  frontend:
+    environment:
+      NEXT_PUBLIC_DIRECT_CALLS_ENABLED: "true"
+      NEXT_PUBLIC_LIVEKIT_URL: ws://localhost:7880
+  livekit:
+    image: livekit/livekit-server@sha256:25cd902de7cacbd5f1f779f6a6ac1eae20ba8f56b0935934ce6b0ab80d1e3d20
+    network_mode: service:backend
+    depends_on:
+      backend:
+        condition: service_healthy
+        restart: true
+    command: ["--config", "/etc/livekit/config.yaml"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+    volumes:
+      - type: bind
+        source: ./docker/secrets/livekit/config.yaml
+        target: /etc/livekit/config.yaml
+        read_only: true
+        bind:
+          create_host_path: false

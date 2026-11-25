@@ -785,7 +785,7 @@ test('app.js mounts the group router after /api/messages and before the legacy s
     const at = text => { const i = source.indexOf(text); assert.ok(i >= 0, text); assert.equal(source.indexOf(text, i + 1), -1, `${text} appears once`); return i; };
     const lifecycle = at("app.use('/api/messages',messageRouters.lifecycle);");
     const mount = at("app.use('/api/groups',createGroupRouter(");
-    const attachmentImport = at("const { createAttachmentRouters }=require('./routes/attachments');");
+    const attachmentImport = at("const { createAttachmentRouters }=require('./routes/canonicalAttachments');");
     const attachmentMount = at("app.use('/api/attachments',attachmentRouters.attachments);");
     const filesMount = at("app.use('/api/files',attachmentRouters.files);");
     const legacy = at("app.use(['/api/messages','/api/logs'],middleware.requireAuth");
@@ -793,7 +793,7 @@ test('app.js mounts the group router after /api/messages and before the legacy s
     assert.ok(attachmentImport >= 0 && lifecycle < mount && mount < attachmentMount && attachmentMount < filesMount && filesMount < legacy && legacy < notFound, 'message, group, attachment, file, legacy and not-found mount order');
     assert.ok(source.includes('features=DISABLED_FEATURES'), 'features default to everything disabled');
     assert.ok(source.includes('groups,groupMessages'), 'groups and message service are returned');
-    assert.ok(source.includes('groupMessages,attachments,features:groups.features'), 'groups, attachments and features are returned');
+    assert.ok(source.includes('encryptedAttachments,canonicalAttachments'), 'encrypted and canonical attachment services are returned');
 });
 
 // ===============================================================================================================

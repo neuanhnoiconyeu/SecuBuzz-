@@ -2,6 +2,7 @@
 import { IDBFactory } from 'fake-indexeddb';
 import { LocalAttachmentStore } from '../localAttachmentStore';
 import type { ChatMessage, MessageAttachment } from '../messageModel';
+import { deleteMessageById, toggleMessagePin, toggleMessageReaction } from '../messageState';
 import { makeAttachmentFile } from '../../../test/attachmentFixtures';
 
 const message = (attachment: MessageAttachment, id = 'message-1', conversationId = 'room-a'): ChatMessage => ({
@@ -64,4 +65,17 @@ test('persists edits and deletion while avoiding stale ciphertext and temporary 
   await store.saveMessage('demo-a', { ...message(attachment), content: 'Deleted', isDeleted: true, attachments: [] });
   await expect(store.getFile('demo-a', 'room-a', attachment.id)).rejects.toThrow('missing');
   expect(await store.loadMessages('demo-a', ['room-a'])).toMatchObject([{ isDeleted: true, attachments: [] }]);
+});
+
+test('saved attachment messages retain consistent local pins and replaced reactions across restoration', async () => {
+  const factory = new IDBFactory(), store = new LocalAttachmentStore(factory);
+  const attachment = await store.putFile('demo-a', 'room-a', makeAttachmentFile('notes.txt', 'text/plain'));
+  let state = toggleMessagePin({ 'room-a': [message(attachment)] }, 'room-a', 'message-1');
+  state = toggleMessageReaction(state, 'room-a', 'message-1', '👍', 'demo-a');
+  state = toggleMessageReaction(state, 'room-a', 'message-1', '❤️', 'demo-a');
+  await store.saveMessage('demo-a', state['room-a']![0]!);
+  const restored = await new LocalAttachmentStore(factory).loadMessages('demo-a', ['room-a']);
+  expect(restored[0]).toMatchObject({ isPinned: true, reactions: [{ emoji: '❤️', userIds: ['demo-a'] }] });
+  const deleted = deleteMessageById({ 'room-a': restored }, 'room-a', 'message-1'); await store.saveMessage('demo-a', deleted['room-a']![0]!);
+  expect((await store.loadMessages('demo-a', ['room-a']))[0]).toMatchObject({ isDeleted: true, isPinned: false, reactions: [] });
 });

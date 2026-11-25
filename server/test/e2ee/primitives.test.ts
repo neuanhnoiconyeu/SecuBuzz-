@@ -85,7 +85,8 @@ describe('statement signatures', () => {
     const der = sign('sha256', Buffer.from(statement), signer.privateKey).toString('base64url');
     assert.equal(verifyStatementSignature(signer.encoded, statement, der), false, 'DER signatures are not accepted');
     assert.equal(verifyStatementSignature(signer.encoded, statement, Buffer.alloc(64).toString('base64url')), false);
-    assert.equal(verifyStatementSignature(signer.encoded, statement, `${signature.slice(0, -2)}AA`), false);
+    const tampered = Buffer.from(signature, 'base64url'); tampered[0] = tampered[0]! ^ 1;
+    assert.equal(verifyStatementSignature(signer.encoded, statement, tampered.toString('base64url')), false);
     assert.equal(verifyStatementSignature('not-a-key', statement, signature), false);
   });
 });

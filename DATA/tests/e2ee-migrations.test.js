@@ -9,24 +9,14 @@ function seed(db){const r=createRepositories(db);for(const id of ['a','b'])r.use
 test('migration 6 to 7 preserves every existing value, receipt, attachment, index, trigger, checksum and FK with enforcement on',t=>{
     const {db}=atSix(t);seed(db);const names=db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(r=>r.name);
     const before=Object.fromEntries(names.map(n=>[n,db.prepare('SELECT * FROM '+n).all()]));const objects=db.prepare("SELECT name,type FROM sqlite_master WHERE type IN ('index','trigger') AND name NOT LIKE 'sqlite_%' ORDER BY name").all();
-    const versionSeven=temporary(t);for(const migration of loadMigrations().filter(m=>m.version<=7))fs.writeFileSync(path.join(versionSeven,migration.name),migration.sql);
-    assert.deepEqual(migrate(db,{directory:versionSeven}).applied,['0007-recipient-keys.sql']);assert.equal(db.pragma('foreign_keys',{simple:true}),1);
+    assert.deepEqual(migrate(db).applied,['0007-recipient-keys.sql','0008-authenticated-message-pins.sql','0009-authenticated-message-reactions.sql','0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql','0013-attachment-lifecycle.sql']);assert.equal(db.pragma('foreign_keys',{simple:true}),1);
     for(const [name,rows]of Object.entries(before)){
         if(name==='SchemaMigrations')assert.deepEqual(db.prepare('SELECT * FROM SchemaMigrations WHERE version<=6 ORDER BY version').all(),rows);
-        else if(name==='Messages')assert.deepEqual(db.prepare(`SELECT ${Object.keys(rows[0]).join(',')} FROM Messages`).all(),rows);
+        else if(name==='Messages'||name==='Attachments')assert.deepEqual(db.prepare(`SELECT ${Object.keys(rows[0]).join(',')} FROM ${name}`).all(),rows);
         else assert.deepEqual(db.prepare('SELECT * FROM '+name).all(),rows);
     }
     for(const o of objects)assert.ok(db.prepare('SELECT 1 FROM sqlite_master WHERE name=? AND type=?').get(o.name,o.type),o.name);
-    assert.ok(db.prepare('SELECT * FROM Messages').all().every(r=>r.key_id===null));assert.deepEqual(db.pragma('foreign_key_check'),[]);assert.equal(db.pragma('integrity_check',{simple:true}),'ok');
-    const attachmentColumnsV7=db.prepare('PRAGMA table_info(Attachments)').all().map(row=>row.name),attachmentsV7=db.prepare('SELECT * FROM Attachments').all();
-    assert.ok(!attachmentColumnsV7.includes('integrity_digest'));assert.deepEqual(migrate(db).applied,['0008-groups.sql','0009-attachment-lifecycle.sql']);
-    assert.deepEqual(db.prepare(`SELECT ${attachmentColumnsV7.join(',')} FROM Attachments`).all(),attachmentsV7,'0009 preserves every version-7 attachment column and value');
-    const attachmentColumnsAfter=new Set(db.prepare('PRAGMA table_info(Attachments)').all().map(row=>row.name));
-    for(const column of ['integrity_digest','expires_at','deleted_at','purge_state','declared_algorithm','declared_format_version'])assert.ok(attachmentColumnsAfter.has(column),column);
-    assert.deepEqual(db.prepare('SELECT integrity_digest,expires_at,deleted_at,purge_state,declared_algorithm,declared_format_version FROM Attachments ORDER BY attachment_id').all(),
-        attachmentsV7.map(()=>({integrity_digest:null,expires_at:null,deleted_at:null,purge_state:'not_purged',declared_algorithm:null,declared_format_version:null})),
-        '0009 initializes new attachment columns to their canonical values');
-    assert.deepEqual(db.pragma('foreign_key_check'),[]);assert.equal(db.pragma('integrity_check',{simple:true}),'ok');assert.deepEqual(migrate(db).applied,[]);
+    assert.ok(db.prepare('SELECT * FROM Messages').all().every(r=>r.key_id===null));assert.deepEqual(db.pragma('foreign_key_check'),[]);assert.equal(db.pragma('integrity_check',{simple:true}),'ok');assert.deepEqual(migrate(db).applied,[]);
     assert.throws(()=>db.prepare("UPDATE Messages SET ciphertext='different' WHERE message_id='approved-v1'").run());assert.throws(()=>db.prepare("UPDATE Messages SET key_id='AAAAAAAAAAAAAAAAAAAAAA' WHERE message_id='approved-v1'").run());
 });
 test('failed migration 7 rolls back the whole rebuild including dependent tables, original schema and migration ledger',t=>{
@@ -36,7 +26,7 @@ test('failed migration 7 rolls back the whole rebuild including dependent tables
     assert.deepEqual(db.prepare('SELECT * FROM Messages').all(),rows);assert.deepEqual(db.prepare('SELECT * FROM MessageReceipts').all(),receipts);assert.deepEqual(db.prepare('SELECT * FROM Attachments').all(),attachments);assert.deepEqual(db.pragma('foreign_key_check'),[]);
 });
 test('fresh migration 7 enforces key ownership, immutable history, monotonic states and epoch foreign keys',t=>{
-    const {db}=fixture(t);assert.equal(db.prepare('SELECT max(version) v FROM SchemaMigrations').get().v,9);assert.deepEqual(db.pragma('foreign_key_check'),[]);
+    const {db}=fixture(t);assert.equal(db.prepare('SELECT max(version) v FROM SchemaMigrations').get().v,13);assert.deepEqual(db.pragma('foreign_key_check'),[]);
     for(const name of ['DeviceKeys','ConversationKeyEpochs','ConversationKeyWraps'])assert.ok(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name));
     assert.throws(()=>db.prepare('INSERT INTO DeviceKeys(device_key_id,user_id,device_id,key_version,created_at,agreement_public_key,signing_public_key,signature,registered_at) VALUES(?,?,?,?,?,?,?,?,?)').run('k'.repeat(43),'missing','d'.repeat(22),1,'time','p'.repeat(87),'q'.repeat(87),'s'.repeat(86),'time'));
 });

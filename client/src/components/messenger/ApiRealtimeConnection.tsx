@@ -10,7 +10,7 @@ import { DirectCallsRuntime } from '@/components/calls/DirectCallsRuntime';
 import type { ReactNode } from 'react';
 
 /** Real connections require a configured cookie-session contract, not a demo identity. */
-export function ApiRealtimeConnection({ user, children }: { user: AuthUser; children?: ReactNode }) {
+export function ApiRealtimeConnection({ user, children, enableDirectCalls = true }: { user: AuthUser; children?: ReactNode; enableDirectCalls?: boolean }) {
   const { restoreSession } = useAuth();
   const revalidate = useRef(restoreSession);
   revalidate.current = restoreSession;
@@ -32,5 +32,5 @@ export function ApiRealtimeConnection({ user, children }: { user: AuthUser; chil
     return () => { active = false; unsubscribe(); client.dispose(); };
   }, [initialUser]);
   const content = <>{children ? <div className="call-workspace-status"><RealtimeStatus status={status} /></div> : <RealtimeStatus status={status} />}{children}</>;
-  return callClient?.calls ? <DirectCallsRuntime client={callClient} user={user}>{content}</DirectCallsRuntime> : content;
+  return enableDirectCalls && callClient?.calls ? <DirectCallsRuntime client={callClient} user={user}>{content}</DirectCallsRuntime> : content;
 }

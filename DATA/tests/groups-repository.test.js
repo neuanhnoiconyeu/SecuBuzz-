@@ -23,9 +23,12 @@ const {
 const HEX64 = /^[0-9a-f]{64}$/;
 const DATA_ROOT = path.join(__dirname, '..');
 // Design, Correctness Properties, P-21: the twelve snapshot tables, in the order of the design.
-const P21_TABLES = ['Conversations', 'ConversationMembers', 'GroupExtensions', 'GroupMembershipIntervals', 'ConversationInvitations',
+const GROUP_SNAPSHOT_TABLES = ['Conversations', 'ConversationMembers', 'GroupExtensions', 'GroupMembershipIntervals', 'ConversationInvitations',
     'GroupReadPositions', 'GroupCreationKeys', 'Messages', 'MessageReceipts', 'Attachments', 'AttachmentReservations', 'AuditLogs'];
-const TABLES_0008 = ['GroupExtensions', 'GroupMembershipIntervals', 'ConversationInvitations', 'GroupReadPositions', 'GroupCreationKeys'];
+const MESSAGING_SNAPSHOT_TABLES = ['ConversationPinVersions','MessagePins','MessagePinOperations','MessageReactionVersions',
+    'MessageReactionActors','MessageReactionOperations','EncryptedAttachmentBatches','MessageEditRevisions'];
+const P21_TABLES = [...GROUP_SNAPSHOT_TABLES,...MESSAGING_SNAPSHOT_TABLES];
+const TABLES_0012 = ['GroupExtensions', 'GroupMembershipIntervals', 'ConversationInvitations', 'GroupReadPositions', 'GroupCreationKeys'];
 // The headers app.js sets on every response (NFR-08), transcribed independently of the helper.
 const EXPECTED_HEADERS = {
     'cache-control':'no-store',
@@ -46,7 +49,7 @@ test('snapshot hashes each P-21 table that exists at the current version and a t
     const present = tablesOf(f.db);
     const before = snapshot(f.db);
     assert.deepEqual(Object.keys(before.tables), P21_TABLES.filter(table => present.has(table)));
-    for (const table of TABLES_0008) assert.ok(table in before.tables, `${table} is hashed from version 8 on`);
+    for (const table of TABLES_0012) assert.ok(table in before.tables, `${table} is hashed from version 12 on`);
     assert.ok(present.has('AuthRateLimits') && !('AuthRateLimits' in before.tables));
     assert.ok(Object.values(before.tables).every(hash => HEX64.test(hash)), 'every table hash is SHA-256 hex');
     assert.match(before.total, HEX64);
@@ -103,16 +106,17 @@ test('a change confined to one P-21 table changes that hash and the total, and n
         step();
         const after = snapshot(f.db);
         assert.deepEqual(changedTables(before, after), expected, label);
+        for(const table of MESSAGING_SNAPSHOT_TABLES)assert.equal(after.tables[table],before.tables[table],`${label} preserves ${table}`);
         assert.notEqual(after.total, before.total, `${label} changes the total`);
     }
     const covered = new Set(steps.flatMap(([, , expected]) => expected));
-    assert.deepEqual([...covered].sort(), P21_TABLES.filter(table => table !== 'AttachmentReservations').sort(), 'the steps reach every table present at version 8');
+    assert.deepEqual([...covered].sort(), GROUP_SNAPSHOT_TABLES.filter(table => table !== 'AttachmentReservations').sort(), 'the steps reach every group-owned table; messaging metadata stays unchanged');
 });
 
 test('the completeness check fails when a table created after 0007 is missing from the snapshot list', t => {
     const current = groupDatabase(t);
     const report = snapshotCompleteness(current.db);
-    for (const table of TABLES_0008) assert.ok(report.created.includes(table), `${table} is created after version 7`);
+    for (const table of TABLES_0012) assert.ok(report.created.includes(table), `${table} is created after version 7`);
     assert.ok(report.created.every(table => P21_TABLES.includes(table)), 'every table created after version 7 is on the list');
     assert.deepEqual(report.missing, []);
     // Copies of every migration plus one more file in a temporary folder; its table is not on the list.
@@ -618,7 +622,7 @@ test('CI-12: normaliseError differs from the unchanged translate() only for trig
 });
 
 // ---------------------------------------------------------------------------------------------------------------
-// Static scans (DB5-R14.14). Group SQL is any code line that names one of the five 0008 tables; a whole-line comment
+// Static scans (DB5-R14.14). Group SQL is any code line that names one of the five 0012 tables; a whole-line comment
 // is prose (as in the database-file check above), and a .sql file comments with --. Scope: the runtime files of DATA
 // (server/, scripts/ and server.js) except the migrations directory and groupRepository.js itself. Only script and SQL
 // files are read, so no database file is ever opened. In groupRepository.js every prepare call takes exactly one string
@@ -626,7 +630,7 @@ test('CI-12: normaliseError differs from the unchanged translate() only for trig
 // ---------------------------------------------------------------------------------------------------------------
 const RUNTIME_EXTENSIONS = new Set(['.js', '.cjs', '.mjs', '.ts', '.sql']);
 const MIGRATIONS_DIRECTORY = 'server/database/migrations/';
-const GROUP_SQL = new RegExp(`\\b(?:${TABLES_0008.join('|')})\\b`, 'i');
+const GROUP_SQL = new RegExp(`\\b(?:${TABLES_0012.join('|')})\\b`, 'i');
 const SQL_COMMENT_LINE = /^\s*--/;
 function groupSqlHits(file, text) {
     const comment = file.endsWith('.sql') ? SQL_COMMENT_LINE : COMMENT_LINE;
@@ -681,7 +685,7 @@ test('group SQL occurs in no runtime file of DATA but groupRepository.js, the mi
     // The matcher: a code line naming a table is reported in any letter case; comment lines and longer names are not.
     const statement = "db.prepare('UPDATE GroupExtensions SET description = ? WHERE conversation_id = ?').run(text, id);";
     assert.deepEqual(groupSqlHits('server/groups/service.js', `// GroupExtensions holds the policy\n${statement}\n`), ['server/groups/service.js:2']);
-    for (const table of TABLES_0008) {
+    for (const table of TABLES_0012) {
         assert.deepEqual(groupSqlHits('server/messaging/service.js', `const sql = \`SELECT * FROM ${table.toLowerCase()}\`;`), ['server/messaging/service.js:1'], table);
     }
     assert.deepEqual(groupSqlHits('server/database/extra.sql', '-- GroupReadPositions\nSELECT 1 FROM GroupReadPositions;'), ['server/database/extra.sql:2']);
@@ -753,7 +757,7 @@ test('while a router file is absent, every method on its path prefixes answers t
 });
 
 // ---------------------------------------------------------------------------------------------------------------
-// Direct-SQL constraint tests of 0008 (T-5B-23; DB5-R14.12, DB5-R04.2, R04.17, DB5-R06.2, DB5-R07.6, DB5-R08.1, R08.3,
+// Direct-SQL constraint tests of 0012 (T-5B-23; DB5-R14.12, DB5-R04.2, R04.17, DB5-R06.2, DB5-R07.6, DB5-R08.1, R08.3,
 // R08.4, DB5-R10.1, R10.2, DB5-R02.13). Each attempt is one plain INSERT, UPDATE or DELETE that bypasses the repository,
 // on a temporary database. It must fail with the SQLite constraint code of the object that enforces the rule (design,
 // "Constraint to requirement map"), its driver message must name that object, and snapshot(db) must be identical
@@ -1076,7 +1080,7 @@ test('T-5B-23: the active-owner index uq_members_active_owner rejects a second a
 });
 
 // ---------------------------------------------------------------------------------------------------------------
-// Static scan (T-5B-23 mitigation): no runtime file writes a 0008 table through a REPLACE conflict path (REPLACE INTO,
+// Static scan (T-5B-23 mitigation): no runtime file writes a 0012 table through a REPLACE conflict path (REPLACE INTO,
 // INSERT OR REPLACE, UPDATE OR REPLACE) or through INSERT OR IGNORE. Scope and comment rule as in the group SQL scan
 // above: server/ without the migrations, scripts/ and server.js; whole-line comments are prose. A statement may span
 // lines, use any letter case, a schema prefix and a quoted table name. The keywords are built from fragments, so this
@@ -1086,11 +1090,11 @@ const REPLACE_KEYWORD = ['REP', 'LACE'].join('');
 const IGNORE_KEYWORD = ['IGN', 'ORE'].join('');
 const OPEN_QUOTE = '["\'`\\[]?';
 const CLOSE_QUOTE = '["\'`\\]]?';
-const TABLE_0008_REFERENCE = `(?:${OPEN_QUOTE}(?:main|temp)${CLOSE_QUOTE}\\s*\\.\\s*)?${OPEN_QUOTE}(?:${TABLES_0008.join('|')})${CLOSE_QUOTE}(?![\\w$])`;
+const TABLE_0012_REFERENCE = `(?:${OPEN_QUOTE}(?:main|temp)${CLOSE_QUOTE}\\s*\\.\\s*)?${OPEN_QUOTE}(?:${TABLES_0012.join('|')})${CLOSE_QUOTE}(?![\\w$])`;
 const CONFLICT_PATHS = Object.freeze([
-    new RegExp(`\\b(?:INSERT\\s+OR\\s+)?${REPLACE_KEYWORD}\\s+INTO\\s+${TABLE_0008_REFERENCE}`, 'gi'),
-    new RegExp(`\\bUPDATE\\s+OR\\s+${REPLACE_KEYWORD}\\s+${TABLE_0008_REFERENCE}`, 'gi'),
-    new RegExp(`\\bINSERT\\s+OR\\s+${IGNORE_KEYWORD}\\s+INTO\\s+${TABLE_0008_REFERENCE}`, 'gi'),
+    new RegExp(`\\b(?:INSERT\\s+OR\\s+)?${REPLACE_KEYWORD}\\s+INTO\\s+${TABLE_0012_REFERENCE}`, 'gi'),
+    new RegExp(`\\bUPDATE\\s+OR\\s+${REPLACE_KEYWORD}\\s+${TABLE_0012_REFERENCE}`, 'gi'),
+    new RegExp(`\\bINSERT\\s+OR\\s+${IGNORE_KEYWORD}\\s+INTO\\s+${TABLE_0012_REFERENCE}`, 'gi'),
 ]);
 function conflictPathHits(file, text) {
     const comment = file.endsWith('.sql') ? SQL_COMMENT_LINE : COMMENT_LINE;
@@ -1100,16 +1104,16 @@ function conflictPathHits(file, text) {
         .map(match => `${file}:${lineOf(match.index)} ${match[0].replace(/\s+/g, ' ')}`);
 }
 
-test('T-5B-23: no runtime file of DATA writes a 0008 table through a REPLACE conflict path or INSERT OR IGNORE', () => {
+test('T-5B-23: no runtime file of DATA writes a 0012 table through a REPLACE conflict path or INSERT OR IGNORE', () => {
     const files = runtimeFiles();
     for (const file of [GROUP_REPOSITORY_FILE, 'server/database/repositories.js', 'scripts/migrate.js', 'server.js']) assert.ok(files.includes(file), `${file} is scanned`);
     assert.ok(!files.some(file => file.startsWith(MIGRATIONS_DIRECTORY)), 'the migrations directory is excluded');
     assert.deepEqual(files.flatMap(file => conflictPathHits(file, readDataFile(file))), []);
     assert.deepEqual(conflictPathHits(path.basename(__filename), fs.readFileSync(__filename, 'utf8')), [], 'this file does not match itself');
-    // The matcher: each form and each 0008 table is reported with the line of its first keyword.
+    // The matcher: each form and each 0012 table is reported with the line of its first keyword.
     const R = REPLACE_KEYWORD;
     const I = IGNORE_KEYWORD;
-    for (const table of TABLES_0008) {
+    for (const table of TABLES_0012) {
         for (const statement of [`${R} INTO ${table}`, `INSERT OR ${R} INTO ${table}`, `UPDATE OR ${R} ${table}`, `INSERT OR ${I} INTO ${table}`]) {
             assert.deepEqual(conflictPathHits('server/probe.js', `const sql = '${statement} (a) VALUES (?)';`), [`server/probe.js:1 ${statement}`], statement);
         }

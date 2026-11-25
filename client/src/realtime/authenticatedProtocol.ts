@@ -1,6 +1,14 @@
 import { decode, exact, identifier, parseEnvelope, timestamp } from '@/security/e2ee/protocol';
 import type { EnvelopeV2 } from '@/security/e2ee/model';
 import type { PersistenceAck } from '@/security/e2ee/session';
+import type { BuzzEvent } from '../../../shared/buzz';
+
+export function buzzEvent(input: unknown): BuzzEvent {
+  const r = exact(input, ['id', 'conversationId', 'userId', 'displayName', 'timestamp']);
+  identifier(r.id); identifier(r.conversationId); identifier(r.userId); timestamp(r.timestamp);
+  if (typeof r.displayName !== 'string' || !r.displayName.trim() || r.displayName.length > 160 || /[\u0000-\u001f\u007f-\u009f]/u.test(r.displayName)) throw new Error('Invalid Buzz');
+  return r as unknown as BuzzEvent;
+}
 
 export const ACK_CODES = ['invalid_payload', 'unauthorized_conversation', 'rate_limited', 'unavailable',
   'message_not_found', 'actor_mismatch', 'idempotency_conflict', 'recipient_keys_unavailable', 'policy_denied'] as const;
@@ -28,6 +36,15 @@ export interface Receipt { conversationId: string; messageId: string; userId: st
 export interface TypingUpdate { conversationId: string; userId: string; displayName: string; isTyping: boolean; timestamp: string }
 export interface PresenceUpdate { userId: string; status: 'online' | 'away' | 'busy' | 'offline' | 'unknown'; timestamp: string }
 export interface KeysChanged { conversationId: string; currentEpoch: { keyId: string; epoch: number } | null }
+export interface MessageDeleted { conversationId: string; messageId: string }
+export function pinsChanged(input: unknown): { conversationId: string } {
+  const value=exact(input,['conversationId']);identifier(value.conversationId);return value as unknown as {conversationId:string};
+}
+
+export function messageDeleted(input: unknown): MessageDeleted {
+  const value = exact(input, ['conversationId', 'messageId']); identifier(value.conversationId); identifier(value.messageId);
+  return value as unknown as MessageDeleted;
+}
 
 export function errorAck(input: unknown): void {
   if (input && typeof input === 'object' && 'status' in input && input.status === 'error') {

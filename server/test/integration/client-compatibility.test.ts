@@ -5,6 +5,7 @@
  * The injected socket factory only adds the Origin and Cookie headers a browser would send.
  */
 import assert from 'node:assert/strict';
+import { BUZZ_SEND_EVENT, BUZZ_RECEIVED_EVENT } from '../../../shared/buzz.ts';
 import { after, afterEach, before, describe, test } from 'node:test';
 import { io as connectClient } from 'socket.io-client';
 import { tsImport } from 'tsx/esm/api';
@@ -103,20 +104,30 @@ describe('Phase 8.7A SocketIoRealtimeClient against the realtime server', () => 
     for (const adapter of adapters.splice(0)) adapter.dispose();
   });
 
-  test('the server registers exactly the client contract event names', () => {
+  test('the server preserves the legacy contract with explicit authenticated extensions', () => {
     const names = clientModule.PROPOSED_EVENT_NAMES;
     assert.deepEqual(
       [names.messageSend, names.messageRead, names.typingStart, names.typingStop, names.presenceSubscribe],
-      Object.values(CLIENT_EVENTS),
+      Object.values(CLIENT_EVENTS).filter(name => name !== BUZZ_SEND_EVENT),
     );
     assert.deepEqual(
       [names.messageNew, names.messageAck, names.messageDelivered, names.messageReadReceipt, names.typingUpdate, names.presenceUpdate, names.conversationUpdated],
-      Object.values(SERVER_EVENTS).filter((name) => name !== 'conversation:keys-changed'),
+      Object.values(SERVER_EVENTS).filter((name) => name !== 'conversation:keys-changed' && name !== 'message:deleted' && name !== 'message:edited' && name !== 'conversation:pins-changed' && name !== 'message:reactions-changed' && name !== BUZZ_RECEIVED_EVENT),
     );
-    // The only server event the Phase 8.7A client contract does not list. A client that has no
+    // Optional authenticated hints the Phase 8.7A client contract does not list. A client that has no
     // listener ignores it (Socket.IO drops unhandled events), so it cannot break an older client.
     assert.equal(SERVER_EVENTS.conversationKeysChanged, 'conversation:keys-changed');
     assert.equal(Object.values(names).includes('conversation:keys-changed'), false);
+    assert.equal(SERVER_EVENTS.messageDeleted, 'message:deleted');
+    assert.equal(SERVER_EVENTS.messageEdited,'message:edited');assert.equal(Object.values(names).includes('message:edited'),false);
+    assert.equal(Object.values(names).includes('message:deleted'), false);
+    assert.equal(SERVER_EVENTS.pinsChanged, 'conversation:pins-changed');
+    assert.equal(Object.values(names).includes('conversation:pins-changed'), false);
+    assert.equal(SERVER_EVENTS.reactionsChanged,'message:reactions-changed');assert.equal(Object.values(names).includes('message:reactions-changed'),false);
+    assert.equal(CLIENT_EVENTS.buzzSend, BUZZ_SEND_EVENT);
+    assert.equal(SERVER_EVENTS.buzzReceived, BUZZ_RECEIVED_EVENT);
+    assert.equal((Object.values(names) as readonly string[]).includes(BUZZ_SEND_EVENT), false);
+    assert.equal((Object.values(names) as readonly string[]).includes(BUZZ_RECEIVED_EVENT), false);
     assert.deepEqual(model.SERVER_ACK_ERROR_CODES, ACK_ERROR_CODES);
     assert.deepEqual(model.SERVER_CONNECT_ERROR_CODES, CONNECT_ERROR_CODES);
     for (const code of ACK_ERROR_CODES) {

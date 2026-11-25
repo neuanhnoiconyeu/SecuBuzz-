@@ -1,6 +1,6 @@
 # DATA schema and ERD
 
-Current working-tree schema is version 8 (`0008-groups.sql`); its additive group
+Current working-tree schema is version 12 (`0012-groups.sql`); its additive group
 schema is documented below. The existing DB-4B key schema is unchanged:
 `0007-recipient-keys.sql` adds DeviceKeys
 (public signing/agreement points, self-signature, account ownership, stable deviceId,
@@ -84,9 +84,9 @@ erDiagram
 
 Encryption metadata is stored unchanged: algorithm, version, encoding, IV, ciphertext including its tag, sender name, client timestamp and type. The server stores no private keys or decrypted message content. Legacy ciphertext has no authenticated sender-name/client-timestamp metadata; those fields remain NULL and must not be invented or passed off as a modern envelope. Modern format/base64 validation and key-distribution verification remain the Security/Realtime owner's responsibility.
 
-## Version 8 group migration
+## Version 12 group migration
 
-`0008-groups.sql` is the DB-5B draft migration. It adds sibling group tables and guards without rebuilding or changing any pre-existing row or value. Versions 1-7 remain unchanged. Applying the schema does not enable Group Chat, File Sharing or any feature gate. Messages and attachments remain in their existing shared tables; this migration changes no E2EE, key distribution or realtime security design.
+`0012-groups.sql` is the DB-5B draft migration. It adds sibling group tables and guards without rebuilding or changing any pre-existing row or value. Versions 1-7 remain unchanged. Applying the schema does not enable Group Chat, File Sharing or any feature gate. Messages and attachments remain in their existing shared tables; this migration changes no E2EE, key distribution or realtime security design.
 
 | Version | Migration file |
 | --- | --- |
@@ -97,8 +97,12 @@ Encryption metadata is stored unchanged: algorithm, version, encoding, IV, ciphe
 | 5 | `0005-conversation-provenance.sql` |
 | 6 | `0006-encrypted-message-lifecycle.sql` |
 | 7 | `0007-recipient-keys.sql` |
-| 8 | `0008-groups.sql` |
-| 9 | `0009-attachment-lifecycle.sql` |
+| 8 | `0008-authenticated-message-pins.sql` |
+| 9 | `0009-authenticated-message-reactions.sql` |
+| 10 | `0010-encrypted-attachments.sql` |
+| 11 | `0011-encrypted-message-revisions.sql` |
+| 12 | `0012-groups.sql` |
+| 13 | `0013-attachment-lifecycle.sql` |
 
 ### Added tables
 
@@ -165,9 +169,9 @@ The backfill inserts one extension for every group conversation of both origins:
 
 Schema presence is not authorization. The repository exposes a managed group only when kind is group, origin is authenticated and an extension exists. Active authorized members retain earlier permitted intervals after rejoining; absence gaps never become visible. `all` additionally allows sequences before the first join. Former members and never-members receive no history. Server filtering does not replace key-based confidentiality; E2EE and realtime security remain under their existing contracts.
 
-## Version 9 attachment lifecycle migration
+## Version 13 attachment lifecycle migration
 
-`0009-attachment-lifecycle.sql` extends the existing shared `Attachments` table; it does not create a second attachment store. It adds nullable `integrity_digest`, `expires_at`, `deleted_at`, `declared_algorithm`, and `declared_format_version` columns, plus `purge_state` defaulting to `not_purged` with the values `not_purged` and `purged`. Existing attachment columns and values are preserved. The migration also creates `AttachmentReservations` with restrictive foreign keys and indexes for reservation lookups and expiry.
+`0013-attachment-lifecycle.sql` extends the existing shared `Attachments` table; it does not create a second attachment store. It adds nullable `integrity_digest`, `deleted_at`, `declared_algorithm`, and `declared_format_version` columns, plus `purge_state` defaulting to `not_purged` with the values `not_purged` and `purged`. `expires_at` is added by `0010-encrypted-attachments.sql` and is not repeated. Existing attachment columns and values are preserved. The migration also creates `AttachmentReservations` with restrictive foreign keys and indexes for reservation lookups and expiry. Its triggers are scoped to canonical rows (`e2ee_version IS NULL`), so main's encrypted-attachment rows and triggers remain authoritative.
 
 The database does not validate the `storage_key` format, recompute `integrity_digest` from private-storage bytes, or interpret descriptor identifiers (`declared_algorithm` and `declared_format_version`). The migration constrains a non-NULL digest to 64 lowercase hexadecimal characters and bounds non-NULL descriptor lengths to 1..64 characters; the storage provider and service validate keys and verify byte digests.
 

@@ -6,6 +6,7 @@ import { MessageComposer } from '@/components/messenger/MessageComposer';
 import { MessageList } from '@/components/messenger/MessageList';
 import { useConversationMessages } from '@/hooks/useConversationMessages';
 import { ForwardDialog } from '@/components/messenger/ForwardDialog';
+import { ReplyPreview } from '@/components/messenger/ReplyPreview';
 import type { ChatMessage, MessageAttachment, PresenceStatus, VoiceMessageMetadata } from '@/messaging/messageModel';
 import type { MessagingTransport } from '@/messaging/transport';
 import { createAttachmentUploader } from '@/messaging/attachmentUpload';
@@ -223,9 +224,9 @@ const handleSendMessage = useCallback(async (
   }, [onBuzz, playBuzzSound]);
 
   const handleForwardConfirm = useCallback(
-  (targetIds: string[], note: string) =>
+  (targetIds: string[], note: string, operationId: string) =>
     forwardingMessage
-      ? forwardMessage(forwardingMessage, targetIds, note)
+      ? forwardMessage(forwardingMessage, targetIds, note, operationId)
       : Promise.resolve({ succeeded: [] as string[], failed: targetIds }),
   [forwardMessage, forwardingMessage],
   );
@@ -269,53 +270,19 @@ const handleSendMessage = useCallback(async (
         onReplyMessage={(message) => setReplyingTo(message)}
         onEditMessage={editMessage}
         canEditMessage={canEdit}
-        onDeleteMessage={removeMessage}
-        {...(canUnsend ? { onUnsendMessage: (messageId: string) => void unsendMessage(messageId) } : {})}
-        onTogglePin={togglePin}
-        onToggleReaction={toggleReaction}
+        {...(transportMode === 'local-demo' ? { onDeleteMessage: removeMessage, onTogglePin: togglePin, onToggleReaction: toggleReaction } : {})}
+        {...(canUnsend ? { onUnsendMessage: unsendMessage } : {})}
         {...((forwardTargets?.length ?? 0) > 0 ? { onForwardMessage: setForwardingMessage } : {})}
       />
 
       <p className="chat-typing-status" role="status" aria-live="polite" aria-atomic="true">
         {typingUsers.length > 0 && `${typingUsers.map((user) => user.displayName).slice(0, 3).join(', ')}${typingUsers.length > 3 ? ' and others' : ''} ${typingUsers.length === 1 ? 'is' : 'are'} typing…${transportMode === 'local-demo' ? ' · simulated' : ''}`}
       </p>
-      {replyingTo && (
-        <div
-          className="reply-preview-banner"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '6px 12px',
-            background: 'rgba(139, 92, 246, 0.12)',
-            borderTop: '1px solid rgba(139, 92, 246, 0.3)',
-            fontSize: '0.8rem',
-          }}
-        >
-          <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-            <strong>Replying to {replyingTo.senderName}: </strong>
-            <span>{replyingTo.content}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setReplyingTo(null)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'inherit',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              padding: '0 6px',
-            }}
-            aria-label="Cancel reply"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      {replyingTo && <ReplyPreview message={replyingTo} onCancel={() => setReplyingTo(null)} />}
 
       <MessageComposer
         key={`composer:${conversationId}`}
+        active={presentationActive}
         conversationName={contactName}
         messageCount={messages.length}
         disabled={!identityReady || !securityStatus?.localEncryptionAvailable || transport?.canSendMessages === false}

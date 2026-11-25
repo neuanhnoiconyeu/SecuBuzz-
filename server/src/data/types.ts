@@ -80,6 +80,7 @@ export interface DataAdapters {
 }
 
 export interface DataApplication {
+  readonly setDirectCallTokenHandler?: (handler:((req:import('node:http').IncomingMessage,res:import('node:http').ServerResponse)=>Promise<boolean>)|null)=>void;
   readonly auth: DataAuth;
   readonly adapters: DataAdapters;
   readonly conversations: DataConversations;

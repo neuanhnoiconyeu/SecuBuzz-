@@ -41,26 +41,26 @@ function createAttachmentRepository(db) {
     const read = operation => readFunction(operation);
     const write = name => operation => writeFunction(db, name, operation);
     const expiredPending = db.prepare(`SELECT * FROM Attachments
-        WHERE status='pending' AND expires_at<=? ORDER BY expires_at,attachment_id LIMIT ?`);
+        WHERE e2ee_version IS NULL AND status='pending' AND expires_at<=? ORDER BY expires_at,attachment_id LIMIT ?`);
     const purgeCandidates = db.prepare(`SELECT * FROM Attachments
-        WHERE status='deleted' AND purge_state='not_purged' AND deleted_at<=?
+        WHERE e2ee_version IS NULL AND status='deleted' AND purge_state='not_purged' AND deleted_at<=?
         ORDER BY deleted_at,attachment_id LIMIT ?`);
     const expiredReservations = db.prepare(`SELECT * FROM AttachmentReservations
         WHERE expires_at<=? ORDER BY expires_at,reservation_id LIMIT ?`);
     const deleteExpiredReservation = db.prepare(`DELETE FROM AttachmentReservations
         WHERE reservation_id=? AND expires_at<=? RETURNING reservation_id`);
     const reconciliationRows = db.prepare(`SELECT attachment_id,storage_key,status FROM Attachments
-        WHERE (? IS NULL OR attachment_id>?) ORDER BY attachment_id LIMIT ?`);
-    const storageKeyExists = db.prepare('SELECT 1 AS present FROM Attachments WHERE storage_key=? LIMIT 1');
+        WHERE e2ee_version IS NULL AND (? IS NULL OR attachment_id>?) ORDER BY attachment_id LIMIT ?`);
+    const storageKeyExists = db.prepare('SELECT 1 AS present FROM Attachments WHERE e2ee_version IS NULL AND storage_key=? LIMIT 1');
 
     return Object.freeze({
-        getById: read(id => repositories.attachments.get(identifier(id))),
+        getById: read(id => db.prepare('SELECT * FROM Attachments WHERE attachment_id=? AND e2ee_version IS NULL').get(identifier(id)) || null),
         messageUsage: read(messageId => {
             identifier(messageId);
             return db.prepare(`SELECT count(*) AS count,coalesce(sum(byte_size),0) AS bytes FROM Attachments
-                WHERE message_id=?`).get(messageId);
+                WHERE e2ee_version IS NULL AND message_id=?`).get(messageId);
         }),
-        searchHighWater: read(() => db.prepare("SELECT coalesce(max(rowid),0) AS value FROM Attachments WHERE status='ready'").get().value),
+        searchHighWater: read(() => db.prepare("SELECT coalesce(max(rowid),0) AS value FROM Attachments WHERE e2ee_version IS NULL AND status='ready'").get().value),
         searchPage: read((filters, options) => {
             inputFields(filters, ['conversationId','uploadedBy','minBytes','maxBytes','createdAfter','createdBefore']);
             inputFields(options, ['after','highWater','limit']);
@@ -80,7 +80,7 @@ function createAttachmentRepository(db) {
             if(filters.createdBefore!==undefined)parameters.createdBefore=isoTime(filters.createdBefore);
             return db.prepare(`SELECT a.*
                 FROM Attachments AS a INDEXED BY idx_attachments_search
-                WHERE a.status='ready' AND a.rowid<=@highWater
+                WHERE a.e2ee_version IS NULL AND a.status='ready' AND a.rowid<=@highWater
                     AND (@afterTime IS NULL OR a.created_at<@afterTime OR (a.created_at=@afterTime AND a.attachment_id<@afterId))
                     AND (@conversationId IS NULL OR a.conversation_id=@conversationId)
                     AND (@uploadedBy IS NULL OR a.uploaded_by=@uploadedBy)
@@ -93,16 +93,16 @@ function createAttachmentRepository(db) {
         usageForUser: read(userId => {
             identifier(userId);
             return db.prepare(`SELECT coalesce(sum(byte_size),0) AS bytes FROM Attachments
-                WHERE uploaded_by=? AND status IN ('pending','ready')`).get(userId).bytes;
+                WHERE e2ee_version IS NULL AND uploaded_by=? AND status IN ('pending','ready')`).get(userId).bytes;
         }),
         usageForConversation: read(conversationId => {
             identifier(conversationId);
             return db.prepare(`SELECT coalesce(sum(byte_size),0) AS bytes FROM Attachments
-                WHERE conversation_id=? AND status IN ('pending','ready')`).get(conversationId).bytes;
+                WHERE e2ee_version IS NULL AND conversation_id=? AND status IN ('pending','ready')`).get(conversationId).bytes;
         }),
         pendingCountForUser: read(userId => {
             identifier(userId);
-            return db.prepare("SELECT count(*) AS count FROM Attachments WHERE uploaded_by=? AND status='pending'").get(userId).count;
+            return db.prepare("SELECT count(*) AS count FROM Attachments WHERE e2ee_version IS NULL AND uploaded_by=? AND status='pending'").get(userId).count;
         }),
         reservationUsage: read(nowIso => {
             isoTime(nowIso);
@@ -159,7 +159,7 @@ function createAttachmentRepository(db) {
             if (!Array.isArray(ids) || ids.length === 0) throw new RepositoryError('INVALID');
             ids.forEach(identifier); identifier(messageId); isoTime(at);
             const associateOne = db.prepare(`UPDATE Attachments SET status='ready',message_id=?,updated_at=?
-                WHERE attachment_id=? AND status='pending' AND message_id IS NULL RETURNING *`);
+                WHERE attachment_id=? AND e2ee_version IS NULL AND status='pending' AND message_id IS NULL RETURNING *`);
             const rows = [];
             for (const id of ids) rows.push(compareAndSet(associateOne, messageId, at, id));
             return rows;
@@ -167,12 +167,12 @@ function createAttachmentRepository(db) {
         markDeleted: write('markDeleted')((id, at) => {
             identifier(id); isoTime(at);
             return compareAndSet(db.prepare(`UPDATE Attachments SET status='deleted',deleted_at=?,updated_at=?
-                WHERE attachment_id=? AND status IN ('pending','ready') RETURNING *`), at, at, id);
+                WHERE attachment_id=? AND e2ee_version IS NULL AND status IN ('pending','ready') RETURNING *`), at, at, id);
         }),
         markPurged: write('markPurged')(id => {
             identifier(id);
             return compareAndSet(db.prepare(`UPDATE Attachments SET purge_state='purged'
-                WHERE attachment_id=? AND status='deleted' AND purge_state='not_purged' RETURNING *`), id);
+                WHERE attachment_id=? AND e2ee_version IS NULL AND status='deleted' AND purge_state='not_purged' RETURNING *`), id);
         })
     });
 }

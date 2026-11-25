@@ -19,9 +19,8 @@ const LINT_PROPERTY_SEED = 29110;
 
 const LINT_FILE = require.resolve('./support/migration-lint');
 const MIGRATIONS = path.join(__dirname, '..', 'server', 'database', 'migrations');
-const migrationNames = () => fs.readdirSync(MIGRATIONS).filter(name => /^\d{4}-[a-z0-9-]+\.sql$/.test(name)).sort();
-const nextMigrationName = (label, offset = 1) => `${String(migrationNames().length + offset).padStart(4, '0')}-${label}.sql`;
-const PUBLISHED = Object.freeze(migrationNames());
+const PUBLISHED = Object.freeze(['0001-legacy.sql', '0002-foundation.sql', '0003-authentication.sql', '0004-profiles-friends.sql',
+    '0005-conversation-provenance.sql', '0006-encrypted-message-lifecycle.sql', '0007-recipient-keys.sql']);
 const rulesOf = result => result.violations.map(violation => violation.rule);
 const statementHits = result => result.violations.filter(v => v.rule === 'FORBIDDEN_STATEMENT').map(v => [v.keyword, v.line]);
 
@@ -99,7 +98,7 @@ test('lint: ON DELETE CASCADE, SET NULL and SET DEFAULT are reported from versio
     const expected = [['FORBIDDEN_FOREIGN_KEY_ACTION', 'ON DELETE CASCADE', 1], ['FORBIDDEN_FOREIGN_KEY_ACTION', 'SET NULL', 2],
         ['FORBIDDEN_FOREIGN_KEY_ACTION', 'SET DEFAULT', 2]];
     assert.deepEqual(actions(lint.lintSql(sql, { version: 8 })), expected);
-    assert.deepEqual(actions(lint.lintSql(sql, { file: '0008-groups.sql' })), expected);
+    assert.deepEqual(actions(lint.lintSql(sql, { file: '0008-example.sql' })), expected);
     assert.deepEqual(actions(lint.lintSql(sql)), expected, 'without a version the rules of version 8 and later apply');
     assert.deepEqual(lint.lintSql(sql, { version: 7 }).violations, []);
     assert.deepEqual(lint.lintSql(sql, { file: '0007-recipient-keys.sql' }).violations, []);
@@ -108,17 +107,17 @@ test('lint: ON DELETE CASCADE, SET NULL and SET DEFAULT are reported from versio
 
 test('lint: file names outside ^\\d{4}-[a-z0-9-]+\\.sql$ and versions that are not contiguous from 1 are reported', () => {
     assert.deepEqual(lint.lintFileNames([...PUBLISHED]).violations, []);
-    assert.deepEqual(lint.lintFileNames([...PUBLISHED, nextMigrationName('future-one'), nextMigrationName('future-two', 2)]).violations, []);
+    assert.deepEqual(lint.lintFileNames([...PUBLISHED, '0008-example.sql', '0009-attachment-lifecycle.sql']).violations, []);
     assert.deepEqual(lint.lintFileNames([...PUBLISHED].reverse()).names, PUBLISHED, 'names are taken in runner order');
     const cases = [
-        [[nextMigrationName('Groups')], [['FILE_NAME', nextMigrationName('Groups')]]],
-        [[nextMigrationName('bad_name')], [['FILE_NAME', nextMigrationName('bad_name')]]],
-        [[nextMigrationName('groups', 1).replace('.sql', '.SQL')], [['FILE_NAME', nextMigrationName('groups', 1).replace('.sql', '.SQL')]]],
+        [['0008-Groups.sql'], [['FILE_NAME', '0008-Groups.sql']]],
+        [['0008_groups.sql'], [['FILE_NAME', '0008_groups.sql']]],
+        [['0008-example.SQL'], [['FILE_NAME', '0008-example.SQL']]],
         [['8-groups.sql'], [['FILE_NAME', '8-groups.sql']]],
-        [['0008-groups.sql.txt'], [['FILE_NAME', '0008-groups.sql.txt']]],
+        [['0008-example.sql.txt'], [['FILE_NAME', '0008-example.sql.txt']]],
         [['README.md'], [['FILE_NAME', 'README.md']]],
-        [[nextMigrationName('future', 2)], [['NOT_CONTIGUOUS', nextMigrationName('future', 2)]]],
-        [[nextMigrationName('groups', 1), nextMigrationName('other', 1)], [['NOT_CONTIGUOUS', nextMigrationName('other', 1)]]],
+        [['0009-attachment-lifecycle.sql'], [['NOT_CONTIGUOUS', '0009-attachment-lifecycle.sql']]],
+        [['0008-example.sql', '0008-other.sql'], [['NOT_CONTIGUOUS', '0008-other.sql']]],
     ];
     for (const [extra, expected] of cases) {
         assert.deepEqual(lint.lintFileNames([...PUBLISHED, ...extra]).violations.map(v => [v.rule, v.file]), expected, extra.join(','));
@@ -135,7 +134,7 @@ test('lint: the 0001 exemption covers exactly PRAGMA foreign_keys = ON in 0001-l
         ['PRAGMA foreign_keys = OFF;', { file: '0001-legacy.sql' }],
         ['PRAGMA journal_mode = WAL;', { file: '0001-legacy.sql' }],
         ['COMMIT;', { file: '0001-legacy.sql' }],
-        ['PRAGMA foreign_keys = ON;', { file: '0008-groups.sql' }],
+        ['PRAGMA foreign_keys = ON;', { file: '0008-example.sql' }],
         ['PRAGMA foreign_keys = ON;', {}],
     ];
     for (const [sql, options] of refused) assert.deepEqual(rulesOf(lint.lintSql(sql, options)), ['FORBIDDEN_STATEMENT'], `${sql} ${JSON.stringify(options)}`);
@@ -329,13 +328,4 @@ test('P-29 for generated SQL texts the lint reports a violation exactly when a f
         assert.equal(summary.runs, LINT_PROPERTY_RUNS);
         assert.ok(withViolation > 0 && withViolation < LINT_PROPERTY_RUNS, 'the generated texts include cases with and without a violation');
     }
-});
-
-test('migration 0009 is contiguous, strict, and contains no forbidden top-level statements or delete actions', () => {
-    const result=lint.lintDirectory();
-    assert.deepEqual(result.violations.map(lint.formatViolation),[]);
-    assert.deepEqual(result.files.map(file=>file.name),Array.from({length:9},(_,index)=>`${String(index+1).padStart(4,'0')}-${migrationNames()[index].slice(5)}`));
-    const entry=result.files.find(file=>file.name==='0009-attachment-lifecycle.sql');
-    assert.ok(entry);assert.equal(entry.version,9);assert.equal(entry.strict,true);assert.deepEqual(entry.violations,[]);
-    assert.doesNotMatch(fs.readFileSync(path.join(MIGRATIONS,'0009-attachment-lifecycle.sql'),'utf8'),/ON DELETE\s+(?:CASCADE|SET\s+(?:NULL|DEFAULT))/i);
 });

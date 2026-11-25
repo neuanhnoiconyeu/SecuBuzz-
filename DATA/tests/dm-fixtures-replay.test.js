@@ -10,6 +10,16 @@ const fs = require('node:fs');
 const { createHash } = require('node:crypto');
 const { BASELINE, DIRECT_OUTPUT, DIRECT_FAMILIES, DIRECT_SCENARIOS, directHeader } = require('./support/record-baseline');
 
+// Keep the historical recording immutable. Phase 11 intentionally changes only
+// the authenticated V1 sender-edit response: V1 is ineligible, so it is 404.
+function phase11Expected(scenario) {
+    return fixture.entries.filter(entry => entry.scenario === scenario).map(entry => {
+        if (entry.id !== 'v1.lifecycle.edit-by-sender') return entry;
+        assert.equal(entry.status,503); assert.equal(entry.code,'FEATURE_UNAVAILABLE');
+        return { ...entry, status:404, code:'NOT_FOUND', body:{code:'NOT_FOUND',fields:[]} };
+    });
+}
+
 const recorded = fs.readFileSync(DIRECT_OUTPUT, 'utf8');
 const fixture = JSON.parse(recorded);
 const digest = () => createHash('sha256').update(fs.readFileSync(DIRECT_OUTPUT)).digest('hex');
@@ -33,7 +43,7 @@ test('the direct-message fixture is the d7cd40a recording with its masking rule 
 for (const scenario of DIRECT_SCENARIOS) {
     test(`direct-message routes answer as at d7cd40a: ${scenario.name}`, async t => {
         const before = digest();
-        const expected = fixture.entries.filter(entry => entry.scenario === scenario.name);
+        const expected = phase11Expected(scenario.name);
         const replayed = await scenario.run(t, { expected });
         assert.equal(replayed.length, expected.length, `${scenario.name} replayed ${replayed.length} of ${expected.length} recorded entries`);
         assert.equal(digest(), before, 'the replay leaves the fixture file unchanged');
@@ -280,7 +290,7 @@ test('P-19: seeded populated groups cannot enter direct routes or change the fro
         await t.test(info.line,async child => {
             try {
                 const scenario = DIRECT_SCENARIOS[info.run % DIRECT_SCENARIOS.length]; scenarios.add(scenario.name);
-                const expected = fixture.entries.filter(entry => entry.scenario === scenario.name);
+                const expected = phase11Expected(scenario.name);
                 let populated, database, groupDigest;
                 const replayed = await scenario.run(child,{ expected, populate:async (f,{ conversationId }) => {
                     populated = populate(f,conversationId,model,info.run); database = f.db;

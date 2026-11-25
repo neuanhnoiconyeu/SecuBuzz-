@@ -140,7 +140,7 @@ export class RealtimeMessagingTransport implements MessagingTransport {
   async deleteMessage(conversationId: string, messageId: string) {
     this.assertConversation(conversationId);
     if (!messageId) throw new RealtimeOperationError('invalid_payload');
-    if (!this.client.canSendMessages) throw new RealtimeOperationError('recipient_keys_unavailable');
+    if (this.mode !== 'local-demo' || !this.client.canSendMessages) throw new RealtimeOperationError('recipient_keys_unavailable');
   }
 
   async editMessage(
@@ -152,7 +152,7 @@ export class RealtimeMessagingTransport implements MessagingTransport {
     this.assertConversation(conversationId);
     if (!messageId || !encryption || !editedAt) throw new RealtimeOperationError('invalid_payload');
     // Real transport: needs server support for message:edit, so it stays blocked like deleteMessage.
-    if (this.mode !== 'local-demo' && !this.client.canSendMessages) {
+    if (this.mode !== 'local-demo' || !this.client.canSendMessages) {
       throw new RealtimeOperationError('recipient_keys_unavailable');
     }
     // Local demo: no real recipient, replay to subscribed views.

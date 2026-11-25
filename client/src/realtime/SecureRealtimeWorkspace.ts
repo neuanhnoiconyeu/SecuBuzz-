@@ -1,11 +1,15 @@
 import { ApiError } from '@/api/sessionApi';
 import { securityMessage } from '@/security/e2ee/api';
-import { E2eeError, type DirectConversation, type EnvelopeV2 } from '@/security/e2ee/model';
+import { E2eeError, type DirectConversation, type EnvelopeV2, type StoredMessage } from '@/security/e2ee/model';
 import { SecureMessagingSession, type DecryptedRow, type SendProgress } from '@/security/e2ee/session';
 import { AuthenticatedSocketIoClient, type LiveConnection } from './AuthenticatedSocketIoClient';
 import { SocketFailure, type PresenceUpdate, type Receipt, type TypingUpdate } from './authenticatedProtocol';
+import { AuthenticatedPins } from '@/messaging/authenticatedPins';
+import { AuthenticatedReactions } from '@/messaging/authenticatedReactions';
+import type { BuzzEvent } from '../../../shared/buzz';
 
 export interface SecureLiveState {
+  buzz?: BuzzEvent;
   connection: LiveConnection; conversations: DirectConversation[]; rows: Record<string, DecryptedRow[]>;
   cursors: Record<string, string | null>; unread: Record<string, number>; typing: Record<string, TypingUpdate>;
   presence: Record<string, PresenceUpdate>; receipts: Record<string, Receipt>; keyVersions: Record<string, number>;
@@ -18,7 +22,15 @@ export function mergeSecureRows(previous: readonly DecryptedRow[], incoming: rea
   const rows = new Map(previous.map(row => [row.message.id, row]));
   for (const row of incoming) {
     const old = rows.get(row.message.id);
+    if(old&&(old.message.storageId!==row.message.storageId||old.message.sequence!==row.message.sequence||old.message.storedAt!==row.message.storedAt))throw new E2eeError('invalid_message');
+    if (old?.message.state === 'deleted' && row.message.state !== 'deleted') continue;
     if (old && old.message.state === 'active' && row.message.state === 'active' && wire(old.message as EnvelopeV2) !== wire(row.message as EnvelopeV2)) throw new E2eeError('invalid_message');
+    if(old&&old.message.state==='active'&&row.message.state==='active'){
+      const before=old.message.edit?.proofs??[],next=row.message.edit?.proofs??[];
+      if(next.length<before.length||(!old.error&&row.error))continue;
+      if(before.some((p,i)=>JSON.stringify(p.proof)!==JSON.stringify(next[i]?.proof))||
+        (next.length===before.length&&before.length&&JSON.stringify(old.message.edit?.envelope)!==JSON.stringify(row.message.edit?.envelope)))throw new E2eeError('invalid_message');
+    }
     if (!old || row.message.revision >= old.message.revision) rows.set(row.message.id, row);
   }
   return [...rows.values()].sort((a, b) => a.message.sequence - b.message.sequence);
@@ -28,6 +40,8 @@ export function mergeSecureRows(previous: readonly DecryptedRow[], incoming: rea
  * Decrypted messages, receipts, presence and socket references are discarded on disposal. */
 export class SecureRealtimeWorkspace {
   readonly transport: AuthenticatedSocketIoClient;
+  readonly pins: AuthenticatedPins;
+  readonly reactions: AuthenticatedReactions;
   private active = true;
   private listeners = new Set<() => void>();
   private selected: string | null = null;
@@ -36,6 +50,9 @@ export class SecureRealtimeWorkspace {
   private typingTimer: ReturnType<typeof setTimeout> | undefined;
   private typingExpiry = new Map<string, ReturnType<typeof setTimeout>>();
   private syncing = new Map<string, { dirty: boolean; promise: Promise<void> }>();
+  private deletionHints = new Map<string, Set<string>>();
+  private editHints = new Map<string,Set<string>>();
+  private refreshLoaded = new Set<string>();
   private refreshing: Promise<void> | undefined;
   private readDone = new Set<string>();
   private readInFlight = new Set<string>();
@@ -46,6 +63,8 @@ export class SecureRealtimeWorkspace {
     typing: {}, presence: {}, receipts: {}, keyVersions: {}, errors: {}, synchronized: 0 };
   constructor(readonly session: SecureMessagingSession, origin: string,
     factory?: ConstructorParameters<typeof AuthenticatedSocketIoClient>[3]) {
+    this.pins = new AuthenticatedPins(session);
+    this.reactions = new AuthenticatedReactions(session.api.session);
     this.transport = new AuthenticatedSocketIoClient(session.api.session, {
       connection: status => {
         this.update({ connection: status, ...(status !== 'connected' ? { typing: {}, presence: {} } : {}) });
@@ -56,7 +75,24 @@ export class SecureRealtimeWorkspace {
         void this.session.revalidate(e.conversationId).catch(error => this.fail(e.conversationId, error));
       },
       receipt: e => this.observeReceipt(e), typing: e => this.observeTyping(e), presence: e => this.observePresence(e),
+      buzz: event => { if (this.allowed(event.conversationId)) this.update({ buzz: event }); },
       updated: () => { void this.refresh().catch(e => this.fail('', e)); },
+      deleted: event => {
+        if (!this.allowed(event.conversationId)) return;
+        const hints = this.deletionHints.get(event.conversationId) ?? new Set<string>();
+        hints.add(event.messageId); this.deletionHints.set(event.conversationId, hints);
+        void this.sync(event.conversationId).catch(e => this.fail(event.conversationId, e));
+        void this.pins.refresh(event.conversationId).catch(() => {});
+        void this.reactions.refresh(event.conversationId).catch(() => {});
+      },
+      edited:event=>{
+        if(!this.allowed(event.conversationId))return;
+        const hints=this.editHints.get(event.conversationId)??new Set<string>();hints.add(event.messageId);this.editHints.set(event.conversationId,hints);
+        this.refreshLoaded.add(event.conversationId);void this.sync(event.conversationId).catch(e=>this.fail(event.conversationId,e));
+        void this.pins.refresh(event.conversationId).catch(()=>{});
+      },
+      pins: event => { if (this.allowed(event.conversationId)) void this.pins.refresh(event.conversationId).catch(() => {}); },
+      reactions: event => { if (this.allowed(event.conversationId)) void this.reactions.refresh(event.conversationId).catch(() => {}); },
     }, origin, factory);
   }
   getSnapshot = (): SecureLiveState => this.state;
@@ -78,6 +114,10 @@ export class SecureRealtimeWorkspace {
     this.interval = setInterval(() => { if (this.active) void this.refresh().catch(e => this.fail('', e)); }, 15000);
   }
   reconnect() { this.transport.reconnect(); if (this.transport.connected) void this.reconcile().catch(e => this.fail('', e)); }
+  buzz(cid: string): Promise<BuzzEvent> {
+    if (!this.allowed(cid)) return Promise.reject(new SocketFailure('unauthorized_conversation'));
+    return this.transport.buzz(cid);
+  }
   refresh(): Promise<void> {
     if (this.refreshing) return this.refreshing;
     const run = async () => {
@@ -91,10 +131,13 @@ export class SecureRealtimeWorkspace {
       const added = conversations.some(c => c.interactionAllowed && !this.state.conversations.some(old => old.id === c.id && old.interactionAllowed));
       for (const c of this.state.conversations) if (c.interactionAllowed && !authorized.has(c.id)) {
         this.accessVersions.set(c.id, this.accessVersion(c.id) + 1);
+        this.deletionHints.delete(c.id);this.editHints.delete(c.id); this.refreshLoaded.delete(c.id);
       }
       const retain = <T,>(entries: Record<string, T>) => Object.fromEntries(Object.entries(entries).filter(([id]) => authorized.has(id)));
       const receipts = Object.fromEntries(Object.entries(this.state.receipts).filter(([, r]) => authorized.has(r.conversationId)));
       const peers = new Set(conversations.filter(c => c.interactionAllowed).flatMap(c => c.participants.map(p => p.id)));
+      this.pins.authorize(conversations);
+      this.reactions.authorize(conversations);
       this.update({ conversations, rows: retain(this.state.rows), cursors: retain(this.state.cursors), unread: retain(this.state.unread),
         typing: retain(this.state.typing), receipts, presence: Object.fromEntries(Object.entries(this.state.presence).filter(([id]) => peers.has(id))) });
       this.transport.setScopes(conversations);
@@ -109,7 +152,10 @@ export class SecureRealtimeWorkspace {
     for (const conversation of this.state.conversations) {
       if (!conversation.interactionAllowed) continue;
       try { await this.session.revalidate(conversation.id); } catch (e) { this.fail(conversation.id, e); }
+      this.refreshLoaded.add(conversation.id);
       await this.sync(conversation.id).catch(() => { /* One unavailable history must not prevent other authorized conversations from recovering. */ });
+      await this.pins.refresh(conversation.id, true).catch(() => {});
+      await this.reactions.refresh(conversation.id).catch(() => {});
     }
     this.update({ synchronized: this.state.synchronized + 1 });
   }
@@ -125,18 +171,26 @@ export class SecureRealtimeWorkspace {
       do {
         job.dirty = false;
         const version = this.accessVersion(cid), known = this.state.rows[cid] ?? [], anchors = new Set(known.map(r => r.message.id));
+        const targets = new Set([...(this.deletionHints.get(cid)??[]),...(this.editHints.get(cid)??[])]), refreshLoaded = this.refreshLoaded.has(cid);
+        const oldest = known.length ? Math.min(...known.map(row => row.message.sequence)) : undefined;
         let cursor: string | undefined, headCursor: string | null = null, fetched: DecryptedRow[] = [], completed = false;
         for (let page = 0; page < 200; page++) {
           const history = await this.session.history(cid, cursor);
           if (!this.active || version !== this.accessVersion(cid) || !this.allowed(cid)) return;
           if (page === 0) headCursor = history.nextCursor;
           fetched = mergeSecureRows(fetched, history.items);
-          if (!known.length || !history.nextCursor || history.items.some(r => anchors.has(r.message.id))) { completed = true; break; }
+          const targetReached = [...targets].every(id => fetched.some(row => row.message.id === id));
+          const loadedReached = !refreshLoaded || oldest === undefined || history.items.some(row => row.message.sequence <= oldest);
+          if (!history.nextCursor || (targetReached && loadedReached && (!known.length || history.items.some(r => anchors.has(r.message.id))))) { completed = true; break; }
           cursor = history.nextCursor;
         }
         if (!completed) throw new ApiError('resource_limit');
+        for (const id of targets) if (fetched.some(row => row.message.id === id && row.message.state === 'deleted')) this.deletionHints.get(cid)?.delete(id);
+        for(const id of targets)if(fetched.some(row=>row.message.id===id&&!row.error))this.editHints.get(cid)?.delete(id);
+        if (refreshLoaded && !job.dirty) this.refreshLoaded.delete(cid);
         const current = this.state.rows[cid] ?? [], rows = mergeSecureRows(current, fetched);
-        const newPeerRows = fetched.filter(r => r.message.senderId !== this.session.api.session.actor.id && !anchors.has(r.message.id));
+        const newest = known.length ? Math.max(...known.map(row => row.message.sequence)) : 0;
+        const newPeerRows = fetched.filter(r => r.message.state === 'active' && r.message.senderId !== this.session.api.session.actor.id && !anchors.has(r.message.id) && r.message.sequence > newest);
         const unread = this.visible && this.selected === cid ? 0 : (this.state.unread[cid] ?? 0) +
           (current.length === 0 ? 0 : newPeerRows.filter(r => !this.liveSeen.has(key(cid, r.message.id))).length);
         this.update({ rows: { ...this.state.rows, [cid]: rows }, cursors: { ...this.state.cursors,
@@ -147,6 +201,17 @@ export class SecureRealtimeWorkspace {
     };
     job.promise = run().catch(e => { this.fail(cid, e); throw e; }).finally(() => this.syncing.delete(cid));
     this.syncing.set(cid, job); return job.promise;
+  }
+  /** Only called with a validated tombstone returned by the existing authenticated Unsend API. */
+  acceptUnsend(message: StoredMessage): void {
+    if (!this.allowed(message.conversationId) || message.state !== 'deleted' || message.encryption !== null) return;
+    const cid = message.conversationId, rows = mergeSecureRows(this.state.rows[cid] ?? [], [{ message, text: null, error: null }]);
+    this.deletionHints.get(cid)?.delete(message.id);
+    this.update({ rows: { ...this.state.rows, [cid]: rows } });
+  }
+  acceptEdit(row:DecryptedRow):void{
+    if(!this.allowed(row.message.conversationId)||row.message.state!=='active'||row.error)return;
+    const cid=row.message.conversationId;this.update({rows:{...this.state.rows,[cid]:mergeSecureRows(this.state.rows[cid]??[],[row])}});
   }
   async older(cid: string): Promise<void> {
     const cursor = this.state.cursors[cid]; if (!cursor || !this.allowed(cid)) return;
@@ -212,21 +277,21 @@ export class SecureRealtimeWorkspace {
       this.update({ keyVersions: { ...this.state.keyVersions, [cid]: (this.state.keyVersions[cid] ?? 0) + 1 } });
     } else if (error instanceof SocketFailure && error.code === 'unauthorized_conversation') await this.refresh().catch(() => {});
   }
-  async send(cid: string, name: string, text: string, mode: 'live' | 'rest', progress: SendProgress) {
+  async send(cid: string, name: string, text: string, mode: 'live' | 'rest', progress: SendProgress,messageId?:string) {
     if (!this.allowed(cid)) throw new ApiError('forbidden'); this.stopTyping();
     try {
-      const result = await this.session.send(cid, name, text, mode === 'live' ? this.transport.send : undefined, progress);
-      progress('Persisted — delivery pending'); await this.sync(cid); return result;
+      const result = messageId ? await this.session.send(cid,name,text,mode==='live'?this.transport.send:undefined,progress,messageId) : await this.session.send(cid, name, text, mode === 'live' ? this.transport.send : undefined, progress);
+      progress('Persisted — delivery pending'); await this.sync(cid).catch(e=>this.fail(cid,e)); return result;
     } catch (e) { await this.sendFailure(cid, e); throw e; }
   }
   async retry(cid: string, mode: 'live' | 'rest', progress: SendProgress) {
-    try { const result = await this.session.retryPending(cid, mode === 'live' ? this.transport.send : undefined, progress); await this.sync(cid); return result; }
+    try { const result = await this.session.retryPending(cid, mode === 'live' ? this.transport.send : undefined, progress); await this.sync(cid).catch(e=>this.fail(cid,e)); return result; }
     catch (e) { await this.sendFailure(cid, e); throw e; }
   }
   dispose() {
-    this.stopTyping(); this.active = false; this.transport.dispose();
+    this.stopTyping(); this.active = false; this.transport.dispose(); this.pins.dispose(); this.reactions.dispose();
     if (this.interval) clearInterval(this.interval); for (const timer of this.typingExpiry.values()) clearTimeout(timer);
-    this.accessVersions.clear(); this.typingExpiry.clear(); this.listeners.clear(); this.liveSeen.clear(); this.readDone.clear(); this.readInFlight.clear();
+    this.accessVersions.clear(); this.deletionHints.clear();this.editHints.clear(); this.refreshLoaded.clear(); this.typingExpiry.clear(); this.listeners.clear(); this.liveSeen.clear(); this.readDone.clear(); this.readInFlight.clear();
     this.state = { connection: 'offline', rows: {}, conversations: [], cursors: {}, typing: {}, presence: {}, receipts: {},
       errors: {}, unread: {}, keyVersions: {}, synchronized: 0 };
   }

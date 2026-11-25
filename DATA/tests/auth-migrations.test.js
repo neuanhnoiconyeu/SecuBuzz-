@@ -21,7 +21,7 @@ test('version 2 upgrades without altering applied checksums, legacy users, conta
     const tables=['Users','Contacts','Messages','SecurityLogs'];
     const before=Object.fromEntries(tables.map(table=>[table,db.prepare(`SELECT * FROM ${table}`).all()]));
     const history=db.prepare('SELECT * FROM SchemaMigrations ORDER BY version').all();
-    assert.deepEqual(migrate(db).applied,['0003-authentication.sql','0004-profiles-friends.sql','0005-conversation-provenance.sql','0006-encrypted-message-lifecycle.sql','0007-recipient-keys.sql','0008-groups.sql','0009-attachment-lifecycle.sql']);
+    assert.deepEqual(migrate(db).applied,['0003-authentication.sql','0004-profiles-friends.sql','0005-conversation-provenance.sql','0006-encrypted-message-lifecycle.sql','0007-recipient-keys.sql','0008-authenticated-message-pins.sql','0009-authenticated-message-reactions.sql','0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql','0013-attachment-lifecycle.sql']);
     for(const table of tables) assert.deepEqual(db.prepare(`SELECT * FROM ${table}`).all(),table==='Messages'
         ? before[table].map(row=>({...row,origin:'legacy',message_seq:null,deleted_at:null,revision:0,key_id:null})) : before[table]);
     assert.deepEqual(db.prepare('SELECT * FROM SchemaMigrations WHERE version<=2 ORDER BY version').all(),history);

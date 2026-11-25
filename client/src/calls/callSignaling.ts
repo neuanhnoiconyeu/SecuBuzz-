@@ -1,6 +1,8 @@
 import type { CallClientEventName, CallClearedEvent, CallSnapshot } from '../../../shared/directCalls';
 import { LIVEKIT_CALL_ID } from '../../../shared/livekit';
 import { isBoundedText, isIdentifier, isTimestamp } from '@/realtime/realtimeValidation';
+import type {RealtimeClient} from '@/realtime/realtimeModel';
+export type DirectCallSignalingClient=Pick<RealtimeClient,'calls'|'mode'|'actorId'|'getStatus'|'subscribe'>;
 
 export interface CallSignalingPort {
   getConnectionId(): string | null;

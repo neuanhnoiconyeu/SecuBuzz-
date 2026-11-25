@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui';
 import type { ChatMessage } from '@/messaging/messageModel';
+import { createClientMessageId } from '@/messaging/messageState';
 
 const MAX_RECIPIENTS = 5;
 
@@ -14,7 +15,7 @@ interface ForwardDialogProps {
   message: ChatMessage | null;
   conversations: ForwardTarget[];
   onClose(): void;
-  onConfirm(conversationIds: string[], note: string): Promise<{ failed: string[] }>;
+  onConfirm(conversationIds: string[], note: string, operationId: string): Promise<{ failed: string[]; noteFailed?: string[] }>;
 }
 
 export function ForwardDialog({ message, conversations, onClose, onConfirm }: ForwardDialogProps) {
@@ -24,12 +25,18 @@ export function ForwardDialog({ message, conversations, onClose, onConfirm }: Fo
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [completed, setCompleted] = useState<string[]>([]);
+  const [attempted, setAttempted] = useState(false);
+  const operationId = useRef('');
+  const submitLock = useRef(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (message && !dialog.open) {
       setQuery(''); setSelected([]); setNote(''); setError('');
+      setCompleted([]); setAttempted(false);
+      operationId.current = createClientMessageId();
       dialog.showModal();
     } else if (!message && dialog.open) {
       dialog.close();
@@ -49,32 +56,44 @@ export function ForwardDialog({ message, conversations, onClose, onConfirm }: Fo
   };
 
   const submit = async () => {
-    if (!selected.length || busy) return;
+    if (!selected.length || submitLock.current) return;
+    submitLock.current = true;
     setBusy(true);
+    setAttempted(true);
     setError('');
     try {
-      const { failed } = await onConfirm(selected, note.trim());
+      const { failed, noteFailed = [] } = await onConfirm(selected, note.trim(), operationId.current);
+      setCompleted(previous => [...new Set([...previous, ...selected.filter(id => !failed.includes(id))])]);
       if (failed.length === 0) {
         onClose();
       } else {
-        const names = conversations.filter((c) => failed.includes(c.id)).map((c) => c.displayName).join(', ');
+        const names = (ids: string[]) => ids.map(id => conversations.find(c => c.id === id)?.displayName ?? 'Unavailable conversation').join(', ');
+        const forwardFailed = failed.filter(id => !noteFailed.includes(id));
         setSelected(failed);
-        setError(`Could not send to: ${names}. Try again.`);
+        setError([
+          forwardFailed.length ? `Could not forward to: ${names(forwardFailed)}.` : '',
+          noteFailed.length ? `The message was forwarded to ${names(noteFailed)}, but the optional note was not confirmed.` : '',
+          'Retry resumes unfinished sends without forwarding completed messages again.',
+        ].filter(Boolean).join(' '));
       }
+    } catch {
+      setError('Forwarding could not be completed. Retry to resume unfinished sends.');
     } finally {
+      submitLock.current = false;
       setBusy(false);
     }
   };
 
   return (
-    <dialog ref={dialogRef} className="ui-dialog forward-dialog" onClose={onClose} aria-labelledby="forward-title">
+    <dialog ref={dialogRef} className="ui-dialog forward-dialog" onClose={onClose}
+      onCancel={event => { if (submitLock.current) event.preventDefault(); }} aria-labelledby="forward-title">
       <div className="ui-dialog-panel">
         <div className="ui-dialog-header">
           <div>
             <h2 className="ui-dialog-title" id="forward-title">Forward to</h2>
             <p className="ui-dialog-description">Choose up to {MAX_RECIPIENTS} conversations.</p>
           </div>
-          <Button variant="ghost" size="sm" className="ui-dialog-close" onClick={onClose} aria-label="Close">
+          <Button variant="ghost" size="sm" className="ui-dialog-close" disabled={busy} onClick={onClose} aria-label="Close">
             <X size={16} aria-hidden="true" />
           </Button>
         </div>
@@ -103,12 +122,14 @@ export function ForwardDialog({ message, conversations, onClose, onConfirm }: Fo
                 <li key={c.id}>
                   <button
                     type="button"
+                    disabled={busy || completed.includes(c.id)}
                     className={`forward-target ${isSelected ? 'is-selected' : ''}`}
                     aria-pressed={isSelected}
                     onClick={() => toggle(c.id)}
                   >
                     <span className="ui-avatar ui-avatar--sm" aria-hidden="true">{initials}</span>
                     <span className="forward-target-name">{c.displayName}</span>
+                    {completed.includes(c.id) && <span className="forward-count">Sent</span>}
                     <span className="forward-check" aria-hidden="true">{isSelected && <Check size={12} />}</span>
                   </button>
                 </li>
@@ -121,6 +142,7 @@ export function ForwardDialog({ message, conversations, onClose, onConfirm }: Fo
             className="ui-input"
             placeholder="Add a message (optional)…"
             value={note}
+            disabled={busy || attempted}
             onChange={(e) => setNote(e.target.value)}
             aria-label="Optional message"
           />

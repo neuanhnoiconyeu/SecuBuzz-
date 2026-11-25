@@ -4,7 +4,12 @@ import type { DirectConversation, EnvelopeV2 } from '@/security/e2ee/model';
 import { exact, parseEnvelope } from '@/security/e2ee/protocol';
 import type { PersistenceAck } from '@/security/e2ee/session';
 import type { SocketPort } from './SocketIoRealtimeClient';
-import { errorAck, incomingEnvelope, keysChanged, persistenceAck, presenceUpdate, receipt, SocketFailure, typingUpdate,
+import {CALL_CLIENT_EVENT_NAMES,CALL_SERVER_EVENTS} from '../../../shared/directCalls';
+import {parseCallSnapshot,parseCallCleared,type CallSignalingPort} from '@/calls/callSignaling';
+import type {RealtimeEvent,RealtimeConnectionStatus} from './realtimeModel';
+import { BUZZ_SEND_EVENT, BUZZ_RECEIVED_EVENT, type BuzzEvent } from '../../../shared/buzz';
+import { buzzEvent } from './authenticatedProtocol';
+import { errorAck, incomingEnvelope, keysChanged, messageDeleted, pinsChanged, persistenceAck, presenceUpdate, receipt, SocketFailure, typingUpdate,
   type KeysChanged, type PresenceUpdate, type Receipt, type TypingUpdate } from './authenticatedProtocol';
 
 export type LiveConnection = 'connecting' | 'connected' | 'reconnecting' | 'offline' | 'auth_failed';
@@ -14,6 +19,7 @@ export interface AuthenticatedSocketOptions {
   auth: { csrfToken: string };
 }
 export interface LiveHandlers {
+  buzz?(event: BuzzEvent): void;
   connection(state: LiveConnection): void;
   message(envelope: EnvelopeV2): Promise<boolean>;
   keys(event: KeysChanged): void;
@@ -21,6 +27,10 @@ export interface LiveHandlers {
   typing(event: TypingUpdate): void;
   presence(event: PresenceUpdate): void;
   updated(conversationId: string): void;
+  deleted?(event: { conversationId: string; messageId: string }): void;
+  edited?(event:{conversationId:string;messageId:string}):void;
+  pins?(event: { conversationId: string }): void;
+  reactions?(event: { conversationId: string; messageId: string }): void;
 }
 type Factory = (url: string, options: AuthenticatedSocketOptions) => SocketPort;
 const defaultFactory: Factory = (url, options) => io(url, options) as unknown as SocketPort;
@@ -30,6 +40,20 @@ const MAX_ATTEMPTS = 6;
 /** Real-account v2 adapter. Every attempt uses a new manager and fresh scoped CSRF proof.
  * No Socket.IO offline buffer, automatic message retries, client room joins or identity claims. */
 export class AuthenticatedSocketIoClient {
+  readonly mode='realtime' as const;
+  get actorId(){return this.api.actor.id;}
+  private readonly callListeners=new Set<(event:'state'|'cleared',value:unknown)=>void>();
+  private readonly statusListeners=new Set<(event:RealtimeEvent)=>void>();
+  getStatus=():RealtimeConnectionStatus=>this.state==='offline'?'disconnected':this.state==='auth_failed'?'error':this.state;
+  subscribe=(listener:(event:RealtimeEvent)=>void)=>{if(this.disposed)return()=>{};this.statusListeners.add(listener);return()=>{this.statusListeners.delete(listener);};};
+  readonly calls:CallSignalingPort={
+    getConnectionId:()=>this.connected?this.socket?.id??null:null,
+    request:(event,body)=>{
+      if(!CALL_CLIENT_EVENT_NAMES.has(event)||this.pending.size>=20)return Promise.reject(new SocketFailure('unavailable'));
+      return this.operation(event,body,value=>value);
+    },
+    subscribe:listener=>{if(this.disposed)return()=>{};this.callListeners.add(listener);return()=>{this.callListeners.delete(listener);};},
+  };
   private socket: SocketPort | undefined;
   private disposed = false;
   private generation = 0;
@@ -39,6 +63,7 @@ export class AuthenticatedSocketIoClient {
   private deadline: ReturnType<typeof setTimeout> | undefined;
   private scopes = new Map<string, Set<string>>();
   private peers = new Set<string>();
+  private buzzSeen = new Set<string>();
   private pending = new Set<() => void>();
   private bindings: Array<[string, (...args: unknown[]) => void]> = [];
   private typingAt = new Map<string, number>();
@@ -51,7 +76,9 @@ export class AuthenticatedSocketIoClient {
       !(process.env.NODE_ENV !== 'production' && url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)))) throw new ApiError('unavailable');
   }
   get connected(): boolean { return !this.disposed && this.state === 'connected' && this.socket?.connected === true; }
-  private setState(state: LiveConnection) { this.state = state; if (!this.disposed) this.handlers.connection(state); }
+  private setState(state: LiveConnection) { this.state = state; if (!this.disposed) {
+    this.handlers.connection(state);for(const listener of this.statusListeners){try{listener({type:'connection',status:this.getStatus()});}catch{/* Isolate call consumers. */}}
+  } }
   setScopes(conversations: readonly DirectConversation[]): void {
     const previous = this.scopes;
     this.scopes = new Map(conversations.filter(c => c.interactionAllowed && c.participants.some(p => p.id === this.api.actor.id))
@@ -133,7 +160,20 @@ export class AuthenticatedSocketIoClient {
         }).catch(() => { /* No delivery claim after a failed decrypt or authorization check. */ });
       });
       validated('conversation:keys-changed', keysChanged, e => { if (this.allowed(e.conversationId)) this.handlers.keys(e); });
+      for(const event of ['state','cleared'] as const)bind(CALL_SERVER_EVENTS[event],value=>{
+        if(!this.connected)return;const parsed=event==='state'?parseCallSnapshot(value,this.api.actor.id):parseCallCleared(value);if(!parsed)return;
+        for(const listener of this.callListeners){try{listener(event,parsed);}catch{/* Isolate consumers. */}}
+      });
+      validated('message:deleted', messageDeleted, e => { if (this.allowed(e.conversationId)) this.handlers.deleted?.(e); });
+      validated('message:edited',messageDeleted,e=>{if(this.allowed(e.conversationId))this.handlers.edited?.(e);});
+      validated('conversation:pins-changed', pinsChanged, e => { if (this.allowed(e.conversationId)) this.handlers.pins?.(e); });
+      validated('message:reactions-changed', messageDeleted, e => { if (this.allowed(e.conversationId)) this.handlers.reactions?.(e); });
       validated('typing:update', typingUpdate, e => { if (e.userId !== this.api.actor.id && this.allowed(e.conversationId, e.userId)) this.handlers.typing(e); });
+      validated(BUZZ_RECEIVED_EVENT, buzzEvent, e => {
+        if (e.userId === this.api.actor.id || !this.allowed(e.conversationId, e.userId) || this.buzzSeen.has(e.id) || Math.abs(Date.now() - Date.parse(e.timestamp)) > 30_000) return;
+        this.buzzSeen.add(e.id); if (this.buzzSeen.size > 100) this.buzzSeen.delete(this.buzzSeen.values().next().value!);
+        this.handlers.buzz?.(e);
+      });
       validated('presence:update', presenceUpdate, e => { if (this.peers.has(e.userId)) this.handlers.presence(e); });
       for (const status of ['delivered', 'read'] as const) validated('message:' + status, r => receipt(r, status), e => {
         if (e.userId !== this.api.actor.id && this.allowed(e.conversationId, e.userId)) this.handlers.receipt(e);
@@ -182,6 +222,14 @@ export class AuthenticatedSocketIoClient {
       if (r.conversationId !== cid || r.messageId !== id || r.userId !== this.api.actor.id) throw new SocketFailure('unavailable'); return r;
     });
   }
+  buzz(cid: string): Promise<BuzzEvent> {
+    if (!this.allowed(cid)) return Promise.reject(new SocketFailure('unauthorized_conversation'));
+    return this.operation(BUZZ_SEND_EVENT, { conversationId: cid }, value => {
+      errorAck(value); const event = buzzEvent(value);
+      if (event.conversationId !== cid || event.userId !== this.api.actor.id) throw new SocketFailure('unavailable');
+      return event;
+    });
+  }
   typing(cid: string): void {
     if (!this.connected || !this.allowed(cid)) return;
     const prior = this.typingAt.get(cid);
@@ -196,5 +244,7 @@ export class AuthenticatedSocketIoClient {
     for (const cid of this.typingAt.keys()) this.stopTyping(cid);
     this.disposed = true; this.generation++; if (this.timer) clearTimeout(this.timer); this.clearSocket();
     this.scopes.clear(); this.peers.clear();
+    this.buzzSeen.clear();
+    this.callListeners.clear();this.statusListeners.clear();
   }
 }

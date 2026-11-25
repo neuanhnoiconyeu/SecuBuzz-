@@ -51,11 +51,11 @@ test('sender deletion creates a stable global tombstone, keeps ciphertext in sto
     assert.equal((await mutate(f.bob,'POST',url+'/read')).status,404);assert.equal(f.db.prepare('SELECT count(*) AS n FROM Messages').get().n,1);
 });
 
-test('editing is explicitly deferred after sender authorization; unauthorized access does not reveal it',async t=>{
+test('legacy V1 messages remain ineligible for encrypted revision edits after sender authorization',async t=>{
     const f=await messagingFixture(t);const {envelope}=await encrypted(f.alice,f.conversationId);const original=(await submit(f,f.alice,envelope)).body.message;
     const url='/api/messages/'+original.storageId;
     assert.equal((await mutate(f.bob,'PATCH',url,{})).status,403);assert.equal((await mutate(f.carol,'PATCH',url,{})).status,404);
-    const own=await mutate(f.alice,'PATCH',url,{});assert.equal(own.status,503);assert.equal(own.body.code,'FEATURE_UNAVAILABLE');
+    const own=await mutate(f.alice,'PATCH',url,{});assert.equal(own.status,404);assert.equal(own.body.code,'NOT_FOUND');
     assert.equal(f.db.prepare('SELECT ciphertext FROM Messages').get().ciphertext,envelope.encryption.ciphertext);
 });
 

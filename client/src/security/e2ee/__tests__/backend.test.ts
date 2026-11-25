@@ -10,6 +10,9 @@ import { ApiError } from '@/api/sessionApi';
 import { SecureMessagingSession } from '../session';
 import { BrowserKeyStore } from '../storage';
 import { encryptV2 } from '../messages';
+import { encodeAuthenticatedContent, decodeAuthenticatedContent } from '@/messaging/authenticatedContent';
+import { AuthenticatedForwarding } from '@/messaging/authenticatedForwarding';
+import { presentMessages } from '@/components/messenger/authenticatedChatPresentation';
 let directory: string;
 const password = 'Isolated client E2EE integration passphrase 2026!';
 let child: ChildProcess, origin: string;
@@ -52,6 +55,70 @@ async function pair() {
   await b.api.request(`/api/friends/requests/${request.request.id}/accept`, { method: 'POST' });
   const c = await a.secure.api.createDirect(b.user.id); return { a, b, c };
 }
+
+test('encrypted reply content round-trips through DATA without changing the V2 envelope or exposing references', async () => {
+  const { a, b, c } = await pair(); await a.secure.initialize(true); await b.secure.initialize(true);
+  const original = await a.secure.send(c.id, 'Alice', 'Original private message');
+  const content = { text: 'Encrypted reply 👩🏽‍💻\nSecond line', reply: { messageId: original.id, senderId: a.user.id } };
+  b.drop();
+  await expect(b.secure.send(c.id, 'Bob', encodeAuthenticatedContent(content))).rejects.toMatchObject({ code: 'unavailable' });
+  const pending = await b.secure.pending(c.id);
+  const sent = (await b.secure.retryPending(c.id))!;
+  expect(sent.id).toBe(pending?.id); expect(sent.encryption).toEqual(pending?.encryption);
+  expect(b.bodies.filter(value => Boolean(value && typeof value === 'object' && 'encryption' in value))).toHaveLength(1);
+  const received = (await a.secure.history(c.id)).items;
+  expect(decodeAuthenticatedContent(received.find(row => row.message.id === sent.id)!.text!)).toEqual(content);
+  const presented = presentMessages(received);
+  expect(presented.messages.find(row => row.id === sent.id)).toMatchObject({ content: content.text, replyTo: { messageId: original.id, senderName: 'Alice', contentSnippet: 'Original private message' } });
+  const posted = b.bodies.find(value => Boolean(value && typeof value === 'object' && 'encryption' in value)) as Record<string, unknown>;
+  expect(Object.keys(posted).sort()).toEqual(['conversationId', 'encryption', 'id', 'senderId', 'senderName', 'timestamp', 'type']);
+  expect(JSON.stringify(posted)).not.toContain(content.text); expect(JSON.stringify(posted)).not.toContain(original.id);
+  const raw = JSON.stringify(await a.secure.api.history(c.id)); expect(raw).not.toContain('Encrypted reply'); expect(raw).not.toContain('Original private message');
+  a.secure.dispose();
+  const restored = new SecureMessagingSession(a.api, new BrowserKeyStore(a.user.id, a.storageName)); sessions.push(restored);
+  expect(presentMessages((await restored.history(c.id)).items).messages.find(row => row.id === sent.id)?.replyTo?.messageId).toBe(original.id);
+}, 20000);
+
+test('forward and optional-note lost acknowledgments resume exactly once using real encrypted pending/history data', async () => {
+  const { a, b, c } = await pair(); await a.secure.initialize(true); await b.secure.initialize(true);
+  await b.secure.send(c.id, 'Bob', 'Incoming text to forward');
+  const source = presentMessages((await a.secure.history(c.id)).items).messages[0]!;
+  const originalSend = a.secure.send.bind(a.secure);
+  let sends = 0;
+  jest.spyOn(a.secure, 'send').mockImplementation(async (...args) => { if (++sends === 2) a.drop(); return originalSend(...args); });
+  const engine = new AuthenticatedForwarding(a.secure), op = randomUUID();
+  expect(await engine.forward(source, [c.id], 'Private optional note', op, 'Alice', 'rest')).toEqual({ failed: [c.id], noteFailed: [c.id] });
+  const pending = await a.secure.pending(c.id); expect(pending).not.toBeNull();
+  const posted = a.bodies.filter(value => Boolean(value && typeof value === 'object' && 'encryption' in value)); expect(posted).toHaveLength(2);
+  const recreated = new AuthenticatedForwarding(a.secure);
+  expect(await recreated.forward(source, [c.id], 'Private optional note', op, 'Alice', 'rest')).toEqual({ failed: [], noteFailed: [] });
+  expect(await a.secure.pending(c.id)).toBeNull(); expect(sends).toBe(2);
+  const rows = (await b.secure.history(c.id)).items, operations = rows.map(row => decodeAuthenticatedContent(row.text!)!).filter(content => content.operation?.id === op);
+  expect(operations).toHaveLength(2); expect(operations.map(value => value.operation?.part).sort()).toEqual(['message', 'note']);
+  expect(operations.find(value => value.forwarded)?.text).toBe(source.content);
+  expect(JSON.stringify(await b.secure.api.history(c.id))).not.toContain('Private optional note');
+}, 20000);
+
+test('forwarding encrypts independently for permitted destinations and rejects a real non-member destination', async () => {
+  const { a, b, c } = await pair(), charlie = await actor('Charlie');
+  for (const user of [a, b, charlie]) await user.secure.initialize(true);
+  for (const user of [a, b]) {
+    const request = await user.api.request('/api/friends/requests', { method: 'POST', body: { userId: charlie.user.id }, status: 201 }) as { request: { id: string } };
+    await charlie.api.request(`/api/friends/requests/${request.request.id}/accept`, { method: 'POST' });
+  }
+  const destination = await a.secure.api.createDirect(charlie.user.id), forbidden = await b.secure.api.createDirect(charlie.user.id);
+  await b.secure.send(c.id, 'Bob', 'Text for separate destination keys');
+  const source = presentMessages((await a.secure.history(c.id)).items).messages[0]!, operation = randomUUID();
+  const result = await new AuthenticatedForwarding(a.secure).forward(source, [c.id, forbidden.id, destination.id], '', operation, 'Alice', 'rest');
+  expect(result).toEqual({ failed: [forbidden.id], noteFailed: [] });
+  const peerRows = (await b.secure.history(c.id)).items, otherRows = (await charlie.secure.history(destination.id)).items;
+  const forwarded = peerRows.find(row => decodeAuthenticatedContent(row.text!)?.forwarded)!, independent = otherRows[0]!;
+  expect(decodeAuthenticatedContent(independent.text!)).toMatchObject({ text: source.content, forwarded: true });
+  expect(independent.message.encryption?.keyId).not.toBe(forwarded.message.encryption?.keyId);
+  expect(independent.message.encryption?.iv).not.toBe(forwarded.message.encryption?.iv);
+  expect(independent.message.encryption?.ciphertext).not.toBe(forwarded.message.encryption?.ciphertext);
+  expect((await b.secure.api.history(forbidden.id)).items).toHaveLength(0);
+}, 30000);
 
 test('socket transport seam shares real encryption and DATA persistence; a lost ack reconciles without REST resubmission', async () => {
   const { a, b, c } = await pair(); await a.secure.initialize(true); await b.secure.initialize(true);

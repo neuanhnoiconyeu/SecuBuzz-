@@ -120,23 +120,14 @@ function rawActorRequest(actor,url,method,rawBody,headers={}) {
     return actor.browser.request(url,{method,rawBody,headers:{'X-CSRF-Token':actor.token,...headers}});
 }
 
-test('attachment routes authenticate, enforce CSRF, then fail closed before rate-limit use while disabled',async t=>{
-    const f=await fixture(t,{enabled:false}),owner=f.actors.owner,anonymous=f.actors.unauthenticated;
+test('canonical attachment API is not mounted while disabled and leaves main encrypted attachments authoritative',async t=>{
+    const f=await fixture(t,{enabled:false}),owner=f.actors.owner;
+    assert.equal(f.application.canonicalAttachments,null,'the canonical DB-6B service stays unset when disabled');
+    assert.equal(f.application.features.attachmentApi,false,'the canonical switch is off');
+    assert.ok(f.application.encryptedAttachments,'main encrypted attachments remain mounted');
     const before=f.limiter.calls.length;
-    const requests=[
-        request(owner,'POST','/api/attachments',{rawBody:Buffer.from('bad'),headers:{'Content-Type':FRAME_CONTENT_TYPE}}),
-        request(owner,'POST','/api/attachments/associations',{body:{bad:true}}),
-        request(owner,'GET','/api/attachments/missing'),
-        request(owner,'GET','/api/attachments/missing/download'),
-        request(owner,'DELETE','/api/attachments/missing'),
-        request(owner,'GET','/api/files/search'),
-    ];
-    const results=await Promise.all(requests);
-    for(const response of results){assertError(response,503,'FEATURE_UNAVAILABLE');assertSecurityHeaders(response);}
-    assert.equal(f.limiter.calls.length,before,'disabled requests do not write limiter buckets');
-    assertError(await request(anonymous,'GET','/api/attachments/unknown'),401,'UNAUTHENTICATED');
-    assertError(await owner.browser.request('/api/attachments/unknown',{method:'DELETE'}),403,'CSRF_INVALID');
-    assert.equal(f.limiter.calls.length,before,'authentication and CSRF refusals precede limiter use');
+    assertError(await request(owner,'GET','/api/files/search'),404,'NOT_FOUND');
+    assert.equal(f.limiter.calls.length,before,'disabled canonical requests do not write limiter buckets');
 });
 
 test('A01 streams a framed upload and A03/A05 preserve uploader-only pending access and deletion',async t=>{
