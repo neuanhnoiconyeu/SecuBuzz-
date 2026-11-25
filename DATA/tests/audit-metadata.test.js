@@ -8,8 +8,13 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const { Readable } = require('node:stream');
+const { createFilesystemProvider } = require('../server/attachments/storage/filesystem');
+const { storageRoot } = require('./support/attachments');
 const { fixture, temporary, users, Database } = require('./support/database');
 const { RepositoryError, translate } = require('../server/database/repositories');
+const { httpGroupFixture, createClock, openLimiter, actorRequest, snapshot } = require('./support/groups');
+const { createGroupService } = require('../server/groups/service');
 
 const ALLOWED_KEYS = ['reason_code', 'operation', 'outcome', 'count', 'duration_ms', 'target_id', 'role'];
 const NEW_KEYS = ['target_id', 'role'];
@@ -154,4 +159,148 @@ test('translate is exported and keeps its error classes for real SQLite errors w
         assert.equal(translate(mapped), mapped, `${label}: a RepositoryError passes through unchanged`);
     }
     db.exec('ROLLBACK');
+});
+
+test('P-30: committed group operations write one safe audit row and refusals write none', {timeout:120000}, async t => {
+    const f=await httpGroupFixture(t,{clock:createClock(),features:{groupApi:true,groups:{directAdd:true,maxMembers:50,
+        maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50}}});
+    const service=createGroupService({db:f.db,auth:f.application.auth,limiter:openLimiter(),features:{groupApi:true,
+        groups:{directAdd:true,maxMembers:50,maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50}},now:f.clock.now});
+    const context=actor=>{
+        const token=actor.browser.cookies.get(f.config.sessionCookie),row=f.application.auth.resolveToken(token).row;
+        return{context:{userId:row.user_id,sessionId:row.session_id},proof:f.application.auth.csrfProof(token,null,actor.token)};
+    };
+    const actors=Object.fromEntries(['owner','admin','member','nonMember','pendingInvitee','removedMember'].map(name=>[name,context(f.actors[name])]));
+    const canary='P30 hostile ../quoted" group name';
+    const stderr=[];const originalWrite=process.stderr.write;
+    process.stderr.write=function(chunk,...args){stderr.push(String(chunk));return originalWrite.call(this,chunk,...args);};
+    let groupId;
+    const groupRows=id=>f.db.prepare("SELECT * FROM AuditLogs WHERE source='groups' AND subject_id=? ORDER BY rowid").all(id);
+    const record=async(label,action)=>{
+        const before=groupId?groupRows(groupId).length:0,result=await action();
+        if(!groupId&&result?.group?.id)groupId=result.group.id;
+        assert.ok(groupId,`${label}: operation produced group id`);
+        const rows=groupRows(groupId);assert.equal(rows.length,before+1,`${label}: one committed audit row`);
+        const row=rows.at(-1);assert.equal(row.source,'groups');assert.equal(row.subject_id,groupId);
+        const metadata=JSON.parse(row.metadata_json);assert.ok(Object.keys(metadata).every(key=>ALLOWED_KEYS.includes(key)),`${label}: allow-listed metadata keys`);
+        for(const value of Object.values(metadata)){
+            if(typeof value==='string')assert.match(value,/^[a-zA-Z0-9_.:-]{1,64}$/,`${label}: safe metadata string`);
+            else assert.ok(typeof value==='number'&&Number.isFinite(value)&&value>=0,`${label}: safe metadata number`);
+        }
+        return result;
+    };
+    try{
+        const created=await record('create',()=>service.createGroup(actors.owner.context,actors.owner.proof,{name:canary,description:canary,historyPolicy:'all'},'203.0.113.9'));
+        groupId=created.group.id;
+        await record('update',()=>service.updateGroup(actors.owner.context,actors.owner.proof,groupId,{name:`${canary} updated`,description:canary}));
+        await record('direct add admin',()=>service.addMember(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.admin.id}));
+        await record('direct add member',()=>service.addMember(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.member.id}));
+        await record('direct add target',()=>service.addMember(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.nonMember.id}));
+        await record('role change',()=>service.changeMemberRole(actors.owner.context,actors.owner.proof,groupId,f.actors.admin.id,{role:'admin'}));
+        const cancelled=await record('invitation create for cancel',()=>service.createInvitation(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.removedMember.id},'203.0.113.9'));
+        await record('invitation cancel',()=>service.cancelInvitation(actors.owner.context,actors.owner.proof,groupId,cancelled.invitation.id));
+        const accepted=await record('invitation create for accept',()=>service.createInvitation(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.removedMember.id},'203.0.113.9'));
+        await record('invitation accept',()=>service.acceptInvitation(actors.removedMember.context,actors.removedMember.proof,accepted.invitation.id));
+        const declined=await record('invitation create for decline',()=>service.createInvitation(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.pendingInvitee.id},'203.0.113.9'));
+        await record('invitation decline',()=>service.declineInvitation(actors.pendingInvitee.context,actors.pendingInvitee.proof,declined.invitation.id));
+        await record('ownership transfer',()=>service.transferOwnership(actors.owner.context,actors.owner.proof,groupId,{userId:f.actors.admin.id}));
+        await record('member removal',()=>service.removeMember(actors.admin.context,actors.admin.proof,groupId,f.actors.nonMember.id));
+        await record('member leave',()=>service.leaveGroup(actors.removedMember.context,actors.removedMember.proof,groupId));
+        await record('archive',()=>service.archiveGroup(actors.admin.context,actors.admin.proof,groupId));
+        const beforeRefusal=groupRows(groupId).length;
+        assert.throws(()=>service.changeMemberRole(actors.member.context,actors.member.proof,groupId,f.actors.owner.id,{role:'admin'}));
+        assert.equal(groupRows(groupId).length,beforeRefusal,'refusal writes no audit row');
+    }finally{process.stderr.write=originalWrite;}
+    const all=groupRows(groupId),serialized=JSON.stringify(all);
+    assert.ok(!serialized.includes(canary),'audit metadata and event rows exclude hostile canary text');
+    assert.ok(!stderr.join('').includes(canary),'stderr excludes hostile canary text');
+    t.diagnostic(`P-30 committedOperations=${all.length} refusedOperations=1`);
+});
+
+test('P-30: stored group messages write one safe audit row and refused canaries write none',{timeout:60000},async t=>{
+    const canary='P30-MESSAGE-CANARY ../" hostile';
+    const verifier=Object.freeze({async verifyEnvelope(){return {verified:true};}});
+    const f=await httpGroupFixture(t,{clock:createClock(),features:{groupApi:true,groupMessaging:true,groups:{directAdd:false,maxMembers:50,
+        maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50}},messageOptions:{groupRecipientKeyVerifier:verifier}});
+    const rows=()=>f.db.prepare("SELECT event_type,metadata_json FROM AuditLogs WHERE source='groups' AND subject_id=? AND event_type LIKE 'message.%' ORDER BY rowid").all(f.groupId);
+    const owner=f.actors.owner,body={id:'p30-message-audit',conversationId:f.groupId,senderId:owner.id,senderName:'Group Owner',
+        timestamp:f.clock.iso(),type:'text',encryption:{version:1,algorithm:'AES-256-GCM',encoding:'base64',iv:Buffer.alloc(12,1).toString('base64'),
+            ciphertext:Buffer.from(canary).toString('base64')}};
+    const stderr=[],write=process.stderr.write;process.stderr.write=function(chunk,...args){stderr.push(String(chunk));return write.call(this,chunk,...args);};
+    try{
+        const stored=await actorRequest(owner,'POST',`/api/groups/${f.groupId}/messages`,{body});assert.equal(stored.status,201);
+        const committed=rows();assert.equal(committed.length,1);assert.equal(committed[0].event_type,'message.stored');
+        const metadata=JSON.parse(committed[0].metadata_json);assert.ok(Object.keys(metadata).every(key=>ALLOWED_KEYS.includes(key)));
+        const before=snapshot(f.db),refused=await actorRequest(owner,'POST',`/api/groups/${f.groupId}/messages`,{body:{content:canary}});
+        assert.equal(refused.status,400);assert.deepEqual(snapshot(f.db),before);assert.equal(rows().length,1,'refused message emits no audit row');
+    }finally{process.stderr.write=write;}
+    assert.ok(!JSON.stringify(rows()).includes(canary),'audit excludes plaintext canary');assert.ok(!stderr.join('').includes(canary),'stderr excludes plaintext canary');
+    t.diagnostic('P-30 group message committed=1 refused=1 safeAudit=1 canaryLeaks=0');
+});
+
+test('P-30: attachment state changes audit once, retention uses an empty actor, and private canaries never reach audit/logs', {timeout:120000}, async t => {
+    const root=storageRoot(t),clock=createClock(),logs=[];
+    const storage=createFilesystemProvider({root,repositoryRoot:path.resolve(__dirname,'../..')});
+    const settings={pendingTtlSeconds:86400,purgeDelaySeconds:86400,retentionIntervalSeconds:3600,
+        quotaUserBytes:1073741824,quotaConversationBytes:5368709120,maxPendingPerUser:10,uploadsPerHour:30,
+        maxConcurrentUploadsPerUser:2,maxConcurrentUploadsPerSource:5};
+    const features={groupApi:true,groupMessaging:false,attachmentApi:true,groups:{maxMembers:50,maxPendingInvitationsPerGroup:20,
+        maxPendingInvitationsPerInvitee:20,directAdd:false},attachments:{...settings,storageDir:root}};
+    const f=await httpGroupFixture(t,{clock,features,storage,env:{AUTH_SESSION_TTL_SECONDS:'172800'},log:line=>logs.push(line),logger:line=>logs.push(line)});
+    const owner=f.actors.owner,sessionToken=owner.browser.cookies.get(f.config.sessionCookie),session=f.application.auth.resolveToken(sessionToken);
+    const context={userId:session.row.user_id,sessionId:session.row.session_id};
+    const proof=f.application.auth.csrfProof(sessionToken,null,owner.token),service=f.application.attachments;
+    const canary='P30-CANARY\n../secret\\C:\\private';
+    const bytes=Buffer.from('synthetic encrypted bytes');
+    const upload=metadata=>service.upload(context,proof,{conversationId:f.groupId,byteSize:bytes.length,encryptedMetadata:metadata,
+        algorithm:'X25519-AESGCM',formatVersion:'v1'},Readable.from([bytes]),'127.0.0.1');
+    const audits=()=>f.db.prepare("SELECT actor_user_id,event_type,source,subject_id,metadata_json FROM AuditLogs WHERE source='attachments' ORDER BY rowid").all();
+    const checkNew=(count,eventType,subject,actor=owner.id)=>{
+        const rows=audits();assert.equal(rows.length,count,`${eventType} adds exactly one audit row`);
+        const row=rows.at(-1);assert.equal(row.event_type,eventType);assert.equal(row.source,'attachments');assert.equal(row.subject_id,subject);
+        assert.equal(row.actor_user_id,actor);
+        const metadata=JSON.parse(row.metadata_json);
+        assert.ok(Object.keys(metadata).every(key=>ALLOWED_KEYS.includes(key)));
+        for(const value of Object.values(metadata))if(typeof value==='string')assert.match(value,/^[a-zA-Z0-9_.:-]{1,64}$/);
+    };
+    const stderr=[],originalWrite=process.stderr.write;
+    process.stderr.write=function(chunk,...args){stderr.push(String(chunk));return originalWrite.call(this,chunk,...args);};
+    try{
+        const first=await upload(canary);checkNew(1,'attachment.uploaded',first.id);
+        const messageId='p30-attachment-audit-message',at=clock.iso();
+        f.repositories.messages.insertAuthenticated({message_id:messageId,conversation_id:f.groupId,sender_id:owner.id,receiver_id:null,
+            ciphertext:'opaque',iv:'opaque',envelope_version:1,encoding:'base64',sender_name:'Synthetic owner',client_timestamp:at,
+            message_type:'text',fingerprint:'c'.repeat(64),client_id:'p30-attachment-audit-client',message_seq:1,created_at:at});
+        service.associate(context,proof,{conversationId:f.groupId,messageId,attachmentIds:[first.id]});
+        checkNew(2,'attachment.associated',first.id);
+        const downloaded=await service.download(context,first.id);let byteCount=0;
+        for await(const chunk of downloaded.stream)byteCount+=chunk.length;
+        assert.equal(byteCount,bytes.length);downloaded.onSent();downloaded.onSent();checkNew(3,'attachment.downloaded',first.id);
+        await service.remove(context,proof,first.id);checkNew(4,'attachment.deleted',first.id);
+
+        const expired=await upload(canary);clock.advance(settings.pendingTtlSeconds*1000+1);
+        const beforeRetention=audits().length,result=await f.application.retentionJob.runOnce();
+        assert.equal(result.expired,1);assert.equal(result.failures,0);
+        const retentionEvents=audits().slice(beforeRetention);
+        assert.equal(retentionEvents.length,2,'expiry and the previously eligible purge each write one audit row');
+        assert.deepEqual(retentionEvents.map(row=>row.event_type).sort(),['attachment.expired','attachment.purged']);
+        assert.ok(retentionEvents.every(row=>row.actor_user_id===null));
+        assert.equal(retentionEvents.find(row=>row.event_type==='attachment.expired').subject_id,expired.id);
+        const unavailable=await upload(canary),row=f.db.prepare('SELECT storage_key FROM Attachments WHERE attachment_id=?').get(unavailable.id);
+        const unavailableMessage='p30-missing-bytes-message',now=clock.iso();
+        f.repositories.messages.insertAuthenticated({message_id:unavailableMessage,conversation_id:f.groupId,sender_id:owner.id,receiver_id:null,
+            ciphertext:'opaque',iv:'opaque',envelope_version:1,encoding:'base64',sender_name:'Synthetic owner',client_timestamp:now,
+            message_type:'text',fingerprint:'d'.repeat(64),client_id:'p30-missing-bytes-client',message_seq:2,created_at:now});
+        service.associate(context,proof,{conversationId:f.groupId,messageId:unavailableMessage,attachmentIds:[unavailable.id]});
+        assert.equal(await storage.delete(row.storage_key),true);
+        await assert.rejects(service.download(context,unavailable.id),error=>error.status===503&&error.code==='SERVICE_UNAVAILABLE');
+        checkNew(10,'attachment.download.unavailable',unavailable.id);
+        const beforeRefusal=audits().length;
+        assert.throws(()=>service.associate(context,proof,{conversationId:f.groupId,messageId:'missing-message',attachmentIds:[unavailable.id]}),error=>error.status===409);
+        assert.equal(audits().length,beforeRefusal,'refused association adds no audit row');
+    }finally{process.stderr.write=originalWrite;}
+    const serialized=JSON.stringify(audits());
+    assert.doesNotMatch(serialized,/P30-CANARY|\.\.\/secret|C:\\\\private/i);
+    assert.doesNotMatch(logs.join('\n'),/P30-CANARY|\.\.\/secret|C:\\\\private/i);
+    assert.doesNotMatch(stderr.join(''),/P30-CANARY|\.\.\/secret|C:\\\\private/i);
 });

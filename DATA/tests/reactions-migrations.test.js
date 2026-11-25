@@ -5,7 +5,7 @@ test('migration 9 preserves phase 6 and all encrypted storage protections and is
     for(const m of loadMigrations().filter(m=>m.version<=8))fs.writeFileSync(path.join(directory,m.name),m.sql);
     migrate(db,{directory});direct(repositories);repositories.messages.insert(encrypted());
     const rows=db.prepare('SELECT * FROM Messages').all(),objects=db.prepare("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'").all();
-    assert.deepEqual(migrate(db).applied,['0009-authenticated-message-reactions.sql','0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql']);
+    assert.deepEqual(migrate(db).applied,['0009-authenticated-message-reactions.sql','0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql','0013-attachment-lifecycle.sql']);
     assert.deepEqual(db.prepare('SELECT * FROM Messages').all(),rows);
     // Migration 10 adds columns to Attachments; its existing columns/FKs are checked in attachments-migrations.
     for(const object of objects.filter(o=>o.name!=='Attachments'))assert.deepEqual(db.prepare('SELECT type,name,sql FROM sqlite_master WHERE name=? AND type=?').get(object.name,object.type),object);

@@ -11,7 +11,7 @@ const currentVersion=loadMigrations().length;
 test('fresh initialization applies ordered migrations, tracks checksums and repeats safely', t => {
     const { db } = fixture(t);
     const history = db.prepare('SELECT * FROM SchemaMigrations ORDER BY version').all();
-    assert.deepEqual(history.map(row => row.version),[1,2,3,4,5,6,7,8,9,10,11,12]);
+    assert.deepEqual(history.map(row => row.version),[1,2,3,4,5,6,7,8,9,10,11,12,13]);
     assert.ok(history.every(row => /^[a-f0-9]{64}$/.test(row.checksum)));
     assert.deepEqual(migrate(db),{version:currentVersion,applied:[]});
     assert.equal(db.prepare('PRAGMA integrity_check').get().integrity_check,'ok');

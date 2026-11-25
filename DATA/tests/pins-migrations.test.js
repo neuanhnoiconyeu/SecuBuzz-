@@ -10,7 +10,7 @@ test('migration 8 is additive, preserves encrypted rows and original protection 
     migrate(db,{directory});direct(repositories);repositories.messages.insert(encrypted());
     const messages=db.prepare('SELECT * FROM Messages').all();
     const protectedObjects=db.prepare("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name").all();
-    assert.deepEqual(migrate(db).applied,['0008-authenticated-message-pins.sql','0009-authenticated-message-reactions.sql','0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql']);
+    assert.deepEqual(migrate(db).applied,['0008-authenticated-message-pins.sql','0009-authenticated-message-reactions.sql','0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql','0013-attachment-lifecycle.sql']);
     assert.deepEqual(db.prepare('SELECT * FROM Messages').all(),messages);
     // Migration 10 adds columns to Attachments; its existing columns/FKs are checked in attachments-migrations.
     for(const object of protectedObjects.filter(o=>o.name!=='Attachments'))assert.deepEqual(db.prepare('SELECT type,name,sql FROM sqlite_master WHERE name=? AND type=?').get(object.name,object.type),object);

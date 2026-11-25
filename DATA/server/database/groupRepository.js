@@ -317,14 +317,16 @@ function createGroupRepository(db) {
         // T-5B-26. Creation participates in the approved membership boundary;
         // the other writes preserve membership and can share that transaction.
         insertGroup:membershipWrite('insertGroup', input => {
-            writeFields(input, ['conversation_id','created_by','title','description','historyPolicy']);
+            writeFields(input, ['conversation_id','created_by','title','description','historyPolicy','at']);
             const { conversation_id, created_by, title, description = null, historyPolicy = 'from_joined' } = input;
+            const at = input.at === undefined ? undefined : writeTime(input.at);
             identifier(created_by); identifier(title);
             if (conversation_id !== undefined) identifier(conversation_id);
             if ((description !== null && typeof description !== 'string') || !HISTORY_POLICIES.includes(historyPolicy)) {
                 throw new RepositoryError('INVALID');
             }
-            const conversation = repositories.conversations.create({ conversation_id, kind:'group', origin:'authenticated', created_by, title });
+            const conversation = repositories.conversations.create({ conversation_id, kind:'group', origin:'authenticated', created_by, title,
+                ...(at === undefined ? {} : {created_at:at,updated_at:at,member_joined_at:at}) });
             const id = conversation.conversation_id;
             compareAndSet(db.prepare(`
                 INSERT INTO GroupExtensions(conversation_id,description,history_policy,membership_revision,created_at)
@@ -531,6 +533,12 @@ function createGroupRepository(db) {
                 SELECT * FROM GroupMembershipIntervals WHERE conversation_id=? AND user_id=? AND left_at IS NULL
             `).get(id, user) ?? null : null;
         }),
+        activeMemberIds:readFunction(id => {
+            identifier(id);
+            return getVisibleGroup(id) ? db.prepare(`
+                SELECT user_id FROM ConversationMembers WHERE conversation_id=? AND left_at IS NULL ORDER BY user_id
+            `).all(id).map(row => row.user_id) : [];
+        }),
         historyPage:readFunction((id, user, options = {}) => {
             identifier(id); identifier(user);
             writeFields(options, ['policy','limit','highWater','before']);
@@ -601,8 +609,7 @@ function createGroupRepository(db) {
         // (design: groupWrite / Concurrency). Revision and audit remain service work.
         addMember:membershipWrite('addMember', (id, user, at) => {
             requireGroup(id); identifier(user); writeTime(at);
-            // The existing insert uses SQLite's clock and accepts no joined_at.
-            // This conditional extension records the supplied first-join instant.
+            // Persist the transaction clock as the member's first-join instant.
             return compareAndSet(db.prepare(`
                 INSERT INTO ConversationMembers(conversation_id,user_id,role,joined_at)
                 SELECT @id,@user,'member',@at WHERE NOT EXISTS(

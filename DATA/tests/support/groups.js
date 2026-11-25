@@ -23,9 +23,7 @@
 // changeRole, endMembership, cancelPendingFor, insertInvitation, upsertReadPosition, claimCreationKey).
 //
 // Determinism (NFR-07): no Math.random and no wall clock in the helper. createClock is a fixed clock that the test
-// advances. Conversations.created_at and ConversationMembers.joined_at still come from their SQLite column defaults until
-// the Group_Repository takes an injected time; the builder copies those values and never compares them with the clock,
-// except that a removal time is never earlier than the member's joined_at. No network beyond the loopback server.
+// advances; group creation, initial membership and intervals use that same timestamp. No network beyond loopback.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -35,7 +33,7 @@ const Database = require('better-sqlite3');
 const { openDatabase } = require('../../server/database/connection');
 const { createRepositories } = require('../../server/database/repositories');
 const { loadMigrations } = require('../../server/database/migrate');
-const { setup } = require('./auth');
+const { setup, Browser } = require('./contract');
 
 // ---------------------------------------------------------------------------------------------------------------
 // Snapshot (P-21; design, Testing Strategy section 3).
@@ -53,8 +51,16 @@ const RUNNER_TABLES = Object.freeze(['SchemaMigrations']); // created by the mig
 const sha256 = text => createHash('sha256').update(text, 'utf8').digest('hex');
 const quoteName = name => `"${String(name).replace(/"/g, '""')}"`;
 const byCodeUnit = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
-const tableNames = db => db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
-    .all().map(row => row.name);
+const tableNameQueries = new WeakMap();
+const digestQueries = new WeakMap();
+function tableNames(db) {
+    let query = tableNameQueries.get(db);
+    if (!query) {
+        query = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
+        tableNameQueries.set(db, query);
+    }
+    return query.all().map(row => row.name);
+}
 
 let publishedTables = null;
 // The tables of version 7: 0001 to 0007 run in order, as the runner runs them, on an in-memory database. The published
@@ -76,33 +82,43 @@ function tablesAtVersion7() {
 }
 
 // created: the tables of db that did not exist at version 7; missing: those of them that SNAPSHOT_TABLES lacks.
-function snapshotCompleteness(db) {
+function missingSnapshotTables(names) {
     const known = new Set([...tablesAtVersion7(), ...RUNNER_TABLES]);
-    const created = tableNames(db).filter(name => !known.has(name));
+    const created = names.filter(name => !known.has(name));
     return { created, missing: created.filter(name => !SNAPSHOT_TABLES.includes(name)) };
 }
-function assertSnapshotComplete(db) {
-    const { missing } = snapshotCompleteness(db);
+function snapshotCompleteness(db) {
+    return missingSnapshotTables(tableNames(db));
+}
+function assertSnapshotNamesComplete(names) {
+    const { missing } = missingSnapshotTables(names);
     if (missing.length) {
         throw new assert.AssertionError({ actual: missing, expected: [], operator: 'snapshotComplete',
             message: `the snapshot list lacks ${missing.join(', ')}, created by a migration after 0007; add it to SNAPSHOT_TABLES in tests/support/groups.js (design P-21)` });
     }
 }
+function assertSnapshotComplete(db) {
+    assertSnapshotNamesComplete(tableNames(db));
+}
 
 // typeof() keeps 1, 1.0, '1' and x'01' apart; integers are read as BigInt, so no value loses precision.
 const encodeValue = value => (typeof value === 'bigint' ? value.toString() : Buffer.isBuffer(value) ? value.toString('hex') : value);
-function tableDigest(db, table) {
-    const columns = db.prepare('SELECT name, pk FROM pragma_table_info(?)').all(table);
-    if (!columns.length) throw new Error(`table ${table} has no columns`);
-    const names = columns.map(column => column.name).sort(byCodeUnit);
-    const key = columns.filter(column => column.pk > 0).sort((a, b) => a.pk - b.pk).map(column => quoteName(column.name));
-    const select = names.map(name => `typeof(${quoteName(name)}), ${quoteName(name)}`).join(', ');
-    const statement = db.prepare(`SELECT ${select} FROM ${quoteName(table)} ORDER BY ${key.length ? key.join(', ') : 'rowid'}`)
-        .raw(true).safeIntegers(true);
+function tableDigest(db, table, queries) {
+    let query = queries.get(table);
+    if (!query) {
+        const columns = db.prepare('SELECT name, pk FROM pragma_table_info(?)').all(table);
+        if (!columns.length) throw new Error(`table ${table} has no columns`);
+        const names = columns.map(column => column.name).sort(byCodeUnit);
+        const key = columns.filter(column => column.pk > 0).sort((a, b) => a.pk - b.pk).map(column => quoteName(column.name));
+        const select = names.map(name => `typeof(${quoteName(name)}), ${quoteName(name)}`).join(', ');
+        query = {names, statement:db.prepare(`SELECT ${select} FROM ${quoteName(table)} ORDER BY ${key.length ? key.join(', ') : 'rowid'}`)
+            .raw(true).safeIntegers(true)};
+        queries.set(table, query);
+    }
     const hash = createHash('sha256');
-    for (const row of statement.iterate()) {
+    for (const row of query.statement.iterate()) {
         const record = {};
-        names.forEach((name, index) => { record[name] = [row[2 * index], encodeValue(row[2 * index + 1])]; });
+        query.names.forEach((name, index) => { record[name] = [row[2 * index], encodeValue(row[2 * index + 1])]; });
         hash.update(`${JSON.stringify(record)}\n`);
     }
     return hash.digest('hex');
@@ -110,10 +126,17 @@ function tableDigest(db, table) {
 // One read transaction, so every hash sees the same database state.
 function snapshot(db) {
     return db.transaction(() => {
-        assertSnapshotComplete(db);
-        const present = new Set(tableNames(db));
+        const names = tableNames(db);
+        assertSnapshotNamesComplete(names);
+        const schemaVersion = db.pragma('schema_version', {simple:true});
+        let cache = digestQueries.get(db);
+        if (!cache || cache.schemaVersion !== schemaVersion) {
+            cache = {schemaVersion, queries:new Map()};
+            digestQueries.set(db, cache);
+        }
+        const present = new Set(names);
         const tables = {};
-        for (const table of SNAPSHOT_TABLES) if (present.has(table)) tables[table] = tableDigest(db, table);
+        for (const table of SNAPSHOT_TABLES) if (present.has(table)) tables[table] = tableDigest(db, table, cache.queries);
         return Object.freeze({ tables:Object.freeze(tables), total:sha256(JSON.stringify(Object.entries(tables))) });
     })();
 }
@@ -254,7 +277,7 @@ function createGroupBuilder({ db, repositories = createRepositories(db), clock =
             idempotencyKey = 'fixture-group-create' } = {}) {
             return write(() => {
                 const group = repositories.conversations.create({ conversation_id:conversationId, kind:'group', title,
-                    created_by:ownerId, origin:'authenticated' });
+                    created_by:ownerId, origin:'authenticated',created_at:clock.iso(),updated_at:clock.iso(),member_joined_at:clock.iso() });
                 const groupId = group.conversation_id;
                 db.prepare(`INSERT INTO GroupExtensions(conversation_id, description, history_policy, membership_revision, created_at)
                     VALUES(?, ?, ?, 1, ?)`).run(groupId, description, historyPolicy, group.created_at);
@@ -270,7 +293,7 @@ function createGroupBuilder({ db, repositories = createRepositories(db), clock =
         // A direct add as member (+1 revision), then a role change to admin when asked (+1 revision).
         addMember(groupId, userId, { role = 'member' } = {}) {
             write(() => {
-                repositories.members.insert({ conversation_id:groupId, user_id:userId, role:'member' });
+                repositories.members.insert({ conversation_id:groupId, user_id:userId, role:'member',joined_at:clock.iso() });
                 openFirstInterval(groupId, userId);
                 bumpRevision(groupId);
                 if (role !== 'member') {
@@ -350,29 +373,59 @@ function groupFixture(t, { clock = createClock(), group = {} } = {}) {
 // HTTP level: the createApp of support/auth.js on loopback with the injected clock and limiter. Every user class is
 // registered and logged in, so it holds a session cookie and a session CSRF token; the unauthenticated class is a
 // browser without cookies.
-async function httpGroupFixture(t, { clock = createClock(), limiter = openLimiter(), group = {}, ...options } = {}) {
+async function httpGroupFixture(t, { clock = createClock(), limiter = openLimiter(), group = {},
+    databaseTemplate = null, actorTemplate = null, createGroup = true, ...options } = {}) {
     const f = await setup(t, { now:clock.now, limiter, ...options });
     guardPath(f.directory);
     guardPath(f.filename);
+    if(databaseTemplate) {
+        guardPath(databaseTemplate);
+        await f.application.close();
+        f.db.close();
+        fs.copyFileSync(databaseTemplate,f.filename);
+        const browser=await f.anotherServer();
+        f.db=f.connections.at(-1);
+        f.application=f.applications.at(-1);
+        f.browser=()=>new Browser(browser.origin,f.config.origins[0]);
+    }
     const actors = { unauthenticated:Object.freeze({ actorClass:'unauthenticated', id:null, username:null, browser:f.browser(), token:null }) };
     for (const actorClass of USER_CLASSES) {
         const browser = f.browser();
         const username = USERNAMES[actorClass];
-        assert.equal((await browser.register(username, { displayName:DISPLAY_NAMES[actorClass] })).status, 201, `register ${actorClass}`);
-        const login = await browser.login(username);
-        assert.equal(login.status, 200, `login ${actorClass}`);
-        actors[actorClass] = Object.freeze({ actorClass, id:login.body.user.id, username, browser, token:await browser.csrf() });
+        if (!actorTemplate) {
+            assert.equal((await browser.register(username, { displayName:DISPLAY_NAMES[actorClass] })).status, 201, `register ${actorClass}`);
+            const login = await browser.login(username);
+            assert.equal(login.status, 200, `login ${actorClass}`);
+            actors[actorClass] = Object.freeze({ actorClass, id:login.body.user.id, username, browser, token:await browser.csrf() });
+        } else {
+            assert.equal(actorTemplate[actorClass]?.username,username,`reused synthetic ${actorClass} fixture identity`);
+            const saved = actorTemplate[actorClass];
+            // databaseTemplate is an immutable, synthetic copy containing these exact sessions. Clone the cookie jar
+            // into the new server origin and verify it against this sequence's database instead of repeating login and
+            // CSRF HTTP round trips for every generated sequence.
+            browser.cookies = new Map(saved.browser.cookies);
+            const sessionToken = browser.cookies.get(f.config.sessionCookie);
+            const session = f.application.auth.resolveToken(sessionToken);
+            assert.equal(session.status,'authenticated',`reused synthetic ${actorClass} session is valid in the isolated database`);
+            assert.equal(session.row.user_id,saved.id,`reused synthetic ${actorClass} session identity`);
+            assert.doesNotThrow(()=>f.application.auth.csrfProof(sessionToken,null,saved.token),`reused synthetic ${actorClass} CSRF proof`);
+            actors[actorClass] = Object.freeze({ actorClass, id:saved.id, username, browser, token:saved.token });
+        }
     }
     const repositories = createRepositories(f.db);
     const builder = createGroupBuilder({ db:f.db, repositories, clock });
-    return { ...f, clock, limiter, repositories, builder, ...buildActorGroup(builder, actors, group), actors:Object.freeze(actors) };
+    const groupFixture= createGroup ? buildActorGroup(builder, actors, group) : {groupId:null,invitationId:null};
+    return { ...f, clock, limiter, repositories, builder, ...groupFixture, actors:Object.freeze(actors) };
 }
 
 // A request as one actor; a state-changing method carries the actor's CSRF token unless csrf is false.
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 function actorRequest(actor, method, url, { body, rawBody, headers = {}, csrf = true } = {}) {
     const proof = csrf && actor.token && !SAFE_METHODS.has(method) ? { 'X-CSRF-Token':actor.token } : {};
-    return actor.browser.request(url, { method, body, rawBody, headers:{ ...proof, ...headers } });
+    return actor.browser.request(url, { method, body, rawBody, headers:{ ...proof, ...headers } }).then(response => {
+        require('./contract').assertGroupResponse(method,url,response);
+        return response;
+    });
 }
 
 // ---------------------------------------------------------------------------------------------------------------

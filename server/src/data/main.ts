@@ -21,10 +21,20 @@ interface StartedData {
   close(): Promise<void>;
 }
 
+/**
+ * DATA builds the one start-failure line (setting names of a FeatureConfigError, or the code and file name of a
+ * MIGRATION_FAILED; never a value, a cause or a path). It is the same line `DATA/server.js` prints (T-5C-06).
+ * Until DATA is loaded, and for a DATA that has no such function, there is no line.
+ */
+type DescribeStartFailure = (error: unknown) => string | null;
+let describeStartFailure: DescribeStartFailure = () => null;
+
 async function main(): Promise<void> {
   const dataRoot = resolve(process.env.DATA_ROOT ?? '../DATA');
   const requireData = createRequire(join(dataRoot, 'package.json'));
   const { startServer } = requireData('./server.js') as { startServer(): Promise<StartedData & Record<string, unknown>> };
+  const { describeStartFailure: describe } = requireData('./server/start.js') as { describeStartFailure?: DescribeStartFailure };
+  if (typeof describe === 'function') describeStartFailure = describe;
   const data = await startServer();
   const bridge = attachRealtimeToData(data.server, data, { logger });
   const address = data.server.address();
@@ -45,6 +55,12 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
+  try {
+    const line = describeStartFailure(error);
+    if (typeof line === 'string') process.stderr.write(`${line.replace(/[\u0000-\u001f\u007f-\u009f]/gu, '?').slice(0, 400)}\n`);
+  } catch {
+    /* The line is best effort; the JSON event below always follows. */
+  }
   logger.log('error', 'realtime.data.start_failed', { name: error instanceof Error ? error.name : 'unknown' });
   process.exitCode = 1;
 });

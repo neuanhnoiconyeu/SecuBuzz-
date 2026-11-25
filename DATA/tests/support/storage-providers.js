@@ -1,0 +1,5 @@
+const fs=require('node:fs');const path=require('node:path');const os=require('node:os');const {Readable}=require('node:stream');const {temporary}=require('./database');const {encode}=require('../../server/attachments/frame');const {createFilesystemProvider}=require('../../server/attachments/storage/filesystem');
+const factories=Object.freeze({filesystem:({root})=>createFilesystemProvider({root,repositoryRoot:path.resolve(__dirname,'../../..')})});
+function assertRegistryComplete(){const dir=path.join(__dirname,'../../server/attachments/storage');const factoriesOnDisk=fs.readdirSync(dir).filter(n=>n.endsWith('.js')&&n!=='provider.js').map(n=>path.basename(n,'.js'));for(const name of factoriesOnDisk)if(!factories[name])throw new Error(`unregistered storage provider: ${name}`);}
+function providers(t){assertRegistryComplete();return Object.entries(factories).map(([name,factory])=>{const root=temporary(t);return {name,root,provider:factory({root})};});}
+module.exports={factories,providers,assertRegistryComplete};

@@ -245,7 +245,7 @@ test('upgrade from version 7: every group of any origin gets one from_joined ext
 
     const result = migrate(db);
     assert.deepEqual(result.applied, laterNames());
-    assert.equal(result.applied.at(-1), '0012-groups.sql');
+    assert.equal(result.applied.at(-1), '0013-attachment-lifecycle.sql');
 
     // DB5-R14.13: one extension row per group conversation of any origin, never for a direct conversation.
     const extensions = db.prepare('SELECT * FROM GroupExtensions ORDER BY conversation_id').all();
