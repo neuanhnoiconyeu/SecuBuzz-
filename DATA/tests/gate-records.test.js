@@ -63,6 +63,28 @@ test('T-5C-48: environment examples keep every Group API and messaging switch of
     assert.doesNotMatch(example, /^GROUP_INVITATION_TTL_SECONDS=/m);
 });
 
+test('T-6B-49: attachment environment example stays off and requires explicit policy configuration',()=>{
+    const example=fs.readFileSync(path.join(DATA,'.env.example'),'utf8');
+    assert.match(example,/^ATTACHMENTS_API_ENABLED=false$/m);
+    assert.match(example,/^ATTACHMENTS_API_GATE_RECORD=$/m);
+    assert.match(example,/^# ATTACHMENT_STORAGE_DIR=$/m);
+    for(const setting of ['ATTACHMENT_PENDING_TTL_SECONDS','ATTACHMENT_PURGE_DELAY_SECONDS','ATTACHMENT_RETENTION_INTERVAL_SECONDS',
+        'ATTACHMENT_QUOTA_USER_BYTES','ATTACHMENT_QUOTA_CONVERSATION_BYTES','ATTACHMENT_MAX_PENDING_PER_USER','ATTACHMENT_UPLOADS_PER_HOUR',
+        'ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_USER','ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_SOURCE'])
+        assert.match(example,new RegExp(`^# ${setting}=$`,'m'),`${setting} is named without a policy default`);
+    assert.match(example,/^# ATTACHMENT_UPLOAD_TIMEOUT_SECONDS=$/m);
+    for(const setting of ['ATTACHMENTS_API_ENABLED','ATTACHMENT_STORAGE_DIR','ATTACHMENT_PENDING_TTL_SECONDS','ATTACHMENT_PURGE_DELAY_SECONDS',
+        'ATTACHMENT_RETENTION_INTERVAL_SECONDS','ATTACHMENT_QUOTA_USER_BYTES','ATTACHMENT_QUOTA_CONVERSATION_BYTES',
+        'ATTACHMENT_MAX_PENDING_PER_USER','ATTACHMENT_UPLOADS_PER_HOUR','ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_USER',
+        'ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_SOURCE','ATTACHMENT_UPLOAD_TIMEOUT_SECONDS','ATTACHMENTS_API_GATE_RECORD'])
+        assert.ok(example.includes(setting),`${setting} is documented`);
+    assert.match(example,/compose\.yaml already sets[\s\S]*?ATTACHMENT_STORAGE_DIR=\/var\/lib\/secubuzz\/attachments/i);
+    assert.ok(example.includes('sets no attachment')&&example.includes('switch or policy setting'));
+    assert.match(example,/one shared bucket/i);
+    assert.doesNotMatch(gates,/^## GR-ATTACHMENTS-PROTECTED-.*APPROVED/m);
+    assert.doesNotMatch(gates,/^## GR-DB6-ACCEPTANCE-.*APPROVED/m);
+});
+
 test('T-5C-48: committed environment and Docker examples never enable a switch or premature client flag', () => {
     if (process.env.SECUBUZZ_DOCKER_VALIDATION === 'true') {
         assert.deepEqual(rootDockerFiles(), [], 'Validation_Runner image intentionally contains no root Docker files');
@@ -79,6 +101,14 @@ test('T-5C-48: committed environment and Docker examples never enable a switch o
         }
         for (const setting of ['GROUPS_API_GATE_RECORD','GROUP_MESSAGING_GATE_RECORD','ATTACHMENTS_API_GATE_RECORD'])
             assert.doesNotMatch(source, new RegExp(`(?:^|\\s)${setting}\\s*[:=]`, 'im'), `${relative}: no gate record is configured`);
+        assert.doesNotMatch(source, /(?:^|\s)ATTACHMENTS_API_ENABLED\s*[:=]/im, `${relative}: no attachment switch assignment`);
+        assert.doesNotMatch(source, /(?:^|\s)ATTACHMENT_(?!STORAGE_DIR\b)[A-Z0-9_]*\s*[:=]/im, `${relative}: no attachment policy setting`);
+        assert.doesNotMatch(source, /(?:^|\s)NEXT_PUBLIC_ATTACHMENT_API_READY\s*[:=]\s*['"]?true(?:['"]|\s|$)/im,
+            `${relative}: attachment client readiness stays false`);
+    }
+    for(const relative of ['compose.yaml',path.join('docker','compose.env.example.yaml')]) {
+        const source=fs.readFileSync(path.join(ROOT,relative),'utf8');
+        assert.match(source,/ATTACHMENT_STORAGE_DIR:\s*\/var\/lib\/secubuzz\/attachments/,`${relative}: reserved private storage root`);
     }
 });
 

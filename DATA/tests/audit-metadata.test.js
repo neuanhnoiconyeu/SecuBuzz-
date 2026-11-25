@@ -8,6 +8,9 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const { Readable } = require('node:stream');
+const { createFilesystemProvider } = require('../server/attachments/storage/filesystem');
+const { storageRoot } = require('./support/attachments');
 const { fixture, temporary, users, Database } = require('./support/database');
 const { RepositoryError, translate } = require('../server/database/repositories');
 const { httpGroupFixture, createClock, openLimiter } = require('./support/groups');
@@ -212,4 +215,71 @@ test('P-30: committed group operations write one safe audit row and refusals wri
     assert.ok(!serialized.includes(canary),'audit metadata and event rows exclude hostile canary text');
     assert.ok(!stderr.join('').includes(canary),'stderr excludes hostile canary text');
     t.diagnostic(`P-30 committedOperations=${all.length} refusedOperations=1`);
+});
+
+test('P-30: attachment state changes audit once, retention uses an empty actor, and private canaries never reach audit/logs', {timeout:120000}, async t => {
+    const root=storageRoot(t),clock=createClock(),logs=[];
+    const storage=createFilesystemProvider({root,repositoryRoot:path.resolve(__dirname,'../..')});
+    const settings={pendingTtlSeconds:86400,purgeDelaySeconds:86400,retentionIntervalSeconds:3600,
+        quotaUserBytes:1073741824,quotaConversationBytes:5368709120,maxPendingPerUser:10,uploadsPerHour:30,
+        maxConcurrentUploadsPerUser:2,maxConcurrentUploadsPerSource:5};
+    const features={groupApi:true,groupMessaging:false,attachmentApi:true,groups:{maxMembers:50,maxPendingInvitationsPerGroup:20,
+        maxPendingInvitationsPerInvitee:20,directAdd:false},attachments:{...settings,storageDir:root}};
+    const f=await httpGroupFixture(t,{clock,features,storage,env:{AUTH_SESSION_TTL_SECONDS:'172800'},log:line=>logs.push(line),logger:line=>logs.push(line)});
+    const owner=f.actors.owner,sessionToken=owner.browser.cookies.get(f.config.sessionCookie),session=f.application.auth.resolveToken(sessionToken);
+    const context={userId:session.row.user_id,sessionId:session.row.session_id};
+    const proof=f.application.auth.csrfProof(sessionToken,null,owner.token),service=f.application.attachments;
+    const canary='P30-CANARY\n../secret\\C:\\private';
+    const bytes=Buffer.from('synthetic encrypted bytes');
+    const upload=metadata=>service.upload(context,proof,{conversationId:f.groupId,byteSize:bytes.length,encryptedMetadata:metadata,
+        algorithm:'X25519-AESGCM',formatVersion:'v1'},Readable.from([bytes]),'127.0.0.1');
+    const audits=()=>f.db.prepare("SELECT actor_user_id,event_type,source,subject_id,metadata_json FROM AuditLogs WHERE source='attachments' ORDER BY rowid").all();
+    const checkNew=(count,eventType,subject,actor=owner.id)=>{
+        const rows=audits();assert.equal(rows.length,count,`${eventType} adds exactly one audit row`);
+        const row=rows.at(-1);assert.equal(row.event_type,eventType);assert.equal(row.source,'attachments');assert.equal(row.subject_id,subject);
+        assert.equal(row.actor_user_id,actor);
+        const metadata=JSON.parse(row.metadata_json);
+        assert.ok(Object.keys(metadata).every(key=>ALLOWED_KEYS.includes(key)));
+        for(const value of Object.values(metadata))if(typeof value==='string')assert.match(value,/^[a-zA-Z0-9_.:-]{1,64}$/);
+    };
+    const stderr=[],originalWrite=process.stderr.write;
+    process.stderr.write=function(chunk,...args){stderr.push(String(chunk));return originalWrite.call(this,chunk,...args);};
+    try{
+        const first=await upload(canary);checkNew(1,'attachment.uploaded',first.id);
+        const messageId='p30-attachment-audit-message',at=clock.iso();
+        f.repositories.messages.insertAuthenticated({message_id:messageId,conversation_id:f.groupId,sender_id:owner.id,receiver_id:null,
+            ciphertext:'opaque',iv:'opaque',envelope_version:1,encoding:'base64',sender_name:'Synthetic owner',client_timestamp:at,
+            message_type:'text',fingerprint:'c'.repeat(64),client_id:'p30-attachment-audit-client',message_seq:1,created_at:at});
+        service.associate(context,proof,{conversationId:f.groupId,messageId,attachmentIds:[first.id]});
+        checkNew(2,'attachment.associated',first.id);
+        const downloaded=await service.download(context,first.id);let byteCount=0;
+        for await(const chunk of downloaded.stream)byteCount+=chunk.length;
+        assert.equal(byteCount,bytes.length);downloaded.onSent();downloaded.onSent();checkNew(3,'attachment.downloaded',first.id);
+        await service.remove(context,proof,first.id);checkNew(4,'attachment.deleted',first.id);
+
+        const expired=await upload(canary);clock.advance(settings.pendingTtlSeconds*1000+1);
+        const beforeRetention=audits().length,result=await f.application.retentionJob.runOnce();
+        assert.equal(result.expired,1);assert.equal(result.failures,0);
+        const retentionEvents=audits().slice(beforeRetention);
+        assert.equal(retentionEvents.length,2,'expiry and the previously eligible purge each write one audit row');
+        assert.deepEqual(retentionEvents.map(row=>row.event_type).sort(),['attachment.expired','attachment.purged']);
+        assert.ok(retentionEvents.every(row=>row.actor_user_id===null));
+        assert.equal(retentionEvents.find(row=>row.event_type==='attachment.expired').subject_id,expired.id);
+        const unavailable=await upload(canary),row=f.db.prepare('SELECT storage_key FROM Attachments WHERE attachment_id=?').get(unavailable.id);
+        const unavailableMessage='p30-missing-bytes-message',now=clock.iso();
+        f.repositories.messages.insertAuthenticated({message_id:unavailableMessage,conversation_id:f.groupId,sender_id:owner.id,receiver_id:null,
+            ciphertext:'opaque',iv:'opaque',envelope_version:1,encoding:'base64',sender_name:'Synthetic owner',client_timestamp:now,
+            message_type:'text',fingerprint:'d'.repeat(64),client_id:'p30-missing-bytes-client',message_seq:2,created_at:now});
+        service.associate(context,proof,{conversationId:f.groupId,messageId:unavailableMessage,attachmentIds:[unavailable.id]});
+        assert.equal(await storage.delete(row.storage_key),true);
+        await assert.rejects(service.download(context,unavailable.id),error=>error.status===503&&error.code==='SERVICE_UNAVAILABLE');
+        checkNew(10,'attachment.download.unavailable',unavailable.id);
+        const beforeRefusal=audits().length;
+        assert.throws(()=>service.associate(context,proof,{conversationId:f.groupId,messageId:'missing-message',attachmentIds:[unavailable.id]}),error=>error.status===409);
+        assert.equal(audits().length,beforeRefusal,'refused association adds no audit row');
+    }finally{process.stderr.write=originalWrite;}
+    const serialized=JSON.stringify(audits());
+    assert.doesNotMatch(serialized,/P30-CANARY|\.\.\/secret|C:\\\\private/i);
+    assert.doesNotMatch(logs.join('\n'),/P30-CANARY|\.\.\/secret|C:\\\\private/i);
+    assert.doesNotMatch(stderr.join(''),/P30-CANARY|\.\.\/secret|C:\\\\private/i);
 });

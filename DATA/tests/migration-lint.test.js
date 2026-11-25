@@ -330,3 +330,12 @@ test('P-29 for generated SQL texts the lint reports a violation exactly when a f
         assert.ok(withViolation > 0 && withViolation < LINT_PROPERTY_RUNS, 'the generated texts include cases with and without a violation');
     }
 });
+
+test('migration 0009 is contiguous, strict, and contains no forbidden top-level statements or delete actions', () => {
+    const result=lint.lintDirectory();
+    assert.deepEqual(result.violations.map(lint.formatViolation),[]);
+    assert.deepEqual(result.files.map(file=>file.name),Array.from({length:9},(_,index)=>`${String(index+1).padStart(4,'0')}-${migrationNames()[index].slice(5)}`));
+    const entry=result.files.find(file=>file.name==='0009-attachment-lifecycle.sql');
+    assert.ok(entry);assert.equal(entry.version,9);assert.equal(entry.strict,true);assert.deepEqual(entry.violations,[]);
+    assert.doesNotMatch(fs.readFileSync(path.join(MIGRATIONS,'0009-attachment-lifecycle.sql'),'utf8'),/ON DELETE\s+(?:CASCADE|SET\s+(?:NULL|DEFAULT))/i);
+});

@@ -1,4 +1,4 @@
-# Implementation Plan: DB-5 / DB-6 Canonical Integration
+﻿# Implementation Plan: DB-5 / DB-6 Canonical Integration
 
 ## Overview
 
@@ -2430,7 +2430,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
   **Docker (COMP-10).** The gate of record is the Validation_Runner. The migration tests (T-6B-03, P-27, P-28) run on temporary databases that each test creates and removes and start no container (DB5-R14.17, R14.21), so they run unchanged in the runner and on the Windows host. The container-level rehearsal of 0009 (T-6B-51) runs only in a Disposable_Project (DK-03, DK-07, DB5-R14.24) on synthetic fixtures or an isolated restored cold-backup copy, never on the volumes of the running project or on a live database. 0009 is a draft migration until it is committed, so Docker Compose Watch is not started for any project whose volumes hold data to keep: `git status --short -- DATA/server/database/migrations` must print nothing before any `docker compose watch` (DB5-R14.22). Before the first start of code that contains 0009 against data to keep, every writer is stopped and both complete volume roots, `sqlite-data` and `private-storage`, are archived together by the cold-backup procedure of `docs/docker-development.md` (DB5-R14.23; no backup helper, DK-06). In the Docker_Environment the storage root is the reserved `private-storage` volume path `ATTACHMENT_STORAGE_DIR=/var/lib/secubuzz/attachments` that `compose.yaml` already sets (outside the working tree, mode 0700, UID 1000, never served), and the provider start checks must accept it with no Compose change. Per-source upload limits stay configurable (OP-19): every request reaches DATA from 127.0.0.1 there, so a per-source bucket is shared by all users of a project and no forwarded header is trusted. `close()` stops the Retention_Job inside the 30 s stop grace period. New files and fixtures avoid the `.dockerignore` names and extensions (G7); `DATA/docs`, `DATA/tests` and `DATA/scripts` are not synced by Compose Watch, so an image that must contain them is rebuilt. No Docker file, `compose.yaml` or `docs/docker-development.md` is edited.
   **Scope note.** The design's Phase Plan lands A02, A04 and A06 in DB-6D. This plan builds the service functions and routes of all six endpoints here, with baseline authorization (conversation membership, the direct send rule, the uploader alone for pending metadata and deletion), so that the standalone tests whose code is ported here run in the same phase (ARCH-R03.4). DB-6D adds the permitted-range check on ready reads and search, the direct-pair rule on reads, the archived-group rules for association and deletion, the tombstone and removed-uploader tests, the actor-class matrix and P-35 to P-37. Every route answers 503 FEATURE_UNAVAILABLE while the switch is off. No client change, no cryptographic primitive other than SHA-256 and the random bytes of the Storage_Key, no static route on the storage root.
 
-  - [ ] 8.1 Add migration `0009-attachment-lifecycle.sql` and amend the seven DC-01 literals again
+  - [x] 8.1 Add migration `0009-attachment-lifecycle.sql` and amend the seven DC-01 literals again
     - **ID**: T-6B-01
     - **Depends on**: T-6A-23, T-5C-52, T-5B-05, T-5B-07, T-5B-11, T-5B-21
     - **Affected modules**: `DATA/server/database/migrations/0009-attachment-lifecycle.sql` (new), the seven baseline test files of T-5B-15, on the same lines and for the literal only (`auth-migrations.test.js`, `conversations-migrations.test.js`, `e2ee-migrations.test.js` two lines, `messaging-migrations.test.js`, `migrations.test.js`, `social-migrations.test.js`)
@@ -2443,19 +2443,20 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.2, DB6-R01.3, DB6-R01.6, DB6-R01.11, DB5-R14.1, DB5-R14.3, DB5-R14.4, DB5-R14.5, DB5-R14.11, DB5-R14.12, ARCH-R01.11, ARCH-R02.1, DB5-R14.22, DB5-R15.11, COMP-04, NFR-09_
 
-  - [ ] 8.2 Extend the checksum guard and the lint test to 0009 (property P-29)
+  - [x] 8.2 Extend the checksum guard and the lint test to 0009 (property P-29)
     - **ID**: T-6B-02
     - **Depends on**: T-6B-01
     - **Property P-29: Published migrations are immutable (clauses for 0008 and 0009)**
     - **Validates: Requirements DB5-R14.1, DB5-R14.2, DB5-R14.5, DB5-R14.11, DB5-R15.11**
     - **Affected modules**: `DATA/tests/baseline-checksums.test.js`, `DATA/tests/migration-lint.test.js`
     - **Acceptance criteria**:
+      - Later owner amendment (2026-11-23): apply the sole E2EE boundary exact-hash exception recorded below when enforcing DC-01; all other baseline files remain strict. This reconciles the inherited DC-01 criterion of Task 8.1 without changing its remaining scope.
       - The guard accepts the seven DC-01 lines with `0009-attachment-lifecycle.sql` or version 9 appended and fails on any other difference, naming file and line, exactly as the guard of T-5B-05 does for 0008 (OP-06 decided; the amendment belongs in the same commit as 0009, DB5-R15.11). It pins the SHA-256 of the LF-normalised merged `0008-groups.sql`, computed in this task, so a single-byte change in a temporary copy of 0008 makes the runner refuse to start and change nothing.
       - The lint test accepts 0001 to 0009 (the trigger bodies of 0009 contain `BEGIN`, `CASE` and `END`), reports no `ON DELETE CASCADE`, `SET NULL` or `SET DEFAULT` in 0008 and 0009, and still rejects the hand-written bad cases of T-5B-11. For generated SQL texts it reports a violation exactly when a forbidden statement lies outside a trigger body.
     - **Verify**: `node --test tests/baseline-checksums.test.js tests/migration-lint.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 8.3 Add the structural migration cases for 0009 and the one-way check
+  - [x] 8.3 Add the structural migration cases for 0009 and the one-way check
     - **ID**: T-6B-03
     - **Depends on**: T-6B-01, T-5B-17
     - **Affected modules**: `DATA/tests/groups-migrations.test.js`
@@ -2468,7 +2469,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R14.6, DB5-R14.9, DB5-R14.10, DB5-R14.11, DB5-R14.16, DB5-R14.17, DB5-R14.19, DB5-R14.21, ARCH-R01.2, ARCH-R01.10, ARCH-R01.11, NFR-04_
 
-  - [ ] 8.4 Add the direct-SQL constraint tests for the 0009 triggers and reservations
+  - [x] 8.4 Add the direct-SQL constraint tests for the 0009 triggers and reservations
     - **ID**: T-6B-04
     - **Depends on**: T-6B-01, T-5B-21
     - **Affected modules**: `DATA/tests/attachments-repository.test.js` (new; extended in T-6B-20)
@@ -2479,7 +2480,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.3, DB6-R01.6, DB6-R01.11, DB5-R14.12_
 
-  - [ ] 8.5 Write property test P-27 for upgrades to version 9
+  - [x] 8.5 Write property test P-27 for upgrades to version 9
     - **ID**: T-6B-05
     - **Depends on**: T-6B-03, T-5B-18
     - **Property P-27: Upgrade from version 7 keeps every row and matches a fresh schema (clauses for 0009)**
@@ -2491,7 +2492,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-migrations.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 8.6 Write property test P-28 for repeat runs and a failing 0009
+  - [x] 8.6 Write property test P-28 for repeat runs and a failing 0009
     - **ID**: T-6B-06
     - **Depends on**: T-6B-05
     - **Property P-28: Repeat runs change nothing and a failing batch rolls back completely (clauses for 0009)**
@@ -2503,7 +2504,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-migrations.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 8.7 Create the Storage_Provider contract module
+  - [x] 8.7 Create the Storage_Provider contract module
     - **ID**: T-6B-07
     - **Depends on**: T-6A-23, T-5C-52
     - **Affected modules**: `DATA/server/attachments/storage/provider.js` (new), `DATA/tests/attachments-storage-contract.test.js` (new; extended in later tasks)
@@ -2514,7 +2515,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R02.1, DB6-R02.3, DB6-R02.7, DB6-R02.11_
 
-  - [ ] 8.8 Implement the upload frame codec
+  - [x] 8.8 Implement the upload frame codec
     - **ID**: T-6B-08
     - **Depends on**: T-6A-23, T-5C-52
     - **Affected modules**: `DATA/server/attachments/frame.js` (new), `DATA/tests/attachments-validation.test.js` (new)
@@ -2525,7 +2526,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R03.1, DB6-R04.12, DB6-R05.12, NFR-09_
 
-  - [ ] 8.9 Implement `attachments/validation.js` for the upload header and the size limit table
+  - [x] 8.9 Implement `attachments/validation.js` for the upload header and the size limit table
     - **ID**: T-6B-09
     - **Depends on**: T-6B-08
     - **Affected modules**: `DATA/server/attachments/validation.js` (new), `DATA/tests/attachments-validation.test.js`
@@ -2537,7 +2538,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R03.1, DB6-R04.1, DB6-R04.2, DB6-R05.3, DB6-R05.5, DB6-R05.12_
 
-  - [ ] 8.10 Write property test P-39 for the limit table
+  - [x] 8.10 Write property test P-39 for the limit table
     - **ID**: T-6B-10
     - **Depends on**: T-6B-09, T-5B-10
     - **Property P-39: The server size limits equal the client policy**
@@ -2549,7 +2550,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/attachments-policy.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 8.11 Add the test helpers `support/storage-providers.js` and `support/attachments.js`
+  - [x] 8.11 Add the test helpers `support/storage-providers.js` and `support/attachments.js`
     - **ID**: T-6B-11
     - **Depends on**: T-6B-07, T-6B-08, T-5B-21
     - **Affected modules**: `DATA/tests/support/storage-providers.js` (new), `DATA/tests/support/attachments.js` (new)
@@ -2560,7 +2561,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R15.1, DB5-R11.6, DB6-R02.11, NFR-07, NFR-08_
 
-  - [ ] 8.12 Implement the filesystem provider: root and key resolution
+  - [x] 8.12 Implement the filesystem provider: root and key resolution
     - **ID**: T-6B-12
     - **Depends on**: T-6B-07
     - **Affected modules**: `DATA/server/attachments/storage/filesystem.js` (new), `DATA/tests/attachments-storage-contract.test.js`
@@ -2572,7 +2573,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R02.2, DB6-R02.3, DB6-R02.4, DB6-R02.7, DB6-R02.8, DB6-R02.9, COMP-09, COMP-10_
 
-  - [ ] 8.13 Implement the filesystem `write` by adapting the standalone streaming write
+  - [x] 8.13 Implement the filesystem `write` by adapting the standalone streaming write
     - **ID**: T-6B-13
     - **Depends on**: T-6B-12, T-6A-20
     - **Affected modules**: `DATA/server/attachments/storage/filesystem.js`, `server/src/storage/attachmentStorage.cjs` (read-only), `DATA/tests/attachments-storage-contract.test.js`
@@ -2583,7 +2584,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R02.5, DB6-R02.6, DB6-R02.7, DB6-R02.9, DB6-R02.13, DB6-R04.10, ARCH-R03.4, ARCH-R03.7, NFR-05_
 
-  - [ ] 8.14 Implement the filesystem `read`, `stat`, `exists`, `delete`, `usage`, `sweepTemporary` and `listKeys`
+  - [x] 8.14 Implement the filesystem `read`, `stat`, `exists`, `delete`, `usage`, `sweepTemporary` and `listKeys`
     - **ID**: T-6B-14
     - **Depends on**: T-6B-13
     - **Affected modules**: `DATA/server/attachments/storage/filesystem.js`, `DATA/tests/attachments-storage-contract.test.js`
@@ -2594,7 +2595,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R02.1, DB6-R02.4, DB6-R02.7, DB6-R02.10, DB6-R03.14_
 
-  - [ ] 8.15 Run the shared storage contract suite for every registered provider
+  - [x] 8.15 Run the shared storage contract suite for every registered provider
     - **ID**: T-6B-15
     - **Depends on**: T-6B-14, T-6B-11
     - **Affected modules**: `DATA/tests/attachments-storage-contract.test.js`
@@ -2606,7 +2607,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R02.11, DB6-R02.4, DB6-R02.5, DB6-R02.6, DB6-R02.7, DB6-R02.9, DB6-R02.13, DB5-R15.16, COMP-09_
 
-  - [ ] 8.16 Write property test P-33 for storage keys and partial writes
+  - [x] 8.16 Write property test P-33 for storage keys and partial writes
     - **ID**: T-6B-16
     - **Depends on**: T-6B-15, T-5B-10
     - **Property P-33: Storage keys are safe and a failed write leaves nothing**
@@ -2618,7 +2619,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/attachments-storage-contract.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 8.17 Add the large-stream memory example and record the hard-link probe result
+  - [x] 8.17 Add the large-stream memory example and record the hard-link probe result
     - **ID**: T-6B-17
     - **Depends on**: T-6B-16
     - **Affected modules**: `DATA/tests/attachments-storage-contract.test.js`, `DATA/docs/db5-db6-handoff.md` (R-10 note)
@@ -2629,7 +2630,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R04.10, DB6-R02.13, DB5-R15.16, NFR-05, COMP-09_
 
-  - [ ] 8.18 Create `attachmentRepository.js` with the core and read functions
+  - [x] 8.18 Create `attachmentRepository.js` with the core and read functions
     - **ID**: T-6B-18
     - **Depends on**: T-6B-01, T-5B-22
     - **Affected modules**: `DATA/server/database/attachmentRepository.js` (new), `DATA/tests/attachments-repository.test.js`
@@ -2641,7 +2642,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.1, DB6-R04.4, ARCH-R01.6, DB5-R14.14, NFR-01, NFR-03_
 
-  - [ ] 8.19 Add the attachment and reservation write functions
+  - [x] 8.19 Add the attachment and reservation write functions
     - **ID**: T-6B-19
     - **Depends on**: T-6B-18
     - **Affected modules**: `DATA/server/database/attachmentRepository.js`, `DATA/tests/attachments-repository.test.js`
@@ -2652,7 +2653,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.3, DB6-R01.4, DB6-R01.6, DB6-R01.11, DB6-R04.4, NFR-01_
 
-  - [ ] 8.20 Add the attachment repository tests
+  - [x] 8.20 Add the attachment repository tests
     - **ID**: T-6B-20
     - **Depends on**: T-6B-19, T-6B-04
     - **Affected modules**: `DATA/tests/attachments-repository.test.js`
@@ -2663,7 +2664,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R14.14, ARCH-R01.6, DB6-R01.1, DB6-R04.4, NFR-01, NFR-03_
 
-  - [ ] 8.21 Complete `features/config.js` for the attachment switch and settings
+  - [x] 8.21 Complete `features/config.js` for the attachment switch and settings
     - **ID**: T-6B-21
     - **Depends on**: T-6B-12, T-5C-01
     - **Affected modules**: `DATA/server/features/config.js`, `DATA/tests/groups-gate.test.js`
@@ -2675,7 +2676,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R16.1, DB5-R16.5, DB5-R16.7, DB6-R03.15, DB6-R04.5, DB6-R04.6, DB6-R04.7, COMP-10_
 
-  - [ ] 8.22 Extend `features/gate.js` and feature-status with the storage-root readiness
+  - [x] 8.22 Extend `features/gate.js` and feature-status with the storage-root readiness
     - **ID**: T-6B-22
     - **Depends on**: T-6B-21, T-6B-12
     - **Affected modules**: `DATA/server/features/gate.js`, `DATA/tests/groups-gate.test.js`
@@ -2687,7 +2688,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R16.1, DB5-R16.4, DB5-R16.13, DB6-R02.2, DB6-R02.8, COMP-10_
 
-  - [ ] 8.23 Build the Attachment_Service infrastructure in `attachments/service.js`
+  - [x] 8.23 Build the Attachment_Service infrastructure in `attachments/service.js`
     - **ID**: T-6B-23
     - **Depends on**: T-6B-19, T-6B-14, T-6B-09, T-6B-22, T-5C-03
     - **Affected modules**: `DATA/server/attachments/service.js` (new), `DATA/tests/attachments-service.test.js` (new; file name chosen here)
@@ -2699,7 +2700,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: ARCH-R01.4, ARCH-R01.5, ARCH-R01.6, DB6-R02.10, DB6-R02.15, DB6-R03.2, DB6-R03.3, DB6-R03.16, DB6-R03.19, DB5-R12.5, DB5-R12.8, DB5-R12.9, DB5-R13.5, NFR-01, NFR-06_
 
-  - [ ] 8.24 Implement the upload reserve step
+  - [x] 8.24 Implement the upload reserve step
     - **ID**: T-6B-24
     - **Depends on**: T-6B-23
     - **Affected modules**: `DATA/server/attachments/service.js`, `DATA/tests/attachments-service.test.js`
@@ -2710,7 +2711,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R03.1, DB6-R03.2, DB6-R03.3, DB6-R04.2, DB6-R04.4, DB6-R04.5, DB6-R04.6, DB6-R04.7, NFR-01_
 
-  - [ ] 8.25 Implement the upload stream and finalize steps
+  - [x] 8.25 Implement the upload stream and finalize steps
     - **ID**: T-6B-25
     - **Depends on**: T-6B-24, T-6B-13
     - **Affected modules**: `DATA/server/attachments/service.js`, `DATA/tests/attachments-service.test.js`
@@ -2721,7 +2722,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.3, DB6-R02.14, DB6-R02.15, DB6-R03.1, DB6-R03.17, DB6-R04.2, DB6-R04.3, DB6-R04.10, DB6-R05.4, DB6-R05.5_
 
-  - [ ] 8.26 Implement the failure cleanup, crash recovery and reservation expiry
+  - [x] 8.26 Implement the failure cleanup, crash recovery and reservation expiry
     - **ID**: T-6B-26
     - **Depends on**: T-6B-25
     - **Affected modules**: `DATA/server/attachments/service.js`, `DATA/tests/attachments-service.test.js`
@@ -2732,7 +2733,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R02.6, DB6-R02.10, DB6-R02.14, DB6-R03.16, DB6-R04.12, DB5-R12.9, NFR-06_
 
-  - [ ] 8.27 Implement the metadata read (A03)
+  - [x] 8.27 Implement the metadata read (A03)
     - **ID**: T-6B-27
     - **Depends on**: T-6B-26
     - **Affected modules**: `DATA/server/attachments/service.js`, `DATA/tests/attachments-service.test.js`
@@ -2743,7 +2744,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.7, DB6-R01.8, DB6-R03.4, DB6-R03.19_
 
-  - [ ] 8.28 Implement the deletion (A05)
+  - [x] 8.28 Implement the deletion (A05)
     - **ID**: T-6B-28
     - **Depends on**: T-6B-27
     - **Affected modules**: `DATA/server/attachments/service.js`, `DATA/tests/attachments-service.test.js`
@@ -2754,7 +2755,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.6, DB6-R01.11, DB6-R03.12, DB6-R03.17, DB6-R03.18_
 
-  - [ ] 8.29 Implement the message association (A02)
+  - [x] 8.29 Implement the message association (A02)
     - **ID**: T-6B-29
     - **Depends on**: T-6B-28
     - **Affected modules**: `DATA/server/attachments/service.js`, `DATA/tests/attachments-service.test.js`
@@ -2765,7 +2766,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.3, DB6-R01.4, DB6-R01.5, DB6-R03.17, DB6-R04.11_
 
-  - [ ] 8.30 Implement the download with the 503-before-first-byte rule (A04)
+  - [x] 8.30 Implement the download with the 503-before-first-byte rule (A04)
     - **ID**: T-6B-30
     - **Depends on**: T-6B-29, T-6B-14
     - **Affected modules**: `DATA/server/attachments/service.js`, `DATA/tests/attachments-service.test.js`
@@ -2776,7 +2777,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R02.10, DB6-R03.5, DB6-R03.6, DB6-R03.7, DB6-R03.17, DB6-R03.19, DB6-R04.10, NFR-08_
 
-  - [ ] 8.31 Implement the file search (A06)
+  - [x] 8.31 Implement the file search (A06)
     - **ID**: T-6B-31
     - **Depends on**: T-6B-30, T-5B-12
     - **Affected modules**: `DATA/server/attachments/service.js`, `DATA/server/attachments/validation.js`, `DATA/tests/attachments-service.test.js`
@@ -2787,7 +2788,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R03.9, DB6-R03.10, DB6-R03.11, DB6-R03.20, NFR-03_
 
-  - [ ] 8.32 Add the router skeleton in `routes/attachments.js` and mount it in `createApp`
+  - [x] 8.32 Add the router skeleton in `routes/attachments.js` and mount it in `createApp`
     - **ID**: T-6B-32
     - **Depends on**: T-6B-23, T-6B-09, T-5C-04
     - **Affected modules**: `DATA/server/routes/attachments.js` (new), `DATA/server/app.js` (mount and returned members only), `DATA/tests/attachments-http.test.js` (new)
@@ -2798,7 +2799,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: ARCH-R01.3, ARCH-R01.4, ARCH-R01.5, DB5-R12.3, DB5-R12.10, DB5-R16.4, DB6-R02.12, DB6-R03.21, COMP-02, NFR-08_
 
-  - [ ] 8.33 Add the upload route A01
+  - [x] 8.33 Add the upload route A01
     - **ID**: T-6B-33
     - **Depends on**: T-6B-32, T-6B-26
     - **Affected modules**: `DATA/server/routes/attachments.js`, `DATA/tests/attachments-http.test.js`
@@ -2809,7 +2810,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R03.1, DB6-R03.2, DB6-R03.3, DB6-R04.2, DB6-R04.3, DB6-R04.12, DB6-R05.3, DB6-R05.12_
 
-  - [ ] 8.34 Add the metadata and deletion routes A03 and A05
+  - [x] 8.34 Add the metadata and deletion routes A03 and A05
     - **ID**: T-6B-34
     - **Depends on**: T-6B-33, T-6B-28
     - **Affected modules**: `DATA/server/routes/attachments.js`, `DATA/tests/attachments-http.test.js`
@@ -2820,7 +2821,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.7, DB6-R01.8, DB6-R03.4, DB6-R03.12, DB6-R03.19_
 
-  - [ ] 8.35 Add the association route A02
+  - [x] 8.35 Add the association route A02
     - **ID**: T-6B-35
     - **Depends on**: T-6B-34, T-6B-29
     - **Affected modules**: `DATA/server/routes/attachments.js`, `DATA/server/attachments/validation.js`, `DATA/tests/attachments-http.test.js`
@@ -2831,7 +2832,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.4, DB6-R01.5, DB6-R04.11_
 
-  - [ ] 8.36 Add the download and search routes A04 and A06
+  - [x] 8.36 Add the download and search routes A04 and A06
     - **ID**: T-6B-36
     - **Depends on**: T-6B-35, T-6B-31
     - **Affected modules**: `DATA/server/routes/attachments.js`, `DATA/tests/attachments-http.test.js`
@@ -2842,7 +2843,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R03.5, DB6-R03.6, DB6-R03.7, DB6-R03.9, DB6-R03.19, DB6-R03.20, DB6-R04.10, NFR-08_
 
-  - [ ] 8.37 Implement the Retention_Job
+  - [x] 8.37 Implement the Retention_Job
     - **ID**: T-6B-37
     - **Depends on**: T-6B-19, T-6B-14
     - **Affected modules**: `DATA/server/attachments/retention.js` (new), `DATA/tests/attachments-retention.test.js` (new)
@@ -2854,7 +2855,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R01.11, DB6-R03.13, DB6-R03.14, DB6-R03.15, DB6-R03.17, DB6-R03.22, DB6-R04.12, NFR-01_
 
-  - [ ] 8.38 Wire the storage provider and the Retention_Job into `startServer`, with the upload timeout
+  - [x] 8.38 Wire the storage provider and the Retention_Job into `startServer`, with the upload timeout
     - **ID**: T-6B-38
     - **Depends on**: T-6B-37, T-6B-32, T-6B-22
     - **Affected modules**: `DATA/server/start.js`, `DATA/server.js`, `DATA/tests/attachments-retention.test.js`
@@ -2867,7 +2868,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R16.7, DB6-R02.8, DB6-R03.14, DB6-R03.15, ARCH-R01.1, ARCH-R01.2, ARCH-R01.10, COMP-10_
 
-  - [ ] 8.39 Write property test P-38 for the Retention_Job
+  - [x] 8.39 Write property test P-38 for the Retention_Job
     - **ID**: T-6B-39
     - **Depends on**: T-6B-37, T-5B-10
     - **Property P-38: Retention marks exactly the expired pending attachments and is idempotent**
@@ -2879,7 +2880,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/attachments-retention.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 8.40 Add the `support/attachments-worker.cjs` process helper
+  - [x] 8.40 Add the `support/attachments-worker.cjs` process helper
     - **ID**: T-6B-40
     - **Depends on**: T-6B-36, T-5C-18
     - **Affected modules**: `DATA/tests/support/attachments-worker.cjs` (new; file name chosen here)
@@ -2890,7 +2891,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R15.5, DB5-R15.1, DB6-R04.4, NFR-07_
 
-  - [ ] 8.41 Write property test P-34 for quotas under concurrent and failed uploads
+  - [x] 8.41 Write property test P-34 for quotas under concurrent and failed uploads
     - **ID**: T-6B-41
     - **Depends on**: T-6B-40, T-6B-38, T-5B-10
     - **Property P-34: Quotas hold under concurrent uploads and a failed upload leaves nothing**
@@ -2902,7 +2903,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/attachments-quota.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 8.42 Add the upload rate-limit tests
+  - [x] 8.42 Add the upload rate-limit tests
     - **ID**: T-6B-42
     - **Depends on**: T-6B-33
     - **Affected modules**: `DATA/tests/attachments-quota.test.js`
@@ -2914,7 +2915,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB6-R04.6, DB5-R12.4, COMP-10, NFR-07_
 
-  - [ ] 8.43 Write property test P-25 for the disabled Attachment_API
+  - [x] 8.43 Write property test P-25 for the disabled Attachment_API
     - **ID**: T-6B-43
     - **Depends on**: T-6B-36, T-6B-38
     - **Property P-25: A disabled switch answers 503 and changes nothing (attachment clauses)**
@@ -2926,7 +2927,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-gate.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 8.44 Write property test P-26 for the attachment switch and storage root
+  - [x] 8.44 Write property test P-26 for the attachment switch and storage root
     - **ID**: T-6B-44
     - **Depends on**: T-6B-22, T-6B-21
     - **Property P-26: Switch parsing, settings and feature-status (attachment clauses)**
@@ -2938,7 +2939,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-gate.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 8.45 Write property test P-30 for attachment audit rows
+  - [x] 8.45 Write property test P-30 for attachment audit rows
     - **ID**: T-6B-45
     - **Depends on**: T-6B-36, T-6B-37, T-5C-40
     - **Property P-30: Audit rows carry only allowed keys and values (attachment operations)**
@@ -2950,7 +2951,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/audit-metadata.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 8.46 Write property test P-31 for attachment atomicity
+  - [x] 8.46 Write property test P-31 for attachment atomicity
     - **ID**: T-6B-46
     - **Depends on**: T-6B-36, T-6B-37, T-5C-41
     - **Property P-31: A failure at any write step leaves every table as before (attachment operations)**
@@ -2962,7 +2963,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-atomicity.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 8.47 Write property test P-19 with attachments in the populations
+  - [x] 8.47 Write property test P-19 with attachments in the populations
     - **ID**: T-6B-47
     - **Depends on**: T-6B-36, T-5B-31
     - **Property P-19: Direct conversations and messages are unchanged by groups and attachments**
@@ -2974,7 +2975,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/dm-fixtures-replay.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 8.48 Write `attachments-openapi.json`, extend the contract checker and the conformance test
+  - [x] 8.48 Write `attachments-openapi.json`, extend the contract checker and the conformance test
     - **ID**: T-6B-48
     - **Depends on**: T-6B-36, T-5C-46
     - **Affected modules**: `DATA/docs/attachments-openapi.json` (new), `DATA/tests/groups-openapi.test.js`, `DATA/tests/support/contract.js` (rows A01 to A06)
@@ -2985,7 +2986,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R13.6, DB5-R13.7, DB5-R13.9, DB5-R13.11, COMP-02, NFR-08_
 
-  - [ ] 8.49 Add the attachment entries to `.env.example` and `gate-records.md`
+  - [x] 8.49 Add the attachment entries to `.env.example` and `gate-records.md`
     - **ID**: T-6B-49
     - **Depends on**: T-6B-21, T-5C-48
     - **Affected modules**: `DATA/.env.example` (names and safe defaults only; `DATA/.env` is never read or edited), `DATA/docs/gate-records.md`, `DATA/tests/gate-records.test.js`
@@ -2997,7 +2998,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R16.1, DB5-R16.8, DB6-R05.8, COMP-08, COMP-10, NFR-09_
 
-  - [ ] 8.50 Update `schema.md`, `migrations.md` and `repositories.md` for 0009
+  - [x] 8.50 Update `schema.md`, `migrations.md` and `repositories.md` for 0009
     - **ID**: T-6B-50
     - **Depends on**: T-6B-03, T-6B-20
     - **Affected modules**: `DATA/docs/schema.md`, `DATA/docs/migrations.md`, `DATA/docs/repositories.md`, `DATA/tests/groups-migrations.test.js`
@@ -3009,7 +3010,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R14.15, DB5-R14.16, DB5-R14.20, DB5-R14.22, DB5-R14.23, COMP-05, COMP-10_
 
-  - [ ] 8.51 Rehearse migration 0009 on synthetic fixtures or an isolated cold-backup copy in a Disposable_Project
+  - [x] 8.51 Rehearse migration 0009 on synthetic fixtures or an isolated cold-backup copy in a Disposable_Project
     - **ID**: T-6B-51
     - **Depends on**: T-6B-50, T-5B-35, T-5B-36, T-6B-17, T-6B-38
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (result note)
@@ -3022,7 +3023,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R14.7, DB5-R14.13, DB5-R14.17, DB5-R14.20, DB5-R14.21, DB5-R14.22, DB5-R14.23, DB5-R14.24, COMP-03, COMP-10_
 
-  - [ ] 8.52 Port standalone tests 1, 9 and 11 and the attachment steps of `db5_db6.test.cjs`
+  - [x] 8.52 Port standalone tests 1, 9 and 11 and the attachment steps of `db5_db6.test.cjs`
     - **ID**: T-6B-52
     - **Depends on**: T-6B-36, T-5C-51, T-6A-21
     - **Affected modules**: `DATA/tests/attachments-http.test.js`, `server/test/integration/attachments.test.ts` (read-only), `server/test/db5_db6.test.cjs` (read-only), `DATA/docs/standalone-inventory.md`
@@ -3033,7 +3034,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: ARCH-R03.4, ARCH-R03.10, ARCH-R03.11, DB5-R15.12, DB6-R03.8_
 
-  - [ ] 8.53 Port standalone tests 2, 12 and 13 and record the remaining ports
+  - [x] 8.53 Port standalone tests 2, 12 and 13 and record the remaining ports
     - **ID**: T-6B-53
     - **Depends on**: T-6B-16, T-6B-41, T-6B-39, T-6B-52
     - **Affected modules**: `DATA/tests/attachments-storage-contract.test.js`, `DATA/tests/attachments-quota.test.js`, `DATA/tests/attachments-retention.test.js`, `DATA/docs/standalone-inventory.md`
@@ -3049,7 +3050,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Depends on**: T-6B-01 to T-6B-53
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md`
     - **Acceptance criteria**:
-      - C1 runs in the Validation_Runner (group `data`, the gate of record) and passes as defined in the Notes (at least 321 plus the new tests, 0 failed, 0 skipped, 0 cancelled, 0 todo). The same C1 on the Windows host is recorded beside it as additional evidence. G1, G2 and G9 exit 0, G3, G5a, G7 and G8 print nothing, and G5b prints only the seven DC-01 lines. The checksums of 0001 to 0007 are unchanged, 0008 is pinned, and the seven literals were amended in the same change set as 0009 with the guard passing. The image built for the run contains the draft 0009 and is never started against volumes that hold data to keep.
+      - C1 runs in the Validation_Runner (group `data`, the gate of record) and passes as defined in the Notes (at least 321 plus the new tests, 0 failed, 0 skipped, 0 cancelled, 0 todo). The same C1 on the Windows host is recorded beside it as additional evidence. G1, G2 and G9 exit 0, G3, G5a, G7 and G8 print nothing. G5b, per later Project Owner decision (2026-11-24), prints exactly the seven DC-01 lines plus the single approved E2EE adaptation at `DATA/tests/e2ee-migrations.test.js:19`, bound to the exact reviewed assertion diff and the normalized replacement digest `4ea6fb2006062a21a35b3fc4500b04328f62a9263c720abdc67fa80ad6d65dfb` with original per-file manifest digest `57966e96f076e234718a1a2cd3afaf5c4ede984767458be3d1a3ce00642d0a46`; every other historical assertion difference fails. The checksums of 0001 to 0007 are unchanged, 0008 is pinned, and the seven literals were amended in the same change set as 0009 with the guard passing. The image built for the run contains the draft 0009 and is never started against volumes that hold data to keep.
       - With the switch off every attachment route answers 503 `FEATURE_UNAVAILABLE` and every other path under `/api/files` answers 404. The package dependency lists equal the baseline, and no file under `client/` or `server/` was changed by this phase. `git diff --stat dc6c997 -- compose.yaml docker .dockerignore server/Dockerfile client/Dockerfile` prints nothing, so no Docker file changed and no new service, port or volume was needed (COMP-10; `docs/docker-development.md` changes only after the Project_Owner approved OP-18). G7 lists none of the new files of this phase.
       - The handoff records each run (command and runner group, passed, failed, skipped, date, `git rev-parse HEAD`, `git status --short`), the C1 run time and the run time of the new `attachments-*` files, the defaults applied (OD-16 plaintext refused, OP-04 15 s unless set, OP-08 reservation expiry), the hard-link probe results (host, runner, Docker volume), the result note of T-6B-51 (project name, input used, counts), the one-way warning for 0009 with the cold-backup sentence for both volumes, and the note that per-source upload limits share one bucket in the Docker_Environment (OP-19). The Known_Baseline_Failure list of T-5B-39 is unchanged (no client suite runs in this phase) and no entry is skipped, edited, excluded or silenced. The Disposable_Project of T-6B-51 is removed (`docker compose ls -a`), and no application container is started by the gate. No Gate_Record applies to DB-6B, and the Attachment_API stays off.
     - **Verify**: C1 in the Validation_Runner (group `data`) and on the Windows host; G1; G2; G3; G5a; G5b; G7; G8; G9; `git diff --stat dc6c997 -- compose.yaml docker .dockerignore server/Dockerfile client/Dockerfile`; `docker compose ls -a`
@@ -3976,3 +3977,14 @@ The criteria that the DB-5A reconciliation added or changed, with the tasks that
 - ARCH-R01.9 (runtime statements: standalone host named by file, script and variable): T-5B-06, T-5G-10, T-6F-08, T-7-05, T-7-06
 - ARCH-R02.1 (all 321 baseline tests, seven literals): T-5B-01, T-5B-03, T-5B-07, T-5B-15, T-5B-37, T-5C-45, T-5C-52, T-5D-31, T-5E-09, T-5G-05, T-5G-12, T-6A-23, T-6B-01, T-6B-54, T-6C-13, T-6D-21, T-6F-02, T-6F-10, T-7-01, T-7-02, T-7-13
 - COMP-10 (unchanged under the Docker_Environment): T-5B-06, T-5B-33, T-5B-36 to T-5B-38, T-5C-06, T-5C-48, T-5C-52, T-5C-54, T-5D-31, T-5E-09, T-5F-12, T-5G-10, T-5G-12, T-6A-02, T-6A-06, T-6A-22 to T-6A-24, T-6B-12, T-6B-21, T-6B-22, T-6B-38, T-6B-42, T-6B-49 to T-6B-51, T-6B-54, T-6C-13, T-6D-21, T-6E-04, T-6E-05, T-6E-07, T-6E-14, T-6E-15, T-6F-08, T-6F-10, T-7-01, T-7-06, T-7-07, T-7-13
+
+
+### Later Project Owner amendment: DB-6B E2EE boundary (2026-11-23)
+
+Scope: DB5-R15.11, ARCH-R02.1, DC-01 and Task 8.2 only; the inherited DC-01 checks of Batch 1 follow this explicit later amendment. The original immutable d7cd40a manifest remains unchanged. In addition to the unchanged seven DC-01 literal rules and existing auth.js exception, only `DATA/tests/e2ee-migrations.test.js` may use the reviewed test adaptation.
+
+Rationale: migration 0009 adds attachment columns, while the historical test calls the latest runner and compares entire attachment rows to the pre-upgrade shape. The approved adaptation uses the existing `migrate(db, {directory})` API to execute every historical version-6-to-7 row, ledger, index, trigger, foreign-key and security assertion at version 7. Separate 0009 checks preserve all old attachment values and assert each new column's canonical NULL/default value. No assertion is removed or relaxed.
+
+Original manifest SHA-256: `57966e96f076e234718a1a2cd3afaf5c4ede984767458be3d1a3ce00642d0a46`. Reviewed replacement raw SHA-256: `931a3f2e7bb047e234308b45165db741c7cc703829bc0bde9de4e86e808bb8df`. SHA-256 of that same reviewed replacement under the existing UTF-8/CRLF-to-LF normalization: `4ea6fb2006062a21a35b3fc4500b04328f62a9263c720abdc67fa80ad6d65dfb`. The raw hash identifies the reviewed bytes; only the canonical normalized digest is used by the verifier. This is a normalization of the same approved content, not a different test revision.
+
+The original baseline content (with its already authorized DC-01 literal updates) and this exact normalized replacement are accepted. Every other digest fails; the exception requires the original manifest digest and exact file path. Positive, normalization and unauthorized-mutation rejection tests are required. No other integrity exception, manifest rewrite, production/migration change or feature activation is authorized. This later decision supersedes earlier statements forbidding any other baseline-file difference only for this precise E2EE revision. Tasks 8.1 through 8.6 remain subject to all other acceptance requirements.

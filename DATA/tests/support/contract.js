@@ -33,6 +33,35 @@ const CONTRACT = freeze(definitions.map(([id,method,path,minimumRole,success,sco
         G09:'owner cannot leave',G14:'inviter, owner or admin'})[id] || null,
     errors:[...common,...(method==='GET'?[]:[[403,'CSRF_INVALID']]),...extra]
 })));
+// Test-owned transcription of the accepted DB-6B A01-A06 contract. A06 is
+// mounted on /api/files; it has no alias on the attachment router.
+const attachmentCommon = [[401,'UNAUTHENTICATED'],[401,'SESSION_EXPIRED'],[403,'FORBIDDEN'],
+    [429,'RATE_LIMITED'],[500,'INTERNAL_ERROR'],[503,'FEATURE_UNAVAILABLE'],[503,'SERVICE_UNAVAILABLE']];
+const ATTACHMENT_CONTRACT = freeze([
+    {id:'A01',method:'POST',path:'/',success:[201],requestFields:['conversationId','byteSize','encryptedMetadata','algorithm','formatVersion'],errors:[[400,'VALIDATION_ERROR'],[403,'FORBIDDEN'],[404,'NOT_FOUND'],[409,'CONFLICT'],[409,'QUOTA_EXCEEDED'],[413,'PAYLOAD_TOO_LARGE'],[429,'RATE_LIMITED'],[503,'SERVICE_UNAVAILABLE']]},
+    {id:'A02',method:'POST',path:'/associations',success:[200],requestFields:['conversationId','messageId','attachmentIds'],errors:[[400,'VALIDATION_ERROR'],[404,'NOT_FOUND'],[409,'CONFLICT'],[409,'QUOTA_EXCEEDED'],[413,'PAYLOAD_TOO_LARGE'],[415,'UNSUPPORTED_MEDIA_TYPE']]},
+    {id:'A03',method:'GET',path:'/:id',success:[200],requestFields:[],errors:[[404,'NOT_FOUND']]},
+    {id:'A04',method:'GET',path:'/:id/download',success:[200],requestFields:[],errors:[[404,'NOT_FOUND'],[503,'SERVICE_UNAVAILABLE']]},
+    {id:'A05',method:'DELETE',path:'/:id',success:[204],requestFields:[],errors:[[404,'NOT_FOUND'],[503,'SERVICE_UNAVAILABLE']]},
+    {id:'A06',method:'GET',path:'/search',success:[200],requestFields:['conversationId','uploadedBy','minBytes','maxBytes','createdAfter','createdBefore','limit','cursor'],errors:[[400,'VALIDATION_ERROR'],[404,'NOT_FOUND']]}
+].map(row=>({...row,errors:[...new Map([...attachmentCommon,...(row.method==='GET'?[]:[[403,'CSRF_INVALID']]),...row.errors]
+    .map(pair=>[`${pair[0]}:${pair[1]}`,pair])).values()]})));
+function assertAttachmentContractRoutes(routes,fileRoutes) {
+    const actual=[...routes.filter(row=>row.id!=='A06'),...fileRoutes].map(({id,method,path})=>`${id} ${method} ${path}`).sort();
+    const expected=ATTACHMENT_CONTRACT.map(({id,method,path})=>`${id} ${method} ${path}`).sort();
+    require('node:assert/strict').deepEqual(actual,expected,'attachment and file frozen router tables equal the independent contract');
+    require('node:assert/strict').deepEqual(fileRoutes.map(({id,method,path})=>`${id} ${method} ${path}`),['A06 GET /search'],
+        'the files router exposes only GET /search');
+}
+function assertAttachmentResponse(id,response) {
+    const row=ATTACHMENT_CONTRACT.find(candidate=>candidate.id===id);
+    if(!row)throw new Error(`unknown attachment contract route ${id}`);
+    if(response.status<400) {
+        if(!row.success.includes(response.status))throw new Error(`${id}: undocumented success ${response.status}`);
+    } else if(!row.errors.some(([status,code])=>status===response.status&&code===response.body?.code)) {
+        throw new Error(`${id}: undocumented error ${response.status} ${response.body?.code}`);
+    }
+}
 function assertContractRoutes(routes) {
     const actual=routes.map(({id,method,path})=>`${id} ${method} ${path}`).sort();
     const expected=CONTRACT.map(({id,method,path})=>`${id} ${method} ${path}`).sort();
@@ -49,6 +78,26 @@ function assertContractResponse(id,response) {
 }
 function assertGroupResponse(method,url,response) {
     const pathname=new URL(url,'http://localhost').pathname;
+    if(pathname==='/api/attachments'||pathname.startsWith('/api/attachments/')||pathname==='/api/files'||pathname.startsWith('/api/files/')) {
+        const isFiles=pathname==='/api/files'||pathname.startsWith('/api/files/');
+        const base=isFiles?'/api/files':'/api/attachments';
+        const relative=pathname.slice(base.length)||'/';
+        const parts=value=>value==='/'?[]:value.split('/').filter(Boolean);
+        const row=ATTACHMENT_CONTRACT.find(candidate=>candidate.method===(method==='HEAD'?'GET':method)&&(()=>{
+            const a=parts(candidate.path),b=parts(relative);return a.length===b.length&&a.every((part,index)=>part.startsWith(':')?Boolean(b[index]):part===b[index]);
+        })()&&((candidate.id==='A06')===isFiles));
+        if(!row) {
+            const errors=[...attachmentCommon,[403,'CSRF_INVALID'],[404,'NOT_FOUND']];
+            if(!errors.some(([status,code])=>status===response.status&&(method==='HEAD'||code===response.body?.code)))
+                throw new Error(`unmatched attachment route returned undocumented response: ${method} ${relative} ${response.status}`);
+            return response;
+        }
+        if(method==='HEAD') {
+            if(![...row.success,...row.errors.map(([status])=>status)].includes(response.status))throw new Error(`undocumented attachment HEAD status ${response.status}`);
+            return response;
+        }
+        assertAttachmentResponse(row.id,response);return response;
+    }
     if(pathname!=='/api/groups'&&!pathname.startsWith('/api/groups/'))return response;
     const relative=pathname.slice('/api/groups'.length)||'/';
     const parts=value=>value==='/'?[]:value.split('/').filter(Boolean);
@@ -87,4 +136,4 @@ async function setup(...args) {
     fixture.anotherServer=async()=>wrapBrowser(await another());
     return fixture;
 }
-module.exports={ CONTRACT, assertContractRoutes, assertContractResponse, assertGroupResponse, setup, Browser };
+module.exports={ CONTRACT, ATTACHMENT_CONTRACT, assertContractRoutes, assertAttachmentContractRoutes, assertContractResponse, assertAttachmentResponse, assertGroupResponse, setup, Browser };

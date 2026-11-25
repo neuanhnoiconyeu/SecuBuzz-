@@ -18,6 +18,10 @@ const { forAll } = require('./support/random');
 const { createGroupRouter, GROUP_ROUTES, assertRouteTable, MAX_BODY_BYTES } = require('../server/routes/groups');
 const { AuthError, sendError } = require('../server/auth/errors');
 const { DISABLED_FEATURES } = require('../server/features/config');
+const { createFilesystemProvider } = require('../server/attachments/storage/filesystem');
+const { storageRoot } = require('./support/attachments');
+// These are previously approved owner policy values, injected only by isolated tests; not production defaults.
+const ATTACHMENT_TEST_SETTINGS = Object.freeze({ pendingTtlSeconds:86400, purgeDelaySeconds:86400, retentionIntervalSeconds:3600, quotaUserBytes:1073741824, quotaConversationBytes:5368709120, maxPendingPerUser:10, uploadsPerHour:30, maxConcurrentUploadsPerUser:2, maxConcurrentUploadsPerSource:5, uploadTimeoutSeconds:120 });
 
 const SERVER_ROOT = path.join(__dirname, '..', 'server');
 const SENTINEL = 'SENTINEL-HTTP-TEXT-5c04';
@@ -49,8 +53,8 @@ const keysOf = limiter => limiter.calls.flatMap(call => call.buckets.map(bucket 
 const authRateRows = db => db.prepare('SELECT count(*) AS n FROM AuthRateLimits').get().n;
 
 // A real application with one registered, logged-in user per name, over a recording limiter.
-async function application(t, { features, limiter = recordingLimiter(), users = ['grp-http-alice'], clock = createClock() } = {}) {
-    const f = await setup(t, { now: clock.now, limiter, ...(features === undefined ? {} : { features }) });
+async function application(t, { features, limiter = recordingLimiter(), users = ['grp-http-alice'], clock = createClock(), storage } = {}) {
+    const f = await setup(t, { now: clock.now, limiter, ...(features === undefined ? {} : { features }), ...(storage === undefined ? {} : { storage }) });
     const actors = {};
     for (const name of users) {
         const browser = f.browser();
@@ -492,12 +496,18 @@ test('feature-status answers 429 with a retry delay when the read bucket is exha
 // ---------------------------------------------------------------------------------------------------------------
 test('every switch assignment is reported by feature-status, group messaging only while the Group_API is on', async t => {
     for (let mask = 0; mask < 8; mask++) {
-        const features = { groupApi: !!(mask & 1), groupMessaging: !!(mask & 2), attachmentApi: !!(mask & 4) };
-        const { actors, application: app } = await application(t, { features, users: ['grp-http-alice'] });
-        const expected = { groupApi: features.groupApi, groupMessaging: features.groupApi && features.groupMessaging, attachmentApi: features.attachmentApi };
+        const selected = { groupApi: !!(mask & 1), groupMessaging: !!(mask & 2), attachmentApi: !!(mask & 4) };
+        let features = selected, storage;
+        if(selected.attachmentApi){
+            const storageDir=storageRoot(t);
+            storage=createFilesystemProvider({root:storageDir,repositoryRoot:path.resolve(__dirname,'../..')});
+            features={...selected,attachments:{...ATTACHMENT_TEST_SETTINGS,storageDir}};
+        }
+        const { actors, application: app } = await application(t, { features, storage, users: ['grp-http-alice'] });
+        const expected = { groupApi: selected.groupApi, groupMessaging: selected.groupApi && selected.groupMessaging, attachmentApi: selected.attachmentApi };
         const response = await send(actors['grp-http-alice'], 'GET', '/api/groups/feature-status');
         assert.deepEqual([response.status, response.body], [200, expected], JSON.stringify(features));
-        assert.deepEqual({ groupApi: app.features.groupApi, groupMessaging: app.features.groupMessaging, attachmentApi: app.features.attachmentApi }, { ...features, groupMessaging: features.groupMessaging });
+        assert.deepEqual({ groupApi: app.features.groupApi, groupMessaging: app.features.groupMessaging, attachmentApi: app.features.attachmentApi }, { ...selected, groupMessaging: selected.groupMessaging });
         const probe = await send(actors['grp-http-alice'], 'GET', '/api/groups/anything');
         assert.equal(probe.status, features.groupApi ? 404 : 503, `the gate follows groupApi alone: ${JSON.stringify(features)}`);
     }
@@ -760,12 +770,14 @@ test('app.js mounts the group router after /api/messages and before the legacy s
     const at = text => { const i = source.indexOf(text); assert.ok(i >= 0, text); assert.equal(source.indexOf(text, i + 1), -1, `${text} appears once`); return i; };
     const lifecycle = at("app.use('/api/messages',messageRouters.lifecycle);");
     const mount = at("app.use('/api/groups',createGroupRouter(");
+    const attachmentImport = at("const { createAttachmentRouters }=require('./routes/attachments');");
+    const attachmentMount = at("app.use('/api/attachments',attachmentRouters.attachments);");
+    const filesMount = at("app.use('/api/files',attachmentRouters.files);");
     const legacy = at("app.use(['/api/messages','/api/logs'],middleware.requireAuth");
     const notFound = at("app.use((req,res)=>sendError(res,'NOT_FOUND',404));");
-    assert.ok(lifecycle < mount && mount < legacy && legacy < notFound, 'mount order');
+    assert.ok(attachmentImport >= 0 && lifecycle < mount && mount < attachmentMount && attachmentMount < filesMount && filesMount < legacy && legacy < notFound, 'message, group, attachment, file, legacy and not-found mount order');
     assert.ok(source.includes('features=DISABLED_FEATURES'), 'features default to everything disabled');
     assert.ok(source.includes('groups,features:groups.features'), 'groups and features are returned');
-    assert.ok(!/require\('\.\/routes\/attachments'\)/.test(source), 'no attachment router yet');
 });
 
 // ===============================================================================================================
