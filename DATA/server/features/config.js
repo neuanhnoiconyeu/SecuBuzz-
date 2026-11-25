@@ -40,13 +40,26 @@ const GROUP_SETTING_KEYS = Object.freeze({
     GROUP_MAX_PENDING_INVITATIONS_PER_GROUP: 'maxPendingInvitationsPerGroup',
     GROUP_MAX_PENDING_INVITATIONS_PER_INVITEE: 'maxPendingInvitationsPerInvitee'
 });
+const ATTACHMENT_API_SETTINGS = Object.freeze([
+    'ATTACHMENT_PENDING_TTL_SECONDS','ATTACHMENT_PURGE_DELAY_SECONDS','ATTACHMENT_RETENTION_INTERVAL_SECONDS',
+    'ATTACHMENT_QUOTA_USER_BYTES','ATTACHMENT_QUOTA_CONVERSATION_BYTES','ATTACHMENT_MAX_PENDING_PER_USER',
+    'ATTACHMENT_UPLOADS_PER_HOUR','ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_USER','ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_SOURCE'
+]);
+const ATTACHMENT_SETTING_KEYS = Object.freeze({
+    ATTACHMENT_PENDING_TTL_SECONDS:'pendingTtlSeconds', ATTACHMENT_PURGE_DELAY_SECONDS:'purgeDelaySeconds',
+    ATTACHMENT_RETENTION_INTERVAL_SECONDS:'retentionIntervalSeconds', ATTACHMENT_QUOTA_USER_BYTES:'quotaUserBytes',
+    ATTACHMENT_QUOTA_CONVERSATION_BYTES:'quotaConversationBytes', ATTACHMENT_MAX_PENDING_PER_USER:'maxPendingPerUser',
+    ATTACHMENT_UPLOADS_PER_HOUR:'uploadsPerHour', ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_USER:'maxConcurrentUploadsPerUser',
+    ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_SOURCE:'maxConcurrentUploadsPerSource', ATTACHMENT_UPLOAD_TIMEOUT_SECONDS:'uploadTimeoutSeconds'
+});
 
 // OP-11: in production a switch that is on also needs a Gate_Record id. The server
 // checks the format only; it does not look the record up. The attachment record
 // variable joins with the attachment settings in DB-6B (T-6B-22).
 const GATE_RECORD_VARIABLES = Object.freeze({
     groupApi: 'GROUPS_API_GATE_RECORD',
-    groupMessaging: 'GROUP_MESSAGING_GATE_RECORD'
+    groupMessaging: 'GROUP_MESSAGING_GATE_RECORD',
+    attachmentApi: 'ATTACHMENTS_API_GATE_RECORD'
 });
 const GATE_RECORD_FORMAT = /^GR-[A-Z0-9-]{3,48}$/;
 
@@ -54,8 +67,9 @@ const GATE_RECORD_FORMAT = /^GR-[A-Z0-9-]{3,48}$/;
 // fraction, no exponent and no padding. Anything else is invalid.
 const POSITIVE_WHOLE_NUMBER = /^[1-9][0-9]*$/;
 
-// Every setting a FeatureConfigError may name. The attachment settings join in DB-6B.
-const DECLARED_SETTINGS = Object.freeze([...GROUP_API_SETTINGS, ...Object.values(GATE_RECORD_VARIABLES)]);
+// Every setting a FeatureConfigError may name.
+const DECLARED_SETTINGS = Object.freeze([...GROUP_API_SETTINGS,...ATTACHMENT_API_SETTINGS,'ATTACHMENT_UPLOAD_TIMEOUT_SECONDS',
+    'ATTACHMENT_STORAGE_DIR',...Object.values(GATE_RECORD_VARIABLES)]);
 
 const DISABLED_FEATURES = Object.freeze({
     groupApi: false,
@@ -113,6 +127,7 @@ function loadFeatureConfig(env) {
 
     const problems = new Set();
     const groups = {};
+    const attachments = {};
     if (groupApi) {
         for (const name of GROUP_API_SETTINGS) {
             const value = positiveWholeNumber(env[name]);
@@ -123,9 +138,24 @@ function loadFeatureConfig(env) {
         // exists for it; only an injected features object enables it, in tests.
         groups.directAdd = false;
     }
+    if (attachmentApi) {
+        for (const name of ATTACHMENT_API_SETTINGS) {
+            const value = positiveWholeNumber(env[name]);
+            if (value === null) problems.add(name);
+            else attachments[ATTACHMENT_SETTING_KEYS[name]] = value;
+        }
+        if (env.ATTACHMENT_UPLOAD_TIMEOUT_SECONDS !== undefined) {
+            const value = positiveWholeNumber(env.ATTACHMENT_UPLOAD_TIMEOUT_SECONDS);
+            if (value === null) problems.add('ATTACHMENT_UPLOAD_TIMEOUT_SECONDS');
+            else attachments.uploadTimeoutSeconds = value;
+        }
+        // An absent or invalid root is handled by the runtime feature gate, not as a fatal config error.
+        attachments.storageDir = env.ATTACHMENT_STORAGE_DIR;
+    }
     if (env.NODE_ENV === PRODUCTION) {
         if (groupApi && !validGateRecord(env[GATE_RECORD_VARIABLES.groupApi])) problems.add(GATE_RECORD_VARIABLES.groupApi);
         if (groupMessaging && !validGateRecord(env[GATE_RECORD_VARIABLES.groupMessaging])) problems.add(GATE_RECORD_VARIABLES.groupMessaging);
+        if (attachmentApi && !validGateRecord(env[GATE_RECORD_VARIABLES.attachmentApi])) problems.add(GATE_RECORD_VARIABLES.attachmentApi);
     }
     if (problems.size > 0) throw new FeatureConfigError([...problems]);
 
@@ -134,8 +164,8 @@ function loadFeatureConfig(env) {
         groupMessaging,
         attachmentApi,
         groups: Object.freeze(groups),
-        attachments: Object.freeze({})
+        attachments: Object.freeze(attachments)
     });
 }
 
-module.exports = { DISABLED_FEATURES, GROUP_API_SETTINGS, FeatureConfigError, loadFeatureConfig };
+module.exports = { DISABLED_FEATURES, GROUP_API_SETTINGS, ATTACHMENT_API_SETTINGS, FeatureConfigError, loadFeatureConfig };

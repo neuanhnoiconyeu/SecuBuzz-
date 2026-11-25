@@ -24,6 +24,13 @@ const MANIFEST_SHA256 = 'fa6d3c1d72d8f5d8bce227341952ef3ca71fa963a99f4f3ea0431fb
 // Later owner-approved exception for the exact Task 2.24 fixture-only change. The manifest remains the immutable
 // d7cd40a record; this one file may match either its original digest or this exact approved commit digest.
 const APPROVED_POST_BASELINE_EXCEPTIONS = Object.freeze({
+    // Project Owner decision 2026-11-23: exact reviewed E2EE boundary adaptation.
+    // Reviewed raw hash 931a3f2e7bb047e234308b45165db741c7cc703829bc0bde9de4e86e808bb8df; canonical CRLF-to-LF digest below.
+    'e2ee-migrations.test.js':Object.freeze({
+        baselineSha256:'57966e96f076e234718a1a2cd3afaf5c4ede984767458be3d1a3ce00642d0a46',
+        approvedSha256:'4ea6fb2006062a21a35b3fc4500b04328f62a9263c720abdc67fa80ad6d65dfb',
+        scope:'historical 6-to-7 assertions at version 7, then separate 0009 preservation/default checks',
+    }),
     'support/auth.js':Object.freeze({
         baselineSha256:'e9910b540e2078a34ff77763c95a00090a02a9d323fe239ecb40a96e69ac08d7',
         approvedSha256:'0d7996a8bef3be2703bfbb40dfe3c170efb3571a9bfdd6077832de2ef50bcc6f',
@@ -42,6 +49,8 @@ const PUBLISHED = Object.freeze([
     { version:7, name:'0007-recipient-keys.sql', sha256:'6a73d3a1533a40f09546fff27639ec654363837f4e6fcb6bd23a7aef5eff06c2' },
 ]);
 const LAST_PUBLISHED = PUBLISHED[PUBLISHED.length - 1];
+// Immutable SHA-256 of the already merged, LF-normalised 0008 migration; 0009 remains draft.
+const GROUPS_0008 = Object.freeze({ version:8, name:'0008-groups.sql', sha256:'114b86a02899aad730e450f5a423d54f01098c051d397a9dc0e77b1125ac3c9e' });
 // P-29 generator. A failure prints property, seed, run and runSeed; replay one run with
 // PROPERTY_SEED=<seed> PROPERTY_RUN=<run> node --test tests/baseline-checksums.test.js
 const P29_RUNS = 105; // run r mutates the applied copy of file r mod 7, so each of the seven files gets 15 cases
@@ -183,6 +192,11 @@ function undoPermittedChange(entry, current, later) {
 // on a DC-01 line names file and line. The manifest holds whole-file digests only, so a difference on any other
 // line names the file and says so; G5b on the host shows that line.
 function checkBaselineFile({ file, text, digest, entries, later }) {
+    // Only the explicitly approved E2EE whole-file revision may move its DC-01 assertions.
+    // Require the original manifest digest as well as the exact normalized replacement digest.
+    const e2ee=APPROVED_POST_BASELINE_EXCEPTIONS['e2ee-migrations.test.js'];
+    if (file==='e2ee-migrations.test.js' && digest===e2ee.baselineSha256 &&
+        [e2ee.baselineSha256,e2ee.approvedSha256].includes(sha256(text))) return [];
     const lines = text.split('\n');
     const restored = lines.slice();
     const problems = [];
@@ -339,6 +353,22 @@ test('later owner-approved Task 2.24 fixture exception accepts only the exact au
         'the exception cannot replace or bypass the original baseline digest');
 });
 
+test('owner-approved E2EE exception accepts only the reviewed normalized revision and rejects mutations', () => {
+    const file='e2ee-migrations.test.js',e=APPROVED_POST_BASELINE_EXCEPTIONS[file],digest=manifest.tests[file];
+    const text=readText(path.join(TESTS_ROOT,file)),entries=dc01Entries(file),later=laterMigrations();
+    assert.equal(digest,e.baselineSha256);
+    assert.equal(sha256(text),e.approvedSha256);
+    assert.deepEqual(checkBaselineFile({file,text,digest,entries,later}),[]);
+    assert.deepEqual(checkBaselineFile({file,text:lfText(Buffer.from(text.replace(/\n/g,'\r\n'))),digest,entries,later}),[]);
+    for (const mutation of [text+'\n',text.replace('assert.deepEqual(', 'assert.notDeepEqual('),
+        text.replace("purge_state:'not_purged'", "purge_state:'purged'")]) {
+        assert.notEqual(sha256(mutation),e.approvedSha256);
+        assert.ok(checkBaselineFile({file,text:mutation,digest,entries,later}).length>0);
+    }
+    assert.ok(checkBaselineFile({file,text,digest:'0'.repeat(64),entries,later}).length>0);
+    assert.ok(checkBaselineFile({file:'other.test.js',text,digest,entries:[],later}).length>0);
+});
+
 test('script files under tests/ that the manifest does not list carry no skip marker', () => {
     const listed = new Set(manifestFiles().map(([file]) => file));
     const scanned = scriptFiles(TESTS_ROOT).filter(file => !listed.has(file));
@@ -456,4 +486,25 @@ test('skip-marker self-test: each marker fails with file and line, and plain wor
         assert.equal(markerHits('new.test.js', `test${parts.join(' ').toUpperCase()}`).length, 1, `${label} in upper case with spaces`);
     }
     assert.deepEqual(markerHits('new.test.js', "test('does not skip, todo or only anything', () => {});\n"), []);
+});
+
+test('0008 merged migration checksum is pinned and a changed applied copy is refused without changing data', t => {
+    const entries = loadMigrations().filter(migration => migration.version <= GROUPS_0008.version);
+    const group = entries.at(-1);
+    assert.deepEqual({ version:group.version, name:group.name, checksum:group.checksum }, {version:GROUPS_0008.version,name:GROUPS_0008.name,checksum:GROUPS_0008.sha256});
+    const directory = temporary(t);
+    for (const migration of entries) fs.writeFileSync(path.join(directory, migration.name), migration.sql);
+    const { db } = fixture(t, { migrate:false });
+    assert.deepEqual(migrate(db, { directory }), { version:8, applied:entries.map(migration => migration.name) });
+    db.prepare('INSERT INTO Users(user_id,username,display_name) VALUES(?,?,?)').run('m8-pin-user','m8-pin-user','M8 pin');
+    const before = snapshot(db);
+    const file = path.join(directory, GROUPS_0008.name);
+    const original = fs.readFileSync(file);
+    const changed = Buffer.from(original);
+    const offset = changed.indexOf(Buffer.from('CREATE INDEX'));
+    assert.ok(offset >= 0, 'the temporary 0008 copy contains an editable statement');
+    changed[offset] = changed[offset] === 0x43 ? 0x63 : 0x43;
+    fs.writeFileSync(file, changed);
+    assert.throws(() => migrate(db, { directory }), { code:'MIGRATION_HISTORY_MISMATCH' });
+    assert.deepEqual(snapshot(db), before, 'the changed applied 0008 copy changes no schema, ledger or row');
 });

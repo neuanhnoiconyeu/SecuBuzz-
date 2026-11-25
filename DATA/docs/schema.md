@@ -98,6 +98,7 @@ Encryption metadata is stored unchanged: algorithm, version, encoding, IV, ciphe
 | 6 | `0006-encrypted-message-lifecycle.sql` |
 | 7 | `0007-recipient-keys.sql` |
 | 8 | `0008-groups.sql` |
+| 9 | `0009-attachment-lifecycle.sql` |
 
 ### Added tables
 
@@ -163,3 +164,21 @@ The backfill inserts one extension for every group conversation of both origins:
 `first_seq` is the lowest authenticated message sequence created at or after that member's join, or the authenticated high-water plus 1 if no such message exists (1 for an empty stream). For active members `last_seq` is NULL. For former members it is the highest authenticated sequence created at or before leaving, or `first_seq - 1` when none qualifies. The SQL uses `strftime` normalization for ISO and legacy SQLite timestamp forms. Unparseable times match no message and narrow access; they never justify widening history. This bootstrap rule does not rewrite Messages or membership rows. Normal joins and closures thereafter use sequence high-water, not timestamp ordering.
 
 Schema presence is not authorization. The repository exposes a managed group only when kind is group, origin is authenticated and an extension exists. Active authorized members retain earlier permitted intervals after rejoining; absence gaps never become visible. `all` additionally allows sequences before the first join. Former members and never-members receive no history. Server filtering does not replace key-based confidentiality; E2EE and realtime security remain under their existing contracts.
+
+## Version 9 attachment lifecycle migration
+
+`0009-attachment-lifecycle.sql` extends the existing shared `Attachments` table; it does not create a second attachment store. It adds nullable `integrity_digest`, `expires_at`, `deleted_at`, `declared_algorithm`, and `declared_format_version` columns, plus `purge_state` defaulting to `not_purged` with the values `not_purged` and `purged`. Existing attachment columns and values are preserved. The migration also creates `AttachmentReservations` with restrictive foreign keys and indexes for reservation lookups and expiry.
+
+The database does not validate the `storage_key` format, recompute `integrity_digest` from private-storage bytes, or interpret descriptor identifiers (`declared_algorithm` and `declared_format_version`). The migration constrains a non-NULL digest to 64 lowercase hexadecimal characters and bounds non-NULL descriptor lengths to 1..64 characters; the storage provider and service validate keys and verify byte digests.
+
+### Added named objects
+
+| Kind | Names |
+| --- | --- |
+| Indexes | `idx_attachments_pending_expiry`, `idx_attachments_uploader_usage`, `idx_attachments_search`, `idx_attachments_purge`, `idx_reservations_user`, `idx_reservations_conversation`, `idx_reservations_source`, `idx_reservations_expiry` |
+| Table | `AttachmentReservations` |
+| Triggers | `attachments_immutable`, `attachments_lifecycle`, `attachments_metadata_insert` |
+
+`attachments_immutable` protects attachment identity and metadata. `attachments_lifecycle` checks every update. A deleted row permits value-preserving updates or only an isolated `purge_state` transition from `not_purged` to `purged`; it rejects any other changed value, a purge-state reversal, and a purge transition combined with another column change. Comparisons are NULL-safe. Existing status transitions, association, sender, and `deleted_at` consistency checks remain enforced. This is the Project Owner-approved Task 8.4 amendment recorded in the DB-6B design decision. `attachments_metadata_insert` enforces the encrypted metadata length bound.
+
+Migration 0009 is DB-6B draft schema in this isolated implementation workspace. Its presence does not enable the Attachment API or any feature gate. Published migrations 0001–0008 remain unchanged.

@@ -344,8 +344,14 @@ test('upgrade from version 7 keeps every row and value of every version-7 table 
     const { db } = atVersionSeven(t);
     seed(db);
     const tables = tableNames(db);
+    const attachmentLegacyDigest = () => {
+        const rows=db.prepare(`SELECT attachment_id,conversation_id,message_id,uploaded_by,storage_key,encrypted_metadata,media_type,
+            byte_size,status,created_at,updated_at FROM Attachments ORDER BY rowid`).all();
+        return {rows:rows.length,sha256:createHash('sha256').update(JSON.stringify(rows)).digest('hex')};
+    };
     const snapshot = () => Object.fromEntries(tables.map(table =>
-        [table, table === 'SchemaMigrations' ? digest(db, table, `WHERE version <= ${BASELINE_VERSION}`) : digest(db, table)]));
+        [table, table === 'SchemaMigrations' ? digest(db, table, `WHERE version <= ${BASELINE_VERSION}`) :
+            table === 'Attachments' ? attachmentLegacyDigest() : digest(db, table)]));
     const before = snapshot();
     for (const table of ['Users', 'UserProfiles', 'AccountCredentials', 'Sessions', 'SocialRevisions', 'FriendRequests', 'Friendships',
         'Blocks', 'Contacts', 'SecurityLogs', 'AuditLogs', 'Conversations', 'ConversationMembers', 'Messages', 'MessageReceipts',
@@ -1607,4 +1613,227 @@ test('P-28: faults before the first and after the last 0008 statement also roll 
     assert.equal(f.db.prepare('SELECT count(*) AS n FROM GroupExtensions').get().n, 1);
     assert.equal(f.db.prepare('SELECT count(*) AS n FROM GroupMembershipIntervals').get().n, 1);
     t.diagnostic('P-28-boundaries failures=6; pending 0007 and 0008 rolled back together');
+});
+
+// DB-6B Task 8.3: temporary migration directories are assembled only from the checked-in migration texts.
+function migrationDirectoryThrough(t, version, override = null) {
+    const directory = temporaryDirectory(t);
+    for (const migration of loadMigrations().filter(entry => entry.version <= version)) {
+        fs.writeFileSync(path.join(directory, migration.name), migration.version === override?.version ? override.sql : migration.sql);
+    }
+    return directory;
+}
+function attachmentSeed(db, suffix, createdAt) {
+    const user = (id, name) => insert(db, 'Users', { user_id:id, username:name, display_name:name, created_at:createdAt, last_seen:createdAt });
+    user('m9-a',`m9-a-${suffix}`); user('m9-b',`m9-b-${suffix}`);
+    insert(db,'Conversations',{conversation_id:'m9-dm',kind:'direct',dm_user_low:'m9-a',dm_user_high:'m9-b',created_at:createdAt,updated_at:createdAt});
+    insert(db,'ConversationMembers',{conversation_id:'m9-dm',user_id:'m9-a',role:'member',joined_at:createdAt});
+    insert(db,'ConversationMembers',{conversation_id:'m9-dm',user_id:'m9-b',role:'member',joined_at:createdAt});
+}
+
+test('T-6B-03: 0009 structural schema, restrict-only reservation FKs, one-way history and failing-copy rollback', t => {
+    const listed = listedMigrations();
+    assert.equal(listed.length,9);
+    assert.deepEqual(listed.map(entry=>entry.version),[1,2,3,4,5,6,7,8,9]);
+    const fresh = guardedDatabase(t);
+    assert.equal(fresh.db.prepare('SELECT max(version) AS n FROM SchemaMigrations').get().n,9);
+    assert.deepEqual(fresh.db.pragma('foreign_key_check'),[]);
+    assert.equal(fresh.db.pragma('integrity_check',{simple:true}),'ok');
+    const reservationKeys=fresh.db.prepare('SELECT * FROM pragma_foreign_key_list(?) ORDER BY id,seq').all('AttachmentReservations');
+    assert.ok(reservationKeys.length>=1);
+    assert.ok(reservationKeys.every(key=>key.on_delete==='RESTRICT'));
+    assert.ok(!fresh.db.prepare('SELECT name FROM pragma_table_info(?) WHERE name=?').get('Messages','group_id'));
+    const names=tableNames(fresh.db);
+    assert.equal(new Set(names).size,names.length);
+    for(const canonical of ['Conversations','ConversationMembers','Messages','Attachments'])assert.ok(names.includes(canonical));
+    assert.equal(names.filter(name=>/^Attachment(?:Metadata|Messages|Records)$/.test(name)).length,0);
+
+    const version8 = guardedVersionSeven(t);
+    assert.deepEqual(migrate(version8.db,{directory:migrationDirectoryThrough(t,8)}).applied,['0008-groups.sql']);
+    attachmentSeed(version8.db,'structural',SETUP);
+    const before=databaseState(version8.db);
+    const original=fs.readFileSync(path.join(MIGRATIONS,'0009-attachment-lifecycle.sql'),'utf8');
+    const directory=migrationDirectoryThrough(t,9,{version:9,sql:`${original}\nCREATE TABLE T6B03Broken (id INTEGER PRIMARY KEY, n INTEGER CHECK(n>0));\nINSERT INTO T6B03Broken VALUES(1,0);\n`});
+    assert.throws(()=>migrate(version8.db,{directory}),error=>{
+        assert.equal(error.code,'MIGRATION_FAILED'); assert.match(error.message,/0009-attachment-lifecycle\.sql/);
+        assertNoPath(error.message,directory,version8.directory); return true;
+    });
+    assert.deepEqual(databaseState(version8.db),before,'failed 0009 preserves schema, ledger and rows');
+
+    const oneWay=guardedDatabase(t); insert(oneWay.db,'Users',{user_id:'one-way-user',username:'one-way-user',display_name:'One way'});
+    const beforeOneWay=databaseState(oneWay.db),onlyEight=migrationDirectoryThrough(t,8);
+    assert.throws(()=>migrate(oneWay.db,{directory:onlyEight}),error=>{
+        assert.equal(error.code,'MIGRATION_HISTORY_MISMATCH'); assertNoPath(error.message,onlyEight); return true;
+    });
+    assert.deepEqual(databaseState(oneWay.db),beforeOneWay,'opening with 0001-0008 changes nothing');
+});
+
+test('T-6B-50: 0009 docs match the migrated schema and state the one-way cold-backup boundary',t=>{
+    const f=atVersionSeven(t),through8=migrationDirectoryThrough(t,8);
+    assert.equal(migrate(f.db,{directory:through8}).version,8);
+    attachmentSeed(f.db,'docs',SETUP);
+    insert(f.db,'Attachments',{attachment_id:'doc-attachment',conversation_id:'m9-dm',message_id:null,uploaded_by:'m9-a',
+        storage_key:'documentation-storage-key',encrypted_metadata:'opaque',media_type:'application/octet-stream',byte_size:4,
+        status:'pending',created_at:SETUP,updated_at:SETUP});
+    const beforeColumns=f.db.prepare('SELECT name FROM pragma_table_info(?) ORDER BY cid').all('Attachments').map(row=>row.name);
+    const beforeObjects=new Set(f.db.prepare("SELECT type,name FROM sqlite_master WHERE type IN ('table','index','trigger') AND name NOT LIKE 'sqlite_%'").all()
+        .map(row=>`${row.type}:${row.name}`));
+    const old=f.db.prepare('SELECT attachment_id,conversation_id,message_id,uploaded_by,storage_key,encrypted_metadata,media_type,byte_size,status,created_at,updated_at FROM Attachments').all();
+    const through9=migrationDirectoryThrough(t,9);
+    assert.deepEqual(migrate(f.db,{directory:through9}).applied,['0009-attachment-lifecycle.sql']);
+    const newColumns=f.db.prepare('SELECT name FROM pragma_table_info(?) ORDER BY cid').all('Attachments').map(row=>row.name).filter(name=>!beforeColumns.includes(name));
+    assert.deepEqual(newColumns.sort(),['declared_algorithm','declared_format_version','deleted_at','expires_at','integrity_digest','purge_state'].sort());
+    assert.deepEqual(f.db.prepare('SELECT attachment_id,conversation_id,message_id,uploaded_by,storage_key,encrypted_metadata,media_type,byte_size,status,created_at,updated_at FROM Attachments').all(),old);
+    const newObjects=f.db.prepare("SELECT type,name FROM sqlite_master WHERE type IN ('table','index','trigger') AND name NOT LIKE 'sqlite_%' ORDER BY type,name").all()
+        .filter(row=>!beforeObjects.has(`${row.type}:${row.name}`));
+    assert.deepEqual(newObjects.reduce((counts,row)=>{counts[row.type]=(counts[row.type]||0)+1;return counts;},{}),{index:8,table:1,trigger:3});
+    const schema=fs.readFileSync(path.join(DOCS,'schema.md'),'utf8'),migrations=fs.readFileSync(path.join(DOCS,'migrations.md'),'utf8');
+    for(const [name,text] of [['schema',schema],['migrations',migrations]]){
+        assert.ok(text.includes('`0009-attachment-lifecycle.sql`'),`${name} migration filename`);
+        for(const column of newColumns)assert.ok(text.includes(`\`${column}\``),`${name} column ${column}`);
+        for(const object of newObjects)assert.ok(text.includes(`\`${object.name}\``),`${name} ${object.type} ${object.name}`);
+        assert.match(text,/does not validate[^\r\n]*(?:storage-key|storage_key)[^\r\n]*format/i,`${name} key-format boundary`);
+        assert.match(text,/does not validate[^\r\n]*digest[^\r\n]*private-storage bytes/i,`${name} digest boundary`);
+        assert.match(text,/does not validate[^\r\n]*interpret[^\r\n]*descriptor identifiers/i,`${name} descriptor boundary`);
+    }
+    assert.match(migrations,/first start[\s\S]*?0009[\s\S]*?sqlite-data[\s\S]*?permanently/i);
+    assert.match(migrations,/MIGRATION_HISTORY_MISMATCH/);
+    for(const volume of ['sqlite-data','private-storage'])assert.ok(migrations.includes(`\`${volume}\``),`cold-backup ${volume}`);
+    assert.match(migrations,/stop every writer[\s\S]*archive both complete Docker volume roots/i);
+    assert.match(migrations,/Compose Watch is not used while 0009 is a draft/i);
+    assert.match(migrations,/Disposable_Project under T-6B-51/);
+    assert.match(migrations,/No backup helper or script exists/);
+    const handoff=fs.readFileSync(path.join(DOCS,'db5-db6-handoff.md'),'utf8').split('## Docker development environment')[1]?.split('\n## ')[0]||'';
+    assert.match(handoff,/first start[\s\S]*?0009[\s\S]*?sqlite-data[\s\S]*?permanently/i);
+    assert.match(handoff,/MIGRATION_HISTORY_MISMATCH/);
+    for(const volume of ['sqlite-data','private-storage'])assert.ok(handoff.includes(`\`${volume}\``),`handoff cold-backup ${volume}`);
+    assert.match(handoff,/stop every writer[\s\S]*archive both complete roots/i);
+    assert.match(handoff,/Compose Watch is not used while 0009 is a draft/);
+    assert.match(handoff,/Disposable_Project \(T-6B-51\)/);
+    assert.match(handoff,/No backup helper or script exists/);
+});
+
+test('T-6B-50: repository documentation lists every migration-0009 attachment repository function',t=>{
+    const f=guardedDatabase(t),repository=require('../server/database/attachmentRepository').createAttachmentRepository(f.db);
+    const text=fs.readFileSync(path.join(DOCS,'repositories.md'),'utf8').split('## DB-6B attachment repository additions')[1]||'';
+    assert.ok(text,'DB-6B attachment repository additions section');
+    for(const [name,value] of Object.entries(repository))if(typeof value==='function')assert.ok(text.includes(`\`${name}\``),name);
+    assert.match(text,/callers own the surrounding immediate transaction/i);
+    assert.match(text,/not an authorization boundary/i);
+    assert.match(text,/does not access private-storage bytes/i);
+});
+
+// P-27 for migration 0009: all pre-existing row values are hashed independently of the runner, including all
+// three attachment statuses. The reference schema is built fresh by the real migration runner.
+test('P-27 (0009): 100 generated version-7 databases preserve every old row and match fresh version 9, plus a version-8 variant', {timeout:900000}, async t => {
+    const coverage={runs:0,attachmentStatuses:new Set(),oldTables:0,oldRows:0};
+    const fresh=guardedDatabase(t),freshSchema=p27Schema(fresh.db);
+    const summary=await forAll('P-27-0009',{runs:100,seed:27119,describe:value=>`suffix=${value.suffix} created=${value.createdAt}`},random=>({
+        suffix:random.string('abcdef0123456789',8,8),createdAt:new Date(Date.UTC(2025,0,1)+random.int(0,86400000)).toISOString(),
+        byteSize:random.int(1,5000000),metadata:random.string('abcdef0123456789',32,32),
+    }),value=>{
+        const f=guardedVersionSeven(t); attachmentSeed(f.db,value.suffix,value.createdAt);
+        for(const status of ['pending','ready','deleted'])insert(f.db,'Attachments',{attachment_id:`att-${status}`,conversation_id:'m9-dm',message_id:null,
+            uploaded_by:'m9-a',storage_key:`m9-${status}-${value.suffix}`,encrypted_metadata:value.metadata,media_type:'application/octet-stream',
+            byte_size:value.byteSize,status,created_at:value.createdAt,updated_at:value.createdAt});
+        const beforeTables=tableNames(f.db),beforeColumns=Object.fromEntries(beforeTables.map(table=>[table,f.db.prepare('SELECT name,pk FROM pragma_table_info(?) ORDER BY cid').all(table)]));
+        const before=Object.fromEntries(beforeTables.map(table=>[table,p27RowDigests(f.db,table,beforeColumns[table])]));
+        assert.deepEqual(migrate(f.db),{version:9,applied:['0008-groups.sql','0009-attachment-lifecycle.sql']});
+        for(const table of beforeTables){assert.deepEqual(p27RowDigests(f.db,table,beforeColumns[table]),before[table],`${table} original values`);coverage.oldTables+=1;coverage.oldRows+=before[table].length;}
+        assert.deepEqual(p27Schema(f.db),freshSchema,'upgraded version-7 schema equals fresh 0009 schema');
+        const rows=f.db.prepare('SELECT status,integrity_digest,expires_at,deleted_at,purge_state,declared_algorithm,declared_format_version FROM Attachments ORDER BY attachment_id').all();
+        assert.deepEqual(rows.map(row=>row.status),['deleted','pending','ready']);
+        for(const row of rows){coverage.attachmentStatuses.add(row.status);assert.equal(row.purge_state,'not_purged');
+            for(const field of ['integrity_digest','expires_at','deleted_at','declared_algorithm','declared_format_version'])assert.equal(row[field],null);}
+        assert.deepEqual(f.db.pragma('foreign_key_check'),[]);assert.equal(f.db.pragma('integrity_check',{simple:true}),'ok');coverage.runs+=1;
+    });
+    assert.equal(summary.runs,100);assert.equal(coverage.runs,100);assert.deepEqual([...coverage.attachmentStatuses].sort(),['deleted','pending','ready']);
+    // A populated version-8 database receives only 0009 and keeps its version-8 attachment values.
+    const v8=guardedVersionSeven(t);assert.deepEqual(migrate(v8.db,{directory:migrationDirectoryThrough(t,8)}).applied,['0008-groups.sql']);
+    attachmentSeed(v8.db,'v8',SETUP);insert(v8.db,'Attachments',{attachment_id:'att-v8',conversation_id:'m9-dm',message_id:null,uploaded_by:'m9-a',
+        storage_key:'m9-v8',encrypted_metadata:'before',media_type:'application/octet-stream',byte_size:42,status:'pending',created_at:SETUP,updated_at:SETUP});
+    const v8Tables=tableNames(v8.db),v8Columns=Object.fromEntries(v8Tables.map(table=>[table,v8.db.prepare('SELECT name,pk FROM pragma_table_info(?) ORDER BY cid').all(table)]));
+    const v8Rows=Object.fromEntries(v8Tables.map(table=>[table,table==='SchemaMigrations'?digest(v8.db,table,'WHERE version <= 8'):p27RowDigests(v8.db,table,v8Columns[table])]));
+    const prior=v8.db.prepare('SELECT * FROM Attachments').all();assert.deepEqual(migrate(v8.db),{version:9,applied:['0009-attachment-lifecycle.sql']});
+    for(const table of v8Tables)assert.deepEqual(table==='SchemaMigrations'?digest(v8.db,table,'WHERE version <= 8'):p27RowDigests(v8.db,table,v8Columns[table]),v8Rows[table],`version-8 ${table} values remain unchanged`);
+    assert.deepEqual(p27Schema(v8.db),freshSchema,'version-8 upgrade also matches the fresh version-9 schema');
+    assert.deepEqual(v8.db.prepare('SELECT attachment_id,conversation_id,message_id,uploaded_by,storage_key,encrypted_metadata,media_type,byte_size,status,created_at,updated_at FROM Attachments').all(),
+        prior.map(({attachment_id,conversation_id,message_id,uploaded_by,storage_key,encrypted_metadata,media_type,byte_size,status,created_at,updated_at})=>
+            ({attachment_id,conversation_id,message_id,uploaded_by,storage_key,encrypted_metadata,media_type,byte_size,status,created_at,updated_at})));
+    assert.equal(v8.db.prepare('SELECT purge_state FROM Attachments').get().purge_state,'not_purged');
+    t.diagnostic(`P-27-0009 seed=${summary.seed} runs=${coverage.runs} oldTables=${coverage.oldTables} oldRows=${coverage.oldRows} statuses=${[...coverage.attachmentStatuses].sort().join(',')}`);
+});
+
+function p28Failing009(sql, position, fault) {
+    const parts=p28StatementChunks(sql);
+    const probe=`CREATE TABLE P28AttachmentProbe(id INTEGER PRIMARY KEY, value INTEGER NOT NULL CHECK(value>=0));\nINSERT INTO P28AttachmentProbe VALUES(1,0);\n`+
+        `UPDATE Users SET display_name='P28 attachment pending' WHERE user_id=(SELECT user_id FROM Users ORDER BY user_id LIMIT 1);\n`;
+    let copy=parts.prefix+probe;
+    parts.chunks.forEach((chunk,index)=>{if(position===index)copy+=fault+';\n';copy+=chunk;});
+    if(position===parts.chunks.length)copy+=fault+';\n';
+    return {copy,parts};
+}
+function p28FaultSql(kind) {
+    if(kind==='syntax')return {sql:'CREATE TABLE P28AttachmentBroken (',code:'SQLITE_ERROR'};
+    if(kind==='check')return {sql:`INSERT INTO AttachmentReservations(reservation_id,user_id,conversation_id,declared_bytes,source_digest,created_at,expires_at) VALUES('bad-check','m9-a','m9-dm',0,'${'a'.repeat(64)}','${SETUP}','${SETUP}')`,code:'SQLITE_CONSTRAINT_CHECK'};
+    return {sql:`INSERT INTO AttachmentReservations(reservation_id,user_id,conversation_id,declared_bytes,source_digest,created_at,expires_at) VALUES('bad-fk','missing','m9-dm',1,'${'a'.repeat(64)}','${SETUP}','${SETUP}')`,code:'SQLITE_CONSTRAINT_FOREIGNKEY'};
+}
+function assert009Rollback(f,directory,sql,position,kind) {
+    const before=databaseState(f.db),fault=p28FaultSql(kind),{copy,parts}=p28Failing009(sql,position,fault.sql);
+    assert.ok(position>=0&&position<=parts.chunks.length);
+    fs.writeFileSync(path.join(directory,'0009-attachment-lifecycle.sql'),copy);
+    assert.throws(()=>migrate(f.db,{directory}),error=>{
+        assert.equal(error.code,'MIGRATION_FAILED');assert.match(error.message,/0009-attachment-lifecycle\.sql/);
+        assertNoPath(error.message,directory,f.directory);assert.equal(error.cause?.code,fault.code,`${fault.code}: ${error.cause?.message}`);return true;
+    },`P-28-0009 ${kind} at statement boundary ${position}`);
+    assert.equal(f.db.inTransaction,false);assert.deepEqual(databaseState(f.db),before,'schema, ledger and rows roll back together');
+    assert.deepEqual(f.db.pragma('foreign_key_check'),[]);assert.equal(f.db.pragma('integrity_check',{simple:true}),'ok');
+}
+
+test('P-28 (0009): generated failures at randomized 0009 boundaries roll back schema, ledger and rows', {timeout:900000}, async t => {
+    const sql=fs.readFileSync(path.join(MIGRATIONS,'0009-attachment-lifecycle.sql'),'utf8'),parts=p28StatementChunks(sql);
+    const tableCreate=parts.chunks.findIndex(chunk=>/CREATE TABLE AttachmentReservations/i.test(chunk));assert.ok(tableCreate>=0);
+    const directoryBase=migrationDirectoryThrough(t,8),coverage={runs:0,failures:0,positions:new Set(),kinds:new Set()};
+    const summary=await forAll('P-28-0009',{runs:100,seed:28120,describe:value=>`kind=${value.kind} boundary=${value.position}`},random=>{
+        const kind=random.pick(['syntax','check','foreign-key']);
+        const min=kind==='syntax'?0:tableCreate+1;
+        return {kind,position:random.int(min,parts.chunks.length)};
+    },value=>{
+        const f=guardedVersionSeven(t);assert.deepEqual(migrate(f.db,{directory:directoryBase}).applied,['0008-groups.sql']);
+        attachmentSeed(f.db,`p28-${coverage.runs}`,SETUP);
+        const directory=migrationDirectoryThrough(t,9);
+        assert009Rollback(f,directory,sql,value.position,value.kind);
+        coverage.runs+=1;coverage.failures+=1;coverage.positions.add(value.position);coverage.kinds.add(value.kind);
+    });
+    if(summary.replay===null)assert.equal(summary.runs,100);assert.equal(coverage.failures,summary.runs);
+    if(summary.replay===null){assert.deepEqual([...coverage.kinds].sort(),['check','foreign-key','syntax']);assert.ok(coverage.positions.size>3,'generated fault boundaries vary');}
+    // Pending 0008 and 0009 roll back as one batch when a 0009 syntax, CHECK or FK failure occurs.
+    const sevenDirectory=migrationDirectoryThrough(t,7),sql8=fs.readFileSync(path.join(MIGRATIONS,'0008-groups.sql'),'utf8');
+    const parts8=p28StatementChunks(sql),baseFaults=[['syntax',0],['check',parts.chunks.length],['foreign-key',parts.chunks.length]];
+    for(const [kind,position] of baseFaults){
+        const f=guardedVersionSeven(t);attachmentSeed(f.db,`batch-${kind}`,SETUP);
+        const directory=migrationDirectoryThrough(t,9);const fault=p28FaultSql(kind);
+        const failing=p28Failing009(sql,position,fault.sql).copy;
+        fs.writeFileSync(path.join(directory,'0009-attachment-lifecycle.sql'),failing);
+        const batchBefore=databaseState(f.db);
+        // Remove 0008 from the active ledger by starting this fixture at version 7; both migrations are pending.
+        // guardedVersionSeven already has exactly that state.
+        fs.writeFileSync(path.join(directory,'0008-groups.sql'),sql8);
+        assert.throws(()=>migrate(f.db,{directory}),error=>{assert.equal(error.code,'MIGRATION_FAILED');assert.match(error.message,/0009-attachment-lifecycle\.sql/);
+            assertNoPath(error.message,directory,f.directory);assert.equal(error.cause?.code,fault.code,`${fault.code}: ${error.cause?.message}`);return true;});
+        assert.deepEqual(databaseState(f.db),batchBefore,'pending 0008 and 0009 both roll back');
+        assert.equal(f.db.prepare('SELECT max(version) AS n FROM SchemaMigrations').get().n,7);
+    }
+    t.diagnostic(`P-28-0009 seed=${summary.seed} failures=${coverage.failures} positions=${[...coverage.positions].sort((a,b)=>a-b).join(',')} kinds=${[...coverage.kinds].sort().join(',')}`);
+});
+
+test('P-28 (0009): repeated migration calls on a populated version-9 database preserve attachments and reservations byte-for-byte', t => {
+    const f=guardedDatabase(t);attachmentSeed(f.db,'repeat',SETUP);
+    insert(f.db,'Attachments',{attachment_id:'repeat-attachment',conversation_id:'m9-dm',message_id:null,uploaded_by:'m9-a',storage_key:'repeat-key',
+        encrypted_metadata:'ciphertext',media_type:'application/octet-stream',byte_size:17,status:'pending',created_at:SETUP,updated_at:SETUP});
+    insert(f.db,'AttachmentReservations',{reservation_id:'repeat-reservation',user_id:'m9-a',conversation_id:'m9-dm',declared_bytes:17,
+        source_digest:'b'.repeat(64),created_at:SETUP,expires_at:'2026-01-02T00:00:00.000Z'});
+    const before=databaseState(f.db);
+    for(let run=0;run<12;run++){assert.deepEqual(migrate(f.db),{version:9,applied:[]});assert.deepEqual(databaseState(f.db),before,`repeat ${run}`);}
+    t.diagnostic('P-28-0009 repeatCalls=12 populated=Attachments,AttachmentReservations');
 });

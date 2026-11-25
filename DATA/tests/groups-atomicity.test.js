@@ -10,10 +10,19 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { httpGroupFixture, snapshot, changedTables, createClock, openLimiter, guardPath } = require('./support/groups');
+const { groupFixture } = require('./support/groups');
 const { createGroupService } = require('../server/groups/service');
 const { createGroupMessageService } = require('../server/messaging/group');
 const { RepositoryError } = require('../server/database/groupRepository');
+const { RepositoryError: DataRepositoryError } = require('../server/database/repositories');
 const { AuthError } = require('../server/auth/errors');
+const { createAttachmentService } = require('../server/attachments/service');
+const { createAttachmentRepository } = require('../server/database/attachmentRepository');
+const { createFilesystemProvider } = require('../server/attachments/storage/filesystem');
+const { createRetentionJob } = require('../server/attachments/retention');
+const { storageRoot } = require('./support/attachments');
+const { Readable } = require('node:stream');
+const crypto = require('node:crypto');
 
 const FEATURES = Object.freeze({ groupApi:true, groups:Object.freeze({ maxMembers:10, directAdd:true,
     maxPendingInvitationsPerGroup:20, maxPendingInvitationsPerInvitee:20 }) });
@@ -199,4 +208,125 @@ test('P-31: every group message write step rolls back send, tombstone, read posi
         }
         assert.deepEqual(outcomes.map(row=>row.kind),Object.keys(actions));
         t.diagnostic(`P-31 group-message write-step coverage ${JSON.stringify(outcomes)}; error classes=${ERROR_CASES.map(row=>row[0]).join(',')}`);
+    });
+
+function instrumentAttachmentDatabase(db,{failAt=Infinity,failCode=null}={}){
+    const state={writes:[],step:0,failedAt:null};
+    const wrapped=new Proxy(db,{get(target,key){
+        if(key==='prepare')return sql=>{
+            const statement=target.prepare(sql);
+            return new Proxy(statement,{get(inner,property){
+                if(['run','all','get'].includes(property))return(...args)=>{
+                    if(/^\s*(?:INSERT|UPDATE|DELETE|REPLACE)\b/i.test(sql)){
+                        state.step+=1;state.writes.push(sql);
+                        if(state.step===failAt){state.failedAt=state.step;const injected=new DataRepositoryError(failCode);injected.message=`${DATABASE_TEXT}: synthetic attachment SQL detail`;throw injected;}
+                    }
+                    return inner[property](...args);
+                };
+                const value=Reflect.get(inner,property,inner);return typeof value==='function'?value.bind(inner):value;
+            }});
+        };
+        const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;
+    }});
+    return{db:wrapped,state};
+}
+function fullTableSnapshot(db){
+    return db.transaction(()=>Object.fromEntries(db.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all()
+        .map(({name})=>[name,db.prepare(`SELECT * FROM "${name.replaceAll('"','""')}" ORDER BY rowid`).all()])))();
+}
+async function storageDigest(storage){
+    const values=[];
+    for(const key of (await storage.listKeys()).sort()){
+        const stored=await storage.read(key),hash=crypto.createHash('sha256');let size=0;
+        for await(const chunk of stored.stream){size+=chunk.length;hash.update(chunk);}
+        values.push({key,size,digest:hash.digest('hex')});
+    }
+    return values;
+}
+function attachmentRow(db,id,{status='pending',created='2026-01-01T00:00:00.000Z',expires='2026-01-03T00:00:00.000Z',deleted=null,message=null,user,conversation}={}){
+    db.prepare(`INSERT INTO Attachments(attachment_id,conversation_id,message_id,uploaded_by,storage_key,encrypted_metadata,media_type,
+        byte_size,status,created_at,updated_at,expires_at,deleted_at,purge_state,integrity_digest,declared_algorithm,declared_format_version)
+        VALUES(?,?,?,?,?,?,'application/octet-stream',4,?,?,?, ?,?,'not_purged',?,'X25519-AESGCM','v1')`).run(
+        id,conversation,message,user,crypto.createHash('sha256').update(id).digest('hex').slice(0,48),'synthetic metadata',status,created,created,expires,deleted,'a'.repeat(64));
+}
+const p31StorageKey=id=>crypto.createHash('sha256').update(id).digest('hex').slice(0,48);
+
+test('P-31: attachment reserve, upload/finalize, association, deletion and retention transactions roll back every write step',
+    {timeout:300000},async t=>{
+        const f=groupFixture(t),root=storageRoot(t),storage=createFilesystemProvider({root,repositoryRoot:path.resolve(__dirname,'..')});
+        const owner=f.actors.owner.id,context={userId:owner,sessionId:`session-${owner}`},proof={type:'session',userId:owner,
+            sessionId:context.sessionId,csrfHash:'synthetic-proof'},now=Date.parse('2026-01-02T00:00:00.000Z');
+        const auth={now:()=>now,checkSession:({sessionId,userId})=>sessionId===`session-${userId}`?{status:'active'}:{status:'revoked'},
+            repository:{verifyProof:value=>{if(value?.csrfHash!=='synthetic-proof')throw new Error('invalid synthetic proof');}}};
+        const settings={pendingTtlSeconds:86400,purgeDelaySeconds:86400,retentionIntervalSeconds:3600,quotaUserBytes:1048576,
+            quotaConversationBytes:1048576,maxPendingPerUser:10,uploadsPerHour:30,maxConcurrentUploadsPerUser:2,maxConcurrentUploadsPerSource:5};
+        const features={groupApi:true,groupMessaging:false,attachmentApi:true,groups:{maxMembers:10},attachments:{...settings,storageDir:root}};
+        const makeService=db=>createAttachmentService({db,auth,features,settings,storage,now:()=>now,limiter:openLimiter()});
+        const header={conversationId:f.groupId,byteSize:4,encryptedMetadata:'synthetic protected metadata',algorithm:'X25519-AESGCM',formatVersion:'v1'};
+        const content=Buffer.from('four'),source='192.0.2.91';
+        const insertMessage=()=>f.repositories.messages.insertAuthenticated({message_id:'p31-attachment-message',conversation_id:f.groupId,
+            sender_id:owner,receiver_id:null,ciphertext:'opaque',iv:'opaque',envelope_version:1,encoding:'base64',sender_name:'Synthetic owner',
+            client_timestamp:'2026-01-01T00:00:00.000Z',message_type:'text',fingerprint:'c'.repeat(64),client_id:'p31-attachment-client',
+            message_seq:1,created_at:'2026-01-01T00:00:00.000Z'});
+        const setUp=async kind=>{
+            if(kind==='associate'||kind==='delete'){
+                if(kind==='associate')insertMessage();
+                attachmentRow(f.db,`p31-${kind}`,{user:owner,conversation:f.groupId,message:kind==='associate'?null:null});
+                await storage.write(p31StorageKey(`p31-${kind}`),Readable.from([content]),{maxBytes:4});
+            }
+            if(kind==='expire'){
+                attachmentRow(f.db,'p31-expire',{user:owner,conversation:f.groupId,status:'pending',expires:'2026-01-01T00:00:00.000Z'});
+                await storage.write(p31StorageKey('p31-expire'),Readable.from([content]),{maxBytes:4});
+            }
+            if(kind==='purge'){
+                const cleanup=createRetentionJob({db:f.db,repository:createAttachmentRepository(f.db),storage,now:()=>new Date(now),settings});
+                await cleanup.runOnce();await cleanup.stop();
+                attachmentRow(f.db,'p31-purge',{user:owner,conversation:f.groupId,status:'deleted',expires:'2025-12-01T00:00:00.000Z',deleted:'2025-12-31T00:00:00.000Z'});
+                await storage.write(p31StorageKey('p31-purge'),Readable.from([content]),{maxBytes:4});
+            }
+        };
+        const scenarios=[
+            {name:'reserve',steps:1,prepare:()=>{},run:svc=>svc.reserve(context,proof,header,source)},
+            {name:'upload/finalize',steps:4,prepare:()=>{},run:svc=>svc.upload(context,proof,header,Readable.from([content]),source)},
+            {name:'association',steps:2,prepare:()=>setUp('associate'),run:svc=>svc.associate(context,proof,{conversationId:f.groupId,messageId:'p31-attachment-message',attachmentIds:['p31-associate']})},
+            {name:'deletion',steps:2,prepare:()=>setUp('delete'),run:svc=>svc.remove(context,proof,'p31-delete')},
+            {name:'retention expiry',steps:2,prepare:()=>setUp('expire'),run:(svc,db)=>createRetentionJob({db,repository:createAttachmentRepository(db),storage,
+                now:()=>new Date(now),settings}).runOnce()},
+            {name:'retention purge',steps:2,prepare:()=>setUp('purge'),run:(svc,db)=>createRetentionJob({db,repository:createAttachmentRepository(db),storage,
+                now:()=>new Date(now),settings}).runOnce()},
+        ];
+        const mapped={DUPLICATE:[409,'CONFLICT'],CONFLICT:[409,'CONFLICT'],INVALID:[400,'VALIDATION_ERROR'],BUSY:[503,'SERVICE_UNAVAILABLE'],DATABASE:[500,'INTERNAL_ERROR']};
+        const summary=[];
+        for(const scenario of scenarios){
+            await scenario.prepare();
+            const counts=[];
+            for(let step=1;step<=scenario.steps;step++)for(const [errorClass,[status,code]] of Object.entries(mapped)){
+                const before=fullTableSnapshot(f.db),filesBefore=await storageDigest(storage),fault=instrumentAttachmentDatabase(f.db,{failAt:step,failCode:errorClass});
+                const svc=makeService(fault.db);
+                if(scenario.name.startsWith('retention')){
+                    const result=await scenario.run(svc,fault.db);
+                    assert.equal(result.failures,1,`${scenario.name} step ${step} ${errorClass} reports one sanitized failure`);
+                }else{
+                    let caught;try{await scenario.run(svc,fault.db);}catch(error){caught=error;}
+                    assert.ok(caught instanceof AuthError,`${scenario.name} step ${step} ${errorClass} is mapped`);
+                    const auditStep=/\bAuditLogs\b/i.test(fault.state.writes[step-1]||'');
+                    assert.equal(caught.status,auditStep?500:status);assert.equal(caught.code,auditStep?'INTERNAL_ERROR':code);
+                    assert.equal(caught.message,caught.code);assert.equal(caught.cause,undefined);assert.deepEqual(caught.fields,[]);
+                    assert.ok(!JSON.stringify(caught).includes(DATABASE_TEXT));
+                }
+                assert.equal(fault.state.failedAt,step,`${scenario.name} reached the injected write step`);
+                assert.deepEqual(fullTableSnapshot(f.db),before,`${scenario.name} step ${step} ${errorClass} changed a table`);
+                assert.equal(f.db.inTransaction,false,`${scenario.name} left a transaction open`);
+                const filesAfter=await storageDigest(storage);
+                if(scenario.name==='retention purge'){
+                    const purgeKey=p31StorageKey('p31-purge');
+                    assert.ok(!filesAfter.some(file=>file.key===purgeKey),'purge retry retains no copy of bytes after physical deletion');
+                    assert.deepEqual(filesAfter,filesBefore.filter(file=>file.key!==purgeKey),`${scenario.name} step ${step} ${errorClass} changed unrelated stored bytes`);
+                }else assert.deepEqual(filesAfter,filesBefore,`${scenario.name} step ${step} ${errorClass} changed stored bytes`);
+                counts.push({step,errorClass,audit:/\bAuditLogs\b/i.test(fault.state.writes[step-1]||'')});
+            }
+            summary.push({operation:scenario.name,writes:scenario.steps,failures:counts.length});
+        }
+        assert.equal(summary.reduce((n,row)=>n+row.failures,0),65);
+        t.diagnostic(`P-31 attachment write-step coverage ${JSON.stringify(summary)}; classes=${Object.keys(mapped).join(',')}`);
     });

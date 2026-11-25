@@ -1,4 +1,5 @@
 const express=require('express');
+const path=require('node:path');
 const { loadAuthConfig }=require('./auth/config');
 const { createAuthService }=require('./auth/service');
 const { createAuthMiddleware }=require('./auth/middleware');
@@ -17,9 +18,20 @@ const { createKeyService }=require('./e2ee/service');
 const { createKeyRouters }=require('./routes/keys');
 const { createGroupService }=require('./groups/service');
 const { createGroupRouter }=require('./routes/groups');
+const { createAttachmentRouters }=require('./routes/attachments');
+const { createAttachmentService }=require('./attachments/service');
+const { createFilesystemProvider }=require('./attachments/storage/filesystem');
 const { DISABLED_FEATURES }=require('./features/config');
+const { createFeatureGate }=require('./features/gate');
+
+function isPlainFeatureObject(value) {
+    if (value===null || typeof value!=='object' || Array.isArray(value)) return false;
+    const prototype=Object.getPrototypeOf(value);
+    return prototype===Object.prototype || prototype===null;
+}
 
 function createApp({db,config=loadAuthConfig(),messageOptions={},features=DISABLED_FEATURES,...dependencies}) {
+    if (!isPlainFeatureObject(features)) throw new TypeError('features must be a plain object.');
     const app=express();
     app.disable('x-powered-by');
     app.set('trust proxy',false); // Rate limits always use the direct peer, never forwarded user input.
@@ -51,11 +63,25 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},features=DISABL
     app.use('/api/conversations',createConversationRouter(conversations,middleware));
     app.use('/api/messages',messageRouters.lifecycle);
     // DB5-R16.2: mounted while every switch is off, so a disabled function answers 503 and not 404.
-    const groups=createGroupService({db,auth,features,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
+    const featureGate=createFeatureGate({
+        groupApi:features?.groupApi===true,
+        groupMessaging:features?.groupMessaging===true,
+        attachmentApi:features?.attachmentApi===true,
+        attachments:features?.attachments
+    });
+    const runtimeFeatures=Object.freeze({ ...features, attachmentApi:featureGate.enabled('attachmentApi') });
+    const groups=createGroupService({db,auth,features:runtimeFeatures,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
     const groupMessages=createGroupMessageService({db,auth,groups,
         ...(messageOptions.groupRecipientKeyVerifier ? {groupRecipientKeyVerifier:messageOptions.groupRecipientKeyVerifier} : {}),
         ...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
     app.use('/api/groups',createGroupRouter({groups,groupMessages,features:groups.features},middleware));
+    const attachmentStorage=dependencies.storage || (featureGate.enabled('attachmentApi')
+        ? createFilesystemProvider({root:features.attachments.storageDir,repositoryRoot:path.resolve(__dirname,'../..')}) : null);
+    const attachments=featureGate.enabled('attachmentApi') ? createAttachmentService({db,auth,features:runtimeFeatures,
+        storage:attachmentStorage,settings:features.attachments,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})}) : null;
+    const attachmentRouters=createAttachmentRouters(attachments,middleware);
+    app.use('/api/attachments',attachmentRouters.attachments);
+    app.use('/api/files',attachmentRouters.files);
     // The legacy APIs have no object-level authorization. Do not expose them merely because
     // authentication now exists. DB-3/4/7 must replace/adapt them before mounting real data routes.
     app.use(['/api/messages','/api/logs'],middleware.requireAuth,(req,res,next)=>{
@@ -79,6 +105,6 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},features=DISABL
         // Never log raw errors, bodies, cookies, SQL, password hashes or session/CSRF material.
         return sendError(res,'INTERNAL_ERROR',500);
     });
-    return {app,auth,social,conversations,keys,messaging,groups,groupMessages,features:groups.features,adapters:createAuthAdapters(auth),middleware};
+    return {app,auth,social,conversations,keys,messaging,groups,groupMessages,attachments,features:groups.features,adapters:createAuthAdapters(auth),middleware};
 }
 module.exports={createApp};

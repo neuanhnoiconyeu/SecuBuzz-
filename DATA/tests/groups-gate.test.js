@@ -3,8 +3,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const config = require('../server/features/config');
 const { createRandom } = require('./support/random');
+const pathAtTop = require('node:path');
+const osAtTop = require('node:os');
 
-const { DISABLED_FEATURES, GROUP_API_SETTINGS, FeatureConfigError, loadFeatureConfig } = config;
+const { DISABLED_FEATURES, GROUP_API_SETTINGS, ATTACHMENT_API_SETTINGS, FeatureConfigError, loadFeatureConfig } = config;
 
 const SWITCHES = [
     ['groupApi', 'GROUPS_API_ENABLED'],
@@ -12,6 +14,14 @@ const SWITCHES = [
     ['attachmentApi', 'ATTACHMENTS_API_ENABLED']
 ];
 const REMOVED_SETTING = 'GROUP_INVITATION_TTL_SECONDS';
+const ATTACHMENT_VALUES = Object.freeze({
+    ATTACHMENT_PENDING_TTL_SECONDS:'86400', ATTACHMENT_PURGE_DELAY_SECONDS:'86400', ATTACHMENT_RETENTION_INTERVAL_SECONDS:'3600',
+    ATTACHMENT_QUOTA_USER_BYTES:'1073741824', ATTACHMENT_QUOTA_CONVERSATION_BYTES:'5368709120', ATTACHMENT_MAX_PENDING_PER_USER:'10',
+    ATTACHMENT_UPLOADS_PER_HOUR:'30', ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_USER:'2', ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_SOURCE:'5'
+});
+const ATTACHMENT_ROOT = fs.mkdtempSync(pathAtTop.join(osAtTop.tmpdir(),'secubuzz-attachment-gate-'));
+test.after(() => fs.rmSync(ATTACHMENT_ROOT,{recursive:true,force:true}));
+const ATTACHMENT_ENV = Object.freeze({ ...ATTACHMENT_VALUES, ATTACHMENT_STORAGE_DIR:ATTACHMENT_ROOT });
 // Valid companion values, so a switch test does not depend on value validation (DB-5C).
 const GROUP_VALUES = Object.freeze({
     GROUP_MAX_MEMBERS: '50',
@@ -50,7 +60,7 @@ test('a switch is on only for the exact string true', () => {
     ];
     for (const [key, variable] of SWITCHES) {
         for (const [label, value, expected] of cases) {
-            const env = { ...GROUP_VALUES };
+            const env = { ...GROUP_VALUES, ...ATTACHMENT_ENV };
             if (value !== undefined) env[variable] = value;
             const features = loadFeatureConfig(env);
             assert.equal(features[key], expected, `${variable} ${label}`);
@@ -65,7 +75,7 @@ test('P-26: seeded environment maps enable only the exact string true', () => {
     const values = ['true','TRUE','1','','   ','-1','1.5','9007199254740992'];
     const cases = new Set();
     for (let run = 0; run < 128; run += 1) {
-        const env = { ...GROUP_VALUES };
+        const env = { ...GROUP_VALUES, ...ATTACHMENT_ENV };
         const drawn = {};
         for (const [key, variable] of SWITCHES) {
             drawn[key] = random.pick(values);
@@ -76,7 +86,7 @@ test('P-26: seeded environment maps enable only the exact string true', () => {
         cases.add(Object.values(drawn).join('|'));
     }
     for (const value of values) {
-        const env = { ...GROUP_VALUES, GROUPS_API_ENABLED:value, GROUP_MESSAGING_ENABLED:value, ATTACHMENTS_API_ENABLED:value };
+        const env = { ...GROUP_VALUES, ...ATTACHMENT_ENV, GROUPS_API_ENABLED:value, GROUP_MESSAGING_ENABLED:value, ATTACHMENTS_API_ENABLED:value };
         const actual = loadFeatureConfig(env);
         for (const [key] of SWITCHES) assert.equal(actual[key], value === 'true', `${key}=${JSON.stringify(value)}`);
     }
@@ -90,7 +100,7 @@ test('an empty environment yields everything disabled and no default for any set
 });
 
 test('loadFeatureConfig returns a frozen result and requires an explicit environment object', () => {
-    const features = loadFeatureConfig({ ...GROUP_VALUES, GROUPS_API_ENABLED: 'true', GROUP_MESSAGING_ENABLED: 'true', ATTACHMENTS_API_ENABLED: 'true' });
+    const features = loadFeatureConfig({ ...GROUP_VALUES, ...ATTACHMENT_ENV, GROUPS_API_ENABLED: 'true', GROUP_MESSAGING_ENABLED: 'true', ATTACHMENTS_API_ENABLED: 'true' });
     assertDeepFrozen(features);
     assert.notEqual(features, DISABLED_FEATURES);
     assert.throws(() => Object.defineProperty(features, 'groupApi', { value: false }), TypeError);
@@ -125,6 +135,47 @@ test('FeatureConfigError names each declared setting and never a value', () => {
     }
 });
 
+test('T-6B-21 attachment settings are required positive whole numbers, with an optional timeout and no defaults', () => {
+    assert.deepEqual(ATTACHMENT_API_SETTINGS, [
+        'ATTACHMENT_PENDING_TTL_SECONDS','ATTACHMENT_PURGE_DELAY_SECONDS','ATTACHMENT_RETENTION_INTERVAL_SECONDS',
+        'ATTACHMENT_QUOTA_USER_BYTES','ATTACHMENT_QUOTA_CONVERSATION_BYTES','ATTACHMENT_MAX_PENDING_PER_USER',
+        'ATTACHMENT_UPLOADS_PER_HOUR','ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_USER','ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_SOURCE'
+    ]);
+    const valid = loadFeatureConfig(attachmentsOn({ ATTACHMENT_UPLOAD_TIMEOUT_SECONDS:'120' }));
+    assert.deepEqual(valid.attachments, {
+        pendingTtlSeconds:86400,purgeDelaySeconds:86400,retentionIntervalSeconds:3600,quotaUserBytes:1073741824,
+        quotaConversationBytes:5368709120,maxPendingPerUser:10,uploadsPerHour:30,maxConcurrentUploadsPerUser:2,
+        maxConcurrentUploadsPerSource:5,uploadTimeoutSeconds:120,storageDir:undefined
+    });
+    assertDeepFrozen(valid);
+    assert.deepEqual(loadFeatureConfig({ ATTACHMENTS_API_ENABLED:'false' }).attachments, {});
+    for (const missing of ATTACHMENT_API_SETTINGS) {
+        const env = attachmentsOn({}); delete env[missing];
+        assertNamesOnly(failure(env), [missing]);
+    }
+    for (const name of ATTACHMENT_API_SETTINGS) for (const value of [...INVALID_NUMBERS,...NON_STRINGS]) {
+        assertNamesOnly(failure(attachmentsOn({ [name]:value })), [name], typeof value==='string' ? value : undefined);
+    }
+    for (const value of [...INVALID_NUMBERS,...NON_STRINGS]) {
+        assertNamesOnly(failure(attachmentsOn({ ATTACHMENT_UPLOAD_TIMEOUT_SECONDS:value })), ['ATTACHMENT_UPLOAD_TIMEOUT_SECONDS']);
+    }
+    const many = attachmentsOn({ ATTACHMENT_PENDING_TTL_SECONDS:'0',ATTACHMENT_QUOTA_USER_BYTES:'1.5' });
+    assertNamesOnly(failure(many), ['ATTACHMENT_PENDING_TTL_SECONDS','ATTACHMENT_QUOTA_USER_BYTES']);
+    const noRoot = loadFeatureConfig(attachmentsOn({}));
+    assert.equal(noRoot.attachmentApi,true,'missing storage root is a readiness failure, not a configuration-load failure');
+    assert.equal(noRoot.attachments.storageDir,undefined);
+});
+
+test('T-6B-21 production attachment enablement requires only its own formatted Gate_Record', () => {
+    for (const record of [undefined,...INVALID_RECORDS]) {
+        const env = attachmentsOn({ NODE_ENV:'production',...(record===undefined?{}:{ATTACHMENTS_API_GATE_RECORD:record}) });
+        assertNamesOnly(failure(env), ['ATTACHMENTS_API_GATE_RECORD']);
+    }
+    const valid = loadFeatureConfig(attachmentsOn({ NODE_ENV:'production',ATTACHMENTS_API_GATE_RECORD:'GR-ATTACHMENTS-2026-11-24' }));
+    assert.equal(valid.attachmentApi,true);
+    assert.ok(!JSON.stringify(valid).includes('GR-'));
+});
+
 test('a FeatureConfigError for the three Group_API settings names exactly those three', () => {
     const error = new FeatureConfigError([...GROUP_API_SETTINGS].reverse().concat(GROUP_API_SETTINGS[0]));
     assert.deepEqual(error.settings, GROUP_API_SETTINGS);
@@ -144,7 +195,7 @@ test('FeatureConfigError refuses anything other than declared setting names and 
 });
 
 test('no export or source line of features/config.js contains GROUP_INVITATION_TTL_SECONDS', () => {
-    assert.deepEqual(Object.keys(config).sort(), ['DISABLED_FEATURES', 'FeatureConfigError', 'GROUP_API_SETTINGS', 'loadFeatureConfig']);
+    assert.deepEqual(Object.keys(config).sort(), ['ATTACHMENT_API_SETTINGS', 'DISABLED_FEATURES', 'FeatureConfigError', 'GROUP_API_SETTINGS', 'loadFeatureConfig']);
     assert.ok(!JSON.stringify({ DISABLED_FEATURES, GROUP_API_SETTINGS }).includes(REMOVED_SETTING));
     assert.ok(!new FeatureConfigError(GROUP_API_SETTINGS).message.includes(REMOVED_SETTING));
     const source = fs.readFileSync(require.resolve('../server/features/config'), 'utf8');
@@ -157,7 +208,7 @@ test('no export or source line of features/config.js contains GROUP_INVITATION_T
 // DB5-R16.1, R16.5, R16.7, R16.8; OD-04 (decided), OD-08 (decided in part), OD-01 (decided in part), OP-11.
 const policy = require('../server/groups/policy');
 
-const RECORD_VARIABLES = Object.freeze({ groupApi: 'GROUPS_API_GATE_RECORD', groupMessaging: 'GROUP_MESSAGING_GATE_RECORD' });
+const RECORD_VARIABLES = Object.freeze({ groupApi: 'GROUPS_API_GATE_RECORD', groupMessaging: 'GROUP_MESSAGING_GATE_RECORD', attachmentApi:'ATTACHMENTS_API_GATE_RECORD' });
 const VALID_RECORD = 'GR-GROUP-MANAGEMENT-2026-11-22';
 // Not positive whole numbers, or not exact: each must stop the start while its switch is on.
 const INVALID_NUMBERS = ['', ' ', '0', '00', '-1', '-0', '+50', '1.5', '50.0', '1e3', '0x32', '050', ' 50', '50 ', '50\n', '5 0', '5_0',
@@ -168,6 +219,7 @@ const INVALID_RECORDS = ['', ' ', 'GR-', 'GR-AB', 'gr-ABC', 'GR-abc', 'GR-ABC_DE
 const VALID_RECORDS = ['GR-ABC', 'GR-' + 'A'.repeat(48), VALID_RECORD, 'GR-A-1', 'GR-123'];
 
 const apiOn = extra => ({ ...GROUP_VALUES, GROUPS_API_ENABLED: 'true', ...extra });
+const attachmentsOn = extra => ({ ...ATTACHMENT_VALUES, ATTACHMENTS_API_ENABLED:'true', ...extra });
 function failure(env) {
     try { loadFeatureConfig(env); } catch (error) { return error; }
     return assert.fail('loadFeatureConfig returned a configuration where a start failure was required');
@@ -209,7 +261,7 @@ test('the smallest and the largest exact whole numbers are accepted', () => {
 test('settings are neither read as requirements nor validated while their switch is off, and valid settings enable nothing', () => {
     const bad = { GROUP_MAX_MEMBERS: '0', GROUP_MAX_PENDING_INVITATIONS_PER_GROUP: 'x', GROUP_MAX_PENDING_INVITATIONS_PER_INVITEE: '-1' };
     for (const extra of [{}, { GROUPS_API_ENABLED: 'false' }, { GROUPS_API_ENABLED: 'TRUE' }, { GROUPS_API_ENABLED: '1' },
-        { GROUP_MESSAGING_ENABLED: 'true' }, { ATTACHMENTS_API_ENABLED: 'true' }]) {
+        { GROUP_MESSAGING_ENABLED: 'true' }, { ...ATTACHMENT_ENV, ATTACHMENTS_API_ENABLED: 'true' }]) {
         const features = loadFeatureConfig({ ...bad, ...extra });
         assert.equal(features.groupApi, false);
         assert.deepEqual(features.groups, {});
@@ -349,6 +401,74 @@ test('loading never changes the environment and accepts a frozen one', () => {
     assert.ok(failure(broken) instanceof FeatureConfigError);
     assert.equal(JSON.stringify(broken), '{"GROUPS_API_ENABLED":"true"}');
 });
+test('T-6B-22 root readiness fails closed for relative, in-tree, parent, link, file and missing roots', t => {
+    const { createFeatureGate } = require('../server/features/gate');
+    const gateFor = storageDir => createFeatureGate({ groupApi:false,groupMessaging:false,attachmentApi:true,
+        attachments:{ ...readyFeatures().attachments,storageDir } });
+    const roots = [
+        ['relative','attachments-private'],
+        ['inside working tree',path.join(DATA_ROOT,'private-attachment-test')],
+        ['through parent',path.join(DATA_ROOT,'tests','..','server','private-attachment-test')],
+        ['file',path.join(ATTACHMENT_ROOT,'not-a-directory')],
+        ['missing',path.join(ATTACHMENT_ROOT,'not-created')]
+    ];
+    fs.writeFileSync(roots[3][1],'synthetic');
+    t.after(() => { try { fs.unlinkSync(roots[3][1]); } catch {} });
+    for (const [label,root] of roots) {
+        assert.equal(gateFor(root).status().attachmentApi,false,`${label} root is not ready`);
+    }
+    const alias=path.join(ATTACHMENT_ROOT,'repository-alias');
+    try {
+        fs.symlinkSync(DATA_ROOT,alias,process.platform==='win32'?'junction':'dir');
+        t.after(() => { try { fs.rmSync(alias,{recursive:true,force:true}); } catch {} });
+        assert.equal(gateFor(alias).status().attachmentApi,false,'a link resolving inside the working tree is refused');
+    } catch (error) {
+        assert.ok(['EPERM','EACCES','ENOTSUP'].includes(error.code),`link setup failed for an unexpected reason: ${error.code}`);
+        const { createFilesystemProvider }=require('../server/attachments/storage/filesystem');
+        const denied=Object.create(fs);
+        denied.realpathSync=fs.realpathSync.bind(fs); denied.statSync=fs.statSync.bind(fs);
+        denied.accessSync=() => { throw Object.assign(new Error(),{code:'EACCES'}); };
+        denied.chmodSync=fs.chmodSync.bind(fs); denied.writeFileSync=fs.writeFileSync.bind(fs);
+        denied.linkSync=fs.linkSync.bind(fs); denied.unlinkSync=fs.unlinkSync.bind(fs);
+        assert.throws(() => createFilesystemProvider({root:ATTACHMENT_ROOT,repositoryRoot:DATA_ROOT,fsImpl:denied}),error => error.code==='STORAGE_IO');
+    }
+});
+
+test('T-6B-22 a valid external directory enables only the attachment boolean and the Docker root is ready outside /workspace', () => {
+    const { createFeatureGate, attachmentReady } = require('../server/features/gate');
+    const { rootDecision } = require('../server/attachments/storage/filesystem');
+    const configured=createFeatureGate({groupApi:false,groupMessaging:true,attachmentApi:true,attachments:readyFeatures().attachments});
+    assert.deepEqual(configured.status(),{groupApi:false,groupMessaging:false,attachmentApi:true});
+    assert.deepEqual(Object.keys(configured.status()),SWITCH_KEYS);
+    assert.equal(configured.enabled('attachments'),true);
+    configured.assertEnabled('attachments');
+    let attachmentPassed=false;
+    configured.middleware('attachments')({}, {}, () => { attachmentPassed=true; });
+    assert.equal(attachmentPassed,true,'enabled attachment middleware uses the alias');
+    const posixPath=require('node:path').posix;
+    const dockerRoot='/var/lib/secubuzz/attachments';
+    assert.equal(rootDecision(dockerRoot,'/workspace',posixPath.posix),null);
+    assert.equal(attachmentReady({attachmentApi:true,attachments:{...READY_ATTACHMENTS,storageDir:dockerRoot}}, {
+        repositoryRoot:'/workspace',providerFactory:options=>{
+            assert.equal(options.root,dockerRoot);
+            assert.equal(options.repositoryRoot,'/workspace');
+            assert.equal(rootDecision(options.root,options.repositoryRoot,posixPath.posix),null);
+            return {};
+        }
+    }),true,'the Docker volume path is accepted when its provider root check succeeds');
+    assert.equal(attachmentReady({attachmentApi:true,attachments:READY_ATTACHMENTS},{providerFactory:()=>{throw new Error('not writable');}}),false,
+        'provider refusal, including a non-writable directory, keeps the switch closed');
+    const missingRoot=createFeatureGate({groupApi:false,groupMessaging:false,attachmentApi:true,attachments:{...readyFeatures().attachments,storageDir:undefined}});
+    assert.deepEqual(missingRoot.status(),{groupApi:false,groupMessaging:false,attachmentApi:false});
+    assert.throws(() => missingRoot.assertEnabled('attachments'),error => error instanceof AuthError && error.code==='FEATURE_UNAVAILABLE' && error.status===503 && error.fields.length===0);
+    let passed;
+    const touched=() => assert.fail('disabled attachment middleware must not inspect request or response');
+    const proxy=new Proxy({}, {get:touched,has:touched,ownKeys:touched,getOwnPropertyDescriptor:touched,set:touched});
+    missingRoot.middleware('attachments')(proxy,proxy,error => { passed=error; });
+    assert.ok(passed instanceof AuthError);
+    assert.deepEqual([passed.code,passed.status,passed.fields],['FEATURE_UNAVAILABLE',503,[]]);
+});
+
 // ---- T-5C-02: the Feature_Gate runtime (DB5-R16.1, R16.2, R16.4, R16.5, R16.13) ----
 const { createFeatureGate, FEATURE_NAMES } = require('../server/features/gate');
 const { AuthError } = require('../server/auth/errors');
@@ -367,6 +487,12 @@ function thrownBy(work) {
     try { work(); } catch (error) { return error; }
     return assert.fail('expected a throw');
 }
+const READY_ATTACHMENTS = Object.freeze({
+    pendingTtlSeconds:86400,purgeDelaySeconds:86400,retentionIntervalSeconds:3600,quotaUserBytes:1073741824,
+    quotaConversationBytes:5368709120,maxPendingPerUser:10,uploadsPerHour:30,maxConcurrentUploadsPerUser:2,
+    maxConcurrentUploadsPerSource:5,storageDir:ATTACHMENT_ROOT
+});
+const readyFeatures = (switches = {}) => ({ groupApi:false,groupMessaging:false,attachmentApi:false,...switches,attachments:READY_ATTACHMENTS });
 
 test('no injected configuration means every function is off, with exactly the three booleans', () => {
     const gate = createFeatureGate();
@@ -384,7 +510,11 @@ test('FEATURE_NAMES are the three switches in a fixed order, frozen, and a statu
 
 test('status reports the three booleans for all eight switch assignments, and groupMessaging only while groupApi is on', () => {
     for (const switches of allSwitchCombinations()) {
-        const gate = createFeatureGate(switches);
+        const gate = createFeatureGate({ ...switches, attachments:{
+            pendingTtlSeconds:86400,purgeDelaySeconds:86400,retentionIntervalSeconds:3600,quotaUserBytes:1073741824,
+            quotaConversationBytes:5368709120,maxPendingPerUser:10,uploadsPerHour:30,maxConcurrentUploadsPerUser:2,
+            maxConcurrentUploadsPerSource:5,storageDir:ATTACHMENT_ROOT
+        } });
         assert.deepEqual(gate.status(), expectedStatus(switches));
         assert.deepEqual(Object.keys(gate.status()), SWITCH_KEYS);
         for (const name of FEATURE_NAMES) assert.equal(gate.enabled(name), expectedStatus(switches)[name]);
@@ -392,7 +522,7 @@ test('status reports the three booleans for all eight switch assignments, and gr
 });
 
 test('a status object cannot be changed by the caller, and each call returns a new object', () => {
-    const gate = createFeatureGate({ groupApi: true, groupMessaging: true, attachmentApi: true });
+    const gate = createFeatureGate(readyFeatures({ groupApi:true,groupMessaging:true,attachmentApi:true }));
     const first = gate.status();
     assert.equal(Reflect.set(first, 'groupApi', false), false);
     assert.equal(gate.status().groupApi, true);
@@ -458,15 +588,15 @@ test('assertEnabled throws the existing AuthError with code FEATURE_UNAVAILABLE,
 });
 
 test('assertEnabled passes for enabled switches, and groupMessaging fails while groupApi is off', () => {
-    const gate = createFeatureGate({ groupApi: true, groupMessaging: true, attachmentApi: true });
+    const gate = createFeatureGate(readyFeatures({ groupApi:true,groupMessaging:true,attachmentApi:true }));
     for (const name of FEATURE_NAMES) assert.equal(gate.assertEnabled(name), undefined);
     const messagingOnly = createFeatureGate({ groupApi: false, groupMessaging: true, attachmentApi: false });
     assert.ok(thrownBy(() => messagingOnly.assertEnabled('groupMessaging')) instanceof AuthError);
 });
 
 test('an unknown feature name is refused by every method and never answered as enabled', () => {
-    const gate = createFeatureGate({ groupApi: true, groupMessaging: true, attachmentApi: true });
-    for (const name of ['groups', 'GROUPAPI', 'attachments', '', undefined, null, 1, 'constructor', '__proto__', 'hasOwnProperty']) {
+    const gate = createFeatureGate(readyFeatures({ groupApi:true,groupMessaging:true,attachmentApi:true }));
+    for (const name of ['groups', 'GROUPAPI', '', undefined, null, 1, 'constructor', '__proto__', 'hasOwnProperty']) {
         assert.ok(thrownBy(() => gate.enabled(name)) instanceof TypeError, String(name));
         assert.ok(thrownBy(() => gate.assertEnabled(name)) instanceof TypeError, String(name));
         assert.ok(thrownBy(() => gate.middleware(name)) instanceof TypeError, String(name));
@@ -474,7 +604,7 @@ test('an unknown feature name is refused by every method and never answered as e
 });
 
 test('middleware passes an enabled request on with no argument and a disabled one with an AuthError 503', () => {
-    const enabledGate = createFeatureGate({ groupApi: true, groupMessaging: true, attachmentApi: true });
+    const enabledGate = createFeatureGate(readyFeatures({ groupApi:true,groupMessaging:true,attachmentApi:true }));
     const disabledGate = createFeatureGate({ groupApi: false, groupMessaging: true, attachmentApi: false });
     const calls = [];
     const next = (...args) => calls.push(args);
@@ -502,7 +632,7 @@ test('middleware reads neither the request nor the response before answering, so
 });
 
 test('two gates from different configurations keep separate state, and the implicit default does not leak', () => {
-    const on = createFeatureGate({ groupApi: true, groupMessaging: true, attachmentApi: true });
+    const on = createFeatureGate(readyFeatures({ groupApi:true,groupMessaging:true,attachmentApi:true }));
     const off = createFeatureGate({ groupApi: false, groupMessaging: false, attachmentApi: false });
     const implicit = createFeatureGate();
     assert.deepEqual(on.status(), { groupApi: true, groupMessaging: true, attachmentApi: true });
@@ -522,11 +652,11 @@ test('no error or status ever contains a configured value', () => {
     }
 });
 
-test('gate.js has no environment access, logging, randomness or clock, and only its two requires', () => {
+test('gate.js has no environment access, logging, randomness or clock, and only its declared imports', () => {
     const source = fs.readFileSync(require.resolve('../server/features/gate'), 'utf8');
     assert.ok(!/process\.env|console\.|Math\.random|Date\.now|new Date\(|setTimeout/.test(source), 'no forbidden call');
     const requires = source.match(/require\(\s*['"][^'"]+['"]\s*\)/g) || [];
-    assert.deepEqual(requires.map(text => text.replace(/\s/g, '')), ["require('./config')", "require('../auth/errors')"]);
+    assert.deepEqual(requires.map(text => text.replace(/\s/g, '')), ["require('node:path')", "require('./config')", "require('../attachments/storage/filesystem')", "require('../auth/errors')"]);
     assert.ok(/^[\x00-\x7F]*$/.test(source), 'ASCII only');
 });
 
@@ -604,9 +734,10 @@ test('the default start has every function off, prints one off line per switch, 
 
 test('every environment switch reaches the router, and its start-up line names the variable and the state, never the value', async t => {
     for (const [key, variable] of SWITCHES) {
-        const { application, lines } = await boot(t, { [variable]: 'true', ...(key === 'groupApi' ? GROUP_VALUES : {}) });
+        const { application, lines } = await boot(t, { [variable]: 'true', ...(key === 'groupApi' ? GROUP_VALUES : {}), ...(key === 'attachmentApi' ? ATTACHMENT_ENV : {}) });
         assert.equal(application.features[key], true, `${variable} turns ${key} on`);
-        assert.deepEqual(lines, switchLines(variable));
+        assert.deepEqual(lines, [...switchLines(variable), ...(key==='attachmentApi'
+            ? ['attachment retention startup records_without_bytes=0','attachment retention startup bytes_without_records=0'] : [])]);
     }
     const typos = ['TRUE', 'True', '1', 'yes', 'on', ' true', 'true ', 'false', '', 'tru'];
     for (const value of typos) {
@@ -617,6 +748,17 @@ test('every environment switch reaches the router, and its start-up line names t
     }
     const { lines } = await boot(t, { GROUPS_API_ENABLED: 'true', ...GROUP_VALUES, GROUP_MESSAGING_ENABLED: 'yes' });
     assert.deepEqual(lines, switchLines('GROUPS_API_ENABLED'));
+});
+
+test('T-6B-22 a missing attachment storage root leaves startup healthy, reports disabled and logs only its setting name', async t => {
+    const settingsOnly={...ATTACHMENT_VALUES,ATTACHMENTS_API_ENABLED:'true'};
+    const {application,lines}=await boot(t,settingsOnly);
+    assert.equal(application.features.attachmentApi,false);
+    assert.deepEqual(lines,[...switchLines('ATTACHMENTS_API_ENABLED'),'Attachment_API disabled: ATTACHMENT_STORAGE_DIR is unavailable']);
+    assert.ok(!lines.join(' ').includes('undefined'));
+    const fixture=await setup(t);
+    const actor=await session(fixture,'attachment-root-missing-status');
+    assert.deepEqual((await call(actor,'GET','/api/groups/feature-status')).body,OFF_STATUS);
 });
 
 test('with the Group_API on, feature-status reports it and a group that cannot be seen ends in the uniform 404', async t => {
@@ -791,7 +933,7 @@ test('P-25: generated disabled-route requests and a disable/restart cycle preser
     for (const groupMessaging of ['false','true']) for (const attachmentApi of ['false','true']) {
         const label = `disabled-${groupMessaging}-${attachmentApi}`;
         const f = await setup(t, { env:{ GROUPS_API_ENABLED:'false', GROUP_MESSAGING_ENABLED:groupMessaging,
-            ATTACHMENTS_API_ENABLED:attachmentApi } });
+            ...(attachmentApi==='true' ? ATTACHMENT_ENV : {}), ATTACHMENTS_API_ENABLED:attachmentApi } });
         const alice = await session(f, `p25-${label}`);
         const before = snapshot(f.db);
         const count = random.int(10,40);

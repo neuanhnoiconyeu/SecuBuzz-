@@ -43,9 +43,11 @@ for (const scenario of DIRECT_SCENARIOS) {
 // T-5B-31 / P-19. Populate the same isolated databases used by the frozen
 // replay; its expected entries and masking rules are never regenerated.
 const path = require('node:path');
-const { forAll } = require('./support/random');
-const { guardPath, snapshot, createClock } = require('./support/groups');
+const { forAll, createRandom } = require('./support/random');
+const { guardPath, snapshot, createClock, httpGroupFixture } = require('./support/groups');
 const { createGroupRepository, withMembershipTransaction } = require('../server/database/groupRepository');
+const { createFilesystemProvider } = require('../server/attachments/storage/filesystem');
+const { storageRoot } = require('./support/attachments');
 const P19_SEED = 5131;
 const P19_RUNS = 10;
 const ZERO_KEY = Buffer.alloc(16).toString('base64url');
@@ -66,7 +68,7 @@ function allTables(db) {
 }
 function groupRows(db, ids) {
     return db.transaction(() => Object.fromEntries(['Conversations','ConversationMembers','GroupExtensions','GroupMembershipIntervals',
-        'ConversationInvitations','GroupReadPositions','GroupCreationKeys','Messages','MessageReceipts','Attachments'].map(name => {
+        'ConversationInvitations','GroupReadPositions','GroupCreationKeys','Messages','MessageReceipts','Attachments','AttachmentReservations'].map(name => {
         const select = db.prepare('SELECT * FROM '+tableName(name)+' WHERE conversation_id=?');
         return [name,rowDigest(ids.flatMap(id => encodedRows(select,id)).sort())];
     })))();
@@ -110,7 +112,7 @@ function generatePopulation(random, info) {
 function populate(f, dm, model, run) {
     guardPath(f.filename);
     const g = createGroupRepository(f.db), r = g.repositories, clock = createClock('2030-01-01T00:00:00.000Z');
-    const groups = ['fixture-group-conversation'], messages = [], directs = [dm];
+    const groups = ['fixture-group-conversation'], messages = [], attachments = [], directs = [dm];
     const extraUsers = [];
     for (let index = 0; index < model.extraUsers; index += 1) {
         extraUsers.push(r.users.create({ user_id:`p19-extra-${run}-${index}`, username:`p19-extra-${run}-${index}`, display_name:'Synthetic extra' }).user_id);
@@ -158,9 +160,20 @@ function populate(f, dm, model, run) {
             if (index === 0) g.resolveInvitation(`p19-invite-${run}-${index}`,model.outcome,clock.iso());
             g.upsertReadPosition(id,f.alice.id,seq,clock.iso());
             if (seq > 0 && spec.tombstone) r.messages.tombstone(messages.at(-1).message_id,clock.iso());
-            if (seq > 0) r.attachments.insert({ attachment_id:`p19-attachment-${run}-${index}`, conversation_id:id,
-                message_id:id, uploaded_by:f.alice.id, storage_key:`p19-synthetic-${run}-${index}`, byte_size:index%2,
-                encrypted_metadata:'synthetic encrypted metadata' });
+            const ownerMessage=messages.find(message=>message.conversation_id===id&&message.sender_id===f.alice.id)||send(f.alice.id);
+            for(const status of ['pending','ready','deleted']){
+                const attachmentId=`p19-attachment-${run}-${index}-${status}`,at=clock.iso();
+                f.db.prepare(`INSERT INTO Attachments(attachment_id,conversation_id,message_id,uploaded_by,storage_key,encrypted_metadata,
+                    media_type,byte_size,status,created_at,updated_at,expires_at,deleted_at,purge_state,integrity_digest,declared_algorithm,declared_format_version)
+                    VALUES(?,?,?,?,?,?,'application/octet-stream',?,?,?, ?,?,?, 'not_purged',?,'X25519-AESGCM','v1')`).run(
+                    attachmentId,id,status==='pending'?null:ownerMessage.message_id,f.alice.id,`p19-synthetic-${run}-${index}-${status}`,
+                    'synthetic encrypted metadata',index%2,status,at,at,new Date(clock.now()+86400000).toISOString(),status==='deleted'?at:null,
+                    'a'.repeat(64));
+                attachments.push(attachmentId);
+            }
+            const expiresAt=new Date(clock.now()+86400000).toISOString();
+            f.db.prepare(`INSERT INTO AttachmentReservations(reservation_id,user_id,conversation_id,declared_bytes,source_digest,created_at,expires_at)
+                VALUES(?,?,?,?,?,?,?)`).run(`p19-reservation-${run}-${index}`,f.alice.id,id,1,'b'.repeat(64),clock.iso(),expiresAt);
             if (spec.archived) g.archiveGroup(id,clock.iso());
         });
         const report = g.invariantReport(id);
@@ -185,7 +198,7 @@ function populate(f, dm, model, run) {
     assert.equal(g.getVisibleGroup(bare.conversation_id),null); groups.push(bare.conversation_id);
     const pairs = Object.fromEntries(directs.map(id => { const row = r.conversations.get(id); return [id,[row.dm_user_low,row.dm_user_high]]; }));
     assert.equal(groups.length,8);
-    return { groups, messages, directs, directMessage, pairs,
+    return { groups, messages, attachments, directs, directMessage, pairs,
         expected:{ alice:[dm], bob:model.archiveDirect ? [dm] : [dm,otherDirect.conversation_id], carol:model.archiveDirect ? [] : [otherDirect.conversation_id] } };
 }
 
@@ -286,4 +299,53 @@ test('P-19: seeded populated groups cannot enter direct routes or change the fro
     if (summary.replay === null) { assert.equal(populations,P19_RUNS); assert.equal(scenarios.size,DIRECT_SCENARIOS.length); }
     assert.equal(digest(),beforeDigest);
     t.diagnostic(`P-19 seed=${summary.seed} populations=${populations} scenarios=${scenarios.size} replayedEntries=${replayedEntries}; all-table denial snapshots and group replay snapshots unchanged`);
+});
+
+test('P-19: generated attachment states and reservations remain isolated from direct and group route identifiers', {timeout:120000}, async t => {
+    const root=storageRoot(t),clock=createClock('2030-01-01T00:00:00.000Z');
+    const storage=createFilesystemProvider({root,repositoryRoot:path.resolve(__dirname,'../..')});
+    const settings={pendingTtlSeconds:86400,purgeDelaySeconds:86400,retentionIntervalSeconds:3600,quotaUserBytes:1073741824,
+        quotaConversationBytes:5368709120,maxPendingPerUser:10,uploadsPerHour:30,maxConcurrentUploadsPerUser:2,
+        maxConcurrentUploadsPerSource:5};
+    const features={groupApi:true,groupMessaging:false,attachmentApi:true,groups:{maxMembers:50,maxPendingInvitationsPerGroup:20,
+        maxPendingInvitationsPerInvitee:20,directAdd:false},attachments:{...settings,storageDir:root}};
+    const f=await httpGroupFixture(t,{clock,features,storage,log:()=>{}}),seed=513147;
+    const seedRow=(id,conversationId,status,index)=>{
+        const at=clock.iso(),messageId=status==='ready'?`p19-cross-message-${index}`:null;
+        if(messageId)f.repositories.messages.insertAuthenticated({message_id:messageId,conversation_id:conversationId,
+            sender_id:f.actors.owner.id,receiver_id:null,ciphertext:'opaque',iv:'opaque',envelope_version:1,encoding:'base64',
+            sender_name:'owner',client_timestamp:at,message_type:'text',fingerprint:String(index).padStart(64,'0'),
+            client_id:`p19-cross-client-${index}`,message_seq:index+1,created_at:at});
+        f.db.prepare(`INSERT INTO Attachments(attachment_id,conversation_id,message_id,uploaded_by,storage_key,encrypted_metadata,
+            media_type,byte_size,status,created_at,updated_at,expires_at,deleted_at,purge_state,integrity_digest,declared_algorithm,declared_format_version)
+            VALUES(?,?,?,?,?,?,'application/octet-stream',1,?,?,?,?,?,'not_purged',?,'X25519-AESGCM','v1')`).run(
+            id,conversationId,messageId,f.actors.owner.id,`p19-cross-key-${index}`,'opaque',status,at,at,
+            new Date(clock.now()+86400000).toISOString(),status==='deleted'?at:null,'a'.repeat(64));
+        f.db.prepare(`INSERT INTO AttachmentReservations(reservation_id,user_id,conversation_id,declared_bytes,source_digest,created_at,expires_at)
+            VALUES(?,?,?,?,?,?,?)`).run(`p19-cross-reservation-${index}`,f.actors.owner.id,conversationId,1,'b'.repeat(64),at,
+            new Date(clock.now()+86400000).toISOString());
+    };
+    const summaries=[];
+    for(let run=0;run<P19_RUNS;run++){
+        const generated=generatePopulation(createRandom(seed+run),{run}),ids=[];
+        for(let i=0;i<generated.managed.length;i++){
+            const id=`p19-cross-attachment-${run}-${i}`,status=['pending','ready','deleted'][i%3];
+            seedRow(id,f.groupId,status,run*4+i);ids.push(id);
+        }
+        const before=allTables(f.db);
+        for(const id of ids){
+            for(const url of [`/api/conversations/${id}`,`/api/groups/${id}`]){
+                const response=await f.actors.owner.browser.request(url);
+                assert.equal(response.status,404,`${url}: ${JSON.stringify(response.body)}`);
+                assert.deepEqual(response.body,{code:'NOT_FOUND',fields:[]});
+                assert.deepEqual(allTables(f.db),before,`${url} is read-only`);
+            }
+        }
+        const conversation=await f.actors.owner.browser.request(`/api/attachments/${f.groupId}`);
+        assert.equal(conversation.status,404);assert.deepEqual(conversation.body,{code:'NOT_FOUND',fields:[]});
+        assert.deepEqual(allTables(f.db),before,'conversation id is not accepted as an attachment id');
+        summaries.push({run,attachments:ids.length,statuses:generated.managed.map((_,i)=>['pending','ready','deleted'][i%3])});
+    }
+    assert.equal(summaries.length,P19_RUNS);
+    t.diagnostic(`P-19 attachment isolation seed=${seed} populations=${summaries.length} attachmentRows=${summaries.reduce((n,x)=>n+x.attachments,0)}; each population includes pending, ready, deleted rows and live reservations`);
 });

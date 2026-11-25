@@ -12,7 +12,9 @@
 // The Gate_Record and setting checks belong to features/config.js (T-5C-01); the
 // ATTACHMENTS_API_GATE_RECORD check is deferred to T-6B-22 (owner decision).
 
-const { DISABLED_FEATURES } = require('./config');
+const path = require('node:path');
+const { DISABLED_FEATURES, ATTACHMENT_API_SETTINGS } = require('./config');
+const { createFilesystemProvider } = require('../attachments/storage/filesystem');
 const { AuthError } = require('../auth/errors');
 
 const FEATURE_NAMES = Object.freeze(['groupApi', 'groupMessaging', 'attachmentApi']);
@@ -29,8 +31,34 @@ function requireConfig(config) {
     }
 }
 
-function requireName(name) {
+function featureKey(name) {
+    if (name === 'attachments') return 'attachmentApi';
     if (!FEATURE_NAMES.includes(name)) throw new TypeError('Unknown feature name.');
+    return name;
+}
+
+const ATTACHMENT_KEYS = Object.freeze({
+    ATTACHMENT_PENDING_TTL_SECONDS:'pendingTtlSeconds', ATTACHMENT_PURGE_DELAY_SECONDS:'purgeDelaySeconds',
+    ATTACHMENT_RETENTION_INTERVAL_SECONDS:'retentionIntervalSeconds', ATTACHMENT_QUOTA_USER_BYTES:'quotaUserBytes',
+    ATTACHMENT_QUOTA_CONVERSATION_BYTES:'quotaConversationBytes', ATTACHMENT_MAX_PENDING_PER_USER:'maxPendingPerUser',
+    ATTACHMENT_UPLOADS_PER_HOUR:'uploadsPerHour', ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_USER:'maxConcurrentUploadsPerUser',
+    ATTACHMENT_MAX_CONCURRENT_UPLOADS_PER_SOURCE:'maxConcurrentUploadsPerSource'
+});
+function attachmentReady(config, { providerFactory=createFilesystemProvider, repositoryRoot=path.resolve(__dirname, '../..') } = {}) {
+    if (config.attachmentApi !== true || !config.attachments || typeof config.attachments !== 'object') return false;
+    for (const name of ATTACHMENT_API_SETTINGS) {
+        const value = config.attachments[ATTACHMENT_KEYS[name]];
+        if (!Number.isSafeInteger(value) || value < 1) return false;
+    }
+    const timeout = config.attachments.uploadTimeoutSeconds;
+    if (timeout !== undefined && (!Number.isSafeInteger(timeout) || timeout < 1)) return false;
+    if (typeof config.attachments.storageDir !== 'string' || config.attachments.storageDir.length === 0) return false;
+    try {
+        providerFactory({ root:config.attachments.storageDir, repositoryRoot });
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 function unavailable() {
@@ -45,12 +73,11 @@ function createFeatureGate(config = DISABLED_FEATURES) {
     const snapshot = Object.freeze({
         groupApi: config.groupApi === true,
         groupMessaging: config.groupApi === true && config.groupMessaging === true,
-        attachmentApi: config.attachmentApi === true
+        attachmentApi: config.attachmentApi === true && attachmentReady(config)
     });
 
     function enabled(name) {
-        requireName(name);
-        return snapshot[name];
+        return snapshot[featureKey(name)];
     }
 
     return Object.freeze({
@@ -67,13 +94,13 @@ function createFeatureGate(config = DISABLED_FEATURES) {
         // application's error handler turns into 503 FEATURE_UNAVAILABLE. It reads neither the
         // request nor the response, so no rate-limit write or group read happens first.
         middleware(name) {
-            requireName(name);
+            featureKey(name);
             return function featureGate(request, response, next) {
-                if (snapshot[name]) return next();
+                if (snapshot[featureKey(name)]) return next();
                 return next(unavailable());
             };
         }
     });
 }
 
-module.exports = { createFeatureGate, FEATURE_NAMES };
+module.exports = { createFeatureGate, FEATURE_NAMES, attachmentReady };

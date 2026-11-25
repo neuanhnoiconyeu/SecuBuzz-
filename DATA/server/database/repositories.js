@@ -240,6 +240,16 @@ function createRepositories(db) {
                 input.encrypted_metadata ?? null,input.media_type ?? 'application/octet-stream',input.byte_size);
                 return repositories.attachments.get(id);
             },
+            insertPending(input) {
+                fields(input, ['attachment_id','conversation_id','uploaded_by','storage_key','encrypted_metadata','media_type','byte_size',
+                    'expires_at','integrity_digest','declared_algorithm','declared_format_version']);
+                if (input.media_type !== 'application/octet-stream') throw new RepositoryError('INVALID');
+                const id = input.attachment_id ?? randomUUID();
+                run("INSERT INTO Attachments(attachment_id,conversation_id,message_id,uploaded_by,storage_key,encrypted_metadata,media_type,byte_size,status,expires_at,integrity_digest,declared_algorithm,declared_format_version) VALUES(?,?,NULL,?,?,?,?,?,'pending',?,?,?,?)",
+                    id,input.conversation_id,input.uploaded_by,input.storage_key,input.encrypted_metadata,input.media_type,input.byte_size,
+                    input.expires_at,input.integrity_digest,input.declared_algorithm,input.declared_format_version);
+                return repositories.attachments.get(id);
+            },
             get: id => get('SELECT * FROM Attachments WHERE attachment_id=?',id),
             setStatus: (id,status) => run('UPDATE Attachments SET status=?,updated_at=? WHERE attachment_id=?',status,now(),id)
         },
