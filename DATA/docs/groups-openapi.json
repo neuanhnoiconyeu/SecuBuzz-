@@ -738,6 +738,506 @@
             "role": "owner"
           }
         }
+      },
+      "GroupMessageEncryption": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "algorithm",
+          "encoding",
+          "iv",
+          "ciphertext"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "const": 1
+          },
+          "algorithm": {
+            "type": "string",
+            "const": "AES-256-GCM"
+          },
+          "encoding": {
+            "type": "string",
+            "const": "base64"
+          },
+          "iv": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 16
+          },
+          "ciphertext": {
+            "type": "string",
+            "minLength": 24,
+            "maxLength": 87384
+          }
+        },
+        "example": {
+          "version": 1,
+          "algorithm": "AES-256-GCM",
+          "encoding": "base64",
+          "iv": "AQEBAQEBAQEBAQEB",
+          "ciphertext": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI="
+        }
+      },
+      "GroupMessageRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "conversationId",
+          "senderId",
+          "senderName",
+          "timestamp",
+          "type",
+          "encryption"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "conversationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "senderId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "senderName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "type": {
+            "type": "string",
+            "const": "text"
+          },
+          "encryption": {
+            "$ref": "#/components/schemas/GroupMessageEncryption"
+          }
+        },
+        "example": {
+          "id": "client-message-1",
+          "conversationId": "group-1",
+          "senderId": "user-1",
+          "senderName": "Group Owner",
+          "timestamp": "2026-01-01T00:00:00.000Z",
+          "type": "text",
+          "encryption": {
+            "version": 1,
+            "algorithm": "AES-256-GCM",
+            "encoding": "base64",
+            "iv": "AQEBAQEBAQEBAQEB",
+            "ciphertext": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI="
+          }
+        }
+      },
+      "GroupMessageProjection": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "storageId",
+          "id",
+          "conversationId",
+          "senderId",
+          "senderName",
+          "timestamp",
+          "type",
+          "encryption",
+          "storedAt",
+          "updatedAt",
+          "sequence",
+          "revision",
+          "state",
+          "deletedAt"
+        ],
+        "properties": {
+          "storageId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "senderId": {
+            "type": "string"
+          },
+          "senderName": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "type": {
+            "type": "string",
+            "const": "text"
+          },
+          "encryption": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupMessageEncryption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "storedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "deleted"
+            ]
+          },
+          "deletedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "example": {
+          "storageId": "storage-message-1",
+          "id": "client-message-1",
+          "conversationId": "group-1",
+          "senderId": "user-1",
+          "senderName": "Group Owner",
+          "timestamp": "2026-01-01T00:00:00.000Z",
+          "type": "text",
+          "encryption": {
+            "version": 1,
+            "algorithm": "AES-256-GCM",
+            "encoding": "base64",
+            "iv": "AQEBAQEBAQEBAQEB",
+            "ciphertext": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI="
+          },
+          "storedAt": "2026-01-01T00:00:01.000Z",
+          "updatedAt": "2026-01-01T00:00:01.000Z",
+          "sequence": 1,
+          "revision": 1,
+          "state": "active",
+          "deletedAt": null
+        }
+      },
+      "GroupMessageSubmitResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "message"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "created",
+              "duplicate"
+            ]
+          },
+          "message": {
+            "$ref": "#/components/schemas/GroupMessageProjection"
+          }
+        },
+        "example": {
+          "outcome": "created",
+          "message": {
+            "storageId": "storage-message-1",
+            "id": "client-message-1",
+            "conversationId": "group-1",
+            "senderId": "user-1",
+            "senderName": "Group Owner",
+            "timestamp": "2026-01-01T00:00:00.000Z",
+            "type": "text",
+            "encryption": {
+              "version": 1,
+              "algorithm": "AES-256-GCM",
+              "encoding": "base64",
+              "iv": "AQEBAQEBAQEBAQEB",
+              "ciphertext": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI="
+            },
+            "storedAt": "2026-01-01T00:00:01.000Z",
+            "updatedAt": "2026-01-01T00:00:01.000Z",
+            "sequence": 1,
+            "revision": 1,
+            "state": "active",
+            "deletedAt": null
+          }
+        }
+      },
+      "GroupMessageResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/GroupMessageProjection"
+          }
+        },
+        "example": {
+          "message": {
+            "storageId": "storage-message-1",
+            "id": "client-message-1",
+            "conversationId": "group-1",
+            "senderId": "user-1",
+            "senderName": "Group Owner",
+            "timestamp": "2026-01-01T00:00:00.000Z",
+            "type": "text",
+            "encryption": {
+              "version": 1,
+              "algorithm": "AES-256-GCM",
+              "encoding": "base64",
+              "iv": "AQEBAQEBAQEBAQEB",
+              "ciphertext": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI="
+            },
+            "storedAt": "2026-01-01T00:00:01.000Z",
+            "updatedAt": "2026-01-01T00:00:01.000Z",
+            "sequence": 1,
+            "revision": 1,
+            "state": "active",
+            "deletedAt": null
+          }
+        }
+      },
+      "GroupMessagePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GroupMessageProjection"
+            }
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "example": {
+          "items": [
+            {
+              "storageId": "storage-message-1",
+              "id": "client-message-1",
+              "conversationId": "group-1",
+              "senderId": "user-1",
+              "senderName": "Group Owner",
+              "timestamp": "2026-01-01T00:00:00.000Z",
+              "type": "text",
+              "encryption": {
+                "version": 1,
+                "algorithm": "AES-256-GCM",
+                "encoding": "base64",
+                "iv": "AQEBAQEBAQEBAQEB",
+                "ciphertext": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI="
+              },
+              "storedAt": "2026-01-01T00:00:01.000Z",
+              "updatedAt": "2026-01-01T00:00:01.000Z",
+              "sequence": 1,
+              "revision": 1,
+              "state": "active",
+              "deletedAt": null
+            }
+          ],
+          "nextCursor": null
+        }
+      },
+      "ReadPositionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "position"
+        ],
+        "properties": {
+          "position": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "example": {
+          "position": 1
+        }
+      },
+      "ReadPositionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "readPosition"
+        ],
+        "properties": {
+          "readPosition": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "example": {
+          "readPosition": 1
+        }
+      },
+      "ReceiptRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "delivered",
+              "read"
+            ]
+          }
+        },
+        "example": {
+          "status": "read"
+        }
+      },
+      "ReceiptProjection": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "conversationId",
+          "storageId",
+          "messageId",
+          "userId",
+          "status",
+          "observedAt",
+          "recordedAt"
+        ],
+        "properties": {
+          "conversationId": {
+            "type": "string"
+          },
+          "storageId": {
+            "type": "string"
+          },
+          "messageId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "delivered",
+              "read"
+            ]
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "example": {
+          "conversationId": "group-1",
+          "storageId": "storage-message-1",
+          "messageId": "client-message-1",
+          "userId": "user-2",
+          "status": "read",
+          "observedAt": "2026-01-01T00:00:02.000Z",
+          "recordedAt": "2026-01-01T00:00:02.000Z"
+        }
+      },
+      "ReceiptResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "receipt"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "created",
+              "duplicate"
+            ]
+          },
+          "receipt": {
+            "$ref": "#/components/schemas/ReceiptProjection"
+          }
+        },
+        "example": {
+          "outcome": "created",
+          "receipt": {
+            "conversationId": "group-1",
+            "storageId": "storage-message-1",
+            "messageId": "client-message-1",
+            "userId": "user-2",
+            "status": "read",
+            "observedAt": "2026-01-01T00:00:02.000Z",
+            "recordedAt": "2026-01-01T00:00:02.000Z"
+          }
+        }
+      },
+      "ReceiptPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptProjection"
+            }
+          }
+        },
+        "example": {
+          "items": []
+        }
       }
     }
   },
@@ -4302,6 +4802,1819 @@
             }
           }
         }
+      }
+    },
+    "/api/groups/{id}/messages": {
+      "get": {
+        "operationId": "G18",
+        "responses": {
+          "200": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SUCCESS"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupMessagePage"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "storageId": "storage-message-1",
+                      "id": "client-message-1",
+                      "conversationId": "group-1",
+                      "senderId": "user-1",
+                      "senderName": "Group Owner",
+                      "timestamp": "2026-01-01T00:00:00.000Z",
+                      "type": "text",
+                      "encryption": {
+                        "version": 1,
+                        "algorithm": "AES-256-GCM",
+                        "encoding": "base64",
+                        "iv": "AQEBAQEBAQEBAQEB",
+                        "ciphertext": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI="
+                      },
+                      "storedAt": "2026-01-01T00:00:01.000Z",
+                      "updatedAt": "2026-01-01T00:00:01.000Z",
+                      "sequence": 1,
+                      "revision": 1,
+                      "state": "active",
+                      "deletedAt": null
+                    }
+                  ],
+                  "nextCursor": null
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "VALIDATION_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "VALIDATION_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SESSION_EXPIRED",
+              "UNAUTHENTICATED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "SESSION_EXPIRED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "FORBIDDEN"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "FORBIDDEN",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "NOT_FOUND"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "NOT_FOUND",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "PAYLOAD_TOO_LARGE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "PAYLOAD_TOO_LARGE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "UNSUPPORTED_MEDIA_TYPE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "RATE_LIMITED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "RATE_LIMITED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "INTERNAL_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "INTERNAL_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "FEATURE_UNAVAILABLE",
+              "SERVICE_UNAVAILABLE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "FEATURE_UNAVAILABLE",
+                  "fields": []
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 1024
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "G19",
+        "responses": {
+          "200": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SUCCESS"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupMessageSubmitResponse"
+                },
+                "example": {
+                  "outcome": "created",
+                  "message": {
+                    "storageId": "storage-message-1",
+                    "id": "client-message-1",
+                    "conversationId": "group-1",
+                    "senderId": "user-1",
+                    "senderName": "Group Owner",
+                    "timestamp": "2026-01-01T00:00:00.000Z",
+                    "type": "text",
+                    "encryption": {
+                      "version": 1,
+                      "algorithm": "AES-256-GCM",
+                      "encoding": "base64",
+                      "iv": "AQEBAQEBAQEBAQEB",
+                      "ciphertext": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI="
+                    },
+                    "storedAt": "2026-01-01T00:00:01.000Z",
+                    "updatedAt": "2026-01-01T00:00:01.000Z",
+                    "sequence": 1,
+                    "revision": 1,
+                    "state": "active",
+                    "deletedAt": null
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SUCCESS"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupMessageSubmitResponse"
+                },
+                "example": {
+                  "outcome": "created",
+                  "message": {
+                    "storageId": "storage-message-1",
+                    "id": "client-message-1",
+                    "conversationId": "group-1",
+                    "senderId": "user-1",
+                    "senderName": "Group Owner",
+                    "timestamp": "2026-01-01T00:00:00.000Z",
+                    "type": "text",
+                    "encryption": {
+                      "version": 1,
+                      "algorithm": "AES-256-GCM",
+                      "encoding": "base64",
+                      "iv": "AQEBAQEBAQEBAQEB",
+                      "ciphertext": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI="
+                    },
+                    "storedAt": "2026-01-01T00:00:01.000Z",
+                    "updatedAt": "2026-01-01T00:00:01.000Z",
+                    "sequence": 1,
+                    "revision": 1,
+                    "state": "active",
+                    "deletedAt": null
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "VALIDATION_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "VALIDATION_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SESSION_EXPIRED",
+              "UNAUTHENTICATED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "SESSION_EXPIRED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "CSRF_INVALID",
+              "FORBIDDEN",
+              "RECIPIENT_KEYS_UNVERIFIED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "CSRF_INVALID",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "NOT_FOUND"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "NOT_FOUND",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "CONFLICT",
+              "IDEMPOTENCY_CONFLICT",
+              "STALE_STATE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "CONFLICT",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "PAYLOAD_TOO_LARGE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "PAYLOAD_TOO_LARGE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "UNSUPPORTED_MEDIA_TYPE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "RATE_LIMITED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "RATE_LIMITED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "INTERNAL_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "INTERNAL_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "FEATURE_UNAVAILABLE",
+              "RECIPIENT_KEYS_UNAVAILABLE",
+              "SERVICE_UNAVAILABLE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "FEATURE_UNAVAILABLE",
+                  "fields": []
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupMessageRequest"
+              },
+              "example": {
+                "id": "client-message-1",
+                "conversationId": "group-1",
+                "senderId": "user-1",
+                "senderName": "Group Owner",
+                "timestamp": "2026-01-01T00:00:00.000Z",
+                "type": "text",
+                "encryption": {
+                  "version": 1,
+                  "algorithm": "AES-256-GCM",
+                  "encoding": "base64",
+                  "iv": "AQEBAQEBAQEBAQEB",
+                  "ciphertext": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI="
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/groups/{id}/messages/{messageId}": {
+      "get": {
+        "operationId": "G20",
+        "responses": {
+          "200": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SUCCESS"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupMessageResponse"
+                },
+                "example": {
+                  "message": {
+                    "storageId": "storage-message-1",
+                    "id": "client-message-1",
+                    "conversationId": "group-1",
+                    "senderId": "user-1",
+                    "senderName": "Group Owner",
+                    "timestamp": "2026-01-01T00:00:00.000Z",
+                    "type": "text",
+                    "encryption": {
+                      "version": 1,
+                      "algorithm": "AES-256-GCM",
+                      "encoding": "base64",
+                      "iv": "AQEBAQEBAQEBAQEB",
+                      "ciphertext": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI="
+                    },
+                    "storedAt": "2026-01-01T00:00:01.000Z",
+                    "updatedAt": "2026-01-01T00:00:01.000Z",
+                    "sequence": 1,
+                    "revision": 1,
+                    "state": "active",
+                    "deletedAt": null
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "VALIDATION_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "VALIDATION_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SESSION_EXPIRED",
+              "UNAUTHENTICATED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "SESSION_EXPIRED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "FORBIDDEN"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "FORBIDDEN",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "NOT_FOUND"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "NOT_FOUND",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "PAYLOAD_TOO_LARGE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "PAYLOAD_TOO_LARGE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "UNSUPPORTED_MEDIA_TYPE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "RATE_LIMITED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "RATE_LIMITED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "INTERNAL_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "INTERNAL_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "FEATURE_UNAVAILABLE",
+              "SERVICE_UNAVAILABLE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "FEATURE_UNAVAILABLE",
+                  "fields": []
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "G21",
+        "responses": {
+          "200": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SUCCESS"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupMessageResponse"
+                },
+                "example": {
+                  "message": {
+                    "storageId": "storage-message-1",
+                    "id": "client-message-1",
+                    "conversationId": "group-1",
+                    "senderId": "user-1",
+                    "senderName": "Group Owner",
+                    "timestamp": "2026-01-01T00:00:00.000Z",
+                    "type": "text",
+                    "encryption": null,
+                    "storedAt": "2026-01-01T00:00:01.000Z",
+                    "updatedAt": "2026-01-01T00:00:01.000Z",
+                    "sequence": 1,
+                    "revision": 1,
+                    "state": "deleted",
+                    "deletedAt": "2026-01-01T00:00:03.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "VALIDATION_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "VALIDATION_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SESSION_EXPIRED",
+              "UNAUTHENTICATED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "SESSION_EXPIRED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "CSRF_INVALID",
+              "FORBIDDEN"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "CSRF_INVALID",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "NOT_FOUND"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "NOT_FOUND",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "CONFLICT"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "CONFLICT",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "PAYLOAD_TOO_LARGE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "PAYLOAD_TOO_LARGE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "UNSUPPORTED_MEDIA_TYPE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "RATE_LIMITED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "RATE_LIMITED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "INTERNAL_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "INTERNAL_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "FEATURE_UNAVAILABLE",
+              "SERVICE_UNAVAILABLE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "FEATURE_UNAVAILABLE",
+                  "fields": []
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/groups/{id}/read-position": {
+      "get": {
+        "operationId": "G22",
+        "responses": {
+          "200": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SUCCESS"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadPositionResponse"
+                },
+                "example": {
+                  "readPosition": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "VALIDATION_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "VALIDATION_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SESSION_EXPIRED",
+              "UNAUTHENTICATED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "SESSION_EXPIRED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "FORBIDDEN"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "FORBIDDEN",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "NOT_FOUND"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "NOT_FOUND",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "PAYLOAD_TOO_LARGE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "PAYLOAD_TOO_LARGE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "UNSUPPORTED_MEDIA_TYPE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "RATE_LIMITED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "RATE_LIMITED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "INTERNAL_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "INTERNAL_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "FEATURE_UNAVAILABLE",
+              "SERVICE_UNAVAILABLE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "FEATURE_UNAVAILABLE",
+                  "fields": []
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "put": {
+        "operationId": "G23",
+        "responses": {
+          "200": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SUCCESS"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadPositionResponse"
+                },
+                "example": {
+                  "readPosition": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "VALIDATION_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "VALIDATION_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SESSION_EXPIRED",
+              "UNAUTHENTICATED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "SESSION_EXPIRED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "CSRF_INVALID",
+              "FORBIDDEN"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "CSRF_INVALID",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "NOT_FOUND"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "NOT_FOUND",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "CONFLICT"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "CONFLICT",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "PAYLOAD_TOO_LARGE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "PAYLOAD_TOO_LARGE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "UNSUPPORTED_MEDIA_TYPE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "RATE_LIMITED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "RATE_LIMITED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "INTERNAL_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "INTERNAL_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "FEATURE_UNAVAILABLE",
+              "SERVICE_UNAVAILABLE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "FEATURE_UNAVAILABLE",
+                  "fields": []
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadPositionRequest"
+              },
+              "example": {
+                "position": 1
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/groups/{id}/messages/{messageId}/receipts": {
+      "post": {
+        "operationId": "G24",
+        "responses": {
+          "200": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SUCCESS"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                },
+                "example": {
+                  "outcome": "created",
+                  "receipt": {
+                    "conversationId": "group-1",
+                    "storageId": "storage-message-1",
+                    "messageId": "client-message-1",
+                    "userId": "user-2",
+                    "status": "read",
+                    "observedAt": "2026-01-01T00:00:02.000Z",
+                    "recordedAt": "2026-01-01T00:00:02.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SUCCESS"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                },
+                "example": {
+                  "outcome": "created",
+                  "receipt": {
+                    "conversationId": "group-1",
+                    "storageId": "storage-message-1",
+                    "messageId": "client-message-1",
+                    "userId": "user-2",
+                    "status": "read",
+                    "observedAt": "2026-01-01T00:00:02.000Z",
+                    "recordedAt": "2026-01-01T00:00:02.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "VALIDATION_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "VALIDATION_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SESSION_EXPIRED",
+              "UNAUTHENTICATED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "SESSION_EXPIRED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "CSRF_INVALID",
+              "FORBIDDEN"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "CSRF_INVALID",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "NOT_FOUND"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "NOT_FOUND",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "CONFLICT"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "CONFLICT",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "PAYLOAD_TOO_LARGE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "PAYLOAD_TOO_LARGE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "UNSUPPORTED_MEDIA_TYPE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "RATE_LIMITED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "RATE_LIMITED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "INTERNAL_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "INTERNAL_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "FEATURE_UNAVAILABLE",
+              "SERVICE_UNAVAILABLE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "FEATURE_UNAVAILABLE",
+                  "fields": []
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiptRequest"
+              },
+              "example": {
+                "status": "read"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "get": {
+        "operationId": "G25",
+        "responses": {
+          "400": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "VALIDATION_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "VALIDATION_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "SESSION_EXPIRED",
+              "UNAUTHENTICATED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "SESSION_EXPIRED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "FORBIDDEN"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "FORBIDDEN",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "NOT_FOUND"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "NOT_FOUND",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "PAYLOAD_TOO_LARGE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "PAYLOAD_TOO_LARGE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "UNSUPPORTED_MEDIA_TYPE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "RATE_LIMITED"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "RATE_LIMITED",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "INTERNAL_ERROR"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "INTERNAL_ERROR",
+                  "fields": []
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Documented contract response.",
+            "x-error-codes": [
+              "FEATURE_UNAVAILABLE",
+              "SERVICE_UNAVAILABLE"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "code": "FEATURE_UNAVAILABLE",
+                  "fields": []
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     }
   }

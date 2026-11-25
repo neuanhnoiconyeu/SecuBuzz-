@@ -1080,6 +1080,7 @@ Worktree status at this host run: modified `DATA/docs/db5-db6-handoff.md`, `DATA
 #### DB-6A resumption checkpoint
 
 Tasks 7.1?7.23 are checked. The executed measurement is Task 7.23 (T-6A-24); the open phase gate is Task 7.24 (T-6A-23). The document verifier passed 7/7, the absent-router regression passed 1/1, and the focused client type-check exited 0. G1, G2, G4 and G9 passed. G3, G5a, G7 and G8 returned no matches; G5b listed the seven ledger assertions. No 0009 migration, attachment router or attachment implementation directory exists. Final Windows and Linux C1 evidence is outstanding. A combined-tree run also includes DB-5D tests: use a separately verified DB-6A-only snapshot to establish the required document-test count delta. Production feature switches and the DB-5D checkpoint are preserved.
+
 #### T-6A-23 final phase gate (2026-11-23; isolated DB-6A validation clone)
 
 Validation snapshot: `D:\Projects\SecuBuzz-DB6A-validation`, detached at accepted baseline `a9521e49621fa7c5571ac93e3bfe07b3dd87824e`. The snapshot carried only DB-6A work: attachment contract documents, the bounded DB-6A handoff and inventory sections, three T-6A-22 document tests, the required dependency fixture, and Task 7.1–7.23 checkbox updates. Source section hashes and fixture/document hashes matched the original worktree. No DB-5D application or test changes were transferred. The Git index stayed empty.
@@ -1090,3 +1091,146 @@ Validation snapshot: `D:\Projects\SecuBuzz-DB6A-validation`, detached at accepte
 - **Document checks:** `node --test tests/gate-records.test.js` passed 7/7, including all three T-6A-22 checks. The complete C1 also passed `while a router file is absent, every method on its path prefixes answers the 404 of an unmatched /api path` (4.604 s); no attachment route was mounted.
 - **Gates:** G1 and G2 exit 0; G3 and G5a print nothing; G5b lists exactly seven DC-01 migration-ledger assertion lines; G7 and G8 print nothing; G9 exit 0. No `0009-*.sql`, `DATA/server/routes/attachments.js` or `DATA/server/attachments` exists. OA-01 and OA-02 decisions and the T-6A-24 measurement are recorded above. `docker compose ls -a` contains no `secubuzz-disposable-*` project and no such project volume remains. C1 ran with `--network none`, no application container or port, and only the ignored evidence directory mounted. Compose feature gates remain disabled; no Docker or application file was changed.
 - **Integrity / worktree:** `git diff --check` and published migration checks passed; G1 found no migration change. G5a found no added skips, todos or focused tests; no client suite ran. At validation completion, the clone's only paths were the DB-6A task checklist, handoff, inventory, `gate-records.test.js`, four attachment contract documents and the required dependency fixture, plus ignored validation evidence. Commands, counts and image identity above are preserved for review.
+
+### DB-5D owner decisions (2026-11-23)
+
+**T-5D-01 / OP-10 — reviewer and report form.** The Project Owner / Security Lead is the designated DB-5D reviewer. The owner approved eight fields for each finding: Finding ID, Severity, Affected component, Evidence, Risk, Remediation, Disposition and Verification. The earlier implementation-authored entry asserted non-authorship without an explicit reviewer confirmation. Task 3.1 stays open pending the reviewer's confirmation against the actual DB-5D changes and owner review of this entry. If there is authorship overlap, identify the affected code and obtain an independent reviewer for it. The designation applies to DB-5D only. OP-10 is decided again before DB-6C.
+
+**OP-14 — approved for DB-5D.** Group envelope version 2 is refused with 503 `RECIPIENT_KEYS_UNAVAILABLE` while no approved group key model exists. A stored `membership_revision` that differs from the revision verified before the write returns 409 `STALE_STATE`. Canonical refusal precedence remains in force; exact idempotency replay remains duplicate, conflicting replay remains 409 `IDEMPOTENCY_CONFLICT`, and direct-message behavior remains unchanged. This decision does not enable group messaging.
+
+**T-5D-27 / OD-19 — recorded 2026-11-23.** The Project Owner confirms that no group key model is selected. No cryptographic design, key-distribution protocol or implementation is authorized by DB-5D. Group messaging remains disabled for Real_Accounts; it must remain off until a verifier satisfying the frozen contract is registered and the Project Owner approves the GROUP-MESSAGING Gate_Record. This decision does not enable the feature. OP-14 remains as approved: envelope v2 returns 503 `RECIPIENT_KEYS_UNAVAILABLE`; a stored membership revision differing from the verified revision returns 409 `STALE_STATE`; canonical refusal precedence applies; exact idempotency replay is duplicate and conflicting replay is 409 `IDEMPOTENCY_CONFLICT`; direct-message behavior is unchanged. Defaults remain OD-07 (departed members' authored content stays visible to permitted remaining members; the departed member cannot delete it), OD-12 (read positions remain private and no other member's receipt/read state is exposed), and OD-13 (only the sender may tombstone a message). No provisional limit or unrelated decision is changed.
+
+**T-5D-17 host and Validation_Runner measurements (2026-11-23).** On the local temporary synthetic SQLite fixture, the workload contained 100 groups for one user, 200 active members in the largest group and 10,000 authenticated messages in that group. Fifty sequential authenticated requests per endpoint measured p95 21.106 ms for G02 group listing, 14.316 ms for G05 members and 15.328 ms for G18 history, each below 200 ms. The unchanged v7/latest direct-history plan regression passed. In the Linux Validation_Runner, the exact command `node --test tests/groups-pagination.test.js tests/groups-migrations.test.js` from `/workspace/DATA` passed 32/32 (0 failed, skipped, cancelled or todo) in 50.054 s; fixture size and 50-request-per-endpoint criteria were met, with p95 12.585 ms (G02), 11.427 ms (G05) and 6.982 ms (G18). Group-list, history and unread query plans used indexes and avoided full scans; the direct-history plan remained identical to v7. Runner evidence is `docker/artifacts/secubuzz-validation-cb4b1f2e/t-5d-17-runner.log`. Runner image `secubuzz-validation-cb4b1f2e-runner:latest` was rebuilt from the final source snapshot; test container used `--network none`, no published ports, no application volumes, and mounted only that evidence directory.
+
+**Earlier full DATA Validation_Runner attempt.** The 720 s external deadline ended the run with exit 1 and no final test summary. The log reports P-11 passed before printing buffered diagnostics through seed 5129, run 92. It does not establish which test was executing when the deadline expired. The earlier image predates the final group-only query validation and repository-doc correction. Its log also contains failure markers for direct v1 fixture replay, P-19, the concurrency file and the 17-template P-25 fixture. Evidence is preserved in `docker/artifacts/secubuzz-validation-cb4b1f2e/{data-tests.log,data-results.json}`.
+
+#### DB-5D implementation evidence for independent review
+
+The P-25 change adds eight request templates in `DATA/tests/groups-gate.test.js` at the G17 entry. In order, they cover history GET, v1 envelope POST, message GET and DELETE, position GET and PUT, and receipt POST and GET. The original G01–G17 templates, seeded request selection, exact 503 status/body assertions, whole-table snapshots and same-database restart loop are intact. Focused P-25/P-26 passed 3/3 in 13.201 s; the canonical gate file passed 58/58 in 21.490 s, both with zero failures, cancellations or skips. The seeded disabled cases issued 28, 30, 20 and 24 requests, plus all 25 routes after restart. The messaging test exercised four switch assignments with each of three verifier states, including the missing-verifier 503 and the Group_API read check. Logs are in `docker/artifacts/secubuzz-validation-0dfd2509/{focused-gate-host.log,gate-host.log}`; `focused-gate.log` preserves an earlier host launcher rejection (`spawn EPERM`) before test execution.
+
+Reviewer questions and source references:
+
+- Can the designated reviewer explicitly attest to non-authorship of the code in scope? Record the answer at T-5D-01 above, applying `tasks.md` under **Agents** and Task 3.1. The earlier OP-10 proposal in `design.md` and the historical handoff decision tables predate this designation.
+- Do `DATA/server/messaging/group.js` (`assertVerifierAvailable`, `verify`, and the transactional submission path) and `DATA/tests/groups-messages.test.js` (T-5D-03/04, AF-08) establish the verifier, replay and revision boundaries for both HTTP and bound-store callers?
+- Do the history and read-state queries in `DATA/server/database/groupRepository.js`, the G18–G25 handlers in `DATA/server/routes/groups.js`, and their P-12/P-18 tests maintain visibility for departed and rejoined members and keep read positions private?
+- Do the errors and logs meet the disclosure limits under verifier failure and rollback? Review AF-08 in `DATA/tests/groups-messages.test.js`, the messaging assertions in `DATA/tests/groups-security.test.js`, and the audit allowlist in `DATA/tests/audit-metadata.test.js`.
+
+Task 3.28 requires a separate independent report and written disposition of findings. OD-19 remains recorded above. GROUP-MESSAGING remains disabled. The final-tree phase gate remains pending.
+
+**Full Linux C1 after the P-25 correction — BLOCKED.** Image `secubuzz-validation-0dfd2509-runner:latest` (ID `sha256:425eb08a4525dfcd5186e43ce75d7532777c4366db2aba16219e66f6da33d737`) was built on `chuong-data` at `a9521e49621fa7c5571ac93e3bfe07b3dd87824e` with the corrected test fixture. Docker inspection confirmed network `none` and one bind at `/evidence`. A one-attempt copy of `docker/validate.cjs` changed only the external timer from 12 to 30 minutes. The container ran `node /evidence/c1-1800.cjs data` with TAP reporting. The child ran the unfiltered `npm test` in `/workspace/DATA` with default parallelism and original test deadlines.
+
+TAP reported 859 tests, 858 passed, 0 failed, 1 cancelled, 0 skipped and 0 todo in 851.832 s. The wrapper and container exited 1 after 852.70 s. The only cancellation was P-01 at `DATA/tests/groups-random.test.js:802`, which reached its 240,000 ms test deadline after 240,120.991 ms. The last emitted case was seed 1543569444, run 49, runSeed 1673510137. Both direct fixture replays, P-19, both independent-process concurrency tests, P-11 and both P-25 checks passed. One resource sample recorded 655.63% CPU and 2.886 GiB of 15.49 GiB memory in use. It establishes concurrent load; it does not isolate a CPU, I/O or fixture bottleneck.
+
+The evidence directory `docker/artifacts/secubuzz-validation-0dfd2509/` contains the fixture-only `p25-templates.patch`, the one-attempt wrapper `c1-1800.cjs`, complete TAP `data-tests.log` (P-01 cancellation at line 6019), runner exit/timing `data-results.json`, and `resource-sample.txt`. The earlier 720 s attempt remains in its original directory.
+
+**P-01 diagnostic.** The same image ran the full P-01 property alone with its original 240 s deadline, seed and assertions. All 100 sequences, including run 49, completed (5,000 generated steps); the test passed in 197.784 s, runner 198.312 s, exit 0. Timings for 100 fixtures were 23.906 s setup, 166.579 s in sequence execution and 5.869 s cleanup. See `p01-isolated.tap` in the same evidence directory. The timeout reproduced under full-suite load only in this comparison. The isolated run leaves the C1 cancellation outstanding. A repeat of unfiltered C1 on a higher-capacity Linux runner would test the load explanation while preserving the individual deadline.
+
+#### DB-5D checkpoint for the next Linux C1 operator
+
+Repository `D:\Projects\SecuBuzz-`, branch `chuong-data`, HEAD `a9521e49621fa7c5571ac93e3bfe07b3dd87824e`. The index is empty. The implementation is uncommitted. Tasks 3.2–3.27 are checked (26/31). Tasks 3.1 and 3.28–3.31 remain open. GROUP-MESSAGING is disabled. The owner authorized an external 1,800 s budget for validation. P-01 retains its 240 s individual deadline.
+
+| Evidence | Schedule and outcome | Elapsed |
+|---|---|---|
+| Full Linux C1, gate command | Default seven test-file slots. 859 tests, 858 passed, 0 failed, 1 cancelled, 0 skipped, 0 todo. Exit 1. P-01 reached run 49 and timed out at 240.121 s. | 852.70 s |
+| Full Linux diagnostic | Three test-file slots. Same TAP test names and counts, exit 1. P-01 reached run 64 and timed out at 240.013 s. Both independent-process properties passed, including P-17 with ten seeded sequences. | 899.98 s |
+| Isolated P-01 diagnostic | Seed 1543569444. All 100 sequences and 5,000 generated operations passed. Exit 0. | Test 197.784 s; runner 198.312 s |
+
+The source host has four physical cores and eight logical CPUs; Docker saw eight CPUs and 15.49 GiB RAM. The default C1 run has one resource sample, 655.63% CPU and 2.886 GiB resident/cached memory as reported by Docker stats. The three-slot run has 91 cgroup samples: average 3.18 CPUs, peak cgroup memory 1.77 GiB, CPU and I/O “some” stall time 1.34% and 0.64%, zero quota-throttling events and zero OOM kills. The measurements support a scheduling/load effect but do not identify a single bottleneck.
+
+Evidence roots beneath `docker/artifacts/` are `secubuzz-validation-0dfd2509/` (default TAP, results JSON, single resource sample, isolated TAP, approved wrapper and P-25 evidence), `secubuzz-diagnostic-4aa2cfbc/` (three-slot TAP, results JSON, scheduled file names and resource series) and `secubuzz-validation-cb4b1f2e/` (earlier 720 s attempt and T-5D-17 measurements). Keep all three intact. Only the default-schedule full run is C1 gate evidence; its verdict is **BLOCKED**.
+
+##### Image identity and offline transport
+
+| Source check | Verified value |
+|---|---|
+| Local tag | `secubuzz-validation-0dfd2509-runner:latest` |
+| Image index digest | `sha256:425eb08a4525dfcd5186e43ce75d7532777c4366db2aba16219e66f6da33d737` |
+| Linux/amd64 platform manifest digest | `sha256:67a923700e41617559b57a6d6a64cb6afb4c112c9a73ec0e5c86c770d92fe6de` |
+| Runtime | Native Linux/amd64, Node 24.20.0, locked npm dependencies and native SQLite module already installed, user `node`, working directory `/workspace` |
+| External-budget wrapper SHA-256 | `8ba467d45d265303a1c09cb2cba0cc46ce8a1c2e46f8f163db56021702a7f326` |
+
+Read-only inspection of the retained image found byte matches for 33 of 34 checked paths: the DATA package manifest and lockfile, runner, and all DATA files in the worktree inventory below except this handoff. The image contains an earlier handoff, SHA-256 `ce11304c76582fd39eb35d9eca8584e30c47324643d0c4b5648c4853dbef7ddc`. The checklist is outside the Docker build context. A passing rerun would establish C1 for this implementation snapshot. Task 3.31 still requires the final reviewed tree.
+
+Docker on the source supports offline `image save` and `image load`. Destination availability, import and digest equality remain unverified until the owner designates the machine. Use a trusted internal Linux/amd64 Docker Engine with a compatible content store, Bash and GNU coreutils, adequate disk for the archive, unpacked layers and temporary databases, and a writable evidence directory. A host offering eight dedicated physical cores with eight visible CPUs would preserve seven-file scheduling while testing higher throughput; this is a comparison target, not a specification minimum.
+
+**Future transfer procedure, after destination and media approval.** Review the tagged image and its layers for export suitability. The Dockerfiles use the repo's credential-free `docker/npm-install.conf`; `.dockerignore` excludes local credentials, databases, artifacts and user configuration. These controls are not a secret scan of arbitrary source content. Release only a reviewed image and the verified wrapper. Use approved encrypted local media or an approved internal device-to-device channel. Keep the archive SHA-256 in a separately trusted record. No registry, remote upload, source bind or application volume is needed.
+
+1. On the Windows source, in a **new private transfer directory**, after release approval, run the following against the named tag. Record both inspected IDs from the table above before saving. Check the native command exit codes. Keep the approved wrapper's original bytes.
+   ```powershell
+   docker image save --output runner.tar secubuzz-validation-0dfd2509-runner:latest
+   if ($LASTEXITCODE -ne 0) { throw 'Image export failed' }
+   Get-FileHash -Algorithm SHA256 -LiteralPath runner.tar
+   Copy-Item -LiteralPath 'D:\Projects\SecuBuzz-\docker\artifacts\secubuzz-validation-0dfd2509\c1-1800.cjs' -Destination .
+   Get-FileHash -Algorithm SHA256 -LiteralPath c1-1800.cjs
+   ```
+2. On the designated machine, use a validation Docker context with no conflicting local tag. From the private incoming directory, verify the archive hash **before loading**. Verify both content identities after loading. An ID-format difference on another Docker store requires inspection of its manifest and configuration before proceeding.
+   ```bash
+   set -eu
+   : "${APPROVED_ARCHIVE_SHA256:?Set from the trusted source record}"
+   printf '%s  runner.tar\n' "$APPROVED_ARCHIVE_SHA256" | sha256sum --check -
+   printf '%s  c1-1800.cjs\n' 8ba467d45d265303a1c09cb2cba0cc46ce8a1c2e46f8f163db56021702a7f326 | sha256sum --check -
+   docker image load --input runner.tar
+   tag=secubuzz-validation-0dfd2509-runner:latest
+   image=sha256:425eb08a4525dfcd5186e43ce75d7532777c4366db2aba16219e66f6da33d737
+   platform=sha256:67a923700e41617559b57a6d6a64cb6afb4c112c9a73ec0e5c86c770d92fe6de
+   test "$(docker image inspect --format '{{.Id}}' "$tag")" = "$image"
+   test "$(docker image inspect --platform linux/amd64 --format '{{.Id}}' "$tag")" = "$platform"
+   ```
+
+##### Run default C1 once on the designated machine
+
+Continue in the same Bash shell. Choose a private evidence parent on persistent host storage. Ensure that the image's mapped `node` UID can write the fresh directory and the operator can read it. The preflight below tests that access before launching C1. Record the source HEAD, branch and `git status --short` from the actual source tree alongside the operator, date, machine identity and image digests. An image-only destination carries that source record separately.
+
+```bash
+: "${EVIDENCE_ROOT:?Set to an existing private absolute directory}"
+umask 077
+ev=$(mktemp -d "$EVIDENCE_ROOT/db5d-c1.XXXXXXXX")
+install -m 0444 c1-1800.cjs "$ev/c1-1800.cjs"
+mount="type=bind,source=$ev,target=/evidence"
+docker run --pull never --rm --network none --mount "$mount" "$image" \
+  sh -ec 'test -r /evidence/c1-1800.cjs && test -w /evidence && node -v'
+date -u > "$ev/host.txt"
+uname -sm >> "$ev/host.txt"
+lscpu >> "$ev/host.txt"
+df -h "$ev" >> "$ev/host.txt"
+docker info --format 'Engine={{.ServerVersion}} CPUs={{.NCPU}} RAM_bytes={{.MemTotal}}' >> "$ev/host.txt"
+cid=$(docker run --pull never -d --init --network none --shm-size=1g \
+  --mount "$mount" -e SECUBUZZ_DOCKER_VALIDATION=true -e NODE_OPTIONS=--test-reporter=tap \
+  "$image" node /evidence/c1-1800.cjs data)
+docker inspect --format '{{.Image}} {{.HostConfig.NetworkMode}} {{json .Mounts}}' "$cid" > "$ev/container.txt"
+while [ "$(docker inspect --format '{{.State.Running}}' "$cid")" = true ]; do
+  date -u >> "$ev/resources.log"
+  docker stats --no-stream --format 'CPU={{.CPUPerc}} RAM={{.MemUsage}} IO={{.BlockIO}} PIDs={{.PIDs}}' "$cid" >> "$ev/resources.log" || true
+  docker exec "$cid" sh -c 'for f in cpu.max cpu.stat cpu.pressure memory.max memory.current memory.events memory.pressure io.stat io.pressure; do echo "$f"; cat "/sys/fs/cgroup/$f"; done' >> "$ev/resources.log" 2>&1 || true
+  sleep 10
+done
+rc=$(docker wait "$cid")
+printf '%s\n' "$rc" > "$ev/exit-code.txt"
+docker logs "$cid" > "$ev/runner.log" 2>&1
+test -s "$ev/data-results.json" && test -s "$ev/data-tests.log"
+tail -n 9 "$ev/data-tests.log"
+grep -A6 -E '^(not )?ok [0-9]+ - P-01:' "$ev/data-tests.log"
+test "$rc" = 0
+```
+
+The last verified wrapper differs from `docker/validate.cjs` only in its 720 → 1,800 s external timer. It runs **unfiltered `npm test` from `/workspace/DATA`**, with Node's default scheduling. TAP reporting changes the output format. The three-slot wrapper, seed replay variables and isolated property command belong to the diagnostic evidence only. On cgroup v1, record equivalent counters or mark unavailable metrics explicitly. Keep the exit code and all partial logs on a failure, including a wrapper timeout without a final TAP summary.
+
+For this snapshot reconcile **859 discovered tests**, the P-01 seed/coverage diagnostic (100 sequences × 50 steps), and both independent-process tests against the previous TAP. Record the P-01 and overall durations, cancellations, skips, todo, and any first failure. Task 3.31 requires at least the 321 baseline DATA tests plus the new tests, exit 0 and zero failed, skipped, cancelled and todo. A discrepant count requires investigation. For phase completion follow the full checklist at Task 3.31: final-tree Linux C1–C5 and Windows evidence, G1–G9, delivered independent report, written disposition of findings and owner approval of the Gate_Record. This C1 handoff covers one gate.
+
+##### Worktree portability and review scope
+
+**DB-5D source manifest, relative to the repository root:**
+
+| Area | Paths |
+|---|---|
+| Task accounting | `.kiro/specs/db5-db6-canonical-integration/tasks.md` (3.2–3.27 checked) |
+| DATA documentation | `DATA/docs/groups-api.md`, `groups-openapi.json`, `repositories.md` in the same directory, plus the shared handoff and standalone inventory below |
+| Implementation | `DATA/server/app.js`, `DATA/server/database/groupRepository.js`, `DATA/server/routes/groups.js`, `DATA/server/messaging/validation.js`, **untracked** `DATA/server/messaging/group.js` |
+| Tests under `DATA/tests/` | `audit-metadata.test.js`, `groups-atomicity.test.js`, `groups-concurrency.test.js`, `groups-gate.test.js`, `groups-history.test.js`, `groups-http.test.js`, **untracked** `groups-messages.test.js`, `groups-model.test.js`, `groups-openapi.test.js`, `groups-pagination.test.js`, `groups-random.test.js`, `groups-security.test.js`, `support/contract.js`, `support/groups-worker.cjs` |
+| Shared files | `DATA/docs/db5-db6-handoff.md` has one appended Git hunk spanning DB-6A and DB-5D. DB-5D begins at the heading “DB-5D owner decisions”. `DATA/docs/standalone-inventory.md` adds the DB-5D T-5D-09 section and a separate T-6A attachment observable-step audit. |
+
+**Optional source handoff.** The immutable image suffices to replay this C1. For a separately approved source handoff, start from a fresh, trusted offline checkout of the exact baseline on the destination. The branch is ahead of origin; verify the full HEAD locally. Use a private allowlisted copy with relative paths, byte counts and SHA-256 from the source. Verify the bytes again on receipt before opening the checkout for edits. Apply files only to that fresh copy. Review content for credentials before release. A Git diff alone omits the two untracked implementation/test files. For a DB-5D-only review, copy the exclusive paths and apply reviewed DB-5D-only hunks to destination copies of the two shared documents, verifying their diff against the baseline. Do not treat that split tree as the full historical C1 input.
+
+Reproducing **the combined worktree** requires separate permission to carry the seven DB-6A paths: the two shared docs in full, `DATA/tests/gate-records.test.js`, and `DATA/docs/attachments-api.md`, `attachments-protected-content.md`, `attachments-storage-contract.md`, `attachments-upload-frame.md` in the same directory. Preserve DB-6A attribution. The untracked `DATA/tests/fixtures/package-dependencies-d7cd40a.json` is a protected validation input already in the image. Preserve its exact bytes and obtain permission before including it in a source copy. Leave `.config.kiro` and `tasks.meta.json` under the canonical spec directory, `client/artifacts/phase8-8/`, `client/artifacts/phase8-8-hotfix/`, and the content-identical `DATA/tests/support/auth.js` status artifact on the source. The existing `stash@{0}` is `fd19c4b454714583ff8e8bc90e9d5bcf4938a782`. Keep its ref, the Git index, databases, volumes and ignored evidence in place. If prior evidence is separately requested for transport, copy only the named reviewed logs and hashes. A recursive workspace, Git metadata or home-directory archive is outside this procedure.
+
+**Review resume point.** The Project Owner / Security Lead designation and eight-field finding format stand. The owner can confirm non-authorship against the scoped changes and review the T-5D-01 decision entry now. The code map, previous test evidence and review questions above are ready for that reviewer. Tasks 3.25–3.27 are checked; after independence is established, the reviewer can inspect the write boundary, visibility, receipts, errors/logs and OD-19 while C1 is pending. Task 3.28 verification still requires the owner-accepted independent report and passing DATA tests. Task 3.29 resolves each finding, then 3.30 drafts the Gate_Record for owner review. Task 3.31 verifies the final tree. No Gate_Record or reviewer attestation is granted by this handoff.

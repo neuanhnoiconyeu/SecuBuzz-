@@ -10,6 +10,7 @@ const {httpGroupFixture,groupFixture,openLimiter,snapshot,changedTables,createCl
 const {withMembershipTransaction}=require('../server/database/groupRepository');
 const {createRandom,forAll}=require('./support/random');
 const {performance}=require('node:perf_hooks');
+const {createGroupMessageService}=require('../server/messaging/group');
 
 const P01_SEQUENCES=100;
 const P01_OPERATIONS=50;
@@ -17,14 +18,18 @@ const P01_SEED=0x5c010024;
 const SOURCE='127.0.0.1';
 const USER_CLASSES=['owner','admin','member','pendingInvitee','removedMember','nonMember'];
 const OP_WEIGHTS=[['create',6],['invite',12],['accept',10],['decline',7],['cancel',7],['advance',5],
-    ['remove',12],['leave',10],['role',10],['transfer',8],['archive',5],['add',8]];
-const MUTATIONS=new Set(['create','invite','accept','decline','cancel','remove','leave','role','transfer','archive','add']);
+    ['remove',12],['leave',10],['role',10],['transfer',8],['archive',5],['add',8],['send',8]];
+const MUTATIONS=new Set(['create','invite','accept','decline','cancel','remove','leave','role','transfer','archive','add','send']);
 const INVITATION_STATES=new Set(['pending','accepted','declined','cancelled','expired']);
 const TERMINAL_INVITATION_STATES=new Set(['accepted','declined','cancelled','expired']);
 const INVITATION_IMMUTABLE_FIELDS=['invitation_id','conversation_id','invitee_id','inviter_id','created_at','expires_at'];
 const invitationQueriesByDatabase=new WeakMap();
 const describeSequence=sequence=>sequence.map((op,index)=>`${index}:${op.op}(a=${op.actorClass},t=${op.targetClass},g=${op.groupSlot},stale=${op.revisionMode||'no'},replay=${op.replay})`);
 const stateQueriesByDatabase=new WeakMap();
+const MESSAGE_VERIFIER=Object.freeze({async verifyEnvelope(){return {verified:true};}});
+const messageEnvelope=(actor,id,clientId,at)=>({id:clientId,conversationId:id,senderId:actor.id,
+    senderName:actor.displayName,timestamp:at,type:'text',encryption:{version:1,algorithm:'AES-256-GCM',encoding:'base64',
+        iv:Buffer.alloc(12,1).toString('base64'),ciphertext:Buffer.alloc(32,2).toString('base64')}});
 const sequenceFixtureTimings={count:0,setupMs:0,sequenceMs:0,cleanupMs:0};
 
 function makeActorContext(f,actor) {
@@ -35,7 +40,7 @@ function makeActorContext(f,actor) {
 }
 function expectedStatus(op) {
     return ({create:201,invite:201,accept:200,decline:204,cancel:204,remove:204,leave:204,
-        role:200,transfer:200,archive:200,add:201,update:200})[op];
+        role:200,transfer:200,archive:200,add:201,update:200,send:201})[op];
 }
 function stateRows(db,id) {
     let queries=stateQueriesByDatabase.get(db);
@@ -47,7 +52,7 @@ function stateRows(db,id) {
             intervals:db.prepare('SELECT conversation_id,user_id,interval_no,first_seq,last_seq,joined_at,left_at FROM GroupMembershipIntervals WHERE conversation_id=? ORDER BY user_id,interval_no'),
             invitations:db.prepare('SELECT invitation_id,conversation_id,invitee_id,inviter_id,state,created_at,expires_at,resolved_at FROM ConversationInvitations WHERE conversation_id=? ORDER BY invitation_id'),
             creationKeys:db.prepare('SELECT user_id,idempotency_key,conversation_id,created_at FROM GroupCreationKeys WHERE conversation_id=? ORDER BY user_id,idempotency_key'),
-            audits:db.prepare('SELECT event_type,actor_user_id,subject_id,metadata_json,created_at FROM AuditLogs WHERE subject_id=? ORDER BY rowid')
+            audits:db.prepare("SELECT event_type,actor_user_id,subject_id,metadata_json,created_at FROM AuditLogs WHERE subject_id=? AND source='groups' ORDER BY rowid")
         };
         stateQueriesByDatabase.set(db,queries);
     }
@@ -101,6 +106,13 @@ function decide(f,groups,request) {
         return {status:201,code:null,effect:'create'};
     }
     if(!group)return deny(404,'NOT_FOUND');
+    if(op==='send') {
+        if(!actorRole)return deny(404,'NOT_FOUND');
+        if(group.archived)return deny(409,'CONFLICT');
+        const prior=group.messages.find(message=>message.id===request.clientId);
+        if(prior)return prior.senderId===actorId?{status:200,code:null,effect:'send-replay',message:prior}:deny(409,'IDEMPOTENCY_CONFLICT');
+        return {status:201,code:null,effect:'send',at,actorId,clientId:request.clientId};
+    }
     if(op==='advance')return {status:200,code:null,effect:'advance'};
     if(op==='invite') {
         if(!actorRole)return deny(404,'NOT_FOUND');
@@ -205,7 +217,7 @@ function applyModel(group,request,decision,result) {
         const created={label:request.label,id,ownerId:actorId,maximum:request.groupMaximum,clock:request.clock,
             name:request.body.name,description:request.body.description,
             createdAt:joinedAt,updatedAt:joinedAt,creationKey:{userId:actorId,key:request.idempotencyKey,createdAt:joinedAt},
-            archived:false,archivedAt:null,revision:1,version:0,members:new Map([[actorId,{role:'owner',active:true,joinedAt,leftAt:null,
+            archived:false,archivedAt:null,revision:1,version:0,messages:[],members:new Map([[actorId,{role:'owner',active:true,joinedAt,leftAt:null,
                 intervals:[{intervalNo:1,firstSeq:1,lastSeq:null,joinedAt,leftAt:null}]}]]),
             invitations:new Map(),audits:[]};
         addAudit(created,'group.created',actorId,at);
@@ -235,8 +247,8 @@ function applyModel(group,request,decision,result) {
         if(state==='accepted') {
             let member=group.members.get(actorId);
             if(!member) {member={role:'member',active:true,joinedAt:at,leftAt:null,intervals:[]};group.members.set(actorId,member);}
-            else {member.role='member';member.active=true;member.leftAt=null;}
-            member.intervals.push({intervalNo:member.intervals.length+1,firstSeq:1,lastSeq:null,joinedAt:at,leftAt:null});
+        else {member.role='member';member.active=true;member.leftAt=null;}
+        member.intervals.push({intervalNo:member.intervals.length+1,firstSeq:(group.messages?.length||0)+1,lastSeq:null,joinedAt:at,leftAt:null});
             group.revision++;addAudit(group,'group.invitation.accepted',actorId,at);
         } else addAudit(group,`group.invitation.${state}`,actorId,at);
         return group;
@@ -245,7 +257,7 @@ function applyModel(group,request,decision,result) {
     case 'leave': {
         const id=decision.effect==='remove'?targetId:actorId;
         const member=group.members.get(id);member.active=false;member.leftAt=at;
-        const interval=member.intervals.at(-1);interval.lastSeq=0;interval.leftAt=at;
+        const interval=member.intervals.at(-1);interval.lastSeq=group.messages?.length||0;interval.leftAt=at;
         cancelInvitationsFor(group,id,at);group.revision++;
         addAudit(group,decision.effect==='remove'?'group.member.removed':'group.member.left',actorId,at);return group;
     }
@@ -267,9 +279,12 @@ function applyModel(group,request,decision,result) {
         let member=group.members.get(targetId);
         if(!member) {member={role:'member',active:true,joinedAt:at,leftAt:null,intervals:[]};group.members.set(targetId,member);}
         else {member.role='member';member.active=true;member.leftAt=null;}
-        member.intervals.push({intervalNo:member.intervals.length+1,firstSeq:1,lastSeq:null,joinedAt:at,leftAt:null});
+        member.intervals.push({intervalNo:member.intervals.length+1,firstSeq:(group.messages?.length||0)+1,lastSeq:null,joinedAt:at,leftAt:null});
         group.revision++;addAudit(group,'group.member.added',actorId,at);return group;
     }
+    case 'send': group.messages.push({id:decision.clientId,sequence:group.messages.length+1,senderId:actorId,at});
+        addAudit(group,'message.stored',actorId,at);return group;
+    case 'send-replay': return group;
     default: return group;
     }
 }
@@ -426,7 +441,7 @@ function chooseActor(random,actors,group,operation,invitation) {
 }
 
 async function createSequenceFixtureTemplate(t) {
-    const template=await httpGroupFixture(t,{clock:createClock(),createGroup:false,features:{groupApi:true,
+    const template=await httpGroupFixture(t,{clock:createClock(),createGroup:false,features:{groupApi:true,groupMessaging:true,
         groups:{directAdd:true,maxMembers:6,maxPendingInvitationsPerGroup:10000,maxPendingInvitationsPerInvitee:10000}}});
     await template.application.close();
     template.db.pragma('wal_checkpoint(TRUNCATE)');
@@ -440,8 +455,8 @@ async function withIsolatedSequenceFixture(template,work) {
     let f;
     let phaseStarted=performance.now();
     try {
-        f=await httpGroupFixture(fixtureScope,{clock:createClock(),databaseTemplate:template.filename,actorTemplate:template.actors,features:{groupApi:true,
-            groups:{directAdd:true,maxMembers:6,maxPendingInvitationsPerGroup:10000,maxPendingInvitationsPerInvitee:10000}}});
+        f=await httpGroupFixture(fixtureScope,{clock:createClock(),databaseTemplate:template.filename,actorTemplate:template.actors,features:{groupApi:true,groupMessaging:true,
+            groups:{directAdd:true,maxMembers:6,maxPendingInvitationsPerGroup:10000,maxPendingInvitationsPerInvitee:10000}},messageOptions:{groupRecipientKeyVerifier:MESSAGE_VERIFIER}});
         sequenceFixtureTimings.setupMs+=performance.now()-phaseStarted;
         sequenceFixtureTimings.count++;
         phaseStarted=performance.now();
@@ -456,13 +471,33 @@ async function withIsolatedSequenceFixture(template,work) {
 
 async function runSequence(f,plan,info,coverage) {
     const actors=Object.fromEntries(USER_CLASSES.map(name=>[f.actors[name].id,{...f.actors[name],...makeActorContext(f,f.actors[name])}]));
-    const service=createGroupService({db:f.db,auth:f.application.auth,limiter:openLimiter(),features:{groupApi:true,
+    const service=createGroupService({db:f.db,auth:f.application.auth,limiter:openLimiter(),features:{groupApi:true,groupMessaging:true,
         groups:{directAdd:true,maxMembers:6,maxPendingInvitationsPerGroup:10000,maxPendingInvitationsPerInvitee:10000}},now:f.clock.now});
+    const messages=createGroupMessageService({db:f.db,auth:f.application.auth,groups:service,groupRecipientKeyVerifier:MESSAGE_VERIFIER,limiter:openLimiter()});
     const repository=createGroupRepository(f.db);
     const byKey=new Map();
     const history=[];
     const invitationHistory=new Map();
     let groups=[];
+    async function assertReadableMessages(label) {
+        for(const group of groups)for(const name of USER_CLASSES) {
+            const actor=actors[f.actors[name].id],member=group.members.get(actor.id);
+            if(f.clock.now()>=actor.expiresAt) {
+                assert.throws(()=>messages.history(actor.context,group.id,{limit:'50'}),error=>error instanceof AuthError&&error.status===401&&error.code==='SESSION_EXPIRED',
+                    `${label} ${name} cannot read after its synthetic session expires`);
+                continue;
+            }
+            if(!member?.active) {
+                assert.throws(()=>messages.history(actor.context,group.id,{limit:'50'}),error=>error instanceof AuthError&&error.status===404&&error.code==='NOT_FOUND',
+                    `${label} ${name} remains hidden`);
+                continue;
+            }
+            const expected=group.messages.filter(message=>member.intervals.some(interval=>message.sequence>=interval.firstSeq&&
+                (interval.lastSeq===null||message.sequence<=interval.lastSeq))).map(message=>({id:message.id,sequence:message.sequence,senderId:message.senderId})).reverse();
+            const actual=messages.history(actor.context,group.id,{limit:'50'}).items.map(message=>({id:message.id,sequence:message.sequence,senderId:message.senderId}));
+            assert.deepEqual(actual,expected,`${label} ${name} readable messages match independent event log and intervals`);
+        }
+    }
     async function runRequest(request,random,sequence,sequenceIndex) {
         let group=request.group;
         const actor=request.op==='advance'?null:actors[request.actorId];
@@ -490,6 +525,11 @@ async function runSequence(f,plan,info,coverage) {
                 ...(request.membershipRevision===null?{}:{membershipRevision:request.membershipRevision})});break;
             case 'archive': value=service.archiveGroup(...args,group.id);break;
             case 'add': value=service.addMember(...args,group.id,{userId:request.targetId});break;
+            case 'send': {
+                const session=f.application.auth.repository.byId(actor.context.sessionId);
+                value=await messages.submit(actor.context,actor.proof,group.id,messageEnvelope({id:actor.id,displayName:session.display_name},group.id,
+                    request.clientId,request.clock.iso()));break;
+            }
             case 'update': value=service.updateGroup(...args,group.id,request.body??{name:request.name,description:request.description,
                 ...(request.membershipRevision===null?{}:{membershipRevision:request.membershipRevision})});break;
             default: throw new Error(`unsupported operation ${request.op}`);
@@ -500,7 +540,7 @@ async function runSequence(f,plan,info,coverage) {
         }
         let actual;
         if(value&&Number.isInteger(value.status))actual={status:value.status,code:value.code};
-        else actual={status:request.op==='create'?(value.created?201:200):expectedStatus(request.op),code:null};
+        else actual={status:request.op==='create'?(value.created?201:200):request.op==='send'&&value.outcome==='duplicate'?200:expectedStatus(request.op),code:null};
         const failureContext={property:sequence.line,operationIndex:sequenceIndex,generatedIndex:request.index,
             simulatedTime:request.clock?.iso(),operation:request.op,group:request.label??group?.label??null,
             groupVersion:group?.version??0,membershipRevision:group?.revision??null,
@@ -535,13 +575,19 @@ async function runSequence(f,plan,info,coverage) {
         if(expected.effect==='accept')coverage.accepted++;
         if(request.op==='advance'&&group)assert.deepEqual(groupSnapshot(f,group),before,'clock advance wrote database rows');
         if(group)assertGroupState(f,repository,group);
+        if(expected.effect==='send') {
+            const stored=f.db.prepare('SELECT message_seq,client_id,sender_id FROM Messages WHERE conversation_id=? AND client_id=?').get(group.id,request.clientId);
+            assert.deepEqual(stored,{message_seq:group.messages.length,client_id:request.clientId,sender_id:request.actorId},
+                `${JSON.stringify(failureContext)} P-01 stored message sequence and identity`);
+        }
+        await assertReadableMessages(JSON.stringify(failureContext));
         if(group&&retainedBefore) {
             const retainedAfter=retainedGroupCounts(f.db,group.id);
             for(const [table,count] of Object.entries(retainedBefore))assert.ok(retainedAfter[table]>=count,
                 `${JSON.stringify(failureContext)} P-24 ${table} row count decreased`);
         }
         if(expected.status<400||expected.committed) {
-            if(group&&expected.effect!=='advance'&&expected.effect!=='create-replay')group.version++;
+            if(group&&expected.effect!=='advance'&&expected.effect!=='create-replay'&&expected.effect!=='send-replay')group.version++;
         }
         if(request.replay)coverage.replays++;
         request.stateVersionAfter=group?.version??0;
@@ -611,7 +657,7 @@ async function runSequence(f,plan,info,coverage) {
         assert.ok(outsider,'P-24 requires a non-member target');
         for(const [op,extra] of [['add',{targetId:outsider}],['invite',{targetId:outsider}],['role',{targetId:target,newRole:'member'}],
             ['transfer',{targetId:target}],['update',{body:{name:'archived update'}}],['update',{body:{description:'archived description'}}],
-            ['update',{body:{historyPolicy:'all'}}],['archive',{}]]) {
+            ['update',{body:{historyPolicy:'all'}}],['archive',{}],['send',{clientId:`p24-archived-${info.run}`} ]]) {
             const result=await runArchived(op,extra);assert.equal(result.expected.status,409,`P-24 archived ${op} is a conflict`);
             prior=assertNondecreasing(prior);
         }
@@ -624,6 +670,9 @@ async function runSequence(f,plan,info,coverage) {
         const left=await runRequest({op:'leave',group,clock:f.clock,actorId:leaver,actorClass:actor.actorClass,sessionExpiresAt:actor.expiresAt,
             index:operationIndex++},info.random,sequence,operationIndex);
         assert.equal(left.expected.status,204,'P-24 leave remains allowed');assertNondecreasing(beforeLeave);
+        const ownerHistory=messages.history(owner.context,group.id,{limit:'50'}).items;
+        assert.ok(ownerHistory.some(message=>group.messages.some(expected=>expected.id===message.id)),
+            'P-24 remaining member keeps the pre-archive message after its sender leaves');
         const routeBrowser=f.browser(),routeUser=`p24-route-${info.run}`;
         assert.equal((await routeBrowser.register(routeUser,{displayName:'P-24 route probe'})).status,201);
         assert.equal((await routeBrowser.login(routeUser)).status,200,'P-24 uses an independent authenticated account for absent-route checks');
@@ -631,7 +680,7 @@ async function runSequence(f,plan,info,coverage) {
             const response=await routeBrowser.request(path,{method,headers:{'X-CSRF-Token':await routeBrowser.csrf()}});
             assert.equal(response.status,404,`P-24 ${method} ${path} stays absent`);assert.equal(response.body.code,'NOT_FOUND');
         }
-        coverage.p24.sequences++;coverage.p24.refusedWrites+=8;coverage.p24.absentRoutes+=3;
+        coverage.p24.sequences++;coverage.p24.refusedWrites+=9;coverage.p24.absentRoutes+=3;
     }
     const random=info.random;
     const sequence={line:`property=P-01 seed=${info.seed} run=${info.run} runSeed=${info.runSeed}`};
@@ -697,6 +746,7 @@ async function runSequence(f,plan,info,coverage) {
                     request={op,group,clock:f.clock,actorId:actor.id,actorClass:actor.actorClass,sessionExpiresAt:actor.expiresAt,
                         targetId,targetClass:USER_CLASSES.find(name=>f.actors[name].id===targetId)||'unknown',
                         invitationId:invitation?.id||'unknown-invitation',newRole:generated.newRole,revisionMode:mode,membershipRevision:revision,
+                        clientId:op==='send'?`p01-message-${info.run}-${generated.index}`:undefined,
                         wrongActor:forcedWrongActor,replay:false,advanceMs:generated.advanceMs,index:generated.index};
                 }
                 if(request.op==='advance') {
@@ -717,6 +767,11 @@ async function runSequence(f,plan,info,coverage) {
                             sessionExpiresAt:owner.expiresAt,targetId,targetClass:USER_CLASSES.find(name=>f.actors[name].id===targetId),
                             membershipRevision:null,revisionMode:'none',index:P01_OPERATIONS+info.run*20-1},info.random,sequence,P01_OPERATIONS+info.run*20-1);
                     }
+                    const senderId=[...archiveGroup.members.entries()].find(([id,row])=>id!==archiveGroup.ownerId&&row.active)[0];
+                    const sender=actors[senderId];
+                    await runRequest({op:'send',group:archiveGroup,clock:f.clock,actorId:sender.id,actorClass:sender.actorClass,
+                        sessionExpiresAt:sender.expiresAt,clientId:`p24-before-archive-${info.run}`,index:P01_OPERATIONS+info.run*20-2},
+                        info.random,sequence,P01_OPERATIONS+info.run*20-2);
                 }
                 const saved={...request,versionAtRequest:request.group?.version??0};
                 const outcome=await runRequest(request,random,sequence,sequenceIndex);
@@ -766,7 +821,7 @@ test('P-01: generated operation sequences preserve the owner and group state mod
     t.diagnostic(`P-24 coverage ${JSON.stringify(coverage.p24)}`);
     t.diagnostic(`P-01 timing ${JSON.stringify(sequenceFixtureTimings)}`);
     if(process.env.PROPERTY_SEED===undefined) {
-        assert.equal(coverage.operations.size,12);assert.ok([...coverage.createdGroups].every(n=>n>=1&&n<=3));
+        assert.equal(coverage.operations.size,13);assert.ok([...coverage.createdGroups].every(n=>n>=1&&n<=3));
         assert.ok(coverage.actors.size>=5);assert.ok(coverage.targets.size>=5);assert.equal(coverage.roles.size,2);
         assert.equal(coverage.archived.size,2);assert.ok(coverage.stale.has('stale'));assert.ok(coverage.stale.has('current'));
         assert.ok(coverage.wrongActor>0);assert.ok(coverage.replays>=100);assert.ok(coverage.accepted>0);
@@ -776,7 +831,7 @@ test('P-01: generated operation sequences preserve the owner and group state mod
         assert.deepEqual([...coverage.p04.clockPeriods].sort(),[0,1,2,3]);
         assert.equal(coverage.p09.requests,P01_SEQUENCES*15);assert.equal(coverage.p09.directSqlAttempts,P01_SEQUENCES*3);
         assert.equal(coverage.p09.noopAssignments,P01_SEQUENCES);
-        assert.deepEqual(coverage.p24,{sequences:P01_SEQUENCES,refusedWrites:P01_SEQUENCES*8,absentRoutes:P01_SEQUENCES*3});
+        assert.deepEqual(coverage.p24,{sequences:P01_SEQUENCES,refusedWrites:P01_SEQUENCES*9,absentRoutes:P01_SEQUENCES*3});
         assert.deepEqual([...coverage.p09.operations].sort(),['direct-add','rejoin']);
         assert.deepEqual([...coverage.p09.preconditions].sort(),['current','future','stale']);
         for(const state of ['accepted','declined','cancelled'])assert.ok(coverage.p04.transitions.has(`pending->${state}`),`P-04 missing pending->${state}`);

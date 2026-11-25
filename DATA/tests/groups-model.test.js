@@ -20,13 +20,18 @@ const { roleMatrix, removalDecision, transferDecision } = require('../server/gro
 const { AuthError } = require('../server/auth/errors');
 const { DISABLED_FEATURES } = require('../server/features/config');
 const service = require('../server/groups/service');
+const { createGroupMessageService } = require('../server/messaging/group');
 
 const { createGroupService, notFound, toAuthError, DEFAULT_RATE_LIMITS, AUDIT_EVENTS } = service;
 const P41_RUNS = 50;
 const P41_STEPS = 20;
 const P41_SEED = 0x5c5341;
 const P41_FEATURES = Object.freeze({ groupApi:true, groups:Object.freeze({ maxMembers:50,
-    maxPendingInvitationsPerGroup:50, maxPendingInvitationsPerInvitee:50, directAdd:false }) });
+    maxPendingInvitationsPerGroup:50, maxPendingInvitationsPerInvitee:50, directAdd:false }), groupMessaging:true });
+const P41_VERIFIER = Object.freeze({ async verifyEnvelope(){ return { verified:true }; } });
+const p20Envelope=(actor,groupId,id,ciphertext=Buffer.alloc(32,2).toString('base64'))=>({id,conversationId:groupId,
+    senderId:actor.id,senderName:actor.actorClass==='owner'?'Group Owner':'Group Member',timestamp:'2031-01-01T00:00:00.000Z',
+    type:'text',encryption:{version:1,algorithm:'AES-256-GCM',encoding:'base64',iv:Buffer.alloc(12,1).toString('base64'),ciphertext}});
 
 const SENTINEL = 'SENTINEL-DB-TEXT-5c03';
 const thrown = work => {
@@ -88,13 +93,14 @@ test('P-41: seeded 50x20 API sequences preserve creation-time History_Policy thr
         const patchActors = ['owner','admin','member','nonMember'];
         const fixtureFeatures = P41_FEATURES;
         const fixtureClockStart = '2031-01-01T00:00:00.000Z';
-        const template = await httpGroupFixture(t,{clock:createClock(fixtureClockStart),features:fixtureFeatures,createGroup:false});
+        const template = await httpGroupFixture(t,{clock:createClock(fixtureClockStart),features:fixtureFeatures,createGroup:false,
+            messageOptions:{groupRecipientKeyVerifier:P41_VERIFIER}});
         await template.application.close();
         template.db.pragma('wal_checkpoint(TRUNCATE)');
         template.db.close();
         const operationNames = ['invite-admin','accept-admin','invite-member','accept-member','patch-owner',
             'sql-policy-update','invite-outsider','patch-admin','cancel','reinvite-outsider','decline-outsider',
-            'clock-advance','role-change','patch-member','transfer','sql-policy-update','remove','leave','archive','patch-archived-owner'];
+            'clock-advance','role-change','patch-member','transfer','message-send','remove','leave','archive','patch-archived-owner'];
         const operationCoverage = new Set();
         const valueCoverage = new Set();
         const actorCoverage = new Set();
@@ -103,7 +109,7 @@ test('P-41: seeded 50x20 API sequences preserve creation-time History_Policy thr
         for (let run = 0; run < P41_RUNS; run += 1) {
             const clock = createClock(fixtureClockStart);
             const f = await httpGroupFixture(t, { clock, features:fixtureFeatures, createGroup:false,
-                databaseTemplate:template.filename,actorTemplate:template.actors });
+                databaseTemplate:template.filename,actorTemplate:template.actors,messageOptions:{groupRecipientKeyVerifier:P41_VERIFIER} });
             const policy = random.pick([undefined,'all','from_joined']);
             const key = `p41-create-${run}`;
             const createBody = { name:`P41 group ${run}`, description:'fixed policy property', idempotencyKey:key };
@@ -228,6 +234,15 @@ test('P-41: seeded 50x20 API sequences preserve creation-time History_Policy thr
                         body:{ userId:f.actors.member.id, membershipRevision:revisionNow() }
                     })).status,200);
                     currentOwner=f.actors.member;
+                } else if (operation === 'message-send') {
+                    const name=({owner:'Group Owner',admin:'Group Admin',member:'Group Member'})[currentOwner.actorClass];
+                    const body={id:`p41-message-${run}`,conversationId:id,senderId:currentOwner.id,senderName:name,
+                        timestamp:clock.iso(),type:'text',encryption:{version:1,algorithm:'AES-256-GCM',encoding:'base64',
+                            iv:Buffer.alloc(12,1).toString('base64'),ciphertext:Buffer.alloc(32,2).toString('base64')}};
+                    const response=await actorRequest(currentOwner,'POST',`/api/groups/${id}/messages`,{body});
+                    assert.deepEqual([response.status,response.body.outcome,response.body.message.sequence],[201,'created',1],
+                        `P-41 seed=${P41_SEED} run=${run} message write`);
+                    assert.equal(stored(id),fixedPolicy,'P-41 message send preserves the creation-time History_Policy');
                 } else if (operation === 'remove') {
                     assert.equal((await actorRequest(currentOwner,'DELETE',`/api/groups/${id}/members/${f.actors.admin.id}`)).status,204);
                     activeUsers.delete(f.actors.admin.id);
@@ -550,6 +565,79 @@ test('P-20: supported and unsupported charset with valid and malformed JSON',asy
             rawBody:malformed?'{':JSON.stringify({historyPolicy:'all'}),headers:{'Content-Type':`application/json; charset=${charset}`}});
         assert.deepEqual([response.status,response.body.code],charset==='utf-7'?[415,'UNSUPPORTED_MEDIA_TYPE']:[400,'VALIDATION_ERROR']);
         assert.equal(snapshot(f.db).total,before.total);
+    }
+});
+
+test('P-20: generated group message write failures follow the independent canonical order',{timeout:180000},async t=>{
+    const modes={verifier:'ready'};
+    const verifier={async verifyEnvelope(){
+        if(modes.verifier==='throw')throw new Error('synthetic verifier failure');
+        if(modes.verifier==='reject')return {verified:false};
+        return {verified:true};
+    }};
+    const enabled=await httpGroupFixture(t,{features:{groupApi:true,groupMessaging:true,groups:{directAdd:true,maxMembers:10,
+        maxPendingInvitationsPerGroup:1000,maxPendingInvitationsPerInvitee:1000}},messageOptions:{groupRecipientKeyVerifier:verifier}});
+    const disabled=await httpGroupFixture(t,{features:{groupApi:true,groupMessaging:false,groups:{directAdd:true,maxMembers:10,
+        maxPendingInvitationsPerGroup:1000,maxPendingInvitationsPerInvitee:1000}}});
+    const order=['gate','envelope','membership','archive','verifier','idempotency'];
+    const resultByFault={gate:[503,'FEATURE_UNAVAILABLE'],envelope:[400,'VALIDATION_ERROR'],membership:[404,'NOT_FOUND'],
+        archive:[409,'CONFLICT'],verifier:[403,'RECIPIENT_KEYS_UNVERIFIED'],idempotency:[409,'IDEMPOTENCY_CONFLICT']};
+    const coverage={runs:0,conditions:new Set(),first:new Set(),subsetSizes:new Set(),verifierResults:new Set()};
+    await forAll('P-20-group-message-write',{runs:180,seed:0x5c202518,onRun:line=>t.diagnostic(line),describe:item=>JSON.stringify(item)},
+        (random,info)=>{
+            if(info.run<order.length)return {faults:[order[info.run]],verifierResult:info.run===4?'reject':'ready'};
+            const faults=random.shuffle(order).slice(0,random.int(1,5));
+            return {faults,verifierResult:random.pick(['reject','throw','missing'])};
+        },async c=>{
+            const has=name=>c.faults.includes(name);
+            const f=has('gate')?disabled:enabled;
+            const groupId=f.builder.createGroup({ownerId:f.actors.owner.id,title:`P20 message ${coverage.runs}`,idempotencyKey:null});
+            f.builder.addMember(groupId,f.actors.member.id);
+            const clientId=`p20-message-${coverage.runs}`;
+            if(has('idempotency')){
+                if(has('gate')){
+                    f.db.transaction(()=>f.repositories.messages.insertAuthenticated({message_id:`p20-seed-${coverage.runs}`,conversation_id:groupId,
+                        sender_id:f.actors.owner.id,receiver_id:null,ciphertext:Buffer.alloc(32,2).toString('base64'),iv:Buffer.alloc(12,1).toString('base64'),
+                        envelope_version:1,encoding:'base64',sender_name:'Group Owner',client_timestamp:'2031-01-01T00:00:00.000Z',
+                        message_type:'text',fingerprint:'a'.repeat(64),client_id:clientId,message_seq:1,created_at:f.clock.iso()}))();
+                }else{
+                    modes.verifier='ready';verifier.verifyEnvelope=async()=>({verified:true});
+                    const seeded=await actorRequest(f.actors.owner,'POST',`/api/groups/${groupId}/messages`,{body:p20Envelope(f.actors.owner,groupId,clientId)});
+                    assert.equal(seeded.status,201,'seed an existing idempotency identity before testing refusal order');
+                }
+            }
+            if(has('archive'))f.repositories.conversations.archive(groupId,f.clock.iso());
+            const actor=has('membership')?f.actors.nonMember:f.actors.owner;
+            if(has('verifier')){
+                modes.verifier=c.verifierResult;
+                verifier.verifyEnvelope=c.verifierResult==='missing'?undefined:async()=>{
+                    if(modes.verifier==='throw')throw new Error('synthetic verifier failure');
+                    return {verified:false};
+                };
+            }else{
+                modes.verifier='ready';verifier.verifyEnvelope=async()=>({verified:true});
+            }
+            const input=has('envelope')?{content:`CANARY-P20-${coverage.runs}`}:p20Envelope(actor,groupId,
+                clientId,has('idempotency')?Buffer.alloc(32,3).toString('base64'):undefined);
+            const before=snapshot(f.db);
+            const response=await actorRequest(actor,'POST',`/api/groups/${groupId}/messages`,{body:input});
+            // Independent oracle: these literal conditions are ordered from DB5-R09.18;
+            // membership is evaluated before archive because visibleGroup precedes archived_at.
+            const first=order.find(name=>has(name));
+            const expected=first==='membership'&&has('archive')?resultByFault.membership:
+                first==='verifier'&&['throw','missing'].includes(c.verifierResult)?[503,'RECIPIENT_KEYS_UNAVAILABLE']:resultByFault[first];
+            assert.deepEqual([response.status,response.body.code],expected,`P-20 seed case ${coverage.runs}: ${c.faults.join('+')}`);
+            assert.deepEqual(snapshot(f.db),before,`P-20 refusal ${c.faults.join('+')} leaves every table unchanged`);
+            assert.equal(JSON.stringify(response.body).includes('CANARY-P20-'),false,'canary is absent from the refusal response');
+            coverage.runs++;coverage.subsetSizes.add(c.faults.length);coverage.first.add(first);
+            if(first==='verifier')coverage.verifierResults.add(c.verifierResult);
+            for(const fault of c.faults)coverage.conditions.add(fault);
+        });
+    t.diagnostic(`P-20 group-message coverage runs=${coverage.runs} conditions=${[...coverage.conditions].join(',')} first=${[...coverage.first].join(',')} subsets=${[...coverage.subsetSizes].join(',')} verifier=${[...coverage.verifierResults].join(',')}`);
+    if(process.env.PROPERTY_RUN===undefined){
+        assert.equal(coverage.runs,180);assert.deepEqual([...coverage.conditions].sort(),[...order].sort());assert.equal(coverage.first.size,order.length);
+        assert.ok(coverage.subsetSizes.has(5),'generated combinations include five simultaneous refusal conditions');
+        assert.deepEqual([...coverage.verifierResults].sort(),['missing','reject','throw']);
     }
 });
 

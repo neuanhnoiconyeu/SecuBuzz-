@@ -103,11 +103,12 @@ test('T-5C-21: schema vocabulary covers the existing OpenAPI documents',()=>{
     assert.ok(schemas>0); // Group OpenAPI examples join this check in T-5C-46.
 });
 
-test('T-5C-36: actor-class matrix covers G01-G17 and G26 with snapshots on every refusal',{timeout:240000},async t=>{
-    const f=await httpGroupFixture(t,{clock:createClock(),features:{groupApi:true,groups:{directAdd:true,maxMembers:50,
-        maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50}}});
+test('T-5D-23: actor-class matrix covers G01-G26 with snapshots on every refusal',{timeout:240000},async t=>{
+    const f=await httpGroupFixture(t,{clock:createClock(),features:{groupApi:true,groupMessaging:true,groups:{directAdd:true,maxMembers:50,
+        maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50}},messageOptions:{groupRecipientKeyVerifier:{async verifyEnvelope(){return {verified:true};}}}});
     const actors=['unauthenticated','nonMember','pendingInvitee','member','admin','owner','removedMember'];
-    const ids=['G01','G02','G03','G04','G05','G06','G07','G08','G09','G10','G11','G12','G13','G14','G15','G16','G17','G26'];
+    const ids=['G01','G02','G03','G04','G05','G06','G07','G08','G09','G10','G11','G12','G13','G14','G15','G16','G17',
+        'G18','G19','G20','G21','G22','G23','G24','G25','G26'];
     const groupFor=(route,actorClass,suffix='')=>{
         const id=`matrix-${route.toLowerCase()}-${actorClass.toLowerCase()}${suffix}`;
         f.builder.createGroup({ownerId:f.actors.owner.id,conversationId:id,title:id,idempotencyKey:null});
@@ -116,11 +117,19 @@ test('T-5C-36: actor-class matrix covers G01-G17 and G26 with snapshots on every
         const invitationId=f.builder.invite(id,f.actors.owner.id,f.actors.pendingInvitee.id);
         return{id,invitationId};
     };
-    const urlFor=(route,id,invitationId)=>'/api/groups'+route.path.replace(':id',id).replace(':userId',f.actors.member.id).replace(':invitationId',invitationId);
-    const validBody=(route,id)=>({G01:{name:`matrix-${id}`},G04:{name:`updated-${id}`},G06:{userId:f.actors.nonMember.id},
-        G08:{role:'admin'},G10:{userId:f.actors.member.id},G12:{userId:f.actors.nonMember.id}})[route.id];
-    const invalidBody=(route,id)=>({G01:{name:''},G04:{name:'',unknown:true},G06:{userId:f.actors.nonMember.id,role:'owner'},
-        G08:{role:'owner'},G10:{userId:f.actors.member.id,membershipRevision:'stale'},G12:{userId:''}})[route.id]??{unexpected:'invalid-for-contract'};
+    const urlFor=(route,id,invitationId,messageId='unknown-message')=>'/api/groups'+route.path.replace(':id',id)
+        .replace(':userId',f.actors.member.id).replace(':invitationId',invitationId).replace(':messageId',messageId);
+    const messageEnvelope=(actor,groupId,clientId)=>({id:clientId,conversationId:groupId,senderId:actor.id,
+        senderName:({owner:'Group Owner',admin:'Group Admin',member:'Group Member'})[actor.actorClass]||'Synthetic Member',
+        timestamp:'2026-01-01T00:00:00.000Z',type:'text',encryption:{version:1,algorithm:'AES-256-GCM',encoding:'base64',
+            iv:Buffer.alloc(12,1).toString('base64'),ciphertext:Buffer.alloc(32,2).toString('base64')}});
+    const validBody=(route,id,actor)=>({G01:{name:`matrix-${id}`},G04:{name:`updated-${id}`},G06:{userId:f.actors.nonMember.id},
+        G08:{role:'admin'},G10:{userId:f.actors.member.id},G12:{userId:f.actors.nonMember.id},
+        G19:messageEnvelope(actor,id,`matrix-${route.id}-${id}`),G23:{position:1},G24:{status:'read'}})[route.id];
+    const invalidBody=(route,id,actor)=>({G01:{name:''},G04:{name:'',unknown:true},G06:{userId:f.actors.nonMember.id,role:'owner'},
+        G08:{role:'owner'},G10:{userId:f.actors.member.id,membershipRevision:'stale'},G12:{userId:''},
+        G19:{content:'not-an-envelope'},G23:{position:-1},G24:{status:'secret'}})[route.id]??
+        (route.method==='GET'||route.id==='G21'?undefined:{unexpected:'invalid-for-contract'});
     const expected=(route,actorClass)=>{
         if(actorClass==='unauthenticated')return[401,'UNAUTHENTICATED'];
         if(['G01','G02','G26','G15'].includes(route.id))return[route.success[0],null];
@@ -128,6 +137,9 @@ test('T-5C-36: actor-class matrix covers G01-G17 and G26 with snapshots on every
         if(['nonMember','pendingInvitee','removedMember'].includes(actorClass))return[404,'NOT_FOUND'];
         const role={owner:'owner',admin:'admin',member:'member'}[actorClass];
         if(route.id==='G09'&&role==='owner')return[409,'CONFLICT'];
+        if(route.id==='G25')return[503,'FEATURE_UNAVAILABLE'];
+        if(route.id==='G21'&&role!=='owner')return[403,'FORBIDDEN'];
+        if(route.id==='G24'&&role==='owner')return[404,'NOT_FOUND'];
         const minimum={G04:'owner',G06:'admin',G07:'admin',G08:'owner',G10:'owner',G11:'owner',G12:'admin',G13:'admin',G14:'admin'}[route.id];
         if(minimum&&({member:0,admin:1,owner:2}[role]<({member:0,admin:1,owner:2}[minimum])))return[403,'FORBIDDEN'];
         return[route.success[0],null];
@@ -136,18 +148,26 @@ test('T-5C-36: actor-class matrix covers G01-G17 and G26 with snapshots on every
     for(const routeId of ids){
         const route=CONTRACT.find(item=>item.id===routeId);assert.ok(route,routeId);
         for(const actorClass of actors){
-            const {id,invitationId}=groupFor(routeId,actorClass),url=urlFor(route,id,invitationId),actor=f.actors[actorClass];
+            const {id,invitationId}=groupFor(routeId,actorClass),actor=f.actors[actorClass];
+            let messageId='unknown-message';
+            if(['G18','G19','G20','G21','G22','G23','G24','G25'].includes(routeId)){
+                const seed=await actorRequest(f.actors.owner,'POST',`/api/groups/${id}/messages`,{body:messageEnvelope(f.actors.owner,id,`seed-${routeId}-${actorClass}`)});
+                assert.equal(seed.status,201,`${routeId}/${actorClass} matrix message fixture`);messageId=seed.body.message.storageId;
+            }
+            const url=urlFor(route,id,invitationId,messageId);
             const [status,code]=expected(route,actorClass);
-            const queryFault=['G02','G05','G13','G15'].includes(routeId)?'?limit=0':'';
+            const queryFault=['G02','G05','G13','G15','G18'].includes(routeId)?'?limit=0':'';
             if(status>=400){
                 for(const bad of [false,true]){
-                    const before=snapshot(f.db),body=route.method==='GET'?undefined:bad?invalidBody(route,id):validBody(route,id);
-                    const response=await actorRequest(actor,route.method,`${url}${queryFault}`,body===undefined?{}:{body});
+                    const hidden=['nonMember','pendingInvitee','removedMember','unauthenticated'].includes(actorClass);
+                    const useInvalid=bad&&!hidden&&!(routeId==='G24'&&actorClass==='owner');
+                    const before=snapshot(f.db),body=useInvalid?invalidBody(route,id,actor):validBody(route,id,actor);
+                    const response=await actorRequest(actor,route.method,`${url}${queryFault&&(!hidden||!['G18'].includes(routeId))?queryFault:''}`,body===undefined?{}:{body});
                     assert.deepEqual([response.status,response.body],[status,{code,fields:[]}],`${routeId}/${actorClass}/${bad?'invalid':'valid'}`);
                     assertSecurityHeaders(response,`${routeId}/${actorClass}`);assert.deepEqual(snapshot(f.db),before,`${routeId}/${actorClass} refusal snapshot`);refusals++;
                 }
             }else{
-                const before=snapshot(f.db),body=validBody(route,id);
+                const before=snapshot(f.db),body=validBody(route,id,actor);
                 const response=await actorRequest(actor,route.method,url,{method:route.method,...(body===undefined?{}:{body})});
                 assert.equal(response.status,status,`${routeId}/${actorClass} success`);assertSecurityHeaders(response,`${routeId}/${actorClass}`);
                 if(['G02','G03','G05','G13','G15','G26'].includes(routeId))assert.deepEqual(snapshot(f.db),before,`${routeId}/${actorClass} read is inert`);
@@ -157,7 +177,7 @@ test('T-5C-36: actor-class matrix covers G01-G17 and G26 with snapshots on every
         if(route.method!=='GET'){
             const {id,invitationId}=groupFor(routeId,'csrf'),url=urlFor(route,id,invitationId);
             for(const bad of [false,true]){
-                const before=snapshot(f.db),body=bad?invalidBody(route,id):validBody(route,id);
+                const before=snapshot(f.db),body=bad?invalidBody(route,id,f.actors.owner):validBody(route,id,f.actors.owner);
                 const response=await actorRequest(f.actors.owner,route.method,url,{csrf:false,...(body===undefined?{}:{body})});
                 assert.deepEqual([response.status,response.body],[403,{code:'CSRF_INVALID',fields:[]}],`${routeId} CSRF ${bad?'invalid':'valid'} body`);
                 assert.deepEqual(snapshot(f.db),before,`${routeId} CSRF refusal snapshot`);csrfCells++;
@@ -262,8 +282,8 @@ test('P-21: generated route, actor and fault refusals preserve every protected t
 });
 
 test('P-22: denial errors are contract-shaped, canaries stay out of errors, and uniform 404 causes are indistinguishable',{timeout:240000},async t=>{
-    const f=await httpGroupFixture(t,{clock:createClock(),features:{groupApi:true,groups:{directAdd:true,maxMembers:50,
-        maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50}}});
+    const f=await httpGroupFixture(t,{clock:createClock(),features:{groupApi:true,groupMessaging:true,groups:{directAdd:true,maxMembers:50,
+        maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50}},messageOptions:{groupRecipientKeyVerifier:{async verifyEnvelope(){return {verified:true};}}}});
     const safeHeaders=response=>Object.fromEntries([...response.headers.entries()].filter(([name])=>name.toLowerCase()!=='date').sort(([a],[b])=>a.localeCompare(b)));
     const removed=f.actors.removedMember,unknownGroup='p22-unknown-group-4f6a',canary='P22-CANARY-../"\\path\n<stack>\u00e9';
     const invitationId=f.invitationId,unknownInvitation='p22-unknown-invitation-4f6a';
@@ -290,7 +310,12 @@ test('P-22: denial errors are contract-shaped, canaries stay out of errors, and 
             continue;
         }
         const routeUrl=urlFor(id);
-        const options=route.method==='GET'?{}:{body:{name:canary,role:'owner',userId:'P22-CANARY-target'}};
+        const validMessage={id:`p22-${route.id}-${id}`,conversationId:id,senderId:removed.id,senderName:'Group Removed',
+            timestamp:'2026-01-01T00:00:00.000Z',type:'text',encryption:{version:1,algorithm:'AES-256-GCM',encoding:'base64',
+                iv:Buffer.alloc(12,1).toString('base64'),ciphertext:Buffer.alloc(32,2).toString('base64')}};
+        const options=route.method==='GET'?{}:route.id==='G19'?{body:validMessage}:route.id==='G21'?{}
+            :route.id==='G23'?{body:{position:0}}:route.id==='G24'?{body:{status:'read'}}
+                :{body:{name:canary,role:'owner',userId:'P22-CANARY-target'}};
         const response=await actorRequest(removed,route.method,routeUrl,options);
         assert.equal(response.status,404,`${route.id}: removed member attempted`);removedRoutes++;
         assert.deepEqual(response.body,{code:'NOT_FOUND',fields:[]},`${route.id}: exact 404 body`);
@@ -301,8 +326,12 @@ test('P-22: denial errors are contract-shaped, canaries stay out of errors, and 
             ['direct',f.actors.owner,urlFor(direct)],['legacy',f.actors.owner,urlFor(legacy)],['bare',f.actors.owner,urlFor(bare)],
             ['non-member',f.actors.nonMember,urlFor(f.groupId)],['pending invitee',f.actors.pendingInvitee,urlFor(f.groupId)],
         ];
+        if(route.id==='G25')uniformCauses.splice(5,0,['removed member',removed,urlFor(f.groupId)]);
         for(const [cause,actor,targetUrl] of uniformCauses){
-            const denied=await actorRequest(actor,route.method,targetUrl,options);
+            const requestOptions=route.id==='G19'?{...options,body:{...options.body,
+                conversationId:decodeURIComponent(targetUrl.split('/')[3]),senderId:actor.id,
+                senderName:f.db.prepare('SELECT display_name FROM Users WHERE user_id=?').get(actor.id).display_name}}:options;
+            const denied=await actorRequest(actor,route.method,targetUrl,requestOptions);
             assert.deepEqual([denied.status,denied.body,safeHeaders(denied)],[response.status,response.body,safeHeaders(response)],`${route.id}: ${cause} uniform 404`);uniformPairs++;
         }
         if(route.id==='G16'||route.id==='G17'){
@@ -313,7 +342,7 @@ test('P-22: denial errors are contract-shaped, canaries stay out of errors, and 
         }
         assert.ok(!response.text.includes(canary),`${route.id}: no canary in error`);
     }
-    assert.equal(removedRoutes,14);assert.ok(uniformPairs>=86);
+    assert.equal(removedRoutes,CONTRACT.length-4);assert.ok(uniformPairs>=86);
     const before=snapshot(f.db),stderr=[],originalWrite=process.stderr.write;let malformed,pathCanary;
     process.stderr.write=function(chunk,...args){stderr.push(String(chunk));return originalWrite.call(this,chunk,...args);};
     try{

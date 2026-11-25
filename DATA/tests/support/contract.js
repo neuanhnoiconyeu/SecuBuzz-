@@ -22,6 +22,15 @@ const definitions = [
     ['G15','GET','/invitations','invitee',[200],'self',[],[]],
     ['G16','POST','/invitations/:invitationId/accept','invitee',[200],'invitee',[],[[404,'NOT_FOUND'],[409,'CONFLICT']]],
     ['G17','POST','/invitations/:invitationId/decline','invitee',[204],'invitee',[],[[404,'NOT_FOUND'],[409,'CONFLICT']]],
+    ['G18','GET','/:id/messages','member',[200],'any',[],[[404,'NOT_FOUND']]],
+    ['G19','POST','/:id/messages','member',[201,200],'any',['id','conversationId','senderId','senderName','timestamp','type','encryption'],
+        [[403,'RECIPIENT_KEYS_UNVERIFIED'],[404,'NOT_FOUND'],[409,'CONFLICT'],[409,'STALE_STATE'],[409,'IDEMPOTENCY_CONFLICT'],[503,'RECIPIENT_KEYS_UNAVAILABLE']]],
+    ['G20','GET','/:id/messages/:messageId','member',[200],'any',[],[[404,'NOT_FOUND']]],
+    ['G21','DELETE','/:id/messages/:messageId','member',[200],'any',[],[[404,'NOT_FOUND'],[409,'CONFLICT']]],
+    ['G22','GET','/:id/read-position','member',[200],'any',[],[[404,'NOT_FOUND']]],
+    ['G23','PUT','/:id/read-position','member',[200],'any',['position'],[[404,'NOT_FOUND'],[409,'CONFLICT']]],
+    ['G24','POST','/:id/messages/:messageId/receipts','member',[201,200],'any',['status'],[[404,'NOT_FOUND'],[409,'CONFLICT']]],
+    ['G25','GET','/:id/messages/:messageId/receipts','member',[],'any',[],[[404,'NOT_FOUND']]],
     ['G26','GET','/feature-status','any',[200],'any',[],[]]
 ];
 const freeze = value => { if(value && typeof value==='object') { Object.values(value).forEach(freeze); Object.freeze(value); } return value; };

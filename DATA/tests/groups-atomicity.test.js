@@ -11,6 +11,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { httpGroupFixture, snapshot, changedTables, createClock, openLimiter, guardPath } = require('./support/groups');
 const { createGroupService } = require('../server/groups/service');
+const { createGroupMessageService } = require('../server/messaging/group');
 const { RepositoryError } = require('../server/database/groupRepository');
 const { AuthError } = require('../server/auth/errors');
 
@@ -22,6 +23,13 @@ const ERROR_CASES = Object.freeze([
     ['BUSY',503,'SERVICE_UNAVAILABLE'],['UNAVAILABLE',503,'SERVICE_UNAVAILABLE'],['DATABASE',500,'INTERNAL_ERROR'],
 ]);
 const OPERATION_NAMES = Object.freeze(['create','update','archive','add','invite','accept','decline','cancel','remove','leave','role','transfer']);
+const MESSAGE_FEATURES=Object.freeze({groupApi:true,groupMessaging:true,groups:Object.freeze({maxMembers:10,directAdd:true,
+    maxPendingInvitationsPerGroup:20,maxPendingInvitationsPerInvitee:20})});
+const MESSAGE_VERIFIER=Object.freeze({async verifyEnvelope(){return {verified:true};}});
+const encryptedEnvelope=(actor,groupId,id)=>({id,conversationId:groupId,senderId:actor.id,
+    senderName:actor.actorClass==='owner'?'Group Owner':'Group Member',timestamp:'2030-01-01T00:00:00.000Z',type:'text',
+    encryption:{version:1,algorithm:'AES-256-GCM',encoding:'base64',iv:Buffer.alloc(12,1).toString('base64'),
+        ciphertext:Buffer.alloc(32,2).toString('base64')}});
 const actorProof = (f, actor) => {
     const sessionToken = actor.browser.cookies.get(f.config.sessionCookie);
     const row = f.application.auth.resolveToken(sessionToken).row;
@@ -142,4 +150,53 @@ test('P-31: every prepared write step of every group mutation rolls back for eve
         }
         assert.deepEqual(outcomes.map(result=>result.kind),OPERATION_NAMES);
         t.diagnostic(`P-31 write-step coverage ${JSON.stringify(outcomes)}; error classes=${ERROR_CASES.map(row=>row[0]).join(',')}`);
+    });
+
+test('P-31: every group message write step rolls back send, tombstone, read position and receipt',
+    {timeout:300000},async t=>{
+        const f=await httpGroupFixture(t,{features:MESSAGE_FEATURES,messageOptions:{groupRecipientKeyVerifier:MESSAGE_VERIFIER},
+            clock:createClock('2030-01-01T00:00:00.000Z')});
+        const baseline=guardPath(path.join(f.directory,'p31-messages-baseline.sqlite'));
+        const owner=actorProof(f,f.actors.owner),member=actorProof(f,f.actors.member);
+        const seed=await f.application.groupMessages.submit(owner.context,owner.proof,f.groupId,
+            encryptedEnvelope(f.actors.owner,f.groupId,'p31-message-seed'));
+        const storageId=seed.message.storageId;
+        await f.application.close();f.db.close();fs.copyFileSync(f.filename,baseline);
+        const firstBrowser=await f.anotherServer();f.db=f.connections.at(-1);f.application=f.applications.at(-1);
+        for(const actor of Object.values(f.actors))actor.browser.origin=firstBrowser.origin;
+        const createServices=db=>{
+            const groups=createGroupService({db,auth:f.application.auth,limiter:openLimiter(),now:f.clock.now,features:MESSAGE_FEATURES});
+            const messages=createGroupMessageService({db,auth:f.application.auth,groups,limiter:openLimiter(),groupRecipientKeyVerifier:MESSAGE_VERIFIER});
+            return{groups,messages};
+        };
+        const actions={
+            send:(messages)=>messages.submit(owner.context,owner.proof,f.groupId,encryptedEnvelope(f.actors.owner,f.groupId,'p31-message-new')),
+            tombstone:(messages)=>messages.remove(owner.context,owner.proof,f.groupId,storageId,{}),
+            readPosition:(messages)=>messages.updateReadPosition(owner.context,owner.proof,f.groupId,{position:1}),
+            receipt:(messages)=>messages.recordReceipt(member.context,member.proof,f.groupId,storageId,{status:'delivered'})
+        };
+        const outcomes=[];
+        for(const kind of Object.keys(actions)){
+            const beforeMeasurement=snapshot(f.db),measured=instrumentDatabase(f.db);
+            const service=createServices(measured.db);await actions[kind](service.messages);
+            const changes=changedTables(beforeMeasurement,snapshot(f.db));
+            assert.ok(changes.length>0,`${kind} successful dry run changes its domain state`);
+            const writes=measured.state.writes.slice();assert.ok(writes.length>0,`${kind} has measurable prepared writes`);
+            outcomes.push({kind,steps:writes.map(sql=>sql.trim().replace(/\s+/g,' ').slice(0,96))});
+            await restoreFixture(f,baseline);
+            // Contexts bind stable sessions; each restarted fixture preserves their cloned session rows.
+            for(let step=1;step<=writes.length;step++)for(const[errorClass,mappedStatus,mappedCode]of ERROR_CASES){
+                const before=snapshot(f.db),fault=instrumentDatabase(f.db,{failAt:step,failCode:errorClass});
+                const services=createServices(fault.db);let caught;
+                try{await actions[kind](services.messages);}catch(error){caught=error;}
+                const isAudit=/\bAuditLogs\b/i.test(writes[step-1]);
+                assert.ok(caught instanceof AuthError,`${kind} step ${step} ${errorClass} maps to AuthError`);
+                assert.deepEqual([caught.status,caught.code],isAudit?[500,'INTERNAL_ERROR']:[mappedStatus,mappedCode],`${kind} step ${step} ${errorClass}`);
+                assert.equal(caught.message,caught.code);assert.equal(caught.cause,undefined);assert.deepEqual(caught.fields,[]);
+                assert.ok(!JSON.stringify(caught).includes(DATABASE_TEXT));assert.deepEqual(snapshot(f.db),before,`${kind} failure leaves every table unchanged`);
+                assert.equal(f.db.inTransaction,false,`${kind} failure closes its transaction`);
+            }
+        }
+        assert.deepEqual(outcomes.map(row=>row.kind),Object.keys(actions));
+        t.diagnostic(`P-31 group-message write-step coverage ${JSON.stringify(outcomes)}; error classes=${ERROR_CASES.map(row=>row[0]).join(',')}`);
     });

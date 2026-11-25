@@ -24,6 +24,10 @@ git diff --exit-code d7cd40a -- client/src/components/YahooChatWindow.attachment
 - While OD-20 is unresolved, no row of the standalone SQLite file is copied into Canonical_DATA and the file is not modified (ARCH-R03.12, DB6-R01.10).
 - Code ported into Canonical_DATA gets, in the same phase, a passing canonical test that reproduces the observable behaviour of each standalone server test covering that code (ARCH-R03.4). Where a standalone test contradicts a requirement, the port follows the requirement (ARCH-R03.11).
 
+## T-5D-09 group post-and-history replacement
+
+The standalone group post-and-history scenario is reproduced by `DATA/tests/groups-messages.test.js`, test `T-5D-05 G18/G20/G21: history cursor, permitted single reads, sender tombstone and uniform 404`. It posts encrypted group messages, reads history in pages and by storage id, verifies the sender-only tombstone, and checks uniform 404 for users without current membership. The replacement uses the canonical message table, history policy and membership intervals; it does not modify a Standalone_Implementation file (ARCH-R03.4, ARCH-R03.10).
+
 ## Disposition vocabulary and mapping
 
 Each entry uses the ARCH-R03.2 vocabulary in the column "Disposition". The column "Design term" keeps the term of the design's Component classification. The mapping is:
@@ -167,13 +171,6 @@ For C-02 to C-09, the planned replacement is the same file, adapted in place at 
 | D. Restart persistence tests | 1 | 0 | 0 | 1 | 0 |
 | Total | 41 | 1 | 29 | 3 | 8 |
 
-## Verification at creation (2026-11-21)
-
-- G2 (command above) printed nothing and exited 0.
-- G4 (command above) printed nothing and exited 0.
-- `git diff --exit-code d7cd40a -- server/database/schema.sql server/database/db.js server/src/attachments/db6Transport.ts shared/attachmentPolicy.ts` exited 0.
-- The 14 server test titles were read from the two files, and the 76 client tests were counted per file by reading the files (see the count table in section C). No standalone or client file was edited, run or moved by this task.
-
 ## T-6A attachment observable-step audit (2026-11-23)
 
 Read-only review of all 13 cases in `server/test/integration/attachments.test.ts` and the attachment scenario in `server/test/db5_db6.test.cjs` records the reproduction points below. They supplement the per-test port plan; they do not alter the standalone tests.
@@ -185,3 +182,10 @@ Read-only review of all 13 cases in `server/test/integration/attachments.test.ts
 | `attachments.test.ts` remaining cases | The inventory rows B-02 through B-14 preserve each individual method/path, status, asserted headers, response fields, database rows and storage-file observations | Each row identifies the relevant body/byte and persisted-state assertions | Follow the stated replacement phase and contract differences; in particular removed uploader access is denied, names are inside encrypted metadata, name search is 400, direct add is 503, and test 8 remains retired. |
 
 The deliberate standalone/canonical differences identified during this audit are: plaintext upload and MIME allow-list are retired (DB6-R05.3-.4); filename headers and plaintext `original_name` are retired (DB6-R05.4, ADR-09); `?group_id` and `?recipient_user_id` scopes become conversation scope (DB6-R03.1); blocked direct pairs follow the owner-approved OA-01 rule and existing direct-path evidence (DB6-R03.2); removed uploader access is denied under the canonical rule (DB6-R03.18); name search is refused (DB6-R03.10-.11); the `/api/files` upload/download alias is retired; direct add remains unavailable (OD-01). The exact per-test rows remain authoritative for porting and include test 8's retired disposition.
+
+## Verification at creation (2026-11-21)
+
+- G2 (command above) printed nothing and exited 0.
+- G4 (command above) printed nothing and exited 0.
+- `git diff --exit-code d7cd40a -- server/database/schema.sql server/database/db.js server/src/attachments/db6Transport.ts shared/attachmentPolicy.ts` exited 0.
+- The 14 server test titles were read from the two files, and the 76 client tests were counted per file by reading the files (see the count table in section C). No standalone or client file was edited, run or moved by this task.

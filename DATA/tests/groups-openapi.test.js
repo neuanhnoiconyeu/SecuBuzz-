@@ -14,7 +14,8 @@ function pairsFromDocument() {
 }
 function pairsFromRouter() { return GROUP_ROUTES.map(row => `${row.method} /api/groups${row.path === '/' ? '' : row.path}`).sort(); }
 function pairsFromStack() {
-    const router = createGroupRouter({ groups:new Proxy({}, { get:() => () => {} }), features:DISABLED_FEATURES },
+    const groupMessages = new Proxy({}, { get:() => () => {} });
+    const router = createGroupRouter({ groups:new Proxy({}, { get:() => () => {} }), groupMessages, features:DISABLED_FEATURES },
         { requireAuth() {}, requireCsrf() {} });
     return router.stack.filter(layer => layer.route).flatMap(layer => Object.keys(layer.route.methods).map(method =>
         `${method.toUpperCase()} /api/groups${layer.route.path === '/' ? '' : layer.route.path}`)).sort();

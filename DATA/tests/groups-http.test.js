@@ -102,6 +102,10 @@ const fakeGroups = (extra = {}) => ({
     createInvitation: () => ({ invitation: {} }), listInvitations: () => ({ items: [], nextCursor: null }),
     cancelInvitation: () => ({}), listOwnInvitations: () => ({ items: [], nextCursor: null }), declineInvitation: () => ({}), acceptInvitation: () => ({ group: {} }), ...extra
 });
+const fakeGroupMessages = (extra = {}) => ({ rate() {}, submit:() => ({ outcome:'created', message:{} }),
+    history:() => ({ items:[], nextCursor:null }), get:() => ({ message:{} }), remove:() => ({ message:{} }),
+    readPosition:() => ({ readPosition:0 }), updateReadPosition:() => ({ readPosition:0 }),
+    recordReceipt:() => ({ outcome:'created', receipt:{} }), receipts:() => ({ items:[] }), ...extra });
 
 test('Batch 2A adapters: exact session/proof/target/query calls, socket source, projections and empty 204 bodies', async t => {
     const actor = Object.freeze({ userId: 'session-actor', sessionId: 'session-id' });
@@ -119,7 +123,7 @@ test('Batch 2A adapters: exact session/proof/target/query calls, socket source, 
         changeMemberRole: record('changeMemberRole', { member: { id: 'changed-member' } }), transferOwnership: record('transferOwnership', { group: { id: 'transferred-group' } }),
         archiveGroup: record('archiveGroup', { group: { id: 'archived-group' } }) });
     const app = express();
-    app.use('/api/groups', createGroupRouter({ groups, features: ON }, {
+    app.use('/api/groups', createGroupRouter({ groups, groupMessages:fakeGroupMessages(), features: ON }, {
         requireAuth(req, res, next) { req.auth = actor; next(); },
         requireCsrf(req, res, next) { req.csrfProof = proof; next(); }
     }));
@@ -174,6 +178,14 @@ test('the route table is frozen, and holds only the routes that are mounted', ()
         { id: 'G15', method: 'GET', path: '/invitations', gated: true },
         { id: 'G16', method: 'POST', path: '/invitations/:invitationId/accept', gated: true },
         { id: 'G17', method: 'POST', path: '/invitations/:invitationId/decline', gated: true },
+        { id: 'G18', method: 'GET', path: '/:id/messages', gated: true },
+        { id: 'G19', method: 'POST', path: '/:id/messages', gated: true },
+        { id: 'G20', method: 'GET', path: '/:id/messages/:messageId', gated: true },
+        { id: 'G21', method: 'DELETE', path: '/:id/messages/:messageId', gated: true },
+        { id: 'G22', method: 'GET', path: '/:id/read-position', gated: true },
+        { id: 'G23', method: 'PUT', path: '/:id/read-position', gated: true },
+        { id: 'G24', method: 'POST', path: '/:id/messages/:messageId/receipts', gated: true },
+        { id: 'G25', method: 'GET', path: '/:id/messages/:messageId/receipts', gated: true },
         { id: 'G01', method: 'POST', path: '/', gated: true },
         { id: 'G02', method: 'GET', path: '/', gated: true },
         { id: 'G06', method: 'POST', path: '/:id/members', gated: true },
@@ -191,9 +203,11 @@ test('the route table is frozen, and holds only the routes that are mounted', ()
     ]);
     assert.equal(assertRouteTable(GROUP_ROUTES), GROUP_ROUTES);
     assert.equal(MAX_BODY_BYTES, 8192);
-    const router = createGroupRouter({ groups: fakeGroups(), features: OFF_SHAPE }, { requireAuth() {}, requireCsrf() {} });
+    const router = createGroupRouter({ groups: fakeGroups(), groupMessages:fakeGroupMessages(), features: OFF_SHAPE }, { requireAuth() {}, requireCsrf() {} });
     const mounted = router.stack.filter(layer => layer.route).map(layer => `${Object.keys(layer.route.methods).map(method => method.toUpperCase()).sort().join('+')} ${layer.route.path}`);
     assert.deepEqual(mounted, ['GET /feature-status', 'GET /invitations', 'POST /invitations/:invitationId/accept', 'POST /invitations/:invitationId/decline',
+        'GET /:id/messages', 'POST /:id/messages', 'GET /:id/messages/:messageId', 'DELETE /:id/messages/:messageId',
+        'GET /:id/read-position', 'PUT /:id/read-position', 'POST /:id/messages/:messageId/receipts', 'GET /:id/messages/:messageId/receipts',
         'POST /', 'GET /', 'POST /:id/members', 'DELETE /:id/members/:userId', 'POST /:id/leave', 'PATCH /:id/members/:userId', 'POST /:id/transfer', 'POST /:id/archive',
         'GET /:id', 'PATCH /:id', 'GET /:id/members', 'POST /:id/invitations',
         'GET /:id/invitations', 'DELETE /:id/invitations/:invitationId'], 'the mounted layer stack equals the table');
@@ -233,16 +247,17 @@ test('createGroupRouter refuses missing dependencies and a handler that does not
     const middleware = { requireAuth() {}, requireCsrf() {} };
     const groups = fakeGroups();
     for (const method of Object.keys(groups)) {
-        assert.ok(thrown(() => createGroupRouter({ groups: { ...groups, [method]: undefined }, features: OFF_SHAPE }, middleware)) instanceof TypeError, `no ${method}`);
+        assert.ok(thrown(() => createGroupRouter({ groups: { ...groups, [method]: undefined }, groupMessages:fakeGroupMessages(), features: OFF_SHAPE }, middleware)) instanceof TypeError, `no ${method}`);
     }
-    for (const [label, args] of [['no arguments', []], ['no service', [{ features: OFF_SHAPE }, middleware]], ['service without rate', [{ groups: {}, features: OFF_SHAPE }, middleware]],
-        ['no middleware', [{ groups, features: OFF_SHAPE }]], ['no requireAuth', [{ groups, features: OFF_SHAPE }, { requireCsrf() {} }]],
-        ['no requireCsrf', [{ groups, features: OFF_SHAPE }, { requireAuth() {} }]],
-        ['features not booleans', [{ groups, features: { groupApi: 'true', groupMessaging: false, attachmentApi: false } }, middleware]],
-        ['features null', [{ groups, features: null }, middleware]]]) {
+    for (const [label, args] of [['no arguments', []], ['no service', [{ features: OFF_SHAPE }, middleware]], ['service without rate', [{ groups: {}, groupMessages:fakeGroupMessages(), features: OFF_SHAPE }, middleware]],
+        ['no middleware', [{ groups, groupMessages:fakeGroupMessages(), features: OFF_SHAPE }]], ['no requireAuth', [{ groups, groupMessages:fakeGroupMessages(), features: OFF_SHAPE }, { requireCsrf() {} }]],
+        ['no requireCsrf', [{ groups, groupMessages:fakeGroupMessages(), features: OFF_SHAPE }, { requireAuth() {} }]],
+        ['features not booleans', [{ groups, groupMessages:fakeGroupMessages(), features: { groupApi: 'true', groupMessaging: false, attachmentApi: false } }, middleware]],
+        ['features null', [{ groups, groupMessages:fakeGroupMessages(), features: null }, middleware]],
+        ['no group message service', [{ groups, features: OFF_SHAPE }, middleware]]]) {
         assert.ok(thrown(() => createGroupRouter(...args)) instanceof TypeError, label);
     }
-    assert.ok(createGroupRouter({ groups, features: DISABLED_FEATURES }, middleware));
+    assert.ok(createGroupRouter({ groups, groupMessages:fakeGroupMessages(), features: DISABLED_FEATURES }, middleware));
 });
 
 test('a router built without features is fully disabled, as the default of the spec requires', async t => {
@@ -250,7 +265,7 @@ test('a router built without features is fully disabled, as the default of the s
     const middleware = { requireAuth(request, response, next) { order.push('auth'); Object.defineProperty(request, 'auth', { value: { userId: 'u' } }); next(); },
         requireCsrf(request, response, next) { order.push('csrf'); next(); } };
     const app = express();
-    app.use('/api/groups', createGroupRouter({ groups: fakeGroups({ rate() { order.push('rate'); } }) }, middleware));
+    app.use('/api/groups', createGroupRouter({ groups: fakeGroups({ rate() { order.push('rate'); } }), groupMessages:fakeGroupMessages(), features:OFF_SHAPE }, middleware));
     app.use((error, request, response, next) => sendError(response, error.code, error.status, error.fields));
     const server = http.createServer(app);
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -290,7 +305,7 @@ async function isolated(t, features) {
         if (isolated.failRate) throw isolated.failRate;
     } });
     const app = express();
-    app.use('/api/groups', createGroupRouter({ groups, features }, middleware));
+    app.use('/api/groups', createGroupRouter({ groups, groupMessages:fakeGroupMessages(), features }, middleware));
     app.use((error, request, response, next) => {
         if (error instanceof AuthError) return sendError(response, error.code, error.status, error.fields);
         if (error.type === 'entity.too.large') return sendError(response, 'PAYLOAD_TOO_LARGE', 413);
@@ -764,7 +779,7 @@ test('app.js mounts the group router after /api/messages and before the legacy s
     const notFound = at("app.use((req,res)=>sendError(res,'NOT_FOUND',404));");
     assert.ok(lifecycle < mount && mount < legacy && legacy < notFound, 'mount order');
     assert.ok(source.includes('features=DISABLED_FEATURES'), 'features default to everything disabled');
-    assert.ok(source.includes('groups,features:groups.features'), 'groups and features are returned');
+    assert.ok(source.includes('groups,groupMessages,features:groups.features'), 'groups and message service are returned');
     assert.ok(!/require\('\.\/routes\/attachments'\)/.test(source), 'no attachment router yet');
 });
 

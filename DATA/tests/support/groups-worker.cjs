@@ -64,7 +64,8 @@ async function main() {
     let application;
     const rejectedPorts=[];
     for(let attempt=0;attempt<16;attempt++) {
-        const candidate=await startServer({ env:process.env, features, limiter, log:() => {} });
+        const candidate=await startServer({ env:process.env, features, limiter, log:() => {},
+            messageOptions:{groupRecipientKeyVerifier:{async verifyEnvelope(){return {verified:true};}}} });
         const address=candidate.server.address();
         const port=address&&typeof address==='object'?address.port:null;
         if(!Number.isInteger(port)||port<1||port>65535) {
@@ -89,7 +90,7 @@ async function main() {
         const input = requestInput(JSON.parse(await firstInputLine()));
         process.stdin.pause();
         const index = Number(process.env.SECUBUZZ_GROUP_WORKER_INDEX);
-        if (!Number.isInteger(index) || index < 0 || index > 1) throw new Error('worker index refused');
+        if (!Number.isInteger(index) || index < 0 || index > 5) throw new Error('worker index refused');
         await waitForGo(barrier, index);
 
         const headers = { Origin:origin, Accept:'application/json' };

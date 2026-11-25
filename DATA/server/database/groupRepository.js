@@ -533,6 +533,12 @@ function createGroupRepository(db) {
                 SELECT * FROM GroupMembershipIntervals WHERE conversation_id=? AND user_id=? AND left_at IS NULL
             `).get(id, user) ?? null : null;
         }),
+        activeMemberIds:readFunction(id => {
+            identifier(id);
+            return getVisibleGroup(id) ? db.prepare(`
+                SELECT user_id FROM ConversationMembers WHERE conversation_id=? AND left_at IS NULL ORDER BY user_id
+            `).all(id).map(row => row.user_id) : [];
+        }),
         historyPage:readFunction((id, user, options = {}) => {
             identifier(id); identifier(user);
             writeFields(options, ['policy','limit','highWater','before']);

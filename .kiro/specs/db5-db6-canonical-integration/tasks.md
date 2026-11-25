@@ -1396,7 +1396,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Project_Owner
     - _Requirements: DB5-R16.8_
 
-  - [ ] 3.2 Create `messaging/group.js` with the gate, validation and prepare step
+  - [x] 3.2 Create `messaging/group.js` with the gate, validation and prepare step
     - **ID**: T-5D-02
     - **Depends on**: T-5C-52
     - **Affected modules**: `DATA/server/messaging/group.js` (new), `DATA/tests/groups-messages.test.js` (new)
@@ -1408,7 +1408,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R09.1, DB5-R09.2, DB5-R09.9, DB5-R09.10, DB5-R09.14, DB5-R09.15, DB5-R16.3_
 
-  - [ ] 3.3 Add the verifier injection point and the verify step
+  - [x] 3.3 Add the verifier injection point and the verify step
     - **ID**: T-5D-03
     - **Depends on**: T-5D-02
     - **Affected modules**: `DATA/server/messaging/group.js`, `DATA/tests/groups-messages.test.js`
@@ -1420,7 +1420,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R09.11, DB5-R09.12, DB5-R09.14, DB5-R16.6_
 
-  - [ ] 3.4 Add the write step with idempotency and the revision re-check
+  - [x] 3.4 Add the write step with idempotency and the revision re-check
     - **ID**: T-5D-04
     - **Depends on**: T-5D-03
     - **Affected modules**: `DATA/server/messaging/group.js`, `DATA/tests/groups-messages.test.js`
@@ -1432,7 +1432,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R09.3, DB5-R09.4, DB5-R09.5, DB5-R09.8, DB5-R09.18, DB5-R12.8, NFR-01_
 
-  - [ ] 3.5 Add history, single-message read and tombstone
+  - [x] 3.5 Add history, single-message read and tombstone
     - **ID**: T-5D-05
     - **Depends on**: T-5D-04
     - **Affected modules**: `DATA/server/messaging/group.js`, `DATA/tests/groups-messages.test.js`
@@ -1444,7 +1444,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R08.5, DB5-R08.6, DB5-R08.7, DB5-R08.8, DB5-R08.10, DB5-R08.12, DB5-R08.13, DB5-R08.14, DB5-R09.2, DB5-R09.6, DB5-R09.17, DB5-R05.8_
 
-  - [ ] 3.6 Add read position, receipts and unread counts
+  - [x] 3.6 Add read position, receipts and unread counts
     - **ID**: T-5D-06
     - **Depends on**: T-5D-05
     - **Affected modules**: `DATA/server/messaging/group.js`, `DATA/server/groups/service.js`, `DATA/tests/groups-messages.test.js`
@@ -1455,7 +1455,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R10.1, DB5-R10.2, DB5-R10.3, DB5-R10.4, DB5-R10.5, DB5-R10.6, DB5-R10.7, DB5-R10.9, DB5-R10.10_
 
-  - [ ] 3.7 Add the group `bindStore` store interface
+  - [x] 3.7 Add the group `bindStore` store interface
     - **ID**: T-5D-07
     - **Depends on**: T-5D-06
     - **Affected modules**: `DATA/server/messaging/group.js`, `DATA/tests/groups-messages.test.js`
@@ -1466,7 +1466,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R09.13, DB5-R09.2, DB5-R09.8_
 
-  - [ ] 3.8 Add the message write route (G19) and wire the service in `createApp`
+  - [x] 3.8 Add the message write route (G19) and wire the service in `createApp`
     - **ID**: T-5D-08
     - **Depends on**: T-5D-07
     - **Affected modules**: `DATA/server/routes/groups.js`, `DATA/server/app.js`, `DATA/tests/groups-messages.test.js`
@@ -1477,7 +1477,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R09.9, DB5-R09.10, DB5-R09.11, DB5-R09.12, DB5-R09.18, DB5-R16.3, DB5-R16.6, ARCH-R01.4_
 
-  - [ ] 3.9 Add history, single-message and tombstone routes (G18, G20, G21)
+  - [x] 3.9 Add history, single-message and tombstone routes (G18, G20, G21)
     - **ID**: T-5D-09
     - **Depends on**: T-5D-08, T-5C-51
     - **Affected modules**: `DATA/server/routes/groups.js`, `DATA/tests/groups-messages.test.js`, `DATA/docs/standalone-inventory.md`
@@ -1489,7 +1489,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R08.5, DB5-R08.13, DB5-R09.6, DB5-R09.17, DB5-R13.9, ARCH-R03.4, ARCH-R03.10_
 
-  - [ ] 3.10 Add the read-state and receipt routes (G22 to G25)
+  - [x] 3.10 Add the read-state and receipt routes (G22 to G25)
     - **ID**: T-5D-10
     - **Depends on**: T-5D-09
     - **Affected modules**: `DATA/server/routes/groups.js`, `DATA/tests/groups-messages.test.js`
@@ -1501,7 +1501,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R10.2, DB5-R10.3, DB5-R10.4, DB5-R10.6, DB5-R10.7, DB5-R10.8, DB5-R10.9, DB5-R10.10, DB5-R12.2, DB5-R12.4_
 
-  - [ ] 3.11 Write property test P-16 for message idempotency
+  - [x] 3.11 Write property test P-16 for message idempotency
     - **ID**: T-5D-11
     - **Depends on**: T-5D-10, T-5B-10
     - **Property P-16: Repeated submissions store nothing new**
@@ -1513,7 +1513,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-messages.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.12 Write property test P-17 for gap-free sequences across processes
+  - [x] 3.12 Write property test P-17 for gap-free sequences across processes
     - **ID**: T-5D-12
     - **Depends on**: T-5D-10, T-5C-18
     - **Property P-17: Concurrent writers get sequences 1 to K without gaps**
@@ -1525,7 +1525,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-concurrency.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.13 Write property test P-18 for read position, unread count and receipts
+  - [x] 3.13 Write property test P-18 for read position, unread count and receipts
     - **ID**: T-5D-13
     - **Depends on**: T-5D-10, T-5B-10
     - **Property P-18: The read position only grows and the unread count is exact**
@@ -1537,7 +1537,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-messages.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.14 Write property test P-12 for visible history over join, leave and rejoin
+  - [x] 3.14 Write property test P-12 for visible history over join, leave and rejoin
     - **ID**: T-5D-14
     - **Depends on**: T-5D-10, T-5B-29
     - **Property P-12: Each member reads exactly the messages the event log entitles**
@@ -1549,7 +1549,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-history.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.15 Extend property test P-15 to the history traversal
+  - [x] 3.15 Extend property test P-15 to the history traversal
     - **ID**: T-5D-15
     - **Depends on**: T-5D-14, T-5C-35
     - **Property P-15: Paged history is disjoint, ordered and stable (history part)**
@@ -1561,7 +1561,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-pagination.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.16 Extend property test P-14 to history cursors
+  - [x] 3.16 Extend property test P-14 to history cursors
     - **ID**: T-5D-16
     - **Depends on**: T-5D-15, T-5C-34
     - **Property P-14: A tampered or foreign cursor is refused with 400 (history cursors)**
@@ -1573,7 +1573,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-pagination.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.17 Add the latency example and the history query-plan checks
+  - [x] 3.17 Add the latency example and the history query-plan checks
     - **ID**: T-5D-17
     - **Depends on**: T-5D-15
     - **Affected modules**: `DATA/tests/groups-pagination.test.js`, `DATA/tests/groups-migrations.test.js`
@@ -1584,7 +1584,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: NFR-02, NFR-03, NFR-04_
 
-  - [ ] 3.18 Extend property test P-01 with message sends
+  - [x] 3.18 Extend property test P-01 with message sends
     - **ID**: T-5D-18
     - **Depends on**: T-5D-14, T-5C-24, T-5C-53
     - **Property P-01: One active owner after every operation (with messages)**
@@ -1597,7 +1597,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-random.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.19 Extend property test P-24 with message submission
+  - [x] 3.19 Extend property test P-24 with message submission
     - **ID**: T-5D-19
     - **Depends on**: T-5D-18, T-5C-28
     - **Property P-24: Archiving stops writes and deletes nothing (message part)**
@@ -1609,7 +1609,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-random.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.20 Extend property test P-25 with the messaging switch
+  - [x] 3.20 Extend property test P-25 with the messaging switch
     - **ID**: T-5D-20
     - **Depends on**: T-5D-10, T-5C-43
     - **Property P-25: A disabled function answers 503 and changes nothing (messaging)**
@@ -1621,7 +1621,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-gate.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.21 Extend property test P-26 with verifier states
+  - [x] 3.21 Extend property test P-26 with verifier states
     - **ID**: T-5D-21
     - **Depends on**: T-5D-20, T-5C-44
     - **Property P-26: Switches follow the exact string and feature-status reports them (verifier states)**
@@ -1633,7 +1633,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-gate.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.22 Add the AF-08 regression
+  - [x] 3.22 Add the AF-08 regression
     - **ID**: T-5D-22
     - **Depends on**: T-5D-10
     - **Affected modules**: `DATA/tests/groups-messages.test.js`
@@ -1644,7 +1644,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R09.10, DB5-R09.11, DB5-R09.12, DB5-R16.3, DB5-R16.6, NFR-06_
 
-  - [ ] 3.23 Extend the contract table and the actor-class matrix to G18 to G25
+  - [x] 3.23 Extend the contract table and the actor-class matrix to G18 to G25
     - **ID**: T-5D-23
     - **Depends on**: T-5D-22, T-5C-38, T-5C-39
     - **Property P-21: A refused request changes no record (G18 to G25)**
@@ -1656,7 +1656,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-security.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.24 Extend property test P-20 with the message write order
+  - [x] 3.24 Extend property test P-20 with the message write order
     - **ID**: T-5D-24
     - **Depends on**: T-5D-23, T-5C-23
     - **Property P-20: The first failing check decides the answer (message write)**
@@ -1668,7 +1668,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/groups-model.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.25 Extend property tests P-30 and P-31 to message operations
+  - [x] 3.25 Extend property tests P-30 and P-31 to message operations
     - **ID**: T-5D-25
     - **Depends on**: T-5D-24, T-5C-40, T-5C-41
     - **Property P-31: A failure at any write step leaves every table unchanged (message operations)**
@@ -1680,7 +1680,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Verify**: `node --test tests/audit-metadata.test.js tests/groups-atomicity.test.js` in DATA/
     - **Agent**: Kiro
 
-  - [ ] 3.26 Extend `groups-api.md` and `groups-openapi.json` to G18 to G25
+  - [x] 3.26 Extend `groups-api.md` and `groups-openapi.json` to G18 to G25
     - **ID**: T-5D-26
     - **Depends on**: T-5D-23
     - **Affected modules**: `DATA/docs/groups-api.md`, `DATA/docs/groups-openapi.json`
@@ -1691,7 +1691,7 @@ Passing results, in the Validation_Runner: C1 shows `# fail 0`, `# cancelled 0`,
     - **Agent**: Kiro
     - _Requirements: DB5-R13.6, DB5-R13.7, DB5-R08.11, DB5-R09.17_
 
-  - [ ] 3.27 Record the OD-19 decision on the group key model
+  - [x] 3.27 Record the OD-19 decision on the group key model
     - **ID**: T-5D-27
     - **Depends on**: T-5D-01
     - **Affected modules**: `DATA/docs/db5-db6-handoff.md` (decision log)

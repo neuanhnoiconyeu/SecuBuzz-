@@ -28,6 +28,7 @@ const { createFeatureGate } = require('../features/gate');
 
 // Group routes accept at most 8 KiB (design, Error Handling, step 6).
 const MAX_BODY_BYTES = 8192;
+const MAX_MESSAGE_BODY_BYTES = 131072;
 const READ_METHODS = Object.freeze(['GET', 'HEAD']);
 // The only charset names a JSON body may declare (RFC 8259 fixes JSON as UTF-8). Anything else is a 415, not a decode attempt.
 const READABLE_CHARSETS = Object.freeze(['utf-8']);
@@ -45,6 +46,14 @@ const GROUP_ROUTES = Object.freeze([
     route('G15', 'GET', '/invitations', true),
     route('G16', 'POST', '/invitations/:invitationId/accept', true),
     route('G17', 'POST', '/invitations/:invitationId/decline', true),
+    route('G18', 'GET', '/:id/messages', true),
+    route('G19', 'POST', '/:id/messages', true),
+    route('G20', 'GET', '/:id/messages/:messageId', true),
+    route('G21', 'DELETE', '/:id/messages/:messageId', true),
+    route('G22', 'GET', '/:id/read-position', true),
+    route('G23', 'PUT', '/:id/read-position', true),
+    route('G24', 'POST', '/:id/messages/:messageId/receipts', true),
+    route('G25', 'GET', '/:id/messages/:messageId/receipts', true),
     route('G01', 'POST', '/', true),
     route('G02', 'GET', '/', true),
     route('G06', 'POST', '/:id/members', true),
@@ -124,11 +133,15 @@ function requireFunction(value, label) {
     if (typeof value !== 'function') throw new TypeError(`createGroupRouter needs ${label}.`);
 }
 
-function createGroupRouter({ groups, features } = {}, middleware) {
+function createGroupRouter({ groups, groupMessages, features } = {}, middleware) {
     if (!groups || typeof groups !== 'object') throw new TypeError('createGroupRouter needs the Group_Service.');
     for (const name of ['rate', 'createGroup', 'listGroups', 'getGroup', 'updateGroup', 'listMembers',
         'createInvitation', 'listInvitations', 'cancelInvitation', 'listOwnInvitations', 'declineInvitation', 'acceptInvitation', 'addMember', 'removeMember', 'leaveGroup',
         'changeMemberRole', 'transferOwnership', 'archiveGroup']) requireFunction(groups[name], `groups.${name}`);
+    if (!groupMessages || typeof groupMessages !== 'object') throw new TypeError('createGroupRouter needs the Group_Message_Service.');
+    for (const name of ['rate', 'submit', 'history', 'get', 'remove', 'readPosition', 'updateReadPosition', 'recordReceipt', 'receipts']) {
+        requireFunction(groupMessages[name], `groupMessages.${name}`);
+    }
     if (!middleware || typeof middleware !== 'object') throw new TypeError('createGroupRouter needs the authentication middleware.');
     requireFunction(middleware.requireAuth, 'requireAuth');
     requireFunction(middleware.requireCsrf, 'requireCsrf');
@@ -164,7 +177,22 @@ function createGroupRouter({ groups, features } = {}, middleware) {
         G17: (request, response) => {
             groups.declineInvitation(request.auth, request.csrfProof, request.params.invitationId);
             response.status(204).end();
-        }
+        },
+        G18: (request, response) => response.json(groupMessages.history(request.auth, request.params.id, request.query)),
+        G19: async (request, response) => {
+            const result = await groupMessages.submit(request.auth, request.csrfProof, request.params.id, request.body);
+            response.status(result.outcome === 'created' ? 201 : 200).json(result);
+        },
+        G20: (request, response) => response.json(groupMessages.get(request.auth, request.params.id, request.params.messageId)),
+        G21: (request, response) => response.json(groupMessages.remove(request.auth, request.csrfProof,
+            request.params.id, request.params.messageId, request.body)),
+        G22: (request, response) => response.json({ readPosition: groupMessages.readPosition(request.auth, request.params.id) }),
+        G23: (request, response) => response.json(groupMessages.updateReadPosition(request.auth, request.csrfProof, request.params.id, request.body)),
+        G24: (request, response) => {
+            const result = groupMessages.recordReceipt(request.auth, request.csrfProof, request.params.id, request.params.messageId, request.body);
+            response.status(result.outcome === 'created' ? 201 : 200).json(result);
+        },
+        G25: (request, response) => response.json(groupMessages.receipts(request.auth, request.params.id, request.params.messageId, request.query))
     });
     const table = GROUP_ROUTES;
     if (Object.keys(handlers).sort().join() !== table.map(row => row.id).sort().join()) {
@@ -178,16 +206,29 @@ function createGroupRouter({ groups, features } = {}, middleware) {
     const requireCsrf = (request, response, next) => (isRead(request) ? next() : middleware.requireCsrf(request, response, next));
     const gateStep = guard(() => gate.assertEnabled('groupApi'));
     const limitRequest = guard(request => groups.rate(isRead(request) ? 'read' : 'write', request.auth, sourceOf(request)));
-    const parser = express.json({ limit: MAX_BODY_BYTES, strict: true, inflate: false });
+    const messagingPath = request => /^\/(?:[^/]+\/(?:messages(?:\/[^/]+(?:\/receipts)?)?|read-position))\/?$/.test(request.path);
+    const limitMessaging = guard(request => {
+        if (!messagingPath(request)) return;
+        const operation = request.method === 'POST' && /\/messages\/?$/.test(request.path) ? 'submit'
+            : request.method === 'DELETE' ? 'delete' : request.method === 'GET' && /\/messages\/?$/.test(request.path) ? 'history' : 'read';
+        groupMessages.rate(operation, request.auth, sourceOf(request));
+    });
+    const messagingGate = (request, response, next) => {
+        const receiptList = request.method === 'GET' && /^\/[^/]+\/messages\/[^/]+\/receipts\/?$/.test(request.path);
+        // G25 must reach its handler while disabled so membership visibility is checked before its 503.
+        if (messagingPath(request) && !receiptList && groups.features.groupMessaging !== true) return sendError(response, 'FEATURE_UNAVAILABLE', 503);
+        next();
+    };
     const bodyStep = (request, response, next) => {
         if (isRead(request)) return next();
+        const maxBytes = messagingPath(request) ? MAX_MESSAGE_BODY_BYTES : MAX_BODY_BYTES;
         const length = Number(request.headers['content-length'] || 0);
-        if (length > MAX_BODY_BYTES) return sendError(response, 'PAYLOAD_TOO_LARGE', 413);
+        if (length > maxBytes) return sendError(response, 'PAYLOAD_TOO_LARGE', 413);
         // No body: req.body stays undefined and the validator of the operation answers 400 (DB5-R13.4).
         if (!request.headers['transfer-encoding'] && !length) return next();
         if (!request.is('application/json')) return sendError(response, 'VALIDATION_ERROR', 400);
         if (declaresUnreadableCharset(request)) return sendError(response, 'UNSUPPORTED_MEDIA_TYPE', 415);
-        return parser(request, response, next);
+        return express.json({ limit: maxBytes, strict: true, inflate: false })(request, response, next);
     };
 
     const router = express.Router({ caseSensitive: true });
@@ -195,7 +236,9 @@ function createGroupRouter({ groups, features } = {}, middleware) {
     for (const row of table) if (!row.gated) router[row.method.toLowerCase()](row.path, limitRead, handlers[row.id]);
     router.use(requireCsrf);
     router.use(gateStep);
+    router.use(messagingGate);
     router.use(limitRequest);
+    router.use(limitMessaging);
     router.use(bodyStep);
     for (const row of table) if (row.gated) router[row.method.toLowerCase()](row.path, handlers[row.id]);
     router.use((request, response) => sendError(response, 'NOT_FOUND', 404));

@@ -14,12 +14,12 @@ const { envDefaults } = require('./support/auth');
 const { createGroupBuilder, createClock, guardPath } = require('./support/groups');
 const { createGroupRepository } = require('../server/database/groupRepository');
 const { createRepositories } = require('../server/database/repositories');
-const { createRandom } = require('./support/random');
+const { createRandom, forAll } = require('./support/random');
 
 const SEED = 0x5c182020;
 const REPEATS = 20;
 const MAX_MEMBERS = 50;
-const FEATURES = Object.freeze({ groupApi:true, groupMessaging:false, attachmentApi:false,
+const FEATURES = Object.freeze({ groupApi:true, groupMessaging:true, attachmentApi:false,
     groups:Object.freeze({ directAdd:true, maxMembers:MAX_MEMBERS, maxPendingInvitationsPerGroup:50,
         maxPendingInvitationsPerInvitee:50 }) });
 const WORKER = path.join(__dirname, 'support', 'groups-worker.cjs');
@@ -53,7 +53,9 @@ async function launch(fixture, barrier, index) {
         stdio:['pipe','pipe','pipe'], windowsHide:true });
     fixture.children.push(child);
     const log = collect(child);
-    await until(() => log.stdout.match(/^READY (\d+)\r?$/m), `worker ${index} readiness`);
+    await until(() => log.stdout.match(/^READY (\d+)\r?$/m) || log.error || log.exit, `worker ${index} readiness`);
+    if (log.error) throw new Error(`worker ${index} failed to launch: ${log.error}`);
+    if (log.exit) throw new Error(`worker ${index} exited before readiness: ${JSON.stringify(log.exit)} ${log.stderr}`);
     return { child, log };
 }
 
@@ -71,15 +73,13 @@ function actorInput(actor, method, route, body) {
 }
 
 async function runPair(fixture, requests, label) {
-    assert.equal(requests.length, 2);
+    assert.ok(Array.isArray(requests) && requests.length >= 2 && requests.length <= 6);
     const barrier = guardPath(fs.mkdtempSync(path.join(os.tmpdir(), 'secubuzz-db5-')));
     const workers = [];
     try {
-        workers.push(await launch(fixture, barrier, 0));
-        workers.push(await launch(fixture, barrier, 1));
-        workers[0].child.stdin.write(`${JSON.stringify(requests[0])}\n`);
-        workers[1].child.stdin.write(`${JSON.stringify(requests[1])}\n`);
-        await until(() => (fs.existsSync(path.join(barrier, 'ready-0')) && fs.existsSync(path.join(barrier, 'ready-1')))
+        for (let index=0;index<requests.length;index++) workers.push(await launch(fixture, barrier, index));
+        workers.forEach((worker,index) => worker.child.stdin.write(`${JSON.stringify(requests[index])}\n`));
+        await until(() => Array.from({length:requests.length},(_,index)=>fs.existsSync(path.join(barrier,`ready-${index}`))).every(Boolean)
             || workers.some(worker => worker.log.exit),
             'both workers at file barrier');
         if (workers.some(worker => worker.log.exit)) throw new Error('worker exited before both reached the barrier');
@@ -96,7 +96,11 @@ async function runPair(fixture, requests, label) {
         throw new Error(`${label}\nprocess logs: ${JSON.stringify(logs)}`, { cause:error });
     } finally {
         for (const worker of workers) if (worker.child.exitCode === null && worker.child.signalCode === null) {
-            const exited = once(worker.child, 'exit'); worker.child.kill(); await exited;
+            // A rejected spawn emits `error` but no `exit`; only wait for shutdown when a child process exists.
+            if (worker.child.pid !== undefined) {
+                const exited = once(worker.child, 'exit');
+                if (worker.child.kill()) await exited;
+            }
         }
         for (const entry of fs.readdirSync(barrier)) fs.unlinkSync(path.join(barrier, entry));
         fs.rmdirSync(barrier);
@@ -413,4 +417,68 @@ test('T-5C-18/19/20: independent-process group concurrency properties', { timeou
     assert.equal(staleResponse.status,409); assert.equal(revision(f,staleGroup.id),staleRevision);
     assert.equal(auditCount(f,staleGroup.id,'group.owner.transferred'),0);
     assert.equal(pairCount, 19*REPEATS, 'all specified concurrency pairs ran');
+});
+
+test('T-5D-12 P-17: independent processes submit group messages with gap-free sequences', { timeout:30*60*1000 }, async t => {
+    const f=await fixture(t);
+    const property=await forAll('P-17-group-message-sequences',{runs:10,seed:0x5d170017,
+        onRun:line=>t.diagnostic(line),describe:sample=>`processes=${sample.processes},waves=${sample.waves},total=${sample.processes*sample.waves},removeAfter=${sample.removeAfter},removeSlot=${sample.removeSlot}`},
+        random=>{
+            const processes=random.int(2,6),waves=random.int(Math.ceil(10/processes),Math.floor(60/processes));
+            return {processes,waves,total:processes*waves,removeAfter:random.int(1,waves-1),
+                removeSlot:random.int(1,processes-1)};
+        },async(sample,info)=>{
+            const group=f.group({size:sample.processes,historyPolicy:'from_joined'});
+            const participants=[group.owner,...group.members];
+            const ids=participants.map(()=>[]);
+            let removed=false,createdCount=0,duplicateCount=0,refusedCount=0;
+            for(let wave=0;wave<sample.waves;wave++){
+                const requests=[];
+                const labels=[];
+                for(let worker=0;worker<sample.processes;worker++){
+                    const slot=worker;
+                    const actor=participants[slot];
+                    const repeated=ids[slot].length>0&&info.random.bool(0.2);
+                    const clientId=repeated?info.random.pick(ids[slot]):`p17-${info.run}-${slot}-${wave}`;
+                    if(!repeated)ids[slot].push(clientId);
+                    const invalid=info.random.bool(0.1);
+                    const body=invalid?{content:'synthetic invalid envelope'}:{id:clientId,conversationId:group.id,senderId:f.users[actor].id,
+                        senderName:f.users[actor].browser===undefined?'':`Concurrent ${actor}`,timestamp:'2026-01-01T00:00:00.000Z',type:'text',
+                        encryption:{version:1,algorithm:'AES-256-GCM',encoding:'base64',iv:Buffer.alloc(12,worker+1).toString('base64'),
+                            ciphertext:Buffer.alloc(32,worker+2).toString('base64')}};
+                    // Registered fixture display names are the usernames; synchronize the authenticated profile projection exactly.
+                    if(!invalid) body.senderName=f.db.prepare('SELECT display_name FROM Users WHERE user_id=?').get(f.users[actor].id).display_name;
+                    requests.push(actorInput(f.users[actor],'POST',`/${group.id}/messages`,body));
+                    labels.push({wave,sender:slot,repeated,invalid,clientId});
+                }
+                const results=await runPair(f,requests,`P-17 seed=${info.seed} run=${info.run} wave=${wave}`);
+                for(let index=0;index<results.length;index++){
+                    const result=results[index],label=labels[index],actorIndex=participants[index];
+                    if(label.invalid){assert.deepEqual([result.status,result.body.code],[400,'VALIDATION_ERROR'],`${info.line} wave ${wave} invalid envelope`);refusedCount++;continue;}
+                    if(removed&&actorIndex===sample.removeSlot){assert.deepEqual([result.status,result.body.code],[404,'NOT_FOUND'],`${info.line} wave ${wave} removed sender`);refusedCount++;continue;}
+                    if(result.status===201){
+                        assert.equal(result.body.outcome,'created',`${info.line} wave ${wave}`);
+                        const stored=f.db.prepare('SELECT message_seq,sender_id,client_id FROM Messages WHERE message_id=?').get(result.body.message.storageId);
+                        assert.ok(stored,`${info.line} created response has a stored row`);
+                        assert.equal(result.body.message.sequence,stored.message_seq,`${info.line} created sequence matches storage`);
+                        assert.equal(stored.sender_id,f.users[actorIndex].id,`${info.line} sender is session-derived`);
+                        createdCount++;
+                    }else if(result.status===200){
+                        assert.equal(result.body.outcome,'duplicate',`${info.line} repeat is identified as duplicate`);duplicateCount++;
+                    }else assert.fail(`${info.line} unexpected ${result.status}: ${JSON.stringify(result.body)}`);
+                }
+                const stored=f.db.prepare("SELECT message_seq FROM Messages WHERE conversation_id=? AND origin='authenticated' ORDER BY message_seq").all(group.id);
+                assert.deepEqual(stored.map(row=>row.message_seq),Array.from({length:createdCount},(_,index)=>index+1),`${info.line} wave ${wave} has no sequence gap`);
+                assert.equal(auditCount(f,group.id,'message.stored'),createdCount,`${info.line} audit count matches committed messages`);
+                if(!removed&&wave===sample.removeAfter){
+                    const target=participants[sample.removeSlot];
+                    const response=await f.users[group.owner].browser.request(`/api/groups/${group.id}/members/${f.users[target].id}`,
+                        {method:'DELETE',headers:{'X-CSRF-Token':f.users[group.owner].csrf}});
+                    assert.equal(response.status,204,`${info.line} member removal between generated waves`);removed=true;
+                }
+            }
+            assert.equal(createdCount+duplicateCount+refusedCount,sample.total,`${info.line} all concurrent requests classified`);
+            assertGroupInvariant(f,group.id);
+        });
+    t.diagnostic(`P-17 seed=${property.seed} runs=${property.runs} processes=2..6 operations=10..60; repeated-id, invalid-envelope and member-removal paths exercised`);
 });

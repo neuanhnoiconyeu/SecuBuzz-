@@ -141,6 +141,7 @@ Rows are internal persistence records, not public DTOs. Keyset lists take `{limi
 | --- | --- |
 | `getVisibleGroup(id)` | Combined conversation/extension row only for group kind, authenticated origin and an existing extension; otherwise null. Archived groups remain readable. |
 | `getMember(id, user)`, `countActiveMembers(id)` | Retained membership row/null, including former membership for internal checks; active count or zero for an invisible group. |
+| `activeMemberIds(id)` | Active member user IDs in stable order for internal receipt fan-out; returns an empty list for an invisible group. This internal projection is not a public membership or visibility grant. |
 | `listGroupsForUser(actor, options)` | Active memberships ordered by updated time and group id descending, with role, member count and permitted unread count. |
 | `listMembers(id, options)` | Active rows by open-period join time/user ascending; `former: true` returns former rows by leave time/user ascending, using their latest closed period. |
 | `getCreationKey(user, key)` | Idempotency row/null restricted to a visible group. |

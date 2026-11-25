@@ -10,7 +10,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { fixture, temporary, users, Database } = require('./support/database');
 const { RepositoryError, translate } = require('../server/database/repositories');
-const { httpGroupFixture, createClock, openLimiter } = require('./support/groups');
+const { httpGroupFixture, createClock, openLimiter, actorRequest, snapshot } = require('./support/groups');
 const { createGroupService } = require('../server/groups/service');
 
 const ALLOWED_KEYS = ['reason_code', 'operation', 'outcome', 'count', 'duration_ms', 'target_id', 'role'];
@@ -212,4 +212,25 @@ test('P-30: committed group operations write one safe audit row and refusals wri
     assert.ok(!serialized.includes(canary),'audit metadata and event rows exclude hostile canary text');
     assert.ok(!stderr.join('').includes(canary),'stderr excludes hostile canary text');
     t.diagnostic(`P-30 committedOperations=${all.length} refusedOperations=1`);
+});
+
+test('P-30: stored group messages write one safe audit row and refused canaries write none',{timeout:60000},async t=>{
+    const canary='P30-MESSAGE-CANARY ../" hostile';
+    const verifier=Object.freeze({async verifyEnvelope(){return {verified:true};}});
+    const f=await httpGroupFixture(t,{clock:createClock(),features:{groupApi:true,groupMessaging:true,groups:{directAdd:false,maxMembers:50,
+        maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50}},messageOptions:{groupRecipientKeyVerifier:verifier}});
+    const rows=()=>f.db.prepare("SELECT event_type,metadata_json FROM AuditLogs WHERE source='groups' AND subject_id=? AND event_type LIKE 'message.%' ORDER BY rowid").all(f.groupId);
+    const owner=f.actors.owner,body={id:'p30-message-audit',conversationId:f.groupId,senderId:owner.id,senderName:'Group Owner',
+        timestamp:f.clock.iso(),type:'text',encryption:{version:1,algorithm:'AES-256-GCM',encoding:'base64',iv:Buffer.alloc(12,1).toString('base64'),
+            ciphertext:Buffer.from(canary).toString('base64')}};
+    const stderr=[],write=process.stderr.write;process.stderr.write=function(chunk,...args){stderr.push(String(chunk));return write.call(this,chunk,...args);};
+    try{
+        const stored=await actorRequest(owner,'POST',`/api/groups/${f.groupId}/messages`,{body});assert.equal(stored.status,201);
+        const committed=rows();assert.equal(committed.length,1);assert.equal(committed[0].event_type,'message.stored');
+        const metadata=JSON.parse(committed[0].metadata_json);assert.ok(Object.keys(metadata).every(key=>ALLOWED_KEYS.includes(key)));
+        const before=snapshot(f.db),refused=await actorRequest(owner,'POST',`/api/groups/${f.groupId}/messages`,{body:{content:canary}});
+        assert.equal(refused.status,400);assert.deepEqual(snapshot(f.db),before);assert.equal(rows().length,1,'refused message emits no audit row');
+    }finally{process.stderr.write=write;}
+    assert.ok(!JSON.stringify(rows()).includes(canary),'audit excludes plaintext canary');assert.ok(!stderr.join('').includes(canary),'stderr excludes plaintext canary');
+    t.diagnostic('P-30 group message committed=1 refused=1 safeAudit=1 canaryLeaks=0');
 });

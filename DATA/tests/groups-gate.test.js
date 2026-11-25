@@ -772,6 +772,19 @@ test('P-25: generated disabled-route requests and a disable/restart cycle preser
         G13:['GET','/api/groups/gated-group/invitations'],G14:['DELETE','/api/groups/gated-group/invitations/synthetic-invitation'],
         G15:['GET','/api/groups/invitations'],G16:['POST','/api/groups/invitations/synthetic-invitation/accept',{}],
         G17:['POST','/api/groups/invitations/synthetic-invitation/decline',{}],
+        G18:['GET','/api/groups/gated-group/messages'],
+        G19:['POST','/api/groups/gated-group/messages',{
+            id:'synthetic-message',conversationId:'gated-group',senderId:'synthetic-sender',senderName:'Synthetic Sender',
+            timestamp:'2033-01-01T00:00:00.000Z',type:'text',
+            encryption:{version:1,algorithm:'AES-256-GCM',encoding:'base64',
+                iv:Buffer.alloc(12,1).toString('base64'),ciphertext:Buffer.alloc(32,2).toString('base64')},
+        }],
+        G20:['GET','/api/groups/gated-group/messages/synthetic-message'],
+        G21:['DELETE','/api/groups/gated-group/messages/synthetic-message'],
+        G22:['GET','/api/groups/gated-group/read-position'],
+        G23:['PUT','/api/groups/gated-group/read-position',{position:1}],
+        G24:['POST','/api/groups/gated-group/messages/synthetic-message/receipts',{status:'read'}],
+        G25:['GET','/api/groups/gated-group/messages/synthetic-message/receipts'],
     });
     assert.equal(GROUP_ROUTES.filter(route => route.gated).length, Object.keys(paths).length,
         'every frozen gated route has a valid request template');
@@ -820,6 +833,39 @@ test('P-25: generated disabled-route requests and a disable/restart cycle preser
         assert.deepEqual(response.body,error503);
         assert.deepEqual(snapshot(restarted.db),before,`${method} ${url} changed persisted tables after restart`);
     }
+});
+
+test('T-5D-20/21 P-25/P-26: messaging gate, verifier states and feature-status combinations', { timeout:180000 }, async t => {
+    const {httpGroupFixture,actorRequest,snapshot}=require('./support/groups');
+    const values={maxMembers:50,maxPendingInvitationsPerGroup:20,maxPendingInvitationsPerInvitee:20};
+    const ready=Object.freeze({async verifyEnvelope(){return {verified:true};}});
+    const testOnly=Object.freeze({testOnly:true,async verifyEnvelope(){return {verified:true};}});
+    const states=[['none',undefined],['test-only',testOnly],['ready',ready]];
+    const envelope=(actor,id)=>({id:'gate-message',conversationId:id,senderId:actor.id,senderName:'Group Owner',timestamp:'2033-01-01T00:00:00.000Z',
+        type:'text',encryption:{version:1,algorithm:'AES-256-GCM',encoding:'base64',iv:Buffer.alloc(12,1).toString('base64'),
+            ciphertext:Buffer.alloc(32,2).toString('base64')}});
+    const coverage=new Set();
+    for(let mask=0;mask<4;mask++)for(const [state,verifier] of states) {
+        const groupApi=Boolean(mask&1),groupMessaging=Boolean(mask&2);
+        const f=await httpGroupFixture(t,{features:{groupApi,groupMessaging,attachmentApi:false,groups:values},
+            ...(verifier?{messageOptions:{groupRecipientKeyVerifier:verifier}}:{})});
+        const actor=f.actors.owner;
+        const status=await actorRequest(actor,'GET','/api/groups/feature-status');
+        assert.deepEqual(status.body,{groupApi,groupMessaging:groupApi&&groupMessaging,attachmentApi:false},`P-26 ${mask}/${state} exact status`);
+        const anonymous=await f.browser().request('/api/groups/feature-status');
+        assert.equal(anonymous.status,401,`P-26 ${mask}/${state} session required`);
+        const before=snapshot(f.db);
+        const write=await actorRequest(actor,'POST',`/api/groups/${f.groupId}/messages`,{body:envelope(actor,f.groupId)});
+        if(!groupApi||!groupMessaging)assert.deepEqual([write.status,write.body.code],[503,'FEATURE_UNAVAILABLE'],`P-25 ${mask}/${state}`);
+        else if(!verifier)assert.deepEqual([write.status,write.body.code],[503,'RECIPIENT_KEYS_UNAVAILABLE'],`P-25 ${mask}/${state} missing verifier`);
+        else assert.deepEqual([write.status,write.body.outcome],[201,'created'],`P-25 ${mask}/${state} ready verifier`);
+        if(write.status>=400)assert.deepEqual(snapshot(f.db),before,`P-25 ${mask}/${state} refusal changes no table`);
+        if(groupApi&&!groupMessaging)assert.equal((await actorRequest(actor,'GET',`/api/groups/${f.groupId}`)).status,200,
+            `P-25 Group_API reads remain available when only messaging is off (${state})`);
+        coverage.add(`${mask}/${state}`);
+        t.diagnostic(`P-25/P-26 groupApi=${groupApi} groupMessaging=${groupMessaging} verifier=${state}: ${write.status}/${write.body.code||write.body.outcome}`);
+    }
+    assert.equal(coverage.size,12,'all four switch assignments crossed with three verifier states');
 });
 
 // ---- the process boundary: server.js on a temporary database, stdout and stderr, exit code ----
