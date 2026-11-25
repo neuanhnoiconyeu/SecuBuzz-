@@ -3,6 +3,8 @@ const { AuthError } = require('../auth/errors');
 const { createSqliteRateLimiter } = require('../auth/rateLimiter');
 const invalid = () => { throw new AuthError('VALIDATION_ERROR',400); };
 const idPattern = /^(?:lounge|study-room|dev-corner|room-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/;
+// Migration 0013 default rows are trigger-immutable in SQLite; map stable IDs to current display names.
+const DEFAULT_ROOM_NAMES = Object.freeze({ lounge: 'Lounge', 'study-room': 'Study Room', 'dev-corner': 'Gaming Room' });
 function roomName(body,creating) {
     if (!body || typeof body!=='object' || Array.isArray(body) ||
         Object.keys(body).sort().join(',')!==(creating?'name,requestId':'name')) invalid();
@@ -14,7 +16,7 @@ function roomName(body,creating) {
 function createVoiceRooms({db,auth,limiter=createSqliteRateLimiter(db)}) {
     let cleanup=null;
     const one=db.prepare('SELECT r.*,u.display_name AS owner_name FROM VoiceRooms r LEFT JOIN Users u ON u.user_id=r.owner_id WHERE room_id=?');
-    const project=r=>({id:r.room_id,name:r.name,description:r.owner_id?'Shared with all signed-in users.':'A shared SecuBuzz voice room.',
+    const project=r=>({id:r.room_id,name:!r.owner_id&&DEFAULT_ROOM_NAMES[r.room_id]?DEFAULT_ROOM_NAMES[r.room_id]:r.name,description:r.owner_id?'Shared with all signed-in users.':'A shared SecuBuzz voice room.',
         ownerId:r.owner_id,ownerName:r.owner_name??null,createdAt:r.created_at});
     function active(context) {
         if(auth.checkSession(context).status!=='active')throw new AuthError('UNAUTHENTICATED',401);
@@ -30,7 +32,9 @@ function createVoiceRooms({db,auth,limiter=createSqliteRateLimiter(db)}) {
     function get(id) { if(!idPattern.test(id))invalid();const row=one.get(id);if(!row)throw new AuthError('NOT_FOUND',404);return row; }
     function owner(context,id) { const row=get(id);if(row.owner_id!==context.userId)throw new AuthError('FORBIDDEN',403);return row; }
     function available(name,id='') {
-        if(db.prepare('SELECT 1 FROM VoiceRooms WHERE name_key=? AND deleted_at IS NULL AND room_id<>?').get(name.toLowerCase(),id))throw new AuthError('CONFLICT',409);
+        const key=name.toLowerCase();
+        if(Object.entries(DEFAULT_ROOM_NAMES).some(([defaultId,defaultName])=>defaultId!==id&&defaultName.toLowerCase()===key) ||
+            db.prepare('SELECT 1 FROM VoiceRooms WHERE name_key=? AND deleted_at IS NULL AND room_id<>?').get(key,id))throw new AuthError('CONFLICT',409);
     }
     return {
         setCleanup(fn){cleanup=fn;},

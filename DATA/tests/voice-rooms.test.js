@@ -12,7 +12,8 @@ test('community rooms require authentication; defaults survive and cannot be man
  const f=await socialFixture(t);
  assert.equal((await f.browser().request('/api/voice/rooms')).status,401);
  const rooms=(await f.alice.browser.request('/api/voice/rooms')).body.items;
- assert.deepEqual(rooms.map(r=>r.id).sort(),['dev-corner','lounge','study-room']);
+ assert.deepEqual(rooms.map(r=>[r.id,r.name]),[['lounge','Lounge'],['study-room','Study Room'],['dev-corner','Gaming Room']]);
+ assert.equal((await create(f.alice,'Gaming Room')).status,409);
  for(const r of rooms){assert.equal(r.ownerId,null);assert.equal((await mutate(f.alice,'DELETE',`/api/voice/rooms/${r.id}`)).status,403);}
 });
 test('create is idempotent and persistent; only the authenticated owner may rename or delete',async t=>{

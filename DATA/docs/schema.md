@@ -180,7 +180,8 @@ Migration `0013-voice-rooms.sql` adds `VoiceRooms`, independent of Conversations
 Messages, device keys and encrypted attachments. Rooms are shared with all signed-in
 users; this catalog does not grant direct-conversation access. The owner is a
 session-derived `Users` foreign key with ON DELETE RESTRICT. Default Lounge, Study
-Room and Dev Corner rows have no account owner and cannot be renamed or removed.
+Room and Dev Corner (projected to the catalog UI/API as Gaming Room) rows have no
+account owner and cannot be renamed or removed.
 `voice_rooms_active_name` enforces unique normalized active names;
 `voice_rooms_owner` supports owner quotas. `voice_rooms_identity` preserves ownership,
 identity, creation time, defaults and terminal deletion. `voice_rooms_retained`

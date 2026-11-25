@@ -14,6 +14,8 @@ test('DATA sessions issue shared-room tokens, enforce owner changes and disconne
  const stack=await DataStack.start({bridge:{livekit:config}});
  try {
   const a=await stack.person('rooms-a','Alice'),b=await stack.person('rooms-b','Bob');
+  const defaults=(await a.browser.request('/api/voice/rooms')).body.items;
+  assert.deepEqual(defaults.map((r:{id:string;name:string})=>[r.id,r.name]),[['lounge','Lounge'],['study-room','Study Room'],['dev-corner','Gaming Room']]);
   const requestId=randomUUID();
   const created=await a.browser.mutate('POST','/api/voice/rooms',{name:'Shared room',requestId});assert.equal(created.status,201);
   const id=created.body.room.id;

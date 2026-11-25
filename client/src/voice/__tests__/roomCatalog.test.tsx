@@ -1,6 +1,6 @@
 import {act,renderHook} from '@testing-library/react';
 import type {SessionApi} from '@/api/sessionApi';
-import {useRoomCatalog} from '../useRoomCatalog';
+import {parseRoomCatalog, useRoomCatalog} from '../useRoomCatalog';
 
 afterEach(()=>jest.useRealTimers());
 test('refresh after a mutation cannot be consumed by a stale in-flight poll; errors retain the last valid catalog',async()=>{
@@ -16,4 +16,22 @@ test('refresh after a mutation cannot be consumed by a stale in-flight poll; err
  expect(view.result.current.rooms).toEqual([room]);expect(view.result.current.error).toBeTruthy();
  view.unmount();const calls=request.mock.calls.length;
  act(()=>jest.advanceTimersByTime(9000));expect(request).toHaveBeenCalledTimes(calls);
+});
+
+test('parseRoomCatalog maps immutable dev-corner default to Gaming Room while preserving Lounge, Study Room and custom rooms', () => {
+  const custom = { id: 'room-12345678-1234-1234-1234-123456789abc', name: 'My Room', description: 'Shared', ownerId: 'alice', ownerName: 'Alice' };
+  const parsed = parseRoomCatalog({
+    items: [
+      { id: 'lounge', name: 'Lounge', description: 'D1', ownerId: null, ownerName: null },
+      { id: 'study-room', name: 'Study Room', description: 'D2', ownerId: null, ownerName: null },
+      { id: 'dev-corner', name: 'Dev Corner', description: 'D3', ownerId: null, ownerName: null },
+      custom,
+    ],
+  });
+  expect(parsed.map((r) => [r.id, r.name])).toEqual([
+    ['lounge', 'Lounge'],
+    ['study-room', 'Study Room'],
+    ['dev-corner', 'Gaming Room'],
+    [custom.id, 'My Room'],
+  ]);
 });

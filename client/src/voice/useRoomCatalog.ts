@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, type SessionApi } from '@/api/sessionApi';
 import { LIVEKIT_ROOM_ID } from '../../../shared/livekit';
-import { VOICE_ROOMS, type VoiceRoom } from './voiceRooms';
+import { DEFAULT_VOICE_ROOM_NAMES, VOICE_ROOMS, type VoiceRoom } from './voiceRooms';
 
 export function parseRoomCatalog(value: unknown): VoiceRoom[] {
   const items = (value as {items?:unknown})?.items;
@@ -14,7 +14,10 @@ export function parseRoomCatalog(value: unknown): VoiceRoom[] {
       typeof room.description !== 'string' || room.description.length > 500 ||
       !(room.ownerId === null || typeof room.ownerId === 'string') ||
       !(room.ownerName === null || typeof room.ownerName === 'string')) throw new ApiError('invalid_response');
-    ids.add(room.id); return room;
+    ids.add(room.id);
+    // Migration 0013 rows with ownerId=null are SQL-immutable; project current default names by stable ID.
+    const defaultName = room.ownerId === null ? DEFAULT_VOICE_ROOM_NAMES[room.id] : undefined;
+    return defaultName && defaultName !== room.name ? { ...room, name: defaultName } : room;
   });
 }
 export function roomFailure(error: unknown): string {
