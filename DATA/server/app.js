@@ -20,6 +20,7 @@ const { createKeyService }=require('./e2ee/service');
 const { createKeyRouters }=require('./routes/keys');
 const {createEncryptedAttachmentService}=require('./messaging/attachments');
 const {createEncryptedAttachmentRouter}=require('./routes/attachments');
+const {createVoiceRooms,createVoiceRoomRouter}=require('./voice/rooms');
 
 function createApp({db,config=loadAuthConfig(),messageOptions={},...dependencies}) {
     const app=express();
@@ -38,11 +39,13 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},...dependencies
     // The combined DATA/realtime host installs the existing LiveKit handler here, before body parsing.
     // DATA still enforces its own Origin/transport/session/CSRF policy on every request.
     let directCallTokens=null;
-    app.all('/api/calls/token',middleware.requireAuth,(req,res,next)=>['GET','HEAD'].includes(req.method)?next():middleware.requireCsrf(req,res,next),(req,res,next)=>{
+    app.all(['/api/calls/token','/api/voice/token'],middleware.requireAuth,(req,res,next)=>['GET','HEAD'].includes(req.method)?next():middleware.requireCsrf(req,res,next),(req,res,next)=>{
         if(!directCallTokens)return sendError(res,'FEATURE_UNAVAILABLE',503);
         Promise.resolve(directCallTokens(req,res)).then(handled=>{if(!handled&&!res.headersSent)sendError(res,'FEATURE_UNAVAILABLE',503);},next);
     });
-    const social=createSocialService({db,auth,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
+    const voiceRooms=createVoiceRooms({db,auth,...(dependencies.limiter?{limiter:dependencies.limiter}:{})});
+    app.use('/api/voice/rooms',createVoiceRoomRouter(voiceRooms,middleware));
+    const social=createSocialService({db,auth,options:dependencies.socialOptions,...(dependencies.limiter ? {limiter:dependencies.limiter} : {})});
     const socialRouters=createSocialRouters(social,middleware);
     app.use('/api/users',socialRouters.users);
     app.use('/api/friends',socialRouters.friends);
@@ -92,7 +95,7 @@ function createApp({db,config=loadAuthConfig(),messageOptions={},...dependencies
         // Never log raw errors, bodies, cookies, SQL, password hashes or session/CSRF material.
         return sendError(res,'INTERNAL_ERROR',500);
     });
-    return {app,auth,social,conversations,keys,messaging,attachments,adapters:createAuthAdapters(auth),middleware,
+    return {app,auth,social,conversations,keys,messaging,attachments,voiceRooms,adapters:createAuthAdapters(auth),middleware,
         setDirectCallTokenHandler(handler){
             if(handler!==null&&typeof handler!=='function')throw new TypeError('Invalid direct call token handler');
             if(handler&&directCallTokens)throw new TypeError('Direct call token handler is already installed');

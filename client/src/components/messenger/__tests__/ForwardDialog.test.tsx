@@ -8,6 +8,16 @@ const conversations = [{ id: 'a', displayName: 'Alice' }, { id: 'b', displayName
   { id: 'd', displayName: 'Dan' }, { id: 'e', displayName: 'Eve' }, { id: 'f', displayName: 'Frank' }];
 const originalShowModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
 const originalClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
+
+test('shared media preview, safe failure feedback and Close release the same operation', async () => {
+  const close = jest.fn(), release = jest.fn(), confirm = jest.fn().mockResolvedValue({ failed: ['a'], errors: { a: 'Source media could not be decrypted.' } });
+  render(<ForwardDialog message={{ ...message, content: '', attachments: [{ id: 'file', name: 'private.pdf', type: 'file', url: '', sizeBytes: 100 }] }} conversations={conversations} onClose={close} onRelease={release} onConfirm={confirm} />);
+  expect(screen.getByText('private.pdf')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Alice' })); fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Source media could not be decrypted');
+  expect(release).not.toHaveBeenCalled(); fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+  expect(release).toHaveBeenCalledWith(confirm.mock.calls[0]![2]); expect(close).toHaveBeenCalled();
+});
 beforeAll(() => {
   Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value(this: HTMLDialogElement) { this.setAttribute('open', ''); } });
   Object.defineProperty(HTMLDialogElement.prototype, 'close', { configurable: true, value(this: HTMLDialogElement) { this.removeAttribute('open'); } });

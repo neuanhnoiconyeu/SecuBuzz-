@@ -22,7 +22,7 @@ test('DB-3 upgrade preserves users, sessions, Contacts and prior migration check
     const tables=['Users','UserProfiles','Sessions','Contacts','FriendRequests','Friendships','Blocks'];
     const before=Object.fromEntries(tables.map(table=>[table,db.prepare(`SELECT * FROM ${table}`).all()]));
     const history=db.prepare('SELECT * FROM SchemaMigrations ORDER BY version').all();
-    assert.deepEqual(migrate(db).applied,['0004-profiles-friends.sql','0005-conversation-provenance.sql','0006-encrypted-message-lifecycle.sql','0007-recipient-keys.sql','0008-authenticated-message-pins.sql','0009-authenticated-message-reactions.sql','0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql']);
+    assert.deepEqual(migrate(db).applied,['0004-profiles-friends.sql','0005-conversation-provenance.sql','0006-encrypted-message-lifecycle.sql','0007-recipient-keys.sql','0008-authenticated-message-pins.sql','0009-authenticated-message-reactions.sql','0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql','0013-voice-rooms.sql','0014-conversation-customization.sql','0015-customization-retention.sql']);
     for(const table of tables) {
         const columns=Object.keys(before[table][0]).join(',');assert.deepEqual(db.prepare(`SELECT ${columns} FROM ${table}`).all(),before[table]);
     }

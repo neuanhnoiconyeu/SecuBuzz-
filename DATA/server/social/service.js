@@ -1,16 +1,19 @@
 const { createSocialRepository }=require('../database/socialRepository');
 const { createSqliteRateLimiter }=require('../auth/rateLimiter');
 const { AuthError }=require('../auth/errors');
+const { createAvatarStorage }=require('./avatars');
 const v=require('./validation');
 const notFound=()=>{throw new AuthError('NOT_FOUND',404);};
 const conflict=()=>{throw new AuthError('CONFLICT',409);};
-const user=row=>({id:row.user_id,username:row.username,displayName:row.display_name,avatar:row.avatar});
+const avatarUrl=row=>row.avatar_sha256 ? `/api/users/${row.user_id}/avatar?v=${row.avatar_sha256.slice(0,12)}` : null;
+const user=row=>({id:row.user_id,username:row.username,displayName:row.display_name,avatar:row.avatar,...(row.avatar_sha256 ? {avatarUrl:avatarUrl(row)} : {})});
 const searchUser=row=>({...user(row),relationship:row.relationship,...(row.request_id ? {requestId:row.request_id} : {})});
 const request=row=>({id:row.request_id,user:user(row),direction:row.direction,status:row.status,createdAt:row.created_at,resolvedAt:row.resolved_at});
 const position=row=>[row.username_key,row.user_id];
 
-function createSocialService({db,auth,limiter=createSqliteRateLimiter(db)}) {
+function createSocialService({db,auth,limiter=createSqliteRateLimiter(db),options={}}) {
     const repository=createSocialRepository(db);const now=auth.now;
+    const avatarStorage=createAvatarStorage({db,options});
     function rate(buckets) {
         const result=limiter.consume(buckets,now());
         if(!result.allowed) {const error=new AuthError('RATE_LIMITED',429);error.retryAfterSeconds=result.retryAfterSeconds;throw error;}
@@ -137,6 +140,48 @@ function createSocialService({db,auth,limiter=createSqliteRateLimiter(db)}) {
         unblock(context,proof,id,body) {
             v.identifier(id);v.emptyBody(body);if(id===context.userId)v.invalid('userId');
             return write(context,proof,actor=>{repository.unblock(actor,id);event(actor,'user.unblocked',id);});
+        },
+        async uploadAvatar(context,proof,request) {
+            read(context,()=>{});
+            if(!proof || proof.type!=='session' || proof.sessionId!==context.sessionId || proof.userId!==context.userId) throw new AuthError('CSRF_INVALID',403);
+            const saved=await avatarStorage.readStream(request);
+            let oldKey=null;
+            try {
+                const profile=write(context,proof,(actor,at)=>{
+                    oldKey=repository.avatarRecord(actor)?.storage_key ?? null;
+                    repository.upsertAvatar(actor,saved,at);
+                    event(actor,'avatar.updated',actor);
+                    return ownProfile(actor);
+                });
+                if(oldKey && oldKey!==saved.storageKey)avatarStorage.remove(oldKey);
+                return {profile};
+            } catch(error) {
+                avatarStorage.remove(saved.storageKey);
+                throw error;
+            }
+        },
+        removeAvatar(context,proof,body) {
+            v.emptyBody(body);
+            let oldKey=null;
+            const profile=write(context,proof,actor=>{
+                oldKey=repository.avatarRecord(actor)?.storage_key ?? null;
+                repository.deleteAvatar(actor);
+                event(actor,'avatar.removed',actor);
+                return ownProfile(actor);
+            });
+            if(oldKey)avatarStorage.remove(oldKey);
+            return {profile};
+        },
+        getAvatar(context,id,query) {
+            v.identifier(id);
+            v.query(query,query.v!==undefined ? ['v'] : []);
+            return read(context,actor=>{
+                if(actor!==id)target(actor,id);
+                const record=repository.avatarRecord(id);
+                if(!record)notFound();
+                const filePath=avatarStorage.resolveKey(record.storage_key);
+                return {filePath,mimeType:record.mime_type,byteSize:record.byte_size};
+            });
         }
     };
 }

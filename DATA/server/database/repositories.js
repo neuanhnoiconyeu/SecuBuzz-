@@ -31,9 +31,13 @@ const directJoins = `JOIN ConversationMembers ml ON ml.conversation_id=c.convers
     JOIN AccountCredentials al ON al.user_id=c.dm_user_low AND al.status='active'
     JOIN AccountCredentials ah ON ah.user_id=c.dm_user_high AND ah.status='active'
     JOIN Users ul ON ul.user_id=c.dm_user_low JOIN UserProfiles pl ON pl.user_id=ul.user_id
-    JOIN Users uh ON uh.user_id=c.dm_user_high JOIN UserProfiles ph ON ph.user_id=uh.user_id`;
-const directColumns = `c.*,ul.username AS low_username,pl.display_name AS low_display_name,pl.avatar AS low_avatar,
-    uh.username AS high_username,ph.display_name AS high_display_name,ph.avatar AS high_avatar,
+    JOIN Users uh ON uh.user_id=c.dm_user_high JOIN UserProfiles ph ON ph.user_id=uh.user_id
+    LEFT JOIN UserProfileAvatars avl ON avl.user_id=ul.user_id
+    LEFT JOIN UserProfileAvatars avh ON avh.user_id=uh.user_id
+    LEFT JOIN ConversationThemes ct ON ct.conversation_id=c.conversation_id`;
+const directColumns = `c.*,ul.username AS low_username,pl.display_name AS low_display_name,pl.avatar AS low_avatar,avl.sha256 AS low_avatar_sha256,
+    uh.username AS high_username,ph.display_name AS high_display_name,ph.avatar AS high_avatar,avh.sha256 AS high_avatar_sha256,
+    coalesce(ct.theme_id,'default') AS theme_id,
     EXISTS(SELECT 1 FROM Friendships f WHERE f.user_low=c.dm_user_low AND f.user_high=c.dm_user_high AND f.origin='authenticated') AS interaction_allowed`;
 const directVisible = `c.kind='direct' AND c.origin='authenticated' AND c.archived_at IS NULL
     AND @actor IN (c.dm_user_low,c.dm_user_high)
@@ -151,7 +155,30 @@ function createRepositories(db) {
             listDirectForUser: (actor, {limit,after=null}) => all(`SELECT ${directColumns} FROM Conversations c ${directJoins}
                 WHERE ${directVisible} AND (@lastTime IS NULL OR (c.updated_at,c.conversation_id)<(@lastTime,@lastId))
                 ORDER BY c.updated_at DESC,c.conversation_id DESC LIMIT @take`,
-            {actor,take:limit+1,lastTime:after?.[0] ?? null,lastId:after?.[1] ?? null})
+            {actor,take:limit+1,lastTime:after?.[0] ?? null,lastId:after?.[1] ?? null}),
+            nicknamesFor(conversationIds) {
+                if (!conversationIds.length) return new Map();
+                const placeholders = conversationIds.map(() => '?').join(',');
+                const rows = all(`SELECT conversation_id, target_user_id, nickname FROM ConversationNicknames WHERE conversation_id IN (${placeholders})`, ...conversationIds);
+                const map = new Map();
+                for (const row of rows) {
+                    if (!map.has(row.conversation_id)) map.set(row.conversation_id, {});
+                    map.get(row.conversation_id)[row.target_user_id] = row.nickname;
+                }
+                return map;
+            },
+            setTheme(conversationId, themeId, actor, at) {
+                if (themeId === 'default') run('DELETE FROM ConversationThemes WHERE conversation_id=?', conversationId);
+                else run(`INSERT INTO ConversationThemes(conversation_id,theme_id,updated_by,updated_at) VALUES(?,?,?,?)
+                    ON CONFLICT(conversation_id) DO UPDATE SET theme_id=excluded.theme_id,updated_by=excluded.updated_by,updated_at=excluded.updated_at`,
+                    conversationId, themeId, actor, at);
+            },
+            setNickname(conversationId, targetUserId, nickname, actor, at) {
+                if (nickname === null) run('DELETE FROM ConversationNicknames WHERE conversation_id=? AND target_user_id=?', conversationId, targetUserId);
+                else run(`INSERT INTO ConversationNicknames(conversation_id,target_user_id,nickname,updated_by,updated_at) VALUES(?,?,?,?,?)
+                    ON CONFLICT(conversation_id,target_user_id) DO UPDATE SET nickname=excluded.nickname,updated_by=excluded.updated_by,updated_at=excluded.updated_at`,
+                    conversationId, targetUserId, nickname, actor, at);
+            }
         },
         members: {
             insert(input) {

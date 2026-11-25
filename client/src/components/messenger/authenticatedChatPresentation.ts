@@ -22,7 +22,8 @@ export function mergePinnedRows(history: readonly DecryptedRow[], pins: readonly
   });
 }
 export function conversationName(conversation: DirectConversation, actorId: string): string {
-  return conversation.participants.find(p => p.id !== actorId)?.displayName ?? 'Contact';
+  const peer = conversation.participants.find(p => p.id !== actorId);
+  return (peer && conversation.nicknames?.[peer.id]) || peer?.displayName || 'Contact';
 }
 export function presentConversations(conversations: readonly DirectConversation[], actorId: string,
   state: SecureLiveState, selectedId: string | null, localRows: readonly DecryptedRow[],
@@ -34,6 +35,7 @@ export function presentConversations(conversations: readonly DirectConversation[
     const presence = peer ? state.presence[peer.id]?.status : undefined;
     const latest=last?.text?decodeAuthenticatedContent(last.text):null;
     return { id: c.id, type: 'direct', displayName: conversationName(c, actorId),
+      ...(peer?.avatarUrl ? { avatarUrl: peer.avatarUrl } : {}),
       lastMessagePreview: last ? last.message.state === 'deleted' ? 'Message deleted' : last.error || last.text === null ? 'Message unavailable on this device' : latest?latest.text||(latest.voice?'Voice message':latest.attachments?'Attachment':''):'Message unavailable on this device' : 'Open conversation',
       lastActivityAt: last?.message.timestamp ?? c.updatedAt, unreadCount: state.unread[c.id] ?? 0,
       ...(presence && presence !== 'unknown' ? { presence } : {}) };

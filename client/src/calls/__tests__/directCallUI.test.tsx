@@ -47,7 +47,7 @@ test('incoming Accept opens an honest connecting preview, which times out withou
   render(<Preview />); fireEvent.click(screen.getByRole('button', { name: 'Incoming preview' }));
   expect(screen.getByRole('dialog', { name: 'Ava Morgan' })).toHaveAttribute('aria-modal', 'false');
   expect(screen.getByText(/Nobody is calling you/)).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Answer' }));
   expect(screen.getByRole('status')).toHaveTextContent('Connecting · UI preview');
   expect(screen.queryByLabelText('Call duration')).not.toBeInTheDocument();
   act(() => { jest.advanceTimersByTime(CALL_PREVIEW_CONNECT_MS); });
@@ -98,4 +98,11 @@ test('connected UI counts time only after media confirmation and freezes it afte
   view.rerender(<DirectCallLayer state={state} actions={actions} />);
   act(() => { jest.advanceTimersByTime(10000); });
   expect(screen.getByLabelText('Call duration')).toHaveTextContent('01:05'); expect(jest.getTimerCount()).toBe(0);
+});
+
+test('an active duration ticker is released when its call UI unmounts', () => {
+  const call: DirectCallSession = { id: 'active-duration', conversationId: 'dm-1', peer, kind: 'voice', direction: 'outgoing', source: 'transport', createdAt: Date.now() };
+  const actions = { accept: jest.fn(), decline: jest.fn(), hangUp: jest.fn(), dismiss: jest.fn() };
+  const view = render(<DirectCallLayer state={{ call, phase: 'connected', connectedAt: Date.now(), endedAt: null }} actions={actions} />);
+  expect(jest.getTimerCount()).toBe(1); view.unmount(); expect(jest.getTimerCount()).toBe(0);
 });

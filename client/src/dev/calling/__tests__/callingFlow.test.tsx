@@ -74,7 +74,7 @@ test('incoming notification uses real call actions to decline or accept and keep
   const fresh = await view(bob);
   await act(async () => { await fresh.broker.request(alice.id, C.initiate, { kind: 'voice' }); });
   notification = within(screen.getByRole('dialog', { name: 'Alice' }));
-  fireEvent.click(notification.getByRole('button', { name: 'Accept' }));
+  fireEvent.click(notification.getByRole('button', { name: 'Answer' }));
   await screen.findByText('Connecting');
   await waitFor(() => expect(fresh.media.room.connect).toHaveBeenCalledTimes(1));
   expect(fresh.client.calls.request).toHaveBeenCalledWith(C.accept, { callId });

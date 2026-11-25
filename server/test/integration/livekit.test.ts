@@ -70,6 +70,30 @@ test('missing adapters never issue production tokens even with valid LiveKit cre
   }
 });
 
+test('DATA catalog tokens use authenticated identity, a separate room and at most 30 seconds admission', async () => {
+  const id = 'room-12345678-1234-1234-1234-123456789abc';
+  const observed: unknown[] = [];
+  const server = await start({config:loadLiveKitConfig({...environment,LIVEKIT_ROOM_CONVERSATIONS:'{}'}),
+    authorizeCatalogRoom:async (who,roomId)=>{observed.push([who.userId,roomId]);return roomId===id;}});
+  const response=await server.post({roomId:id});assert.equal(response.status,200);
+  const details=await response.json() as LiveKitConnectionDetails;
+  const claims=await new TokenVerifier(apiKey,apiSecret).verify(details.token);
+  assert.equal(claims.name,actor.displayName);assert.equal(claims.sub,liveKitParticipantIdentity(actor));
+  assert.equal(claims.video?.room,details.roomName);assert.equal(claims.video?.canPublishData,false);
+  assert.ok((claims.exp as number)-(claims.nbf as number)<=30);
+  assert.deepEqual(observed,[[actor.userId,id],[actor.userId,id]]);
+  assert.equal((await server.post({roomId:'unknown'})).status,403);
+  assert.equal((await server.post({roomId:id,userId:'another'})).status,400);
+  assert.equal((await server.post({roomId:id},{'x-csrf-token':''})).status,403);
+  assert.equal((await server.post({roomId:id},{cookie:''})).status,401);
+});
+
+test('deleting a catalog room during token issuance prevents returning a join capability',async()=>{
+  let checks=0;
+  const server=await start({authorizeCatalogRoom:async()=>++checks===1});
+  assert.equal((await server.post()).status,403);assert.equal(checks,2);
+});
+
 test('disabled, missing, and invalid configuration fail closed without leaking credentials', async () => {
   for (const env of [{}, { ...environment, LIVEKIT_ENABLED: 'false' }, { ...environment, LIVEKIT_API_SECRET: '' },
     { ...environment, LIVEKIT_URL: 'ws://media.example.invalid' }, { ...environment, LIVEKIT_ROOM_CONVERSATIONS: '{}' },

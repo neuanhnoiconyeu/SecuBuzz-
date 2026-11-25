@@ -30,6 +30,24 @@ function setup(...responses: Response[]) {
   return { service, fetcher, api: service.createSessionApi(alice) };
 }
 
+test.each([
+  ['/api/voice/rooms','GET'], ['/api/voice/rooms','POST'], ['/api/voice/token','POST'],
+  ['/api/voice/rooms/room-12345678-1234-1234-1234-123456789abc','PATCH'],
+  ['/api/voice/rooms/room-12345678-1234-1234-1234-123456789abc','DELETE'],
+] as const)('voice contract %s %s preserves account checks and CSRF',async(path,method)=>{
+ const replies=[response(200,{user:alice}),...(method==='GET'?[]:[response(200,proof)]),response(200,{ok:true}),response(200,{user:alice})];
+ const {api,fetcher}=setup(...replies);
+ await expect(api.request(path,{method})).resolves.toEqual({ok:true});
+ expect(fetcher.mock.calls[method==='GET'?1:2]).toEqual([path,expect.objectContaining({method,credentials:'same-origin',...(method==='GET'?{}:{headers:expect.objectContaining({'X-CSRF-Token':proof.csrfToken})})})]);api.dispose();
+});
+
+test('voice room routing remains canonical and caller account changes invalidate a response',async()=>{
+ const {api,fetcher}=setup(response(200,{user:alice}),response(200,proof),response(200,{ok:true}),response(200,{user:bob}));
+ for(const path of ['/api/voice/rooms?owner=other','/api/voice/token/','https://other.test/api/voice/rooms','/api/voice/rooms/../rooms'])await expect(api.request(path,{method:'POST'})).rejects.toMatchObject({code:'unavailable'});
+ expect(fetcher).not.toHaveBeenCalled();
+ await expect(api.request('/api/voice/token',{method:'POST'})).rejects.toMatchObject({code:'cancelled'});api.dispose();
+});
+
 test('direct-call tokens use scoped DATA identity, fresh CSRF and canonical POST routing',async()=>{
   const details={token:'test-only-signed-token'};
   const {api,fetcher}=setup(response(200,{user:alice}),response(200,proof),response(200,details),response(200,{user:alice}));

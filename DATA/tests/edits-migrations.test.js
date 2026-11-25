@@ -5,7 +5,7 @@ test('migration 11 preserves all existing data, schema objects and encryption gu
  for(const m of loadMigrations().filter(m=>m.version<=10))fs.writeFileSync(path.join(directory,m.name),m.sql);
  migrate(db,{directory});direct(repositories);repositories.messages.insert(encrypted());
  const rows=db.prepare('SELECT * FROM Messages').all(),objects=db.prepare("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'").all();
- assert.deepEqual(migrate(db).applied,['0011-encrypted-message-revisions.sql','0012-groups.sql']);
+ assert.deepEqual(migrate(db).applied,['0011-encrypted-message-revisions.sql','0012-groups.sql','0013-voice-rooms.sql','0014-conversation-customization.sql','0015-customization-retention.sql']);
  assert.deepEqual(db.prepare('SELECT * FROM Messages').all(),rows);
  for(const o of objects)assert.deepEqual(db.prepare('SELECT type,name,sql FROM sqlite_master WHERE type=? AND name=?').get(o.type,o.name),o);
  assert.throws(()=>db.prepare("UPDATE Messages SET ciphertext='overwrite'").run(),/immutable/);

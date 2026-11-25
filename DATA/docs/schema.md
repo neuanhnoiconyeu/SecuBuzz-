@@ -1,7 +1,7 @@
 # DATA schema and ERD
 
-Current working-tree schema is version 12 (`0012-groups.sql`); its additive group
-schema is documented below. The existing DB-4B key schema is unchanged:
+Current working-tree schema is version 15 (`0015-customization-retention.sql`).
+The additive group schema is documented below. The existing DB-4B key schema is unchanged:
 `0007-recipient-keys.sql` adds DeviceKeys
 (public signing/agreement points, self-signature, account ownership, stable deviceId,
 monotonic keyVersion and active/superseded/revoked status), ConversationKeyEpochs
@@ -52,6 +52,9 @@ DB-4B adds `0006-encrypted-message-lifecycle.sql` to the existing Messages table
 | AuthChallenges | Anonymous pre-session proof verifiers; PK challenge_hash | Hash-only nonce/CSRF storage, integer issue/expiry times; expiry index. No authenticated user association. |
 | AuthRateLimits | Durable shared fixed-window counters; PK bucket_hash | Hashed source/identifier/account keys, integer times/attempt count; expiry index. Independent infrastructure table. |
 | SocialRevisions | DB-3 user-scoped version; PK/FK user_id to Users | Nonnegative integer updated transactionally for visible social changes; supports coherent paginated snapshots, not relationship copies or a global activity count. |
+| UserProfileAvatars | PK/FK `user_id` to Users | Opaque storage key, allowlisted image MIME type, bounded byte size, content digest and update time. Foreign key is restrictive; avatar file replacement/removal is explicit service behavior. |
+| ConversationThemes | PK/FK `conversation_id` to Conversations; nullable `updated_by` FK to Users | Allowlisted theme ID and update time. Foreign keys are restrictive. |
+| ConversationNicknames | Composite PK `(conversation_id,target_user_id)`; optional `updated_by` FK to Users | Bounded nonblank display nickname and update time. Foreign keys are restrictive. |
 
 The schema does not encode full business authorization. DB-3 must enforce block restrictions and atomic friendship transitions. DB-5 must enforce invitations, history visibility, owner transfer, at least one owner, and authorized leave/removal. Membership rows are retained to keep historical sender and receipt references valid. Rejoining and multiple membership intervals need an agreed DB-5 policy. Profile length/content rules require API validation in DB-3. Timestamp syntax outside session integers remains a trusted DAL caller responsibility.
 
@@ -102,6 +105,9 @@ Encryption metadata is stored unchanged: algorithm, version, encoding, IV, ciphe
 | 10 | `0010-encrypted-attachments.sql` |
 | 11 | `0011-encrypted-message-revisions.sql` |
 | 12 | `0012-groups.sql` |
+| 13 | `0013-voice-rooms.sql` |
+| 14 | `0014-conversation-customization.sql` |
+| 15 | `0015-customization-retention.sql` |
 
 ### Added tables
 
@@ -167,3 +173,32 @@ The backfill inserts one extension for every group conversation of both origins:
 `first_seq` is the lowest authenticated message sequence created at or after that member's join, or the authenticated high-water plus 1 if no such message exists (1 for an empty stream). For active members `last_seq` is NULL. For former members it is the highest authenticated sequence created at or before leaving, or `first_seq - 1` when none qualifies. The SQL uses `strftime` normalization for ISO and legacy SQLite timestamp forms. Unparseable times match no message and narrow access; they never justify widening history. This bootstrap rule does not rewrite Messages or membership rows. Normal joins and closures thereafter use sequence high-water, not timestamp ordering.
 
 Schema presence is not authorization. The repository exposes a managed group only when kind is group, origin is authenticated and an extension exists. Active authorized members retain earlier permitted intervals after rejoining; absence gaps never become visible. `all` additionally allows sequences before the first join. Former members and never-members receive no history. Server filtering does not replace key-based confidentiality; E2EE and realtime security remain under their existing contracts.
+
+## Authenticated community voice rooms (V2.4)
+
+Migration `0013-voice-rooms.sql` adds `VoiceRooms`, independent of Conversations,
+Messages, device keys and encrypted attachments. Rooms are shared with all signed-in
+users; this catalog does not grant direct-conversation access. The owner is a
+session-derived `Users` foreign key with ON DELETE RESTRICT. Default Lounge, Study
+Room and Dev Corner rows have no account owner and cannot be renamed or removed.
+`voice_rooms_active_name` enforces unique normalized active names;
+`voice_rooms_owner` supports owner quotas. `voice_rooms_identity` preserves ownership,
+identity, creation time, defaults and terminal deletion. `voice_rooms_retained`
+retains tombstones for room admission and media cleanup. No existing row or trigger
+is changed. Room metadata and participant display names are not media E2EE.
+
+## Conversation customization (V2.5)
+
+Migration 0014 adds `UserProfileAvatars`, `ConversationThemes` and
+`ConversationNicknames`. It is immutable and already applied with a recorded
+checksum; its six historical non-restrictive delete actions are pinned as a
+file-and-checksum-specific linter exception. Migration 0015 rebuilds those tables
+with `ON DELETE RESTRICT`, copies all stored values and recreates the avatar
+social-revision triggers. No customization rows are cascaded or nulled by a
+parent deletion. Avatar bytes remain in private storage and are replaced or
+removed only through the explicit avatar service.
+
+`UserProfileAvatars` belongs to one user. Theme and nickname rows belong to a
+conversation; nickname targets and optional updater identities are user-owned
+references. These tables are included in DATA group snapshots so mutation and
+rollback checks cover V2.5 state as well as group and messaging data.

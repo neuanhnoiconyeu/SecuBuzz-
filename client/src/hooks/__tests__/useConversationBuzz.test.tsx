@@ -41,3 +41,23 @@ test('unmount cancels timers and ignores a late acknowledgement', async () => {
   let pending!: Promise<void>; act(() => { pending = result.current.sendBuzz(event.conversationId); }); unmount();
   await act(async () => { resolve(event); await pending; }); expect(jest.getTimerCount()).toBe(0);
 });
+
+test('workspace receiving includes inactive sections, deduplicates reordered IDs and never sends automatically', () => {
+  const send = jest.fn();
+  const { result, rerender, unmount } = renderHook(({ value }) => useConversationBuzz(value, false, send, true), { initialProps: { value: undefined as BuzzEvent | undefined } });
+  rerender({ value: event }); expect(result.current.notice).toBe('Bob sent you a BUZZ!');
+  act(() => jest.advanceTimersByTime(BUZZ_EFFECT_MS));
+  rerender({ value: { ...event, id: 'next' } });
+  act(() => jest.advanceTimersByTime(BUZZ_EFFECT_MS));
+  act(() => result.current.dismiss());
+  rerender({ value: event }); expect(result.current.notice).toBe(''); expect(result.current.effectConversation).toBeNull();
+  expect(send).not.toHaveBeenCalled(); unmount(); expect(jest.getTimerCount()).toBe(0);
+});
+
+test('Buzz sound callback runs once only for a new incoming event, never cached events or sending acknowledgements', async () => {
+  const notify = jest.fn(), send = jest.fn().mockResolvedValue({ ...event, id: 'outgoing' });
+  const { result, rerender } = renderHook(({ value }) => useConversationBuzz(value, true, send, true, notify), { initialProps: { value: event } });
+  expect(notify).not.toHaveBeenCalled(); await act(() => result.current.sendBuzz(event.conversationId)); expect(notify).not.toHaveBeenCalled();
+  rerender({ value: { ...event, id: 'new' } }); rerender({ value: { ...event, id: 'new' } });
+  expect(notify).toHaveBeenCalledTimes(1); expect(notify).toHaveBeenCalledWith({ ...event, id: 'new' });
+});

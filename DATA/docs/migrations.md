@@ -39,6 +39,9 @@ Starting the existing `npm start` also applies pending migrations before mountin
 | `0010-encrypted-attachments.sql` | Encrypted attachment batch association, staging/retention metadata and Unsend revocation; voice reuses this contract. |
 | `0011-encrypted-message-revisions.sql` | Append-only signed encrypted edits; original ciphertext and identity remain immutable. |
 | `0012-groups.sql` | Version 12 (DB-5B draft): additive group extensions, membership intervals, Invitations, read positions and creation keys; backfills existing groups and adds immutable-history, overlap and replacement guards. No pre-existing row or published migration changes. |
+| `0013-voice-rooms.sql` | Adds the persistent authenticated community-room catalog and protected defaults. |
+| `0014-conversation-customization.sql` | Adds profile avatars, conversation themes and nicknames. This immutable applied file retains its recorded checksum. |
+| `0015-customization-retention.sql` | Rebuilds the three customization tables with restrictive foreign keys, preserving rows and avatar revision triggers. |
 
 The runner obtains a `BEGIN IMMEDIATE` writer lock, validates existing history, applies **all** pending versions and checks foreign keys within one transaction. Failures roll back the entire pending batch, including the migration ledger and Messages rebuild. Already committed earlier versions remain intact. Success records each version once. Repeating the command reports zero migrations applied.
 
@@ -114,3 +117,43 @@ The following inventory contains all 38 explicitly named objects. SQLite also su
 ### Backfill rule
 
 Every group of both origins receives one extension with NULL description, `from_joined` policy, revision 1 and the existing conversation creation time. Every existing group member receives interval 1 with the original join/leave times. `first_seq` is the lowest authenticated message sequence created at or after joining, otherwise authenticated high-water +1 (1 when there are no messages). Active `last_seq` is NULL; for a former member it is the highest authenticated sequence created at or before leaving, otherwise `first_seq - 1` (an empty closed period). The SQL compares `strftime`-normalized timestamp forms, including legacy SQLite strings; an unparseable time matches no message, narrowing visibility. No original row, ciphertext, membership timestamp or version-1-to-7 checksum changes. This conservative bootstrap is separate from subsequent sequence-based join/leave boundaries.
+
+## V2.4 additive room migration
+
+`0013-voice-rooms.sql` follows immutable migrations 0001–0012. It creates the
+independent authenticated community-room catalog and its three protected defaults.
+It does not rewrite existing account, conversation, message, attachment or E2EE
+records. Apply only with the canonical migration runner; repeat execution verifies
+the existing ledger/checksums and applies nothing. The whole pending batch rolls
+back on failure. Preserve a consistent database backup before first startup of an
+updated image. The room tombstones are retained; there is no destructive down
+migration. See `docs/custom-voice-rooms-v2-4.md` for authorization, token admission
+limits, room deletion and verification results.
+
+## V2.5 conversation customization retention
+
+`0014-conversation-customization.sql` is already recorded in the primary database
+ledger with normalized SHA-256
+`6a132cff0ce19ee83be87c6f26b8dac3277c25fa95e654f04671cd53200d9748`. Do not
+rewrite it: the migration runner rejects a checksum mismatch. The applied file
+contains four `ON DELETE CASCADE` and two `ON DELETE SET NULL` actions, unlike
+the repository's retention policy. The migration linter grandfathers only those
+six findings for that exact filename and checksum; modified content, copied SQL
+and all other migrations remain subject to the normal rule.
+
+`0015-customization-retention.sql` creates replacement tables, copies every
+customization row, swaps the tables transactionally and restores the three
+avatar revision triggers. All customization foreign keys now use
+`ON DELETE RESTRICT`: avatar metadata remains owned by its user, preferences
+remain tied to their conversation and referenced users, and deletion cannot
+silently discard customization history. Avatar file replacement/removal
+continues through the explicit avatar service. No account-erasure API is added.
+
+The conversation API keeps the exact historical DTO as its default contract.
+Callers opt into V2.5 `themeId`, `nicknames` and participant `avatarUrl` fields
+with `?contractVersion=2`; the authenticated E2EE client requests and strictly
+parses that version. List cursors are bound to their response contract version.
+
+The migration runner applies 0015 with foreign keys enabled and checks
+referential integrity before commit. Test this upgrade against a disposable
+backup before deploying; this task did not apply it to the primary database.

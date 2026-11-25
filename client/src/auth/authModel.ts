@@ -1,7 +1,7 @@
 import { DISPLAY_NAME_MAX_LENGTH, type UserProfile } from '@/profiles/profileModel';
 
 /** Authentication reuses the existing profile identity; account/private fields are excluded. */
-export type AuthUser = Pick<UserProfile, 'id' | 'username' | 'displayName' | 'avatar' | 'isDemo'>;
+export type AuthUser = Pick<UserProfile, 'id' | 'username' | 'displayName' | 'avatar' | 'avatarUrl' | 'isDemo'>;
 
 export interface LoginInput {
   identifier: string;

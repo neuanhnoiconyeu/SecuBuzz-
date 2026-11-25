@@ -239,6 +239,7 @@ const handleSendMessage = useCallback(async (
     <section className="chat-window chat-attachment-drop-target" aria-label={`${contactName} conversation`} data-buzz-active={buzzBusy} {...drop.bind}>
       {drop.dragging && <div className="chat-attachment-drop-overlay" aria-hidden="true">Drop files to attach</div>}
       <ConversationHeader
+        active={presentationActive}
         name={contactName}
         transitionKey={conversationId}
         headingRef={chatHeadingRef}

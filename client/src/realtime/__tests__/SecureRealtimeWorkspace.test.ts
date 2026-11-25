@@ -4,6 +4,10 @@ import type { DecryptedRow, SecureMessagingSession } from '@/security/e2ee/sessi
 import { mergeSecureRows, SecureRealtimeWorkspace } from '../SecureRealtimeWorkspace';
 import { SocketFailure } from '../authenticatedProtocol';
 import { ack, conversation, envelope, FakeSocket, flush, proof } from '../testing/authenticatedFixtures';
+import { useSyncExternalStore } from 'react';
+import { act, renderHook } from '@testing-library/react';
+import { useBrowserTabNotifications } from '@/notifications/useBrowserTabNotifications';
+import { BRAND_NAME } from '@/components/branding/brandConstants';
 const row = (sequence = 1, own = false): DecryptedRow => ({ message: { ...envelope, id: 'wire-' + sequence, senderId: own ? 'alice' : 'bob',
   senderName: own ? 'Alice' : 'Bob', storageId: 'storage-' + sequence, storedAt: envelope.timestamp, updatedAt: envelope.timestamp,
   sequence, revision: 1, state: 'active', deletedAt: null }, text: 'Locally decrypted fixture ' + sequence, error: null });
@@ -17,6 +21,93 @@ async function setup(initial: DecryptedRow[] = []) {
   await live.refresh(); live.transport.start(); await flush(); return { live, session, sockets, api };
 }
 beforeEach(() => jest.useFakeTimers()); afterEach(() => jest.useRealTimers());
+
+function notificationWire(value: DecryptedRow) {
+  const { storageId: _storage, storedAt: _stored, updatedAt: _updated, sequence: _sequence, revision: _revision, state: _state, deletedAt: _deleted, ...wire } = value.message;
+  return { ...wire, deliveryStatus: 'sent' };
+}
+
+test('browser tab consumes canonical unread: initial history, peer replay, own sends and reconnect cannot double count', async () => {
+  const original = document.title; document.title = BRAND_NAME;
+  const h = await setup([row(1)]);
+  const view = renderHook(() => { const state = useSyncExternalStore(h.live.subscribe, h.live.getSnapshot); useBrowserTabNotifications(state.unread, null); });
+  expect(document.title).toBe(BRAND_NAME);
+  await act(async () => {
+    h.session.history.mockResolvedValue({ items: [row(1), row(2)], nextCursor: null });
+    h.sockets[0]!.fire('message:new', notificationWire(row(2)), jest.fn());
+    h.sockets[0]!.fire('message:new', notificationWire(row(2)), jest.fn()); await flush();
+  });
+  expect(document.title).toBe(`(1) ${BRAND_NAME}`);
+  await act(async () => {
+    await h.live.sync(conversation.id); h.sockets[0]!.fire('message:new', notificationWire(row(1)), jest.fn());
+    h.session.history.mockResolvedValue({ items: [row(1), row(2), row(3, true)], nextCursor: null });
+    h.sockets[0]!.fire('message:new', notificationWire(row(3, true)), jest.fn()); await flush();
+    h.sockets[0]!.drop(); jest.advanceTimersByTime(1000); await flush(); await flush();
+    h.sockets.at(-1)!.fire('message:new', notificationWire(row(2)), jest.fn()); await flush();
+  });
+  expect(document.title).toBe(`(1) ${BRAND_NAME}`);
+  const select = jest.spyOn(h.live, 'select');
+  act(() => { window.dispatchEvent(new Event('focus')); document.dispatchEvent(new Event('visibilitychange')); });
+  expect(select).not.toHaveBeenCalled(); expect(document.title).toBe(`(1) ${BRAND_NAME}`);
+  act(() => h.live.select(conversation.id, true)); expect(document.title).toBe(BRAND_NAME);
+  view.unmount(); h.live.dispose(); document.title = original;
+});
+
+test('new verified live messages publish generic metadata once; history, own sends and replay never notify', async () => {
+  const h = await setup([row(1)]); await flush();
+  expect(h.live.getSnapshot().synchronized).toBeGreaterThan(0);
+  expect(h.live.getSnapshot().incomingMessage).toBeUndefined();
+  const notices: unknown[] = []; let previous: unknown;
+  const unsubscribe = h.live.subscribe(() => {
+    const current = h.live.getSnapshot().incomingMessage;
+    if (current && current !== previous) notices.push(current);
+    previous = current;
+  });
+  h.session.history.mockResolvedValue({ items: [row(1), row(2)], nextCursor: null });
+  h.sockets[0]!.fire('message:new', notificationWire(row(2)), jest.fn());
+  h.sockets[0]!.fire('message:new', notificationWire(row(2)), jest.fn()); await flush();
+  expect(notices).toEqual([{ id: 'wire-2', conversationId: conversation.id, senderId: 'bob', senderName: 'Bob' }]);
+  expect(JSON.stringify(notices)).not.toContain('Locally decrypted');
+  h.sockets[0]!.fire('message:new', notificationWire(row(1)), jest.fn()); await flush();
+  h.session.history.mockResolvedValue({ items: [row(1), row(2), row(3, true)], nextCursor: null });
+  h.sockets[0]!.fire('message:new', notificationWire(row(3, true)), jest.fn()); await flush();
+  h.session.history.mockResolvedValue({ items: [row(1), row(2), row(3, true), row(4)], nextCursor: null });
+  await h.live.sync(conversation.id);
+  expect(notices).toHaveLength(1); unsubscribe(); h.live.dispose();
+});
+
+test('reconnect history and replay stay silent, while a later new live message still notifies', async () => {
+  const h = await setup([row(1)]);
+  h.sockets[0]!.drop();
+  h.session.history.mockResolvedValue({ items: [row(1), row(2)], nextCursor: null });
+  jest.advanceTimersByTime(1000); await flush(); await flush();
+  const socket = h.sockets.at(-1)!;
+  socket.fire('message:new', notificationWire(row(2)), jest.fn()); await flush();
+  expect(h.live.getSnapshot().incomingMessage).toBeUndefined();
+  h.session.history.mockResolvedValue({ items: [row(1), row(2), row(3)], nextCursor: null });
+  socket.fire('message:new', notificationWire(row(3)), jest.fn()); await flush();
+  expect(h.live.getSnapshot().incomingMessage?.id).toBe('wire-3'); h.live.dispose();
+});
+
+test('failed decryption and unauthorized peer events cannot create a notification', async () => {
+  const h = await setup(); h.session.decryptIncoming.mockRejectedValue(new E2eeError('decryption_failed'));
+  h.session.history.mockResolvedValue({ items: [{ ...row(), text: null, error: 'Verification failed' }], nextCursor: null });
+  h.sockets[0]!.fire('message:new', notificationWire(row()), jest.fn()); await flush();
+  expect(h.live.getSnapshot().incomingMessage).toBeUndefined();
+  h.sockets[0]!.fire('message:new', { ...notificationWire(row(2)), senderId: 'not-a-participant' }, jest.fn()); await flush();
+  expect(h.live.getSnapshot().incomingMessage).toBeUndefined(); h.live.dispose();
+});
+
+test('events arriving during connection reconciliation cannot turn into delayed history alerts', async () => {
+  const h = await setup([row(1)]); h.sockets[0]!.drop();
+  let release!: (value: { items: DecryptedRow[]; nextCursor: null }) => void;
+  h.session.history.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+  jest.advanceTimersByTime(1000); await flush();
+  h.session.history.mockResolvedValue({ items: [row(1), row(2)], nextCursor: null });
+  h.sockets.at(-1)!.fire('message:new', notificationWire(row(2)), jest.fn()); await flush();
+  release({ items: [row(1), row(2)], nextCursor: null }); await flush(); await flush();
+  expect(h.live.getSnapshot().incomingMessage).toBeUndefined(); h.live.dispose();
+});
 
 test('Buzz changes only ephemeral workspace state, preserving rows, receipts, history and encryption paths', async () => {
   const h = await setup([row(1)]), before = h.live.getSnapshot();
@@ -163,9 +254,50 @@ test('authorization removal clears rows, previews, typing, unread and grants; la
   const h = await setup([row()]); let resolve!: (value: string) => void;
   h.session.decryptIncoming.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
   h.sockets[0]!.fire('message:new', { ...envelope, senderId: 'bob', deliveryStatus: 'sent' }, jest.fn());
-  h.session.api.conversations.mockResolvedValue({ items: [{ ...conversation, interactionAllowed: false }], nextCursor: null }); await h.live.refresh();
+  // DATA omits blocked conversations entirely; interactionAllowed:false still permits member history reads.
+  h.session.api.conversations.mockResolvedValue({ items: [], nextCursor: null }); await h.live.refresh();
   resolve('previous conversation plaintext'); await flush(); expect(h.live.getSnapshot().rows[conversation.id]).toBeUndefined();
   await expect(h.live.send(conversation.id, 'Alice', 'never sent', 'live', jest.fn())).rejects.toBeInstanceOf(ApiError); h.live.dispose();
+});
+
+test('unblock restores read-only history without crypto preparation or write grants; renewed friendship restores realtime', async () => {
+  const h = await setup([row(1)]);
+  h.session.api.conversations.mockResolvedValue({ items: [], nextCursor: null }); await h.live.refresh();
+  expect(h.live.getSnapshot().rows[conversation.id]).toBeUndefined();
+  h.session.revalidate.mockClear(); h.session.api.conversations.mockResolvedValue({ items: [{ ...conversation, interactionAllowed: false }], nextCursor: null });
+  await h.live.refresh(); await flush();
+  expect(h.live.getSnapshot().rows[conversation.id]!.map(r => r.message.id)).toEqual(['wire-1']);
+  expect(h.session.revalidate).not.toHaveBeenCalled();
+  await expect(h.live.send(conversation.id, 'Alice', 'not yet permitted', 'live', jest.fn())).rejects.toBeInstanceOf(ApiError);
+  expect(h.session.send).not.toHaveBeenCalled();
+  h.session.api.conversations.mockResolvedValue({ items: [conversation], nextCursor: null }); await h.live.refresh(); await flush(); await flush();
+  expect(h.session.revalidate).toHaveBeenCalled(); expect(h.live.getSnapshot().rows[conversation.id]![0]!.message.id).toBe('wire-1');
+  h.live.dispose();
+});
+
+test('read-only history remains available after unfriend, but blocking discards it and an in-flight history cannot restore blocked rows', async () => {
+  const h = await setup([row(1)]);
+  h.session.api.conversations.mockResolvedValue({ items: [{ ...conversation, interactionAllowed: false }], nextCursor: null }); await h.live.refresh();
+  expect(h.live.getSnapshot().rows[conversation.id]).toHaveLength(1);
+  let finish!: (result: unknown) => void;
+  h.session.history.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; })); const loading = h.live.sync(conversation.id);
+  h.session.api.conversations.mockResolvedValue({ items: [], nextCursor: null }); await h.live.refresh();
+  finish({ items: [row(1)], nextCursor: null }); await loading;
+  expect(h.live.getSnapshot().rows[conversation.id]).toBeUndefined(); h.live.dispose();
+});
+
+test.each(['response', 'denial'] as const)('a late pre-block history %s cannot strand the unblocked read-only conversation', async outcome => {
+  const h = await setup([row(1)]);
+  let finish!: () => void;
+  h.session.history.mockImplementationOnce(() => new Promise((resolve, reject) => {
+    finish = () => outcome === 'response' ? resolve({ items: [row(1)], nextCursor: null }) : reject(new ApiError('forbidden'));
+  }));
+  const loading = h.live.sync(conversation.id).catch(() => {});
+  h.session.api.conversations.mockResolvedValue({ items: [], nextCursor: null }); await h.live.refresh();
+  h.session.api.conversations.mockResolvedValue({ items: [{ ...conversation, interactionAllowed: false }], nextCursor: null }); await h.live.refresh();
+  finish(); await loading; await flush();
+  expect(h.live.getSnapshot().rows[conversation.id]?.map(r => r.message.id)).toEqual(['wire-1']);
+  expect(h.live.getSnapshot().errors[conversation.id]).toBeUndefined(); h.live.dispose();
 });
 test('typing expires and stops on selection change/disconnect; invisible unknown presence is removed', async () => {
   const h = await setup(); h.live.select(conversation.id, true); h.live.typing(conversation.id);

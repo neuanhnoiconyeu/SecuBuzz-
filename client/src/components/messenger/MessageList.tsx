@@ -1,9 +1,9 @@
 import { UnsendDialog, type UnsendScope } from './UnsendDialog';
-import { QUICK_EMOJIS, emojiName, emojiOnlyCount } from './emojiData';
+import { QUICK_EMOJIS, emojiName, isEmojiOnlyMessage } from './emojiData';
 import { EmojiPicker } from './EmojiPicker';
 import { rememberEmoji } from './recentEmojis';
 import { useAnchoredMessagePopover } from '@/hooks/useAnchoredMessagePopover';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import {
   AlertTriangle, ArrowDown, Check, Edit2, Forward, LockKeyhole, MoreHorizontal,
@@ -12,6 +12,8 @@ import {
 import { BrandLogo } from '@/components/branding';
 import { Badge, Button, Surface } from '@/components/ui';
 import type { ChatMessage, TransportMode } from '@/messaging/messageModel';
+import type { DirectCallSummary } from '@/calls/directCallHistory';
+import { CallEventBubble } from '@/components/calls/CallEventBubble';
 import { DEMO_MESSAGING_CAPABILITIES, type MessagingCapabilities } from '@/messaging/messagingCapabilities';
 import { AI_MAX_INPUT, type AIMessageAction } from '@/ai/aiModel';
 import { useMessageEntryMotion } from './useMessageEntryMotion';
@@ -21,6 +23,8 @@ import './message-reactions.css';
 
 export interface MessageListProps {
   messages: ChatMessage[];
+  /** Session-only call observations already scoped to the authorized conversation. */
+  callEvents?: readonly DirectCallSummary[] | undefined;
   currentUserId: string;
   /** Current display label only; stored authenticated sender metadata stays unchanged. */
   currentUserName?: string;
@@ -47,7 +51,12 @@ export interface MessageListProps {
   onForwardMessage?: (message: ChatMessage) => void;
   canForwardMessage?: (message:ChatMessage)=>boolean;
   verifiedMessageIds?: ReadonlySet<string>;
+  emptyState?: { title: string; description: string } | undefined;
 }
+
+const noCallEvents: readonly DirectCallSummary[] = [];
+type TimelineEntry = { key: string; message: ChatMessage; call?: never }
+  | { key: string; call: DirectCallSummary; message?: never };
 
 function formatTime(timestamp: string): string {
   const date = new Date(timestamp);
@@ -78,6 +87,7 @@ function isAcceptedMessage(message: ChatMessage): boolean {
 
 export function MessageList({
   messages,
+  callEvents = noCallEvents,
   currentUserId,
   currentUserName = 'You',
   active = true,
@@ -100,7 +110,24 @@ export function MessageList({
   transportMode = 'local-demo',
   capabilities = DEMO_MESSAGING_CAPABILITIES,
   verifiedMessageIds,
+  emptyState,
 }: MessageListProps) {
+  const timeline = useMemo(() => {
+    const calls = [...new Map(callEvents.map(call => [call.id, call])).values()]
+      .sort((a, b) => a.endedAt - b.endedAt || a.id.localeCompare(b.id));
+    const entries: TimelineEntry[] = [];
+    let nextCall = 0;
+    // Preserve authenticated message order; interleave local observations by their end time.
+    for (const message of messages) {
+      while (nextCall < calls.length && calls[nextCall]!.endedAt <= Date.parse(message.timestamp)) {
+        const call = calls[nextCall++]!;
+        entries.push({ key: `call:${call.id}`, call });
+      }
+      entries.push({ key: `message:${message.id}`, message });
+    }
+    for (const call of calls.slice(nextCall)) entries.push({ key: `call:${call.id}`, call });
+    return entries;
+  }, [messages, callEvents]);
   // A callback cannot enable an operation unsupported by this transport.
   const onReplyMessage = capabilities.reply ? suppliedReply : undefined;
   const onEditMessage = capabilities.edit ? suppliedEdit : undefined;
@@ -111,8 +138,7 @@ export function MessageList({
   const onForwardMessage = capabilities.forward ? suppliedForward : undefined;
   const historyRef = useRef<HTMLDivElement>(null);
   const isNearBottom = useRef(true);
-  const previousLength = useRef(messages.length);
-  const previousPage = useRef({ first: messages[0]?.id, last: messages.at(-1)?.id, height: 0 });
+  const previousPage = useRef({ first: timeline[0]?.key, last: timeline.at(-1)?.key, height: 0, keys: new Set(timeline.map(entry => entry.key)) });
   const initialScrollHandled = useRef(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const { enteringIds, finishEntry } = useMessageEntryMotion(messages, active);
@@ -295,17 +321,16 @@ export function MessageList({
     const history = historyRef.current;
     if (!initialScrollHandled.current) {
       initialScrollHandled.current = true;
-      previousLength.current = messages.length;
-      previousPage.current = { first: messages[0]?.id, last: messages.at(-1)?.id, height: history?.scrollHeight ?? 0 };
-      if (messages.length > 0 && history) {
+      previousPage.current = { first: timeline[0]?.key, last: timeline.at(-1)?.key, height: history?.scrollHeight ?? 0, keys: new Set(timeline.map(entry => entry.key)) };
+      if (timeline.length > 0 && history) {
         history.scrollTop = history.scrollHeight;
         isNearBottom.current = true;
       }
       return;
     }
 
-    const addedCount = messages.length - previousLength.current;
-    const prepended = addedCount > 0 && previousPage.current.first && messages[0]?.id !== previousPage.current.first && messages.at(-1)?.id === previousPage.current.last;
+    const addedCount = timeline.filter(entry => !previousPage.current.keys.has(entry.key)).length;
+    const prepended = addedCount > 0 && previousPage.current.first && timeline[0]?.key !== previousPage.current.first && timeline.at(-1)?.key === previousPage.current.last;
     if (prepended && history) {
       history.scrollTop += Math.max(0, history.scrollHeight - previousPage.current.height);
     } else if (addedCount > 0) {
@@ -316,9 +341,8 @@ export function MessageList({
         setNewMessageCount((count) => count + addedCount);
       }
     }
-    previousLength.current = messages.length;
-    previousPage.current = { first: messages[0]?.id, last: messages.at(-1)?.id, height: history?.scrollHeight ?? 0 };
-  }, [messages]);
+    previousPage.current = { first: timeline[0]?.key, last: timeline.at(-1)?.key, height: history?.scrollHeight ?? 0, keys: new Set(timeline.map(entry => entry.key)) };
+  }, [timeline]);
 
   const updateViewportPosition = () => {
     closePopovers();
@@ -389,27 +413,29 @@ export function MessageList({
         onScroll={updateViewportPosition}
         tabIndex={0}
       >
-        {messages.length === 0 ? (
+        {timeline.length === 0 ? (
           <div className="chat-empty-state">
             <div className="chat-empty-atmosphere" aria-hidden="true" />
             <div className="chat-empty-brand-stage">
               <BrandLogo variant="full" size="lg" className="chat-empty-logo" />
             </div>
-            <h2 className="display-heading display-heading--empty">No messages yet</h2>
-            <p>{transportMode === 'local-demo'
+            <h2 className="display-heading display-heading--empty">{emptyState?.title ?? 'No messages yet'}</h2>
+            <p>{emptyState?.description ?? (transportMode === 'local-demo'
               ? 'A little hello starts a conversation. Try it in this local demo.'
-              : 'Write a message to start this conversation.'}</p>
+              : 'Write a message to start this conversation.')}</p>
           </div>
         ) : (
           <div className="message-list">
-            {messages.map((message, index) => {
-              const previous = messages[index - 1];
+            {timeline.map((entry, index) => {
+              if (entry.call) return <CallEventBubble key={entry.key} call={entry.call} />;
+              const message = entry.message;
+              const previous = timeline[index - 1]?.message;
               const grouped = isGroupedWithPrevious(message, previous);
               const isOutgoing = message.senderId === currentUserId;
 
               if (message.type === 'system') {
                 return (
-                  <article className="message-system" key={message.id} role="note" data-message-id={message.id}>
+                  <article className="message-system" key={entry.key} role="note" data-message-id={message.id}>
                     <span>{message.content}</span>
                     <time dateTime={message.timestamp} title={new Date(message.timestamp).toLocaleString()}>
                       {formatTime(message.timestamp)}
@@ -420,7 +446,7 @@ export function MessageList({
 
               if (message.type === 'security_alert') {
                 return (
-                  <article className="message-security-alert" key={message.id} role="alert" data-message-id={message.id}>
+                  <article className="message-security-alert" key={entry.key} role="alert" data-message-id={message.id}>
                     <AlertTriangle size={18} aria-hidden="true" />
                     <div className="message-security-copy">
                       <strong>{message.senderName}</strong>
@@ -440,7 +466,11 @@ export function MessageList({
                 (message.reactions ?? []).filter((r) => r.userIds.includes(currentUserId)).map((r) => r.emoji),
               );
               const canShareWithAI = Boolean(onAIMessage && message.type === 'text' && !message.isDeleted && message.content.trim() && message.content.length <= AI_MAX_INPUT);
-              const emojiCount = message.type === 'text' && !message.isDeleted && !message.attachments?.length && !message.voice ? emojiOnlyCount(message.content) : 0;
+              const hasAttachments = !message.isDeleted && Boolean(message.attachments && message.attachments.length > 0);
+              const hasVoice = !message.isDeleted && Boolean(message.voice);
+              const hasText = Boolean(message.content.trim());
+              const showTextBubble = message.isDeleted || hasText || (!hasAttachments && !hasVoice);
+              const isBareEmoji = message.type === 'text' && !message.isDeleted && !hasAttachments && !hasVoice && isEmojiOnlyMessage(message.content);
               const accepted = isAcceptedMessage(message);
               const canEdit = Boolean(isOutgoing && onEditMessage && canEditMessage && (!isEditEligible||isEditEligible(message)) && message.type === 'text' && accepted);
               const canUnsend = Boolean(isOutgoing && onUnsendMessage && accepted);
@@ -454,7 +484,7 @@ export function MessageList({
               return (
                 <article
                   className={`message-row ${isOutgoing ? 'message-row-outgoing' : ''} ${grouped ? 'message-row-grouped' : ''}`}
-                  key={message.id}
+                  key={entry.key}
                   data-message-id={message.id}
                   data-message-highlighted={highlightedId === message.id && !message.isDeleted ? 'true' : undefined}
                   tabIndex={-1}
@@ -507,24 +537,32 @@ export function MessageList({
                       </div>
                     ) : (
                       <div className={`msg-bubble-wrap ${hasReactions ? 'msg-bubble-wrap--has-reactions' : ''}`}>
-                        <div className="message-bubble" style={message.isDeleted ? { fontStyle: 'italic', opacity: 0.6 } : undefined}>
-                          {(message.forwardedFrom || message.isForwarded) && (
-                            <span className="message-forwarded-label">
-                              <Forward size={12} aria-hidden="true" /> Forwarded{message.forwardedFrom ? ` from ${message.forwardedFrom}` : ''}
+                        {showTextBubble ? (
+                          <div className={`message-bubble${isBareEmoji ? ' message-bubble--bare' : ''}`} style={message.isDeleted ? { fontStyle: 'italic', opacity: 0.6 } : undefined}>
+                            {(message.forwardedFrom || message.isForwarded) && (
+                              <span className="message-forwarded-label">
+                                <Forward size={12} aria-hidden="true" /> Forwarded{message.forwardedFrom ? ` from ${message.forwardedFrom}` : ''}
+                              </span>
+                            )}
+                            <span className={isBareEmoji ? 'message-text message-text--emoji' : 'message-text'}>
+                              {message.content}
                             </span>
-                          )}
-                          <span className={emojiCount ? 'message-text message-text--emoji' : 'message-text'} data-emoji-count={emojiCount || undefined}>{message.content}</span>
+                          </div>
+                        ) : (message.forwardedFrom || message.isForwarded) ? (
+                          <span className="message-forwarded-label message-forwarded-label--standalone">
+                            <Forward size={12} aria-hidden="true" /> Forwarded{message.forwardedFrom ? ` from ${message.forwardedFrom}` : ''}
+                          </span>
+                        ) : null}
 
-                          {!message.isDeleted && message.attachments && message.attachments.length > 0 && (
-                            <div className="message-attachments">
-                              {message.attachments.map((attachment) => <MessageAttachmentView key={attachment.id} attachment={attachment} ownerId={currentUserId} conversationId={message.conversationId} />)}
-                            </div>
-                          )}
+                        {hasAttachments && (
+                          <div className="message-attachments">
+                            {message.attachments!.map((attachment) => <MessageAttachmentView key={attachment.id} attachment={attachment} ownerId={currentUserId} conversationId={message.conversationId} />)}
+                          </div>
+                        )}
 
-                          {!message.isDeleted && message.voice && (
-                            <VoiceMessageView voice={message.voice} senderName={isOutgoing?currentUserName:message.senderName} ownerId={currentUserId} conversationId={message.conversationId}/>
-                          )}
-                        </div>
+                        {hasVoice && message.voice && (
+                          <VoiceMessageView voice={message.voice} senderName={isOutgoing?currentUserName:message.senderName} ownerId={currentUserId} conversationId={message.conversationId}/>
+                        )}
 
                         {hasReactions && (
                           <div className="rx-summary">

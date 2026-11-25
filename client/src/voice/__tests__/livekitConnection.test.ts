@@ -209,3 +209,19 @@ test('slow cleanup of a failed connection cannot overwrite a newer successful co
   expect(service.getSnapshot()).toEqual({ status: 'connected', roomId: 'study-room', error: null });
   await service.dispose();
 });
+
+
+test('authenticated voice rooms use the session API for fresh CSRF without requiring a direct-call socket id', async () => {
+  const previousEnabled=process.env.NEXT_PUBLIC_LIVEKIT_ENABLED, previousUrl=process.env.NEXT_PUBLIC_LIVEKIT_URL;
+  process.env.NEXT_PUBLIC_LIVEKIT_ENABLED='true'; process.env.NEXT_PUBLIC_LIVEKIT_URL='wss://media.example.invalid';
+  const api={actor:user,request:jest.fn().mockResolvedValue({}),dispose:jest.fn()} as unknown as SessionApi;
+  try {
+    const service=createSessionLiveKitConnection(user,'api',undefined,'voice-room',undefined,{api,enabled:true});
+    await expect(service.connect('lounge')).rejects.toMatchObject({code:'invalid_response'});
+    expect(api.request).toHaveBeenCalledWith('/api/voice/token',{method:'POST',body:{roomId:'lounge'},signal:expect.any(AbortSignal)});
+    await service.dispose();
+  } finally {
+    if(previousEnabled===undefined)delete process.env.NEXT_PUBLIC_LIVEKIT_ENABLED;else process.env.NEXT_PUBLIC_LIVEKIT_ENABLED=previousEnabled;
+    if(previousUrl===undefined)delete process.env.NEXT_PUBLIC_LIVEKIT_URL;else process.env.NEXT_PUBLIC_LIVEKIT_URL=previousUrl;
+  }
+});

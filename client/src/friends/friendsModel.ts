@@ -7,6 +7,7 @@ export interface FriendUser {
   username: string;
   displayName: string;
   avatar: ProfileAvatarId;
+  avatarUrl?: string | null;
   /** A connected adapter may set this only from confirmed presence, never a local preference. */
   presence?: PresenceStatus;
 }

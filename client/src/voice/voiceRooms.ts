@@ -2,6 +2,8 @@ export interface VoiceRoom {
   readonly id: string;
   readonly name: string;
   readonly description: string;
+  readonly ownerId?: string | null;
+  readonly ownerName?: string | null;
 }
 
 /** Stable catalog until an authorized room API is available. Occupancy is separate. */

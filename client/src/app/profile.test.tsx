@@ -1,5 +1,8 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MessengerHarness as Home } from '@/test-support/MessengerHarness';
+
+// Timing budget: renders full messenger workspace; matches sibling page/friends tests under parallel Jest load.
+jest.setTimeout(20000);
 
 const originalShowModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
 const originalClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
@@ -16,6 +19,11 @@ beforeAll(() => {
       this.dispatchEvent(new Event('close'));
     },
   });
+});
+
+afterEach(() => {
+  cleanup();
+  jest.restoreAllMocks();
 });
 
 afterAll(() => {

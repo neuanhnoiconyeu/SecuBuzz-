@@ -74,3 +74,14 @@
   65% { transform: translateX(-2px); }
   80% { transform: translateX(1px); }
 }
+/* Whole real-account window: deliberately more visible than the demo bubble nudge. */
+@keyframes messenger-buzz-shake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-10px); }
+  20% { transform: translateX(10px); }
+  30% { transform: translateX(-9px); }
+  40% { transform: translateX(9px); }
+  55% { transform: translateX(-7px); }
+  70% { transform: translateX(6px); }
+  85% { transform: translateX(-3px); }
+}

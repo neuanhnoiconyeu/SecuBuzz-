@@ -207,7 +207,7 @@ async function run() {
   await click(alice, '.navigation-profile-button'); await screenshot(alice, 'mobile-profile-dark.png');
   check('keyboard focus stays in the open profile dialog', await alice.eval(`Boolean(document.activeElement?.closest('.profile-dialog'))`));
   await click(alice, '.profile-dialog button[aria-label="Close profile"]');
-  await textClick(alice, 'Sign Out', '.real-account-footer'); await wait(alice, `location.pathname === '/login'`, 'confirmed logout');
+  await click(alice, '.real-account-footer button[aria-label="Sign out"]'); await wait(alice, `location.pathname === '/login'`, 'confirmed logout');
   check('logout removes all account workspace and profile state', await alice.eval(`!document.querySelector('.real-messenger') && !document.body.textContent.includes('Alice private status')`));
   await login(alice, 'bob');
   await wait(alice, `Boolean(document.querySelector('#friends-discovery'))`, 'new account collections loaded');

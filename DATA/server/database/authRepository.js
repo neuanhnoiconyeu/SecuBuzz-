@@ -5,15 +5,20 @@ const { createRepositories,RepositoryError }=require('./repositories');
 function createAuthRepository(db) {
     const repositories=createRepositories(db);
     const get=(sql,...args)=>db.prepare(sql).get(...args) || null;
-    const joined=`SELECT s.*,a.status AS account_status,a.auth_version AS account_version,
+    const joinedBase=`SELECT s.*,a.status AS account_status,a.auth_version AS account_version,
         u.username,p.display_name,p.avatar FROM Sessions s JOIN AccountCredentials a ON a.user_id=s.user_id
         JOIN Users u ON u.user_id=s.user_id JOIN UserProfiles p ON p.user_id=u.user_id`;
+    const joinedWithAvatar=`SELECT s.*,a.status AS account_status,a.auth_version AS account_version,
+        u.username,p.display_name,p.avatar,av.sha256 AS avatar_sha256 FROM Sessions s JOIN AccountCredentials a ON a.user_id=s.user_id
+        JOIN Users u ON u.user_id=s.user_id JOIN UserProfiles p ON p.user_id=u.user_id
+        LEFT JOIN UserProfileAvatars av ON av.user_id=u.user_id`;
+    const joined=()=>get("SELECT 1 FROM sqlite_master WHERE type='table' AND name='UserProfileAvatars'") ? joinedWithAvatar : joinedBase;
     const repository={
         repositories,
         findCredential:identifier=>get('SELECT * FROM AccountCredentials WHERE username_key=? OR email_key=?',identifier,identifier),
         credentialById:id=>get('SELECT * FROM AccountCredentials WHERE user_id=?',id),
-        byHash:hash=>get(joined+' WHERE s.token_hash=?',hash),
-        byId:id=>get(joined+' WHERE s.session_id=?',id),
+        byHash:hash=>get(joined()+' WHERE s.token_hash=?',hash),
+        byId:id=>get(joined()+' WHERE s.session_id=?',id),
         challenge:hash=>get('SELECT * FROM AuthChallenges WHERE challenge_hash=?',hash),
         addChallenge(hash,csrfHash,now,expiry,max) {
             return repositories.transaction(()=>{

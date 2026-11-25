@@ -6,7 +6,7 @@ test('migration 10 preserves existing envelopes, pins, reactions and all securit
     migrate(db,{directory});direct(repositories);repositories.messages.insert(encrypted());
     const rows=db.prepare('SELECT * FROM Messages').all(),triggers=db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger'").all();
     const columns=db.prepare('PRAGMA table_info(Attachments)').all(),fks=db.prepare('PRAGMA foreign_key_list(Attachments)').all();
-    assert.deepEqual(migrate(db).applied,['0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql']);
+    assert.deepEqual(migrate(db).applied,['0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql','0013-voice-rooms.sql','0014-conversation-customization.sql','0015-customization-retention.sql']);
     assert.deepEqual(db.prepare('SELECT * FROM Messages').all(),rows);
     assert.deepEqual(db.prepare('PRAGMA table_info(Attachments)').all().slice(0,columns.length),columns);
     assert.deepEqual(db.prepare('PRAGMA foreign_key_list(Attachments)').all(),fks);

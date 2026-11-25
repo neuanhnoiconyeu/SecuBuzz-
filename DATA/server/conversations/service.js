@@ -11,11 +11,21 @@ function timestamp(value) {
     if (!Number.isFinite(parsed)) throw new AuthError('INTERNAL_ERROR',500);
     return new Date(parsed).toISOString();
 }
-function project(row) {
-    return {id:row.conversation_id,type:'direct',participants:[
-        {id:row.dm_user_low,username:row.low_username,displayName:row.low_display_name,avatar:row.low_avatar},
-        {id:row.dm_user_high,username:row.high_username,displayName:row.high_display_name,avatar:row.high_avatar}],
+function project(row, nicknames = {}, contractVersion = 1) {
+    const participant=(id,username,displayName,avatar,sha256)=>{
+        const result={id,username,displayName,avatar};
+        if(contractVersion===2)result.avatarUrl=sha256 ? `/api/users/${id}/avatar?v=${sha256.slice(0,12)}` : null;
+        return result;
+    };
+    const result={id:row.conversation_id,type:'direct',participants:[
+        participant(row.dm_user_low,row.low_username,row.low_display_name,row.low_avatar,row.low_avatar_sha256),
+        participant(row.dm_user_high,row.high_username,row.high_display_name,row.high_avatar,row.high_avatar_sha256)],
     createdAt:timestamp(row.created_at),updatedAt:timestamp(row.updated_at),interactionAllowed:Boolean(row.interaction_allowed)};
+    if(contractVersion===2){
+        result.themeId=row.theme_id || 'default';
+        result.nicknames=nicknames;
+    }
+    return result;
 }
 
 /** Conversation policy over the existing injected DAL; no messages, sockets or second store. */
@@ -69,7 +79,8 @@ function createConversationService({db,auth,limiter=createSqliteRateLimiter(db)}
             const result=limiter.consume(buckets,auth.now());
             if (!result.allowed) {const error=new AuthError('RATE_LIMITED',429);error.retryAfterSeconds=result.retryAfterSeconds;throw error;}
         },
-        createDirect(context,proof,body) {
+        createDirect(context,proof,body,input={}) {
+            const contractVersion=v.contractVersion(input);
             const recipient=v.recipient(body);
             if (recipient===context.userId) v.invalid('recipientId');
             return write(context,proof,actor=>{
@@ -90,21 +101,44 @@ function createConversationService({db,auth,limiter=createSqliteRateLimiter(db)}
                 }
                 if (!authenticated) repositories.audit.insert({actor_user_id:actor,event_type:'conversation.direct.ready',source:'conversations',subject_id:existing.conversation_id,
                     metadata:{operation:'direct.ready',outcome:'confirmed'}});
-                return {created,conversation:project(authorized(actor,existing.conversation_id))};
+                const nicknames=conversations.nicknamesFor([existing.conversation_id]).get(existing.conversation_id) || {};
+                return {created,conversation:project(authorized(actor,existing.conversation_id),nicknames,contractVersion)};
             });
         },
         detail(context,id,input={}) {
-            v.query(input,[]);v.conversationId(id);
-            return read(context,actor=>({conversation:project(authorized(actor,id))}));
+            const contractVersion=v.contractVersion(input);v.conversationId(id);
+            return read(context,actor=>{
+                const row=authorized(actor,id);
+                const nicknames=conversations.nicknamesFor([id]).get(id) || {};
+                return {conversation:project(row,nicknames,contractVersion)};
+            });
         },
         list(context,input) {
             const pagination=v.page(input,context.userId);
             return read(context,actor=>{
                 const rows=conversations.listDirectForUser(actor,pagination);
                 const visible=rows.slice(0,pagination.limit);
+                const nicknameMap=conversations.nicknamesFor(visible.map(row=>row.conversation_id));
                 const last=visible.at(-1);
-                return {items:visible.map(project),nextCursor:rows.length>pagination.limit ? Buffer.from(JSON.stringify({v:1,context:pagination.context,
+                return {items:visible.map(row=>project(row,nicknameMap.get(row.conversation_id) || {},pagination.contractVersion)),nextCursor:rows.length>pagination.limit ? Buffer.from(JSON.stringify({v:1,context:pagination.context,
                     last:[last.updated_at,last.conversation_id]})).toString('base64url') : null};
+            });
+        },
+        updatePreferences(context,proof,id,body,input={}) {
+            const contractVersion=v.contractVersion(input);v.conversationId(id);
+            return this.withInteraction(context,proof,id,capability=>{
+                const patch=v.preferencesPatch(body,capability.participantIds);
+                const at=new Date(auth.now()).toISOString();
+                if(patch.themeId!==undefined)conversations.setTheme(id,patch.themeId,context.userId,at);
+                if(patch.nicknames){
+                    for(const [targetId,nickname] of Object.entries(patch.nicknames)){
+                        conversations.setNickname(id,targetId,nickname,context.userId,at);
+                    }
+                }
+                repositories.audit.insert({actor_user_id:context.userId,event_type:'conversation.preferences.updated',source:'conversations',subject_id:id,
+                    metadata:{operation:'preferences.updated',outcome:'confirmed'}});
+                const nicknames=conversations.nicknamesFor([id]).get(id) || {};
+                return {conversation:project(authorized(context.userId,id),nicknames,contractVersion)};
             });
         }
     };

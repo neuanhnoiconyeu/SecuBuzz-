@@ -22,6 +22,9 @@ export interface LiveKitHttpOptions {
   readonly verifyCsrf?: (request: IncomingMessage, actor: RealtimeActor) => Promise<boolean>;
   /** Voice-specific group/block policy, supplied by its owner; missing fails closed. */
   readonly authorizeRoom?: (actor: RealtimeActor, room: LiveKitRoomAccess) => Promise<boolean>;
+  /** DATA's independent authenticated community catalog, never supplied by the caller. */
+  readonly authorizeCatalogRoom?: (actor: RealtimeActor, roomId: string) => Promise<boolean>;
+  readonly prepareCatalogRoom?: (actor: RealtimeActor, roomId: string) => Promise<boolean>;
   readonly adapterTimeoutMs?: number;
 }
 
@@ -86,7 +89,7 @@ export function createLiveKitHttpHandler(options: LiveKitHttpOptions) {
     try {
       if (request.method !== 'POST') { response.setHeader('allow', 'POST'); return reject(405, 'method_not_allowed'); }
       const { sessionResolver, authorizer, verifyCsrf, authorizeRoom, config } = options;
-      if (!(directCall ? config.directCallsReady && options.directCalls : config.status === 'ready' && authorizeRoom) || !sessionResolver || !authorizer || !verifyCsrf) {
+      if (!(directCall ? config.directCallsReady && options.directCalls : options.authorizeCatalogRoom ? config.directCallsReady : config.status === 'ready' && authorizeRoom) || !sessionResolver || !authorizer || !verifyCsrf) {
         return reject(503, 'livekit_unavailable');
       }
       const origin = request.headers.origin;
@@ -131,6 +134,23 @@ export function createLiveKitHttpHandler(options: LiveKitHttpOptions) {
           active.session.expiresAt.getTime() <= Date.now() + 1000) return reject(401, 'authentication_required');
         const details = await config.issueDirectCallToken(grant.call, actor, active.session.expiresAt);
         if (!grant.current()) return reject(403, 'call_forbidden');
+        json(response, 200, details); return true;
+      }
+      if (options.authorizeCatalogRoom) {
+        const authorize = () => callAdapter(() => options.authorizeCatalogRoom!(actor, roomId), timeout);
+        const access = await authorize();
+        if (!access.ok) return reject(503, 'authorization_unavailable');
+        if (access.value !== true) return reject(403, 'room_forbidden');
+        if (options.prepareCatalogRoom) {
+          const prepared = await callAdapter(() => options.prepareCatalogRoom!(actor, roomId), timeout);
+          if (!prepared.ok || prepared.value !== true) return reject(503, 'livekit_unavailable');
+        }
+        const active = await authenticate();
+        if (!active || active.status !== 'authenticated' || active.session.userId !== actor.userId ||
+            active.session.sessionId !== actor.sessionId || active.session.expiresAt.getTime() <= Date.now() + 1000) return reject(401, 'authentication_required');
+        const details = await config.issueCatalogToken(roomId, actor, active.session.expiresAt);
+        const current = await authorize();
+        if (!current.ok || current.value !== true) return reject(403, 'room_forbidden');
         json(response, 200, details); return true;
       }
       const room = config.room(roomId);

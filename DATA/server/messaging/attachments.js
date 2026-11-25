@@ -97,7 +97,7 @@ function createEncryptedAttachmentService({db,auth,conversations,options={},limi
             if(!uuid(id))v.invalid();v.query(query,[]);
             return db.transaction(()=>{
                 const row=get(id);if(!row||row.status!=='ready'||!row.message_id)fail('NOT_FOUND',404);
-                conversations.authorizeInTransaction(context,row.conversation_id,{interaction:true});
+                conversations.authorizeInTransaction(context,row.conversation_id);
                 const m=message(row.conversation_id,row.client_message_id);
                 if(!m||m.deleted_at!==null||m.sender_id!==row.uploaded_by||m.message_id!==row.message_id)fail('NOT_FOUND',404);
                 const path=disk().resolveStoragePath(row.storage_key);if(!fs.existsSync(path))fail('NOT_FOUND',404);

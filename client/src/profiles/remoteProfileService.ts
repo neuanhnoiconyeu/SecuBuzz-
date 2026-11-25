@@ -45,6 +45,39 @@ export class RemoteProfileService implements ProfileService {
       throw failure;
     } finally { this.saving = false; }
   }
+  async uploadAvatar(file: File): Promise<UserProfile> {
+    if (!this.api.binary) throw new ApiError('unavailable');
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      throw new ProfileValidationError({ avatar: 'Choose a PNG, JPEG, or WebP image.' });
+    }
+    if (file.size === 0 || file.size > 2 * 1024 * 1024) {
+      throw new ProfileValidationError({ avatar: 'Avatar image must be 2 MB or smaller.' });
+    }
+    if (this.saving) throw new ApiError('conflict');
+    this.saving = true;
+    try {
+      const confirmed = ownProfile(record(record(await this.api.binary('/api/users/me/avatar', { method: 'POST', body: file })).profile), this.api.actor);
+      this.version += 1;
+      this.profile = confirmed;
+      for (const listener of this.listeners) {
+        try { listener({ ...confirmed }); } catch { /* A view cannot change the confirmed save outcome. */ }
+      }
+      return { ...confirmed };
+    } finally { this.saving = false; }
+  }
+  async removeAvatar(): Promise<UserProfile> {
+    if (this.saving) throw new ApiError('conflict');
+    this.saving = true;
+    try {
+      const confirmed = ownProfile(record(record(await this.api.request('/api/users/me/avatar', { method: 'DELETE' })).profile), this.api.actor);
+      this.version += 1;
+      this.profile = confirmed;
+      for (const listener of this.listeners) {
+        try { listener({ ...confirmed }); } catch { /* A view cannot change the confirmed save outcome. */ }
+      }
+      return { ...confirmed };
+    } finally { this.saving = false; }
+  }
   setPresencePreference(preference: PresencePreference) { return this.updateProfile({ presencePreference: preference }); }
   subscribeToProfileChanges(listener: (profile: UserProfile) => void): () => void {
     this.listeners.add(listener); return () => { this.listeners.delete(listener); };

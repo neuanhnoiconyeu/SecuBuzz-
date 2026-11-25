@@ -1,10 +1,11 @@
 import { webcrypto } from 'node:crypto';
 import { useState } from 'react';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { SecureConversationPanel } from '../SecureConversationPanel';
 import { SecureMessagingSession } from '@/security/e2ee/session';
 import { generateDevice } from '@/security/e2ee/devices';
 import { E2eeError, type DirectConversation } from '@/security/e2ee/model';
+import { ApiError } from '@/api/sessionApi';
 import { ConversationHeader } from '../ConversationHeader';
 import { MessageList } from '../MessageList';
 import { presentMessages } from '../authenticatedChatPresentation';
@@ -17,6 +18,13 @@ import { hideLocalMessage, LOCAL_HIDDEN_MESSAGE_PREFIX } from '@/messaging/local
 import type { DecryptedRow } from '@/security/e2ee/session';
 import { decodeAuthenticatedContent } from '@/messaging/authenticatedContent';
 import { AuthenticatedReactions } from '@/messaging/authenticatedReactions';
+import { useDirectCalls } from '@/components/calls/DirectCallsRuntime';
+import type { LiveDirectCallsController } from '@/calls/useLiveDirectCalls';
+
+// Timing budget: tests perform WebCrypto ECDSA/AES-GCM setup and multi-panel renders under parallel Jest load.
+jest.setTimeout(20000);
+
+jest.mock('@/components/calls/DirectCallsRuntime', () => ({ useDirectCalls: jest.fn(() => null) }));
 
 const conversation: DirectConversation = { id: 'conversation', type: 'direct', interactionAllowed: true,
   createdAt: '2026-11-16T00:00:00.000Z', updatedAt: '2026-11-16T00:00:00.000Z', participants: [
@@ -36,8 +44,8 @@ afterAll(() => {
   if (originalClose) Object.defineProperty(HTMLDialogElement.prototype, 'close', originalClose);
   else Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
 });
-beforeEach(() => {localStorage.clear();jest.spyOn(AuthenticatedReactions.prototype,'refresh').mockResolvedValue(undefined);});
-afterEach(() => { jest.restoreAllMocks(); });
+beforeEach(() => {localStorage.clear();jest.spyOn(AuthenticatedReactions.prototype,'refresh').mockResolvedValue(undefined);jest.mocked(useDirectCalls).mockReturnValue(null);});
+afterEach(() => { cleanup(); jest.restoreAllMocks(); });
 async function fixture(actorId = 'alice') {
   const session = new SecureMessagingSession({ actor: { id: actorId, username: actorId }, request: jest.fn().mockResolvedValue({ conversationId: conversation.id, version: 0, items: [] }), dispose() {} });
   const device = await generateDevice(actorId);
@@ -50,6 +58,68 @@ async function fixture(actorId = 'alice') {
   jest.spyOn(session, 'isCachedMessageCurrent').mockResolvedValue(true);
   return { session, device, initialize, prepare, key };
 }
+
+test.each(['alice', 'bob'])('%s sees verified read-only history after unblock without preparing keys or enabling writes', async actorId => {
+  const f = await fixture(actorId); f.initialize.mockResolvedValue(f.device);
+  jest.spyOn(f.session.api, 'conversations').mockResolvedValue({ items: [{ ...conversation, interactionAllowed: false }], nextCursor: null });
+  const original = localDeleteRow('preserved', actorId === 'alice' ? 'bob' : 'alice');
+  jest.spyOn(f.session, 'history').mockResolvedValue({ items: [original], nextCursor: null });
+  const send = jest.spyOn(f.session, 'send'), review = jest.spyOn(f.session, 'acceptKeyChange');
+  render(<SecureConversationPanel session={f.session} selectedId="conversation" onSelect={jest.fn()} displayName={actorId} />);
+  await within(screen.getByRole('log')).findByText('Text preserved');
+  expect(screen.getByRole('status', { name: 'Conversation access' })).toHaveTextContent('new friend request');
+  expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
+  expect(screen.queryByText('No messages yet')).not.toBeInTheDocument(); expect(screen.queryByText('Key verification failed')).not.toBeInTheDocument();
+  expect(f.prepare).not.toHaveBeenCalled(); expect(send).not.toHaveBeenCalled(); expect(review).not.toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: /^Security details:/ })).not.toHaveAttribute('data-security-state', 'verified');
+});
+
+test.each(['forbidden', 'unavailable'] as const)('%s history failure never appears as empty history or cryptographic verification failure', async code => {
+  const f = await fixture(); f.initialize.mockResolvedValue(f.device);
+  f.prepare.mockRejectedValue(new ApiError(code)); jest.spyOn(f.session, 'history').mockRejectedValue(new ApiError(code));
+  render(<SecureConversationPanel session={f.session} selectedId="conversation" onSelect={jest.fn()} displayName="Alice" />);
+  await screen.findByRole('heading', { name: 'Messages unavailable' });
+  expect(screen.queryByText('No messages yet')).not.toBeInTheDocument(); expect(screen.queryByText('Key verification failed')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
+});
+
+test('a genuine signature/key verification failure remains visible and does not offer a silent trust or empty-history fallback', async () => {
+  const f = await fixture(); f.initialize.mockResolvedValue(f.device); f.prepare.mockRejectedValue(new E2eeError('invalid_proof'));
+  const review = jest.spyOn(f.session, 'acceptKeyChange');
+  render(<SecureConversationPanel session={f.session} selectedId="conversation" onSelect={jest.fn()} displayName="Alice" />);
+  await screen.findByRole('heading', { name: 'Key verification required' });
+  expect(screen.getByText('Key verification failed', { exact: true })).toBeInTheDocument();
+  expect(screen.queryByText('No messages yet')).not.toBeInTheDocument(); expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
+  expect(review).not.toHaveBeenCalled();
+});
+
+test('blocked or missing conversation history has an access state rather than an empty-message prompt', async () => {
+  const f = await fixture(); f.initialize.mockResolvedValue(f.device);
+  jest.spyOn(f.session.api, 'conversations').mockResolvedValue({ items: [], nextCursor: null });
+  f.prepare.mockRejectedValue(new ApiError('not_found')); jest.spyOn(f.session, 'history').mockRejectedValue(new ApiError('not_found'));
+  render(<SecureConversationPanel session={f.session} selectedId="conversation" onSelect={jest.fn()} displayName="Alice" />);
+  await screen.findByRole('heading', { name: 'Conversation unavailable' });
+  await waitFor(() => expect(screen.getByRole('log')).toHaveTextContent('Access may be blocked or restricted'));
+  expect(screen.queryByText('No messages yet')).not.toBeInTheDocument();
+});
+
+test('authenticated call events appear only in the authorized conversation MessageList, without a separate summary bar', async () => {
+  const f = await fixture(); f.initialize.mockResolvedValue(f.device);
+  const event = { id: 'call-event', conversationId: conversation.id, kind: 'video', endedAt: Date.now(), durationMs: 4000, outcome: 'completed', confirmed: true };
+  jest.mocked(useDirectCalls).mockReturnValue({ history: [event] } as unknown as LiveDirectCallsController);
+  jest.spyOn(f.session.api, 'conversations').mockResolvedValue({ items: [conversation, { ...conversation, id: 'blocked', interactionAllowed: false }], nextCursor: null });
+  const props = { session: f.session, onSelect: jest.fn(), displayName: 'Alice' };
+  const view = render(<SecureConversationPanel {...props} selectedId={conversation.id} />);
+  await screen.findByText('Secure message ready', { exact: true });
+  await within(screen.getByRole('log')).findByRole('note', { name: 'Video call · 00:04' });
+  expect(view.container.querySelector('.conversation-call-history')).toBeNull();
+  expect(screen.queryByRole('region', { name: 'Recent calls in this conversation' })).not.toBeInTheDocument();
+  await act(async () => { view.rerender(<SecureConversationPanel {...props} selectedId="blocked" />); });
+  expect(screen.getByRole('log').querySelector('[data-call-id]')).toBeNull();
+  await act(async () => { view.rerender(<SecureConversationPanel {...props} selectedId={conversation.id} />); });
+  expect(screen.getByRole('log').querySelectorAll('[data-call-id]')).toHaveLength(1);
+  await act(async () => { view.unmount(); });
+});
 
 test('startup and cancelled confirmation cannot enroll; confirmation permits explicit enrollment', async () => {
   const f = await fixture(), confirm = jest.spyOn(window, 'confirm').mockReturnValue(false);
@@ -112,6 +182,7 @@ test('real conversations reuse the original presentation without demo copy or un
   expect(screen.getByRole('log', { name: 'Chat messages' })).toHaveClass('chat-history');
   expect(screen.getByLabelText('Message to Bob')).toHaveClass('composer-input');
   expect(screen.getByText('End-to-end encrypted', { exact: true })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /^Security details:/ })).toHaveAttribute('data-security-state', 'verified');
   expect(screen.queryByText('E2EE not established')).not.toBeInTheDocument();
   expect(screen.queryByText(/Local examples only/)).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Attach files or images' })).not.toBeInTheDocument();
@@ -166,9 +237,10 @@ test('real-account advanced emoji uses shared categories, search and recents whi
   fireEvent.keyDown(search, { key: 'Enter' }); expect(send).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Insert flag: Vietnam 🇻🇳' }));
   expect(input).toHaveValue('Hello 🇻🇳 text\nSecond line 👩🏽‍💻');
-  await waitFor(() => expect(input.selectionStart).toBe(10)); expect(input.selectionEnd).toBe(10); expect(input).toHaveFocus();
+  await waitFor(() => expect(input.selectionStart).toBe(10)); expect(input.selectionEnd).toBe(10); expect(input).not.toHaveFocus();
+  expect(screen.getByRole('dialog', { name: 'Emoji picker' })).toBeInTheDocument();
   expect(JSON.parse(localStorage.getItem(RECENT_EMOJI_KEY)!)).toEqual(['🇻🇳']);
-  fireEvent.click(screen.getByRole('button', { name: 'Insert emoji' }));
+  fireEvent.click(screen.getByRole('tab', { name: 'Recently Used' }));
   expect(screen.getByRole('tab', { name: 'Recently Used' })).toHaveAttribute('aria-selected', 'true');
   fireEvent.click(screen.getByRole('button', { name: 'Insert flag: Vietnam 🇻🇳' }));
   expect(input).toHaveValue('Hello 🇻🇳🇻🇳 text\nSecond line 👩🏽‍💻');
@@ -461,11 +533,13 @@ test('changed contact keys lock sending, preserve the draft, and require explici
   f.prepare.mockRejectedValueOnce(new E2eeError('keys_changed')); keys.mockReturnValue({ oldIds: ['old'], newIds: ['new'] });
   fireEvent.click(screen.getByText('Advanced settings')); fireEvent.click(screen.getByRole('button', { name: 'Refresh secure conversation' }));
   const warning = await screen.findByText('Contact device keys changed');
+  expect(screen.getByRole('button', { name: /^Security details:/ })).toHaveAttribute('data-security-state', 'warning');
   expect(screen.getByLabelText('Message to Bob')).toHaveValue('Keep this private draft');
   expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled(); expect(review).not.toHaveBeenCalled();
   fireEvent.click(within(warning.closest('[role=alert]')!).getByRole('button', { name: 'Trust these device changes' }));
   await waitFor(() => expect(screen.getByLabelText('Message to Bob')).toBeEnabled());
   expect(review).toHaveBeenCalledWith('conversation'); expect(screen.getByLabelText('Message to Bob')).toHaveValue('Keep this private draft');
+  expect(screen.getByRole('button', { name: /^Security details:/ })).toHaveAttribute('data-security-state', 'verified');
 });
 
 test('revocation discovered during a conversation refresh locks sending and exposes safe enrollment guidance', async () => {
@@ -476,6 +550,7 @@ test('revocation discovered during a conversation refresh locks sending and expo
   f.prepare.mockRejectedValue(new E2eeError('device_revoked'));
   fireEvent.click(screen.getByText('Advanced settings')); fireEvent.click(screen.getByRole('button', { name: 'Refresh secure conversation' }));
   await screen.findByText('Device revoked', { exact: true });
+  expect(screen.getByRole('button', { name: /^Security details:/ })).toHaveAttribute('data-security-state', 'error');
   expect(screen.getByLabelText('Message to Bob')).toBeDisabled();
   expect(screen.getByText(/fresh browser profile/)).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /^Enroll this browser/ })).not.toBeInTheDocument(); expect(send).not.toHaveBeenCalled();
@@ -547,6 +622,8 @@ test('missing historical keys are explained without marking ciphertext verified 
   const notice = await screen.findByRole('status', { name: 'Historical message keys' });
   expect(notice).toHaveTextContent('original browser profile');
   expect(notice).toHaveTextContent('New messages');
+  expect(screen.getByRole('button', { name: /^Security details:/ })).toHaveAttribute('data-security-state', 'warning');
+  expect(screen.getByRole('button', { name: /^Security details:/ }).querySelector('.lucide-shield-check')).toBeNull();
   expect(screen.getByRole('log')).toHaveTextContent(missing.error);
   expect(presentMessages([missing]).verifiedIds.has(message.id)).toBe(false);
   await waitFor(() => expect(screen.getByLabelText('Message to Bob')).toBeEnabled());
@@ -564,6 +641,7 @@ test('ciphertext verification failures are not mislabeled as missing historical 
   await waitFor(() => expect(screen.getByRole('log')).toHaveTextContent(invalid.error));
   expect(screen.queryByRole('status', { name: 'Historical message keys' })).not.toBeInTheDocument();
   expect(presentMessages([invalid]).verifiedIds.has(message.id)).toBe(false);
+  expect(screen.getByRole('button', { name: /^Security details:/ })).toHaveAttribute('data-security-state', 'warning');
 });
 
 test('server pins reuse original rows and navigation beyond loaded history while local hides remain private', async () => {

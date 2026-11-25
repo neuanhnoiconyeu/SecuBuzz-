@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { BUZZ_COOLDOWN_MS, BUZZ_EFFECT_MS, type BuzzEvent } from '../../../shared/buzz';
 import { SocketFailure } from '@/realtime/authenticatedProtocol';
 
-/** Visual-only Buzz. Existing CSS respects reduced motion; never touches message/key storage. */
+/** Ephemeral Buzz feedback; incoming callbacks never touch message/key storage. */
 export function useConversationBuzz(incoming: BuzzEvent | undefined, active: boolean,
-  send: ((cid: string) => Promise<BuzzEvent>) | undefined) {
+  send: ((cid: string) => Promise<BuzzEvent>) | undefined, receiveWhileInactive = false, onIncoming?: (event: BuzzEvent) => void) {
   const [notice, setNotice] = useState(''), [busy, setBusy] = useState(false);
   const [effectConversation, setEffectConversation] = useState<string | null>(null);
-  const seen = useRef(incoming?.id), locked = useRef(false), mounted = useRef(false);
+  const seen = useRef(new Set(incoming ? [incoming.id] : [])), locked = useRef(false), mounted = useRef(false);
   const effectTimer = useRef<ReturnType<typeof setTimeout>>(), cooldown = useRef<ReturnType<typeof setTimeout>>();
+  const incomingCallback = useRef(onIncoming); incomingCallback.current = onIncoming;
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; clearTimeout(effectTimer.current); clearTimeout(cooldown.current); };
@@ -18,10 +19,12 @@ export function useConversationBuzz(incoming: BuzzEvent | undefined, active: boo
     effectTimer.current = setTimeout(() => setEffectConversation(null), BUZZ_EFFECT_MS);
   }, []);
   useEffect(() => {
-    if (!incoming || seen.current === incoming.id) return;
-    seen.current = incoming.id;
-    if (active) show(incoming.conversationId, `${incoming.displayName} sent you a BUZZ!`);
-  }, [incoming, active, show]);
+    if (!incoming || seen.current.has(incoming.id)) return;
+    seen.current.add(incoming.id);
+    if (seen.current.size > 100) seen.current.delete(seen.current.values().next().value!);
+    if (active || receiveWhileInactive) { incomingCallback.current?.(incoming); show(incoming.conversationId, `${incoming.displayName} sent you a BUZZ!`); }
+  }, [incoming, active, receiveWhileInactive, show]);
+  const dismiss = useCallback(() => setNotice(''), []);
   const sendBuzz = useCallback(async (cid: string) => {
     if (!send || locked.current || !active) return;
     locked.current = true; setBusy(true); setNotice('');
@@ -31,5 +34,5 @@ export function useConversationBuzz(incoming: BuzzEvent | undefined, active: boo
     catch (error) { if (mounted.current) setNotice(error instanceof SocketFailure && error.code === 'rate_limited'
       ? 'Please wait before sending another BUZZ.' : 'Could not send BUZZ. Your contact may be offline. Check the connection and try again shortly.'); }
   }, [send, active, show]);
-  return { notice, busy, effectConversation, sendBuzz };
+  return { notice, busy, effectConversation, sendBuzz, dismiss };
 }

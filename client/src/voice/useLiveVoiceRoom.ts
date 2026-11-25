@@ -2,8 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Participant, Room, RemoteAudioTrack, LocalVideoTrack, RemoteVideoTrack } from 'livekit-client';
 import type { AuthUser } from '@/auth/authModel';
 import { LiveKitConnectionError, type LiveKitConnectionService, type LiveKitSnapshot } from './livekitConnection';
-import { VOICE_ROOMS } from './voiceRooms';
-const catalogRoom = (id: string) => VOICE_ROOMS.some(room => room.id === id);
+import { VOICE_ROOMS, type VoiceRoom } from './voiceRooms';
 
 export interface VoiceParticipant {
   id: string;
@@ -206,7 +205,7 @@ export function useLiveRoomMedia(service: LiveKitConnectionService | null, user:
     connectionError: error ?? (connection.error ? new LiveKitConnectionError(connection.error).message : null),
     canJoin: Boolean(service) && connection.status !== 'disabled' && !leaving };
 }
-export function useLiveVoiceRoom(service: LiveKitConnectionService | null, user: AuthUser) {
-  return useLiveRoomMedia(service, user, catalogRoom);
+export function useLiveVoiceRoom(service: LiveKitConnectionService | null, user: AuthUser, rooms: readonly VoiceRoom[] = VOICE_ROOMS) {
+  return useLiveRoomMedia(service, user, id => rooms.some(room => room.id === id));
 }
 export type LiveVoiceRoomController = ReturnType<typeof useLiveVoiceRoom>;

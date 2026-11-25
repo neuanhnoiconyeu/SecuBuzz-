@@ -3,6 +3,7 @@ import { BrandLogo } from '@/components/branding';
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { PRESENCE_OPTIONS } from '@/profiles/profileModel';
 import type { UserProfile } from '@/profiles/profileModel';
+import type { ReactNode } from 'react';
 
 export type MessengerSection = 'chats' | 'friends' | 'security' | 'ai';
 
@@ -14,9 +15,10 @@ export interface MainNavigationProps {
   onOpenProfile?: () => void;
   pendingRequestCount?: number;
   mode?: 'remote' | 'local-demo';
+  profileActions?: ReactNode;
 }
 
-export function MainNavigation({ activeSection, onSelect, profile, profileLoading = false, onOpenProfile, pendingRequestCount = 0, mode }: MainNavigationProps) {
+export function MainNavigation({ activeSection, onSelect, profile, profileLoading = false, onOpenProfile, pendingRequestCount = 0, mode, profileActions }: MainNavigationProps) {
   const presenceLabel = PRESENCE_OPTIONS.find((option) => option.value === profile?.presencePreference)?.label;
   const remote = mode === 'remote' || profile?.isDemo === false;
   return (
@@ -71,7 +73,7 @@ export function MainNavigation({ activeSection, onSelect, profile, profileLoadin
             onClick={onOpenProfile}
           >
             <span className="navigation-profile-avatar">
-              {profile ? <ProfileAvatar displayName={profile.displayName} avatar={profile.avatar} /> : <UserRound size={24} aria-hidden="true" />}
+              {profile ? <ProfileAvatar displayName={profile.displayName} avatar={profile.avatar} avatarUrl={profile.avatarUrl} /> : <UserRound size={24} aria-hidden="true" />}
               {profile && !remote && <span className={`navigation-profile-dot navigation-profile-dot--${profile.presencePreference}`} aria-hidden="true" />}
             </span>
             <span className="navigation-profile-copy">
@@ -83,6 +85,7 @@ export function MainNavigation({ activeSection, onSelect, profile, profileLoadin
               <span className="navigation-profile-local">{remote ? 'Presence unavailable' : 'Local preference'}</span>
             </span>
           </button>
+          {profileActions}
         </div>
       ) : <span className="messenger-navigation-caption">Local demo</span>}
     </nav>

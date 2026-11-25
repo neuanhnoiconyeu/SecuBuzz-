@@ -26,8 +26,10 @@ export interface StoredMessage extends Omit<EnvelopeV2, 'encryption'> {
   edit?:MessageEditSnapshot;
 }
 export interface DirectConversation {
-  id: string; type: 'direct'; participants: { id: string; username: string; displayName: string; avatar: string }[];
+  id: string; type: 'direct'; participants: { id: string; username: string; displayName: string; avatar: string; avatarUrl?: string | null }[];
   createdAt: string; updatedAt: string; interactionAllowed: boolean;
+  themeId?: import('../../../../shared/conversationThemes').ConversationThemeId;
+  nicknames?: Record<string, string>;
 }
 export interface DeviceIdentity {
   schema: 1; userId: string; deviceId: string; deviceKeyId: string; keyVersion: number;

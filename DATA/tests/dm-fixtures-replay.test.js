@@ -87,11 +87,15 @@ function clientKeys() {
     const conversation = source.slice(source.indexOf('  conversation(input:'),source.indexOf('  async conversations('));
     const list = source.slice(source.indexOf('  async conversations('),source.indexOf('  async getConversation('));
     const quoted = text => [...text.matchAll(/'([^']+)'/g)].map(match => match[1]).sort();
-    const object = conversation.match(/exact\(input,\s*\[([^\]]+)\]/);
-    const participant = conversation.match(/exact\(p,\s*\[([^\]]+)\]/);
+    const keys = name => {
+        const match = source.match(new RegExp(`const ${name} = \\[([^\\]]+)\\]`));
+        return match && quoted(match[1]);
+    };
     const page = list.match(/,\s*\[([^\]]+)\]\);/);
-    assert.ok(object && participant && page,'the current client parser declares each exact key set');
-    return { object:quoted(object[1]), participant:quoted(participant[1]), page:quoted(page[1]) };
+    const object=keys('CONVERSATION_V1_KEYS'), objectV2=keys('CONVERSATION_V2_KEYS');
+    const participant=keys('PARTICIPANT_V1_KEYS'), participantV2=keys('PARTICIPANT_V2_KEYS');
+    assert.ok(object && objectV2 && participant && participantV2 && page,'the client parser declares exact versioned key sets');
+    return { object,objectV2,participant,participantV2,page:quoted(page[1]) };
 }
 function assertDirect(row, actor, expectedIds, groupIds, keys, pair) {
     assert.deepEqual(Object.keys(row).sort(),keys.object);
@@ -265,6 +269,8 @@ async function isolation(f, data, run, keys) {
 
 test('P-19: seeded populated groups cannot enter direct routes or change the frozen fixture replay', async t => {
     const beforeDigest = digest(), keys = clientKeys(), scenarios = new Set();
+    assert.deepEqual(keys.objectV2,[...keys.object,'nicknames','themeId'].sort());
+    assert.deepEqual(keys.participantV2,[...keys.participant,'avatarUrl'].sort());
     let populations = 0, replayedEntries = 0;
     assert.equal(fs.existsSync(path.join(__dirname,'../server/routes/groups.js')),false,'DB-5B group router remains unmounted');
     const summary = await forAll('P-19',{ seed:P19_SEED, runs:P19_RUNS, onRun:line => t.diagnostic(line) },generatePopulation,async (model,info) => {

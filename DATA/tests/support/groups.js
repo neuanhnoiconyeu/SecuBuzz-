@@ -44,7 +44,8 @@ const { setup } = require('./auth');
 const SNAPSHOT_TABLES = Object.freeze(['Conversations', 'ConversationMembers', 'GroupExtensions', 'GroupMembershipIntervals',
     'ConversationInvitations', 'GroupReadPositions', 'GroupCreationKeys', 'Messages', 'MessageReceipts', 'Attachments',
     'AttachmentReservations', 'AuditLogs', 'ConversationPinVersions', 'MessagePins', 'MessagePinOperations',
-    'MessageReactionVersions', 'MessageReactionActors', 'MessageReactionOperations', 'EncryptedAttachmentBatches', 'MessageEditRevisions']);
+    'MessageReactionVersions', 'MessageReactionActors', 'MessageReactionOperations', 'EncryptedAttachmentBatches', 'MessageEditRevisions', 'VoiceRooms',
+    'ConversationNicknames', 'ConversationThemes', 'UserProfileAvatars']);
 // Limiter counters may change on a refused request (P-21), so they are never hashed.
 const SNAPSHOT_EXCLUDED = Object.freeze(['AuthRateLimits']);
 const LAST_PUBLISHED_VERSION = 7;

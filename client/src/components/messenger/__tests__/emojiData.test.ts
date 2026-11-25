@@ -1,4 +1,4 @@
-import { ALL_EMOJIS, EMOJI_CATEGORIES, QUICK_EMOJIS, emojiOnlyCount, findEmoji, searchEmoji } from '../emojiData';
+import { ALL_EMOJIS, EMOJI_CATEGORIES, QUICK_EMOJIS, emojiOnlyCount, findEmoji, isEmojiOnlyMessage, searchEmoji } from '../emojiData';
 
 test('the installed Unicode collection covers all nine categories, names, flags and variations without duplicates', () => {
   expect(EMOJI_CATEGORIES.map(category => category.label)).toEqual(['Smileys', 'People', 'Animals', 'Food', 'Activities', 'Travel', 'Objects', 'Symbols', 'Flags']);
@@ -24,4 +24,23 @@ test('search matches full names, aliases, multiple words and native characters',
 test.each([['😀', 1], ['👍🏽 👩‍💻', 2], ['👨‍👩‍👧‍👦 🇻🇳 1️⃣', 3], ['❤️', 1], ['  😀  ', 1],
   ['123', 0], ['#', 0], ['Hello 😀', 0], ['😀😀😀😀', 0], ['❤\ufe0e', 0], ['\n  ', 0]])('emoji-only presentation counts graphemes: %s', (text, count) => {
   expect(emojiOnlyCount(text as string)).toBe(count);
+});
+
+test.each([
+  ['😍', true],
+  ['👩🏽‍💻', true],
+  ['👍🏽👍🏻', true],
+  ['👍❤️😂', true],
+  ['😍😍😍😍😍', true],
+  ['😍'.repeat(20), true],
+  ['👨‍👩‍👧‍👦 🇻🇳 🇫🇷', true],
+  ['👨👩👧👦😍😍', true],
+  ['Hello 😍', false],
+  ['😍😍😍!', false],
+  ['123', false],
+  ['#', false],
+  ['', false],
+  ['❤\ufe0e', false],
+])('isEmojiOnlyMessage detects all standalone emoji sequences uniformly: %s', (text, expected) => {
+  expect(isEmojiOnlyMessage(text as string)).toBe(expected);
 });

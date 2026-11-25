@@ -11,6 +11,7 @@ import {createDataCallResolver} from './calls.ts';
 import {loadLiveKitConfig,createDirectCallMediaLifecycle,createLiveKitHttpHandler,type LiveKitConfig} from '../livekit/index.ts';
 import {extractSessionCookie} from '../realtime/cookies.ts';
 import type {DirectCallOptions} from '../calls/config.ts';
+import { catalogRoomName } from '../livekit/config.ts';
 
 /** Session revalidation and grant refresh period. Also the worst-case staleness of typing and presence grants. */
 export const DATA_REVALIDATION_INTERVAL_MS = 15_000;
@@ -91,7 +92,18 @@ export function attachRealtimeToData(httpServer: HttpServer | HttpsServer, appli
     timing: { revalidationIntervalMs: DATA_REVALIDATION_INTERVAL_MS, ...options.timing },
   });
 
+  const communityMedia = livekit.directCallsReady && data.voiceRooms ? livekit.createRoomService() : null;
   const tokenHandler=createLiveKitHttpHandler({config:livekit,allowedOrigins:config.origins,sessionCookieName:config.sessionCookie,
+    ...(data.voiceRooms ? {authorizeCatalogRoom:async(actor,id)=>{
+      try{return Boolean(data.voiceRooms!.authorize({userId:actor.userId,sessionId:actor.sessionId},id));}catch{return false;}
+    }} : {}),
+    ...(communityMedia ? {prepareCatalogRoom:async(actor,id)=>{
+      await communityMedia.createRoom({name:catalogRoomName(id),maxParticipants:32,emptyTimeout:300,departureTimeout:30});
+      try { if (data.voiceRooms?.authorize({userId:actor.userId,sessionId:actor.sessionId},id)) return true; } catch { /* Session/catalog changed during room creation. */ }
+      // A deleted room may have been created after its first cleanup. Never issue a token.
+      if (data.voiceRooms?.deleted().some(room=>room.id===id)) await communityMedia.deleteRoom(catalogRoomName(id));
+      return false;
+    }} : {}),
     sessionResolver:data.adapters.sessionResolver as NonNullable<RealtimeServerOptions['sessionResolver']>,authorizer,directCalls:realtime,
     resolveTransportSecurity:request=>transportSecurityFor(config)({remoteAddress:request.socket.remoteAddress??'',encrypted:'encrypted' in request.socket&&request.socket.encrypted===true,
       forwardedProto:typeof request.headers['x-forwarded-proto']==='string'?request.headers['x-forwarded-proto']:null}),
@@ -102,6 +114,29 @@ export function attachRealtimeToData(httpServer: HttpServer | HttpsServer, appli
       return proof.type==='session'&&'sessionId'in proof&&proof.sessionId===actor.sessionId&&'userId'in proof&&proof.userId===actor.userId;
     }});
   data.setDirectCallTokenHandler?.(tokenHandler);
+
+  // Tombstones survive process restarts. Reap again through the short token admission
+  // window: LiveKit JWTs already issued cannot be individually revoked.
+  const removedRooms = new Set<string>();
+  const roomService = communityMedia;
+  const cleanupRoom = async (id: string) => {
+    if (!roomService) return;
+    try { await roomService.deleteRoom(catalogRoomName(id)); }
+    catch (error) { if ((error as {code?:string})?.code !== 'not_found') throw new Error('Voice room cleanup is unavailable.'); }
+  };
+  data.voiceRooms?.setCleanup(cleanupRoom);
+  let reaping = false, stopped = false;
+  const reap = async () => {
+    if (reaping || stopped || !roomService) return; reaping = true;
+    try { for (const room of data.voiceRooms!.deleted()) {
+      if (stopped) break;
+      if (!removedRooms.has(room.id) || Date.parse(room.deletedAt) > Date.now() - 60_000) {
+        try { await cleanupRoom(room.id); removedRooms.add(room.id); } catch { /* Retry on the next sweep; never reopen admission. */ }
+      }
+    } } finally { reaping = false; }
+  };
+  const roomSweep = roomService ? setInterval(() => { void reap(); }, 2000) : null;
+  roomSweep?.unref(); void reap();
 
   const observer = options.observeChanges === false
     ? null
@@ -116,6 +151,7 @@ export function attachRealtimeToData(httpServer: HttpServer | HttpsServer, appli
     close() {
       closing ??= (async () => {
         observer?.dispose();
+        stopped = true; if (roomSweep) clearInterval(roomSweep); data.voiceRooms?.setCleanup(null);
         data.setDirectCallTokenHandler?.(null);
         await realtime.close();
       })();

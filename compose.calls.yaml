@@ -11,6 +11,7 @@ services:
   frontend:
     environment:
       NEXT_PUBLIC_DIRECT_CALLS_ENABLED: "true"
+      NEXT_PUBLIC_LIVEKIT_ENABLED: "true"
       NEXT_PUBLIC_LIVEKIT_URL: ws://localhost:7880
   livekit:
     image: livekit/livekit-server@sha256:25cd902de7cacbd5f1f779f6a6ac1eae20ba8f56b0935934ce6b0ab80d1e3d20

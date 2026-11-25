@@ -10,14 +10,18 @@ import { VoiceParticipantTile } from '@/components/voice/VoiceParticipantTile';
 import { Button } from '@/components/ui';
 import { DirectCallLayer } from './DirectCallLayer';
 import { FloatingCallPanel } from './FloatingCallPanel';
+import { useArrivalAttention } from '@/hooks/useArrivalAttention';
+import { useIncomingRingtone } from '@/notifications/useIncomingRingtone';
 
 const DirectCallsContext = createContext<LiveDirectCallsController | null>(null);
 export const useDirectCalls = () => useContext(DirectCallsContext);
 
 export function DirectCallMediaStage({ calls, user }: { calls: LiveDirectCallsController; user: AuthUser }) {
   const { media } = calls;
-  return <div className="direct-call-media-content">
-    {media.participants.filter(person => person.screen).map(person => <section className="call-screen-stage" key={person.id} aria-label={`${person.name}'s screen share`}>
+  const screenParticipants = media.participants.filter(person => person.screen);
+  const hasScreenShare = screenParticipants.length > 0;
+  return <div className={`direct-call-media-content ${hasScreenShare ? 'has-screen-share' : ''}`} data-has-screen-share={hasScreenShare ? 'true' : 'false'}>
+    {screenParticipants.map(person => <section className="call-screen-stage" key={person.id} aria-label={`${person.name}'s screen share`}>
       <p>{person.name}{person.isLocal ? ' (you)' : ''} · Screen share</p><VoiceVideo track={person.screen!} local={false} label={`${person.name}'s shared screen`} />
     </section>)}
     <div className={`voice-stage ${media.participants.length > 1 ? 'has-participants' : ''}`} data-participant-count={media.participants.length}>
@@ -29,14 +33,18 @@ export function DirectCallMediaStage({ calls, user }: { calls: LiveDirectCallsCo
 }
 export function LiveDirectCallLayer({ calls, user }: { calls: LiveDirectCallsController; user: AuthUser }) {
   const incoming = calls.state.phase === 'ringing' && calls.state.call.direction === 'incoming';
+  const incomingId = incoming && calls.state.phase !== 'idle' ? calls.state.call.id : null;
+  const audio = useIncomingRingtone(incomingId, calls.ringExpiresAt, incoming && calls.signalStatus === 'connected' && !calls.busy && calls.state.phase !== 'idle' && calls.state.call.source === 'transport');
+  const attention = useArrivalAttention(incoming && calls.state.phase !== 'idle' ? calls.state.call.id : null, incoming && calls.signalStatus === 'connected');
   return <>
     {calls.state.phase!=='idle'&&<p role="status" className="direct-call-note">Calls use LiveKit transport encryption. End-to-end media encryption is not enabled.</p>}
-    {incoming ? <DirectCallLayer state={calls.state} actions={calls} busy={calls.busy} canAccept={calls.available} error={calls.error}
+    {incoming ? calls.signalStatus === 'connected' ? <DirectCallLayer state={calls.state} actions={{ ...calls,
+      accept: id => { audio?.stopRinging(id); calls.accept(id); }, decline: id => { audio?.stopRinging(id); calls.decline(id); } }} busy={calls.busy} canAccept={calls.available} error={calls.error} attention={attention}
       media={{ microphoneEnabled: calls.media.microphoneEnabled, cameraEnabled: calls.media.cameraEnabled,
         pending: calls.media.pending.audio || calls.media.pending.video,
         onToggleMicrophone: () => void calls.media.toggleDevice('audio'), onToggleCamera: () => void calls.media.toggleDevice('video') }}
       mediaContent={calls.state.phase !== 'idle' && calls.state.phase !== 'ringing' && <DirectCallMediaStage calls={calls} user={user} />} />
-      : <FloatingCallPanel key={calls.state.phase === 'idle' ? 'idle' : calls.state.call.id} calls={calls}><DirectCallMediaStage calls={calls} user={user} /></FloatingCallPanel>}
+      : null : <FloatingCallPanel key={calls.state.phase === 'idle' ? 'idle' : calls.state.call.id} calls={calls}><DirectCallMediaStage calls={calls} user={user} /></FloatingCallPanel>}
     <VoiceRoomAudio controller={calls.media} />
     {calls.state.phase === 'idle' && calls.error && <p role="alert" className="voice-device-error">{calls.error}</p>}
   </>;

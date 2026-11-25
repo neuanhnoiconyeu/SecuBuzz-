@@ -7,6 +7,7 @@ import { CALL_CLIENT_EVENTS as C, type CallClientEventName, type CallSnapshot } 
 import { LIVEKIT_CALL_ID } from '../../../shared/livekit';
 import { callFailureMessage, parseCallCleared, parseCallSnapshot } from './callSignaling';
 import { directCallReducer, idleDirectCall, isCallFinished, type DirectCallEvent, type DirectCallKind, type DirectCallPeer } from './directCallMachine';
+import { rememberDirectCall, summarizeDirectCall, type DirectCallSummary } from './directCallHistory';
 
 const allowedCall = (id: string) => LIVEKIT_CALL_ID.test(id);
 const terminal = (call: CallSnapshot) => call.status !== 'ringing' && call.status !== 'accepted';
@@ -18,9 +19,17 @@ export function useLiveDirectCalls(client: DirectCallSignalingClient | null, ser
   const mediaRef = useRef(media); mediaRef.current = media;
   const [state, dispatch] = useReducer(directCallReducer, idleDirectCall);
   const ui = useRef(state); ui.current = state;
-  const commit = useCallback((event: DirectCallEvent) => { ui.current = directCallReducer(ui.current, event); dispatch(event); }, []);
-  const [wire, setWire] = useState<CallSnapshot | null>(null);
   const latest = useRef<CallSnapshot | null>(null);
+  const [history, setHistory] = useState<readonly DirectCallSummary[]>([]);
+  const commit = useCallback((event: DirectCallEvent) => {
+    ui.current = directCallReducer(ui.current, event); dispatch(event);
+    const summary = summarizeDirectCall(ui.current, latest.current);
+    if (summary) setHistory(previous => rememberDirectCall(previous, summary));
+    else if (ui.current.phase !== 'idle' && latest.current?.reason === 'access_revoked') {
+      const id = ui.current.call.id; setHistory(previous => previous.filter(call => call.id !== id));
+    }
+  }, []);
+  const [wire, setWire] = useState<CallSnapshot | null>(null);
   const [ownedId, setOwnedId] = useState<string | null>(null);
   const owned = useRef<string | null>(null);
   const attempted = useRef<string | null>(null);
@@ -109,6 +118,7 @@ export function useLiveDirectCalls(client: DirectCallSignalingClient | null, ser
   useEffect(() => {
     const epoch = ++generation.current;
     commit({ type: 'RESET' }); latest.current = null; setWire(null); own(null); attempted.current = null;
+    setHistory([]);
     watermarks.current.clear(); pendingEnd.current = null; busyRef.current = false; setBusy(false); setError(null);
     if (!client?.calls || client.mode !== 'realtime' || client.actorId !== user.id || user.isDemo !== false) return;
     let active = true;
@@ -127,6 +137,7 @@ export function useLiveDirectCalls(client: DirectCallSignalingClient | null, ser
           commit({ type: 'TRANSPORT', callId: call.callId, signal: 'ended', at: Date.now() });
           latest.current = null; setWire(null); own(null); attempted.current = null; void mediaRef.current.leave();
         }
+        setHistory(previous => previous.filter(entry => entry.id !== cleared.callId));
       }
     });
     const unstatus = client.subscribe((event) => {
@@ -205,7 +216,7 @@ export function useLiveDirectCalls(client: DirectCallSignalingClient | null, ser
     } catch { if (epoch === generation.current) setError(callFailureMessage()); }
     finally { if (epoch === generation.current) { busyRef.current = false; setBusy(false); } }
   };
-  return { state, media, error, busy, available, signalStatus, ownedId, canStart: available && !busy && state.phase === 'idle', start,
+  return { state, history, media, error, busy, available, signalStatus, ownedId, ringExpiresAt: wire?.status === 'ringing' ? Date.parse(wire.ringExpiresAt) : null, canStart: available && !busy && state.phase === 'idle', start,
     accept: (id: string) => { void request(C.accept, id); }, decline: (id: string) => { void request(C.decline, id); },
     hangUp: (id: string) => stopRef.current(id), dismiss: (id: string) => {
       if (ui.current.phase === 'idle' || ui.current.call.id !== id || !isCallFinished(ui.current)) return;

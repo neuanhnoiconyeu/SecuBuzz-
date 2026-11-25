@@ -40,6 +40,11 @@
 // PRAGMA in any other file, is a violation. The runner applies migrations inside its open transaction, where SQLite
 // treats this PRAGMA as a no-op.
 //
+// Applied-migration exception. The deployed database has migration 0014 recorded with the checksum below, and that
+// immutable file contains six forbidden foreign-key actions. Only that exact filename and normalized SHA-256 may
+// grandfather those six findings. Any changed byte, another file or a different action set remains a violation;
+// every new migration is subject to the normal rule.
+//
 // API:
 //   lintSql(sql, { file, version })  -> { file, version, strict, violations, exempted, statements }
 //       version defaults to the number of a matching file name; without either, the stricter rules of version 8 and
@@ -53,6 +58,7 @@
 //   formatViolation(violation)       -> one readable line, for assertion messages
 'use strict';
 
+const { createHash } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -64,6 +70,13 @@ const KEYWORD_ALIASES = new Map([['END', 'COMMIT']]);
 const FORBIDDEN_FOREIGN_KEY_ACTIONS = Object.freeze(['ON DELETE CASCADE', 'SET NULL', 'SET DEFAULT']);
 const PUBLISHED_EXEMPTIONS = Object.freeze([
     Object.freeze({ file: '0001-legacy.sql', statement: 'PRAGMA foreign_keys = ON' }),
+]);
+const APPLIED_FOREIGN_KEY_ACTION_EXEMPTIONS = Object.freeze([
+    Object.freeze({
+        file: '0014-conversation-customization.sql',
+        checksum: '6a132cff0ce19ee83be87c6f26b8dac3277c25fa95e654f04671cd53200d9748',
+        actions: Object.freeze(['ON DELETE CASCADE', 'ON DELETE CASCADE', 'ON DELETE CASCADE', 'ON DELETE CASCADE', 'SET NULL', 'SET NULL']),
+    }),
 ]);
 const RULES = Object.freeze(['FILE_NAME', 'NOT_CONTIGUOUS', 'FORBIDDEN_STATEMENT', 'FORBIDDEN_FOREIGN_KEY_ACTION',
     'UNTERMINATED_LITERAL', 'UNTERMINATED_TRIGGER']);
@@ -239,6 +252,12 @@ function versionOf(options, file) {
 }
 
 const exempt = (file, text) => PUBLISHED_EXEMPTIONS.some(entry => entry.file === file && entry.statement.toUpperCase() === text.toUpperCase());
+const checksum = sql => createHash('sha256').update(sql.replace(/\r\n/g, '\n')).digest('hex');
+function appliedForeignKeyActionExemption(file, sql, actions) {
+    const exemption = APPLIED_FOREIGN_KEY_ACTION_EXEMPTIONS.find(entry => entry.file === file && entry.checksum === checksum(sql));
+    if (!exemption || exemption.actions.length !== actions.length) return false;
+    return [...exemption.actions].sort().every((action, index) => action === [...actions].sort()[index]);
+}
 
 function lintSql(sql, options = {}) {
     if (!options || typeof options !== 'object') throw new TypeError('lintSql options must be an object');
@@ -263,6 +282,7 @@ function lintSql(sql, options = {}) {
         else found.push({ offset: head.offset, violation });
     }
 
+    const foreignKeyActions = [];
     if (strict) {
         for (let index = 0; index < tokens.length; index += 1) {
             let phrase = null;
@@ -271,9 +291,14 @@ function lintSql(sql, options = {}) {
             else if (isKeyword(tokens[index], 'SET') && isKeyword(tokens[index + 1], 'DEFAULT')) phrase = 'SET DEFAULT';
             if (phrase !== null) {
                 const { offset } = tokens[index];
-                found.push({ offset, violation: { rule: 'FORBIDDEN_FOREIGN_KEY_ACTION', file, line: lineOf(offset), phrase } });
+                foreignKeyActions.push({ offset, violation: { rule: 'FORBIDDEN_FOREIGN_KEY_ACTION', file, line: lineOf(offset), phrase } });
             }
         }
+    }
+    const exemptAppliedActions = appliedForeignKeyActionExemption(file, sql, foreignKeyActions.map(entry => entry.violation.phrase));
+    for (const entry of foreignKeyActions) {
+        if (exemptAppliedActions) exempted.push(entry.violation);
+        else found.push(entry);
     }
     found.sort((a, b) => a.offset - b.offset); // stable, so equal offsets keep the order above
     return { file, version, strict, violations: found.map(entry => entry.violation), exempted, statements };
@@ -331,6 +356,7 @@ module.exports = {
     FORBIDDEN_KEYWORDS,
     FORBIDDEN_FOREIGN_KEY_ACTIONS,
     PUBLISHED_EXEMPTIONS,
+    APPLIED_FOREIGN_KEY_ACTION_EXEMPTIONS,
     RULES,
     lintSql,
     lintFileNames,

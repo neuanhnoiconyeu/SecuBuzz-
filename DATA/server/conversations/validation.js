@@ -11,11 +11,20 @@ function recipient(body) {
         Object.keys(body).length!==1 || !Object.prototype.hasOwnProperty.call(body,'recipientId')) invalid();
     return identifier(body.recipientId,'recipientId');
 }
+function contractVersion(input) {
+    query(input,['contractVersion']);
+    const value=input.contractVersion ?? '1';
+    if(value!=='1'&&value!=='2')invalid('contractVersion');
+    return Number(value);
+}
 function page(input,actor) {
-    query(input,['limit','cursor']);
+    query(input,['limit','cursor','contractVersion']);
+    const version=input.contractVersion ?? '1';
+    if(version!=='1'&&version!=='2')invalid('contractVersion');
     const limit=input.limit===undefined ? 20 : /^[1-9][0-9]?$/.test(input.limit) ? Number(input.limit) : 0;
     if (limit<1 || limit>50) invalid('limit');
-    const context=createHash('sha256').update(JSON.stringify({kind:'direct-conversations-v1',actor})).digest('hex');
+    const contractVersion=Number(version);
+    const context=createHash('sha256').update(JSON.stringify({kind:`direct-conversations-v${contractVersion}`,actor})).digest('hex');
     let after=null;
     if (input.cursor!==undefined) {
         const encoded=input.cursor;
@@ -26,6 +35,36 @@ function page(input,actor) {
             !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(decoded.last[0]) || !Number.isFinite(Date.parse(decoded.last[0]))) invalid('cursor');
         conversationId(decoded.last[1],'cursor'); after=decoded.last;
     }
-    return {limit,after,context};
+    return {limit,after,context,contractVersion};
 }
-module.exports={conversationId,recipient,page,query,invalid};
+const CONVERSATION_THEME_IDS = ['default', 'ocean', 'sunset', 'forest', 'berry', 'midnight'];
+const controls = /[\u0000-\u001f\u007f-\u009f]/u;
+
+function preferencesPatch(body, participantIds) {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) invalid();
+    const keys = Object.keys(body);
+    if (!keys.length || keys.some(key => !['themeId', 'nicknames'].includes(key))) invalid();
+    const patch = {};
+    if (Object.prototype.hasOwnProperty.call(body, 'themeId')) {
+        if (typeof body.themeId !== 'string' || !CONVERSATION_THEME_IDS.includes(body.themeId)) invalid('themeId');
+        patch.themeId = body.themeId;
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'nicknames')) {
+        if (!body.nicknames || typeof body.nicknames !== 'object' || Array.isArray(body.nicknames)) invalid('nicknames');
+        const entries = Object.entries(body.nicknames);
+        if (!entries.length || entries.length > 2) invalid('nicknames');
+        const nicknames = {};
+        for (const [targetId, raw] of entries) {
+            if (!participantIds.includes(targetId)) invalid('nicknames');
+            if (raw === null) { nicknames[targetId] = null; continue; }
+            if (typeof raw !== 'string' || !raw.isWellFormed() || controls.test(raw)) invalid('nicknames');
+            const trimmed = raw.trim();
+            if ([...trimmed].length > 40) invalid('nicknames');
+            nicknames[targetId] = trimmed ? trimmed : null;
+        }
+        patch.nicknames = nicknames;
+    }
+    return patch;
+}
+
+module.exports={conversationId,recipient,page,contractVersion,query,invalid,preferencesPatch,CONVERSATION_THEME_IDS};

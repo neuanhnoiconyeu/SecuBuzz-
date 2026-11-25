@@ -12,6 +12,11 @@ export function resourceId(value: unknown): string {
   }
   return value;
 }
+export function validAvatarUrl(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === 'string' && /^\/api\/users\/[A-Za-z0-9._:-]+\/avatar(?:\?v=[A-Za-z0-9_-]+)?$/.test(value)) return value;
+  throw new ApiError('invalid_response');
+}
 export function publicUser(value: unknown): FriendUser {
   const user = record(value);
   if (typeof user.username !== 'string' || !/^[a-z0-9][a-z0-9._-]{2,29}$/.test(user.username) ||
@@ -19,8 +24,9 @@ export function publicUser(value: unknown): FriendUser {
     /[\u0000-\u001f\u007f-\u009f]/u.test(user.displayName) || !PROFILE_AVATARS.some(avatar => avatar.id === user.avatar)) {
     throw new ApiError('invalid_response');
   }
+  const avatarUrl = validAvatarUrl(user.avatarUrl);
   // Project only the public identity. Never infer presence from a preference.
-  return { id: resourceId(user.id), username: user.username, displayName: user.displayName, avatar: user.avatar as FriendUser['avatar'] };
+  return { id: resourceId(user.id), username: user.username, displayName: user.displayName, avatar: user.avatar as FriendUser['avatar'], ...(avatarUrl ? { avatarUrl } : {}) };
 }
 export function searchUser(value: unknown): UserSearchResult {
   const user = record(value);

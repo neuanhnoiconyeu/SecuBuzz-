@@ -87,6 +87,7 @@ export function VoiceRoomPanel({ room, controller, user, onBack }: VoiceRoomPane
       {joined && Object.entries(controller.errors).map(([device, message]) => message && <p key={device} className="voice-device-error" role="alert">{message}</p>)}
       {live?.connectionError && live.status !== 'disabled' && <p className="voice-device-error" role="alert">{live.connectionError}</p>}
       <p className="voice-controls-note">{!live ? 'Microphone and camera start off. Nothing is transmitted.' : joined ? microphoneOn ? 'Microphone on. Use Mute to stop transmitting audio.' : 'Your microphone is muted. You can still listen.' : 'Joining turns on your microphone. Camera starts off.'}</p>
+      {live && <p className="voice-controls-note">LiveKit transport encryption is used. End-to-end media encryption is not enabled.</p>}
     </footer>
   </section>;
 }

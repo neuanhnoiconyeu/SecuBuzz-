@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { BrandLogo } from '@/components/branding';
 import { Button } from '@/components/ui';
+import { ApiError, safeApiMessage } from '@/api/sessionApi';
 import { securityMessage } from '@/security/e2ee/api';
 import { E2eeError, type DirectConversation } from '@/security/e2ee/model';
 import { SecureMessagingSession, type DecryptedRow } from '@/security/e2ee/session';
@@ -14,7 +15,7 @@ import { MessageComposer } from './MessageComposer';
 import { REAL_ACCOUNT_MESSAGING_CAPABILITIES as capabilities } from '@/messaging/messagingCapabilities';
 import { useLocalHiddenMessages } from '@/hooks/useLocalHiddenMessages';
 import { encodeAuthenticatedContent, type EncryptedReplyReference } from '@/messaging/authenticatedContent';
-import { AuthenticatedForwarding } from '@/messaging/authenticatedForwarding';
+import { AuthenticatedForwarding, canForwardAuthenticatedMessage } from '@/messaging/authenticatedForwarding';
 import { AuthenticatedUnsend } from '@/messaging/authenticatedUnsend';
 import { AuthenticatedPins, type AuthenticatedPinState } from '@/messaging/authenticatedPins';
 import { AuthenticatedReactions, type ReactionState } from '@/messaging/authenticatedReactions';
@@ -23,10 +24,13 @@ import {AuthenticatedAttachments} from '@/messaging/authenticatedAttachments';
 import {EncryptedAttachmentContext} from '@/messaging/EncryptedAttachmentContext';
 import {useChatFileDrop} from '@/hooks/useChatFileDrop';
 import { useConversationBuzz } from '@/hooks/useConversationBuzz';
+import { ActivityToast } from './ActivityToast';
+import { useDirectCalls } from '@/components/calls/DirectCallsRuntime';
 import { ReplyPreview } from './ReplyPreview';
 import {MAX_MESSAGE_EDITS} from '../../../../shared/messageRevisions';
 import { ForwardDialog } from './ForwardDialog';
 import { conversationName, mergePinnedRows, presentConnection, presentConversations, presentMessages, presentSendState } from './authenticatedChatPresentation';
+import { getConversationTheme, type ConversationThemeId } from '../../../../shared/conversationThemes';
 import styles from './SecureConversationPanel.module.css';
 
 const emptyLive: SecureLiveState = { connection: 'offline', conversations: [], rows: {}, cursors: {}, unread: {}, typing: {}, presence: {}, receipts: {}, keyVersions: {}, errors: {}, synchronized: 0 };
@@ -36,15 +40,27 @@ const emptyPins: AuthenticatedPinState = { collections: {}, rows: {}, saving: {}
 const emptyPinSnapshot = () => emptyPins;
 const emptyReactions: ReactionState = { records: {}, saving: {}, errors: {} };
 const emptyReactionSnapshot = () => emptyReactions;
-export function SecureConversationPanel({ session, live, active = true, selectedId, onSelect, displayName, onOpenVoiceRooms, onOpenFriends }: {
+function preparationStatus(error: unknown): string {
+  if (error instanceof ApiError) return error.code === 'forbidden' ? 'Conversation access restricted'
+    : error.code === 'not_found' ? 'Conversation unavailable' : 'Secure conversation service unavailable';
+  return error instanceof E2eeError && error.code === 'keys_changed' ? 'Recipient keys changed'
+    : error instanceof E2eeError && error.code === 'recipient_missing' ? 'Waiting for recipient keys'
+      : error instanceof E2eeError && error.code === 'device_revoked' ? 'Device revoked' : 'Key verification failed';
+}
+export function SecureConversationPanel({ session, live, active = true, selectedId, onSelect, displayName, onOpenVoiceRooms, onOpenFriends, buzzController }: {
   session: SecureMessagingSession; live?: SecureRealtimeWorkspace | undefined; active?: boolean; selectedId: string | null;
   onSelect(id: string): void; displayName: string; onOpenVoiceRooms?: (() => void) | undefined; onOpenFriends?: (() => void) | undefined;
+  buzzController?: ReturnType<typeof useConversationBuzz>;
 }) {
   const liveState = useSyncExternalStore(live?.subscribe ?? noSubscription, live?.getSnapshot ?? emptySnapshot, emptySnapshot);
   const [localConversations, setConversations] = useState<DirectConversation[]>([]), [listCursor, setListCursor] = useState<string | null>(null);
   const conversations = live ? liveState.conversations : localConversations;
   const selected = conversations.find(c => c.id === selectedId);
+  const hasConversation = Boolean(selected);
   const authorized = Boolean(selected?.interactionAllowed);
+  const calls = useDirectCalls();
+  const callEvents = useMemo(() => authorized ? calls?.history.filter(call => call.conversationId === selectedId) : undefined,
+    [authorized, calls?.history, selectedId]);
   const [localPins, setLocalPins] = useState<{ session: SecureMessagingSession; store: AuthenticatedPins } | null>(null);
   useEffect(() => {
     if (live) return;
@@ -59,7 +75,8 @@ export function SecureConversationPanel({ session, live, active = true, selected
   const reactionState=useSyncExternalStore(reactions?.subscribe??noSubscription,reactions?.getSnapshot??emptyReactionSnapshot,emptyReactionSnapshot);
   const actorId = session.api.session.actor.id;
   const sendBuzz = useCallback((cid: string) => live!.buzz(cid), [live]);
-  const buzz = useConversationBuzz(liveState.buzz, active, live ? sendBuzz : undefined);
+  const localBuzz = useConversationBuzz(buzzController ? undefined : liveState.buzz, active, !buzzController && live ? sendBuzz : undefined);
+  const buzz = buzzController ?? localBuzz;
   const attachmentSession=useMemo(()=>new AuthenticatedAttachments(session.api.session,selectedId??''),[session,selectedId]);
   const [attachmentLimit,setAttachmentLimit]=useState<number|null>(null),[attachmentError,setAttachmentError]=useState('');
   const [composerRevision,setComposerRevision]=useState(0);
@@ -72,7 +89,11 @@ export function SecureConversationPanel({ session, live, active = true, selected
     }).catch(()=>{if(active)setAttachmentError('Encrypted file storage is unavailable. Text messaging is still available.');});
     return()=>{active=false;};
   },[session]);
-  const chatCapabilities=useMemo(()=>({...capabilities,buzz:capabilities.buzz&&Boolean(live),attachments:capabilities.attachments&&attachmentLimit!==null,voiceMessages:capabilities.voiceMessages&&attachmentLimit!==null}),[attachmentLimit,live]);
+  const chatCapabilities=useMemo(()=>({...capabilities,sendMessages:capabilities.sendMessages&&authorized,
+    reply:capabilities.reply&&authorized,forward:capabilities.forward&&authorized,edit:capabilities.edit&&authorized,
+    unsendForEveryone:capabilities.unsendForEveryone&&authorized,pin:capabilities.pin&&authorized,reactions:capabilities.reactions&&authorized,
+    buzz:capabilities.buzz&&Boolean(live)&&authorized,attachments:capabilities.attachments&&attachmentLimit!==null&&authorized,
+    voiceMessages:capabilities.voiceMessages&&attachmentLimit!==null&&authorized}),[attachmentLimit,live,authorized]);
   const localHidden = useLocalHiddenMessages(actorId);
   const [localDeleteError, setLocalDeleteError] = useState('');
   const [unsendError, setUnsendError] = useState('');
@@ -82,6 +103,7 @@ export function SecureConversationPanel({ session, live, active = true, selected
   const [initializing, setInitializing] = useState(false), [revoked, setRevoked] = useState(false);
   const [keyReview, setKeyReview] = useState<ReturnType<SecureMessagingSession['getKeyReview']>>(null);
   const [localRows, setRows] = useState<DecryptedRow[]>([]), [localCursor, setCursor] = useState<string | null>(null);
+  const [loadedHistoryId, setLoadedHistoryId] = useState<string | null>(null);
   const rows = useMemo(() => mergePinnedRows(live && selectedId ? liveState.rows[selectedId] ?? [] : localRows.filter(row => row.message.conversationId === selectedId),
     selectedId ? pinState.rows[selectedId] ?? [] : []), [live, selectedId, liveState.rows, localRows, pinState.rows]);
   useEffect(() => {
@@ -99,7 +121,28 @@ export function SecureConversationPanel({ session, live, active = true, selected
   const pendingReplies = useRef<Record<string, EncryptedReplyReference | undefined>>({});
   const [forwardSource, setForwardSource] = useState<{ id: string; conversationId: string } | null>(null);
   const [forwardBusy, setForwardBusy] = useState(false);
+  const [prefSaving, setPrefSaving] = useState(false);
+  const [prefError, setPrefError] = useState<string | null>(null);
+  const savePreferences = async (patch: { themeId?: ConversationThemeId; nicknames?: Record<string, string | null> }): Promise<boolean> => {
+    if (!selectedId || !authorized || prefSaving) return false;
+    setPrefSaving(true);
+    setPrefError(null);
+    try {
+      const updated = await session.api.updatePreferences(selectedId, patch);
+      if (!alive.current) return false;
+      if (live) live.applyConversation(updated);
+      else setConversations(prev => prev.map(c => c.id === updated.id ? updated : c));
+      return true;
+    } catch (e) {
+      if (alive.current) setPrefError(safeApiMessage(e, 'Could not save conversation settings. Try again.'));
+      return false;
+    } finally {
+      if (alive.current) setPrefSaving(false);
+    }
+  };
+  useEffect(() => { setPrefError(null); }, [selectedId]);
   const forwarding = useMemo(() => new AuthenticatedForwarding(session, live), [session, live]);
+  useEffect(() => () => forwarding.dispose(), [forwarding]);
   const draft = selectedId ? drafts[selectedId] ?? '' : '';
   const [readyId, setReadyId] = useState<string | null>(null), [busy, setBusy] = useState(false);
   const ready = Boolean(selectedId && readyId === selectedId && deviceReady && !revoked && authorized);
@@ -140,23 +183,31 @@ export function SecureConversationPanel({ session, live, active = true, selected
     try {
       if (live) await live.refresh();
       if (revoked) throw new E2eeError('device_revoked');
-      const prepared = await session.prepare(selectedId);
-      if (!alive.current || sequence.current !== version) return;
-      setConversations(previous => [...new Map([prepared.conversation, ...previous].map(c => [c.id, c])).values()]);
-      setSafety(prepared.safetyNumber); setKeyReview(null); setReadyId(selectedId); setStatus('Secure message ready'); live?.clearError(selectedId);
+      if (hasConversation && !authorized) {
+        if (!alive.current || sequence.current !== version) return;
+        setKeyReview(session.getKeyReview(selectedId)); setStatus('History is read-only');
+      } else {
+        const prepared = await session.prepare(selectedId);
+        if (!alive.current || sequence.current !== version) return;
+        setConversations(previous => [...new Map([prepared.conversation, ...previous].map(c => [c.id, c])).values()]);
+        setSafety(prepared.safetyNumber); setKeyReview(null); setReadyId(selectedId); setStatus('Secure message ready'); live?.clearError(selectedId);
+      }
     } catch (e) {
       if (alive.current && sequence.current === version && e instanceof E2eeError && e.code === 'device_revoked') { setRevoked(true); setDeviceReady(false); }
-      if (alive.current && sequence.current === version) { setError(securityMessage(e)); setKeyReview(session.getKeyReview(selectedId)); setStatus(e instanceof E2eeError && e.code === 'keys_changed' ? 'Recipient keys changed' : e instanceof E2eeError && e.code === 'recipient_missing' ? 'Waiting for recipient keys' : e instanceof E2eeError && e.code === 'device_revoked' ? 'Device revoked' : 'Key verification failed'); }
+      if (alive.current && sequence.current === version) { setError(securityMessage(e)); setKeyReview(session.getKeyReview(selectedId)); setStatus(preparationStatus(e)); }
     }
     try {
       if (live) await live.sync(selectedId);
       await pins?.refresh(selectedId, true).catch(() => {});
       const history = live ? null : await session.history(selectedId), outstanding = await session.pending(selectedId);
-      if (alive.current && sequence.current === version) { if (history) { setRows(previous => mergeSecureRows(previous.filter(row => row.message.conversationId === selectedId && row.message.state === 'deleted'), history.items)); setCursor(history.nextCursor); } setPending(Boolean(outstanding)); }
+      if (alive.current && sequence.current === version) {
+        if (history) { setRows(previous => mergeSecureRows(previous.filter(row => row.message.conversationId === selectedId && row.message.state === 'deleted'), history.items)); setCursor(history.nextCursor); }
+        setLoadedHistoryId(selectedId); if(hasConversation&&!authorized) live?.clearError(selectedId); setPending(Boolean(outstanding));
+      }
     } catch (e) { if (alive.current && sequence.current === version) setError(securityMessage(e)); }
     finally { if (alive.current && sequence.current === version) setBusy(false); }
-  }, [deviceReady, revoked, selectedId, session, live, pins]);
-  useEffect(() => { sequence.current++; setRows([]); setPending(false); setReadyId(null); setSafety(''); setKeyReview(null); setError(''); setSendState(''); if (selectedId) void refresh(); }, [refresh, selectedId]);
+  }, [deviceReady, revoked, selectedId, session, live, pins, authorized, hasConversation]);
+  useEffect(() => { sequence.current++; setRows([]); setLoadedHistoryId(null); setPending(false); setReadyId(null); setSafety(''); setKeyReview(null); setError(''); setSendState(''); if (selectedId) void refresh(); }, [refresh, selectedId]);
   const keyRevision = selectedId ? liveState.keyVersions[selectedId] ?? 0 : 0;
   const observedKeys = useRef({ conversationId: selectedId, revision: keyRevision, synchronized: liveState.synchronized });
   useEffect(() => {
@@ -276,6 +327,14 @@ export function SecureConversationPanel({ session, live, active = true, selected
   };
   const sidebar = presentConversations(conversations, actorId, liveState, selectedId, localRows, localHidden.isHidden);
   const presented = presentMessages(rows, live ? (cid, id) => live.receiptFor(cid, id) : undefined, localHidden.isHidden);
+  const activeNicknames = selected?.nicknames;
+  const actorDisplay = activeNicknames?.[actorId] || displayName;
+  if (activeNicknames) {
+    for (const msg of presented.messages) {
+      const nick = activeNicknames[msg.senderId];
+      if (nick) msg.senderName = nick;
+    }
+  }
   const pinnedIds = new Set((selectedId ? pinState.collections[selectedId]?.items : undefined)?.map(pin => pin.message.id) ?? []);
   for (const message of presented.messages) if (!message.isDeleted && pinnedIds.has(message.id)) message.isPinned = true;
   for(const m of presented.messages){
@@ -333,6 +392,11 @@ export function SecureConversationPanel({ session, live, active = true, selected
   const peer = selected?.participants.find(p => p.id !== actorId);
   const presence = peer ? liveState.presence[peer.id]?.status : undefined;
   const messageError = error || (selectedId ? liveState.errors[selectedId] : '') || liveState.errors[''];
+  const historyLoaded = live ? Boolean(selectedId && Object.prototype.hasOwnProperty.call(liveState.rows, selectedId)) : loadedHistoryId === selectedId;
+  const emptyState = !busy && status === 'Conversation unavailable' ? { title: 'Conversation unavailable', description: 'Access may be blocked or restricted. Blocking does not delete stored messages. Refresh after resolving access.' }
+    : messageError ? { title: status.includes('keys') || status.includes('verification') ? 'Key verification required' : 'Messages unavailable', description: messageError }
+      : busy || !historyLoaded ? { title: 'Loading messages', description: 'Loading and verifying encrypted history.' }
+        : !authorized ? { title: 'Read-only conversation', description: 'Renew your friendship to send messages. Unblocking does not restore friendship.' } : undefined;
   const connectionLabel = !live ? 'Live delivery unavailable' : liveState.connection === 'connected' ? 'Connected' : liveState.connection === 'auth_failed' ? 'Session expired — sign in again' : liveState.connection === 'offline' ? 'Offline' : 'Reconnecting…';
   const deviceNotice = <>
     <div className={deviceReady && !messageError ? 'sr-only' : styles.notice} role="status" aria-live="polite">{status}</div>
@@ -356,16 +420,29 @@ export function SecureConversationPanel({ session, live, active = true, selected
         {onOpenVoiceRooms && <Button size="sm" variant="outline" onClick={onOpenVoiceRooms}>Open Voice Rooms</Button>}
       </div>} />
     <div className={`messenger-main-column ${styles.column}`}>
-      <section className="chat-window chat-attachment-drop-target" data-buzz-active={Boolean(active && selectedId && buzz.effectConversation === selectedId)} {...drop.bind} aria-label={selectedId ? `${name} conversation` : 'Choose a conversation'}>
-        {buzz.notice && <p role="status" aria-label="Buzz notification" className={styles.notice}>{buzz.notice}</p>}
+      <section className="chat-window chat-attachment-drop-target" data-chat-theme={selected?.themeId ?? 'default'} data-buzz-active={Boolean(!buzzController && active && selectedId && buzz.effectConversation === selectedId)} {...drop.bind} aria-label={selectedId ? `${name} conversation` : 'Choose a conversation'}>
+        {!buzzController && buzz.notice && <ActivityToast id={buzz.notice} kind="buzz" text={buzz.notice} onDismiss={buzz.dismiss} />}
         {drop.dragging&&<div className="chat-attachment-drop-overlay" aria-hidden="true">Drop files to attach</div>}
-        {selectedId && <ConversationHeader name={name} type="direct" securityStatus={null} transportMode="realtime"
+        {selectedId && <ConversationHeader name={name} {...(peer?.avatarUrl ? { avatarUrl: peer.avatarUrl } : {})} type="direct" securityStatus={null} transportMode="realtime" active={visible}
           connectionStatus={presentConnection(live?.getSnapshot().connection)} headingRef={heading} transitionKey={selectedId}
           onBackToConversations={() => setMobileListOpen(true)} showCalls={capabilities.directCalls}
           callDisabled={!authorized||!live?.transport.connected}
-          {...(selectedId&&peer?{callTarget:{conversationId:selectedId,peer:{id:peer.id,name:peer.displayName}}}:{})}
+          {...(selectedId&&peer?{callTarget:{conversationId:selectedId,peer:{id:peer.id,name,...(peer.avatarUrl?{avatarUrl:peer.avatarUrl}:{})}}}:{})}
           {...(presence && presence !== 'unknown' ? { presence } : {})}
-          securePresentation={{ ready, label: ready ? 'End-to-end encrypted' : revoked ? 'Secure messaging locked' : keyReview ? 'Review contact keys' : 'Checking conversation keys', details: <>
+          {...(selected ? { customization: {
+            themeId: selected.themeId ?? 'default',
+            participants: selected.participants.map(p => ({ id: p.id, displayName: p.displayName, username: p.username, ...(selected.nicknames?.[p.id] ? { nickname: selected.nicknames[p.id] } : {}) })),
+            canEdit: authorized,
+            saving: prefSaving,
+            error: prefError,
+            onChangeTheme: (themeId) => { void savePreferences({ themeId }); },
+            onSaveNicknames: (nicknames) => savePreferences({ nicknames }),
+          } } : {})}
+          securePresentation={{ ready,
+            state: revoked || liveState.connection === 'auth_failed' || (selected && !authorized) ? 'error'
+              : keyReview || missingHistoricalKeys || messageError || rows.some(row => row.error && !localHidden.isHidden(row.message.conversationId, row.message.id)) ? 'warning'
+                : ready ? 'verified' : 'unverified',
+            label: ready ? 'End-to-end encrypted' : revoked ? 'Secure messaging locked' : keyReview ? 'Review contact keys' : selected && !authorized ? 'Read-only conversation' : 'Checking conversation keys', details: <>
             <p>Messages use E2EE v2. Device keys are authenticated by the service and remembered on this browser. Compare your safety number with your contact through another channel.</p>
             <p>Conversation readiness applies to new messages. Earlier messages still require the device keys they were encrypted for.</p>
             <p>This is trust on first use, not independent verification against a malicious server.</p>
@@ -374,6 +451,10 @@ export function SecureConversationPanel({ session, live, active = true, selected
         {(!narrow || !mobileListOpen) && deviceNotice}
         {keyReview && <div role="alert" className={styles.warning}><strong>Contact device keys changed</strong><p>Check with your contact before trusting new device keys.</p><details><summary>Compare device identities</summary><p>Previously trusted: {keyReview.oldIds.join(', ')}</p><p>Current devices: {keyReview.newIds.join(', ')}</p></details><Button disabled={busy} onClick={() => void review()}>Trust these device changes</Button></div>}
         {selectedId ? <>
+          {selected && !authorized && <div role="status" aria-label="Conversation access" className={styles.notice}>
+            <p>History is read-only. Unblocking does not restore friendship. Send a new friend request and have it accepted before sending messages.</p>
+            {onOpenFriends && <Button size="sm" variant="outline" onClick={onOpenFriends}>Manage friendship</Button>}
+          </div>}
           {localHidden.unavailable && <p role="status" className={styles.notice}>Local Delete for Me preferences could not be loaded. Allow browser storage to keep messages hidden on this device.</p>}
           {localDeleteError && <p role="alert" className={styles.warning}>{localDeleteError}</p>}
           {unsendError && <p role="alert" className={styles.warning}>{unsendError}</p>}
@@ -383,9 +464,9 @@ export function SecureConversationPanel({ session, live, active = true, selected
             <p>Some earlier messages cannot be decrypted in this browser. Use the original browser profile if it still has their keys. Enrolling another device does not recover earlier messages. New messages can still work once your current device and contact keys are verified.</p>
           </div>}
           {cursor && <Button size="sm" variant="ghost" disabled={busy} onClick={() => void older()}>Load older messages</Button>}
-          <MessageList key={selectedId} messages={presented.messages} verifiedMessageIds={presented.verifiedIds} currentUserId={actorId}
-            currentUserName={displayName} active={visible} transportMode="realtime" capabilities={chatCapabilities}
-            canForwardMessage={message=>!message.attachments?.length&&!message.voice}
+          <MessageList key={selectedId} messages={presented.messages} callEvents={callEvents} emptyState={emptyState} verifiedMessageIds={presented.verifiedIds} currentUserId={actorId}
+            currentUserName={actorDisplay} active={visible} transportMode="realtime" capabilities={chatCapabilities}
+            canForwardMessage={canForwardAuthenticatedMessage}
             canEditMessage={ready&&!busy&&!revoked}
             isEditEligible={message=>!message.attachments?.length&&!message.voice&&Boolean(rows.find(r=>r.message.id===message.id&&!r.error&&(r.message.edit?.proofs.length??0)<MAX_MESSAGE_EDITS))}
             onEditMessage={editMessage}
@@ -395,9 +476,9 @@ export function SecureConversationPanel({ session, live, active = true, selected
             onTogglePin={togglePin} pinBusy={Boolean(selectedId && pinState.saving[selectedId])}
             onToggleReaction={toggleReaction} reactionBusy={Boolean(selectedId&&reactionState.saving[selectedId])}
             confirmDeleteForMe {...(!localHidden.unavailable ? { onDeleteMessage: deleteForMe } : {})}
-            onRetryMessage={() => void retry()} canRetryMessage={() => pending && !busy && !revoked} />
+            onRetryMessage={() => void retry()} canRetryMessage={() => authorized && pending && !busy && !revoked} />
           {liveState.typing[selectedId]?.isTyping && <p role="status" className={styles.typing}>{liveState.typing[selectedId]?.displayName} is typing…</p>}
-          {pending && <div className={styles.notice}><p>A message is awaiting confirmation. Retrying preserves its encrypted bytes and ID.</p><Button disabled={busy || revoked} onClick={() => void retry()}>Reconcile or retry pending message</Button></div>}
+          {pending && <div className={styles.notice}><p>A message is awaiting confirmation. Retrying preserves its encrypted bytes and ID.</p><Button disabled={busy || revoked || !authorized} onClick={() => void retry()}>Reconcile or retry pending message</Button></div>}
           {reply && <ReplyPreview message={replyOriginal || { senderName: 'a message', content: 'Original message unavailable.' }} onCancel={() => { if (selectedId) setReplies(previous => { const next = { ...previous }; delete next[selectedId]; return next; }); }} />}
           {attachmentError&&<p role="status" className={styles.notice}>{attachmentError}</p>}
           <MessageComposer key={`composer:${selectedId}:${composerRevision}`} conversationName={name} messageCount={presented.messages.length}
@@ -408,6 +489,7 @@ export function SecureConversationPanel({ session, live, active = true, selected
             prepareVoice={attachmentSession.uploadVoice}
             {...(drop.files?{droppedFiles:drop.files}:{})}
             onTypingActivity={() => { if (selectedId) live?.typing(selectedId); }} onTypingStop={() => live?.stopTyping()}
+            quickEmoji={getConversationTheme(selected?.themeId).quickEmoji}
             onSend={(text, extras) => send(text,extras?.attachments,extras?.voice)} />
           {sendState && <p role="status" aria-label="Send state" className={sendState === 'Persisted — delivery pending' ? 'sr-only' : styles.sendState}>{presentSendState(sendState)}</p>}
         </> : <div className={styles.empty}><BrandLogo variant="full" size="lg" /><h2 className="display-heading display-heading--empty">Your people, your conversations</h2><p>Choose a chat or message someone from Friends.</p>{onOpenFriends && <Button onClick={onOpenFriends}>Find your friends</Button>}</div>}
@@ -415,14 +497,14 @@ export function SecureConversationPanel({ session, live, active = true, selected
           <div className={styles.settings}>
             <Button size="sm" variant="outline" disabled={busy || !selectedId} onClick={() => void refresh()}>Refresh secure conversation</Button>
             {live && <><Button size="sm" variant="outline" onClick={() => live.reconnect()}>Reconnect live</Button><label>Message transport <select aria-label="Message transport" value={mode} disabled={busy} onChange={e => setMode(e.target.value === 'rest' ? 'rest' : 'live')}><option value="live">Live Socket.IO</option><option value="rest">REST persistence</option></select></label></>}
-            <p>Group messaging and direct calls remain separate until their authenticated encrypted contracts are verified. Media forwarding remains unavailable.</p>
+            <p>Forwarded files and voice messages are decrypted on this device and encrypted again for the selected conversation.</p>
             <details><summary>This browser and key recovery</summary><p>Device keys stay in this browser’s IndexedDB after refresh and sign-out. They are not recoverable from your password. Another browser, a different application address, or a private window has separate key storage. Closing all private windows or clearing browser data may make older messages unavailable. IndexedDB does not protect keys against malicious same-origin JavaScript.</p>
               {deviceReady && <Button size="sm" variant="outline" onClick={() => { if (window.confirm('Permanently revoke this browser for future messages? Previously received keys and history are not erased.')) void session.revokeCurrentDevice().catch(e => { if (alive.current) { setRevoked(e instanceof E2eeError && e.code === 'device_revoked'); setDeviceReady(false); setReadyId(null); setStatus('Device revoked'); setError(securityMessage(e)); } }); }}>Revoke this browser</Button>}
             </details>
           </div>
         </details>
       </section>
-      <ForwardDialog message={visible ? forwardMessage || null : null} conversations={forwardTargets} onClose={() => setForwardSource(null)} onConfirm={confirmForward} />
+      <ForwardDialog message={visible ? forwardMessage || null : null} conversations={forwardTargets} onClose={() => setForwardSource(null)} onRelease={forwarding.release} onConfirm={confirmForward} />
     </div>
   </section></EncryptedAttachmentContext.Provider>;
 }

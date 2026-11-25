@@ -17,12 +17,14 @@ export interface UseCurrentProfileResult {
   fieldErrors: ProfileFieldErrors;
   loadProfile(): Promise<void>;
   updateProfile(updates: ProfileUpdates): Promise<boolean>;
+  uploadAvatar(file: File): Promise<boolean>;
+  removeAvatar(): Promise<boolean>;
   setPresencePreference(preference: PresencePreference): Promise<boolean>;
 }
 
 export function useCurrentProfile(providedService?: ProfileService): UseCurrentProfileResult {
   const [localService] = useState(() => providedService ?? new LocalDemoProfileService());
-  const service = providedService ?? localService;
+  const service: ProfileService = providedService ?? localService;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -105,8 +107,16 @@ export function useCurrentProfile(providedService?: ProfileService): UseCurrentP
   }, [service]);
 
   const updateProfile = useCallback((updates: ProfileUpdates) => save(() => service.updateProfile(updates)), [save, service]);
+  const uploadAvatar = useCallback((file: File) => save(() => {
+    if (!service.uploadAvatar) return Promise.reject(new Error('Avatar upload is unavailable.'));
+    return service.uploadAvatar(file);
+  }), [save, service]);
+  const removeAvatar = useCallback(() => save(() => {
+    if (!service.removeAvatar) return Promise.reject(new Error('Avatar removal is unavailable.'));
+    return service.removeAvatar();
+  }), [save, service]);
   const setPresencePreference = useCallback((preference: PresencePreference) =>
     save(() => service.setPresencePreference(preference)), [save, service]);
 
-  return { profile, isLoading, isSaving, error, fieldErrors, loadProfile, updateProfile, setPresencePreference };
+  return { profile, isLoading, isSaving, error, fieldErrors, loadProfile, updateProfile, uploadAvatar, removeAvatar, setPresencePreference };
 }

@@ -27,7 +27,8 @@ const GROUP_SNAPSHOT_TABLES = ['Conversations', 'ConversationMembers', 'GroupExt
     'GroupReadPositions', 'GroupCreationKeys', 'Messages', 'MessageReceipts', 'Attachments', 'AttachmentReservations', 'AuditLogs'];
 const MESSAGING_SNAPSHOT_TABLES = ['ConversationPinVersions','MessagePins','MessagePinOperations','MessageReactionVersions',
     'MessageReactionActors','MessageReactionOperations','EncryptedAttachmentBatches','MessageEditRevisions'];
-const P21_TABLES = [...GROUP_SNAPSHOT_TABLES,...MESSAGING_SNAPSHOT_TABLES];
+const CUSTOMIZATION_SNAPSHOT_TABLES = ['ConversationNicknames','ConversationThemes','UserProfileAvatars'];
+const P21_TABLES = [...GROUP_SNAPSHOT_TABLES,...MESSAGING_SNAPSHOT_TABLES,'VoiceRooms',...CUSTOMIZATION_SNAPSHOT_TABLES];
 const TABLES_0012 = ['GroupExtensions', 'GroupMembershipIntervals', 'ConversationInvitations', 'GroupReadPositions', 'GroupCreationKeys'];
 // The headers app.js sets on every response (NFR-08), transcribed independently of the helper.
 const EXPECTED_HEADERS = {
@@ -50,6 +51,7 @@ test('snapshot hashes each P-21 table that exists at the current version and a t
     const before = snapshot(f.db);
     assert.deepEqual(Object.keys(before.tables), P21_TABLES.filter(table => present.has(table)));
     for (const table of TABLES_0012) assert.ok(table in before.tables, `${table} is hashed from version 12 on`);
+    for (const table of CUSTOMIZATION_SNAPSHOT_TABLES) assert.ok(table in before.tables, `${table} is hashed from version 15 on`);
     assert.ok(present.has('AuthRateLimits') && !('AuthRateLimits' in before.tables));
     assert.ok(Object.values(before.tables).every(hash => HEX64.test(hash)), 'every table hash is SHA-256 hex');
     assert.match(before.total, HEX64);
@@ -57,6 +59,24 @@ test('snapshot hashes each P-21 table that exists at the current version and a t
     // P-21 allows the limiter counters to change on a refused request; they never reach the snapshot.
     f.db.prepare('INSERT INTO AuthRateLimits(bucket_hash, window_start_ms, expires_at_ms, attempts) VALUES(?, ?, ?, ?)').run('a'.repeat(64), 0, 60000, 1);
     assert.deepEqual(snapshot(f.db), before);
+});
+
+test('snapshot detects customization changes and returns to the original state after rollback', t => {
+    const f = groupFixture(t);
+    const { db, repositories, actors } = f;
+    const [low, high] = [actors.owner.id, actors.member.id].sort();
+    const conversationId = 'snapshot-customization-dm';
+    repositories.conversations.create({ conversation_id:conversationId, kind:'direct', dm_user_low:low, dm_user_high:high, origin:'authenticated' });
+    const before = snapshot(db);
+    assert.throws(() => db.transaction(() => {
+        db.prepare(`INSERT INTO UserProfileAvatars(user_id,storage_key,mime_type,byte_size,sha256)
+            VALUES(?,?,?,?,?)`).run(actors.owner.id,'snapshot-avatar.png','image/png',8,'a'.repeat(64));
+        repositories.conversations.setTheme(conversationId,'ocean',actors.owner.id,'2026-01-01T00:00:00.000Z');
+        repositories.conversations.setNickname(conversationId,actors.member.id,'Member',actors.owner.id,'2026-01-01T00:00:00.000Z');
+        assert.deepEqual(changedTables(before,snapshot(db)),CUSTOMIZATION_SNAPSHOT_TABLES);
+        throw new Error('rollback snapshot fixture');
+    })(),/rollback snapshot fixture/);
+    assert.deepEqual(snapshot(db),before);
 });
 
 test('snapshot orders rows by primary key and sorts columns, so the insertion order does not change a hash', t => {

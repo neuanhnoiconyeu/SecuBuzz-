@@ -16,11 +16,12 @@ function createConversationRouter(service,middleware) {
     });
     router.get('/',(req,res)=>res.json(service.list(req.auth,req.query)));
     router.post('/dm',(req,res)=>{
-        query(req.query,[]);
-        const result=service.createDirect(req.auth,req.csrfProof,req.body);
+        query(req.query,['contractVersion']);
+        const result=service.createDirect(req.auth,req.csrfProof,req.body,req.query);
         res.status(result.created ? 201 : 200).json({conversation:result.conversation});
     });
     router.get('/:id',(req,res)=>res.json(service.detail(req.auth,req.params.id,req.query)));
+    router.patch('/:id/preferences',(req,res)=>res.json(service.updatePreferences(req.auth,req.csrfProof,req.params.id,req.body,req.query)));
     router.use((req,res)=>sendError(res,'NOT_FOUND',404));
     return router;
 }
