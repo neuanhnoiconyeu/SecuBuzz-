@@ -131,16 +131,53 @@ test('T-5C-48: Gate_Record identifiers, stages, approval boundary and inventory 
     assert.match(row, /ARCH-R03\.10/);
 });
 
+const APPROVED_ENCRYPTED_ATTACHMENT_REWRITES = Object.freeze([
+    '/api/attachments/limits',
+    '/api/attachments/batches/:cid/:mid',
+    '/api/attachments/:id/download',
+    '/api/attachments/:id',
+    '/api/attachments',
+]);
+
 test('T-5C-48: package dependency sets match d7cd40a unless handoff records an exception', () => {
     for (const file of ['DATA/package.json','server/package.json','client/package.json']) {
         const current = dependencies(file);
         const allowed = handoff.includes(`Dependency exception: ${file}`);
         if (!allowed) assert.deepEqual(current, baseline[file], `${file} dependencies remain at d7cd40a`);
     }
-    for (const file of ['client/authProxy.cjs','client/next.config.js']) {
-        const source = fs.readFileSync(path.join(ROOT, file), 'utf8');
-        assert.doesNotMatch(source, /\/api\/(?:groups|attachments|files)/, `${file} has no premature feature rewrite`);
+    const nextConfigSource = fs.readFileSync(path.join(ROOT, 'client/next.config.js'), 'utf8');
+    assert.doesNotMatch(nextConfigSource, /\/api\/(?:groups|attachments|files)/, 'client/next.config.js has no premature feature rewrite');
+
+    const authProxyPath = path.join(ROOT, 'client/authProxy.cjs');
+    const authProxySource = fs.readFileSync(authProxyPath, 'utf8');
+    assert.doesNotMatch(authProxySource, /\/api\/(?:groups|files)/, 'client/authProxy.cjs has no premature groups or canonical files rewrite');
+    assert.doesNotMatch(authProxySource, /\/api\/attachments\/(?:associations|search)\b/, 'client/authProxy.cjs has no premature DB-6B canonical attachment rewrite');
+    const literalAttachmentPaths = authProxySource.match(/\/api\/attachments[^'"`\s]*/g) || [];
+    for (const route of literalAttachmentPaths) {
+        assert.ok(APPROVED_ENCRYPTED_ATTACHMENT_REWRITES.includes(route),
+            `client/authProxy.cjs attachment literal ${route} must belong to pre-existing encrypted attachment routes`);
     }
+
+    const proxy = require(authProxyPath);
+    for (const fn of ['authProxyRewrites', 'socialProxyRewrites', 'messagingProxyRewrites', 'realtimeProxyRewrites']) {
+        assert.deepEqual(proxy[fn]({ NODE_ENV: 'production' }), [], `${fn} stays fail-closed in production without AUTH_BACKEND_URL`);
+    }
+    const devEnv = { NODE_ENV: 'development', AUTH_BACKEND_URL: 'http://127.0.0.1:5000' };
+    const devRoutes = [
+        ...proxy.authProxyRewrites(devEnv),
+        ...proxy.socialProxyRewrites(devEnv),
+        ...proxy.messagingProxyRewrites(devEnv),
+        ...proxy.realtimeProxyRewrites(devEnv),
+    ];
+    for (const route of devRoutes) {
+        assert.doesNotMatch(route.source, /^\/api\/(?:groups|files)(?:\/|$)/, `unexpected gated route ${route.source}`);
+        if (route.source.startsWith('/api/attachments')) {
+            assert.ok(APPROVED_ENCRYPTED_ATTACHMENT_REWRITES.includes(route.source), `unapproved attachment rewrite ${route.source}`);
+            assert.equal(route.destination, `http://127.0.0.1:5000${route.source}`);
+        }
+    }
+    assert.deepEqual(devRoutes.map(r => r.source).filter(s => s.startsWith('/api/attachments')),
+        APPROVED_ENCRYPTED_ATTACHMENT_REWRITES, 'encrypted attachment rewrites preserve exact static-first allowlist');
 });
 
 test('T-6A-22: attachment contract documents contain required sections and decision tables', () => {

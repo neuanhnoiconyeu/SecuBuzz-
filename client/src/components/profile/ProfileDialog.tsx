@@ -29,6 +29,8 @@ export interface ProfileDialogProps {
   fieldErrors?: ProfileFieldErrors;
   onRetry(): void;
   onSave(updates: ProfileUpdates): Promise<boolean>;
+  onUploadAvatar?: (file: File) => Promise<boolean>;
+  onRemoveAvatar?: () => Promise<boolean>;
   onLogout?: () => Promise<boolean>;
   isLoggingOut?: boolean;
   logoutError?: string | null;
@@ -56,6 +58,8 @@ export function ProfileDialog({
   onOpenChange,
   onRetry,
   onSave,
+  onUploadAvatar,
+  onRemoveAvatar,
   open,
   profile,
   onLogout,
@@ -69,8 +73,10 @@ export function ProfileDialog({
   const [errors, setErrors] = useState<ProfileFieldErrors>({});
   const [saveError, setSaveError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const submitLock = useRef(false);
   const saveAttempted = useRef(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const statusInputRef = useRef<HTMLInputElement>(null);
   const firstAvatarRef = useRef<HTMLInputElement>(null);
@@ -85,8 +91,16 @@ export function ProfileDialog({
       setErrors({});
       setSaveError('');
       saveAttempted.current = false;
+      setAvatarPreviewUrl((current) => {
+        if (current) URL.revokeObjectURL(current);
+        return null;
+      });
     }
   }, [open]);
+
+  useEffect(() => () => {
+    if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+  }, [avatarPreviewUrl]);
 
   useEffect(() => {
     if (!open) return;
@@ -207,12 +221,67 @@ export function ProfileDialog({
           void saveProfile();
         }}>
           <div className="profile-edit-heading">
-            <ProfileAvatar displayName={draft.displayName || 'Your profile'} avatar={draft.avatar} />
+            <ProfileAvatar displayName={draft.displayName || 'Your profile'} avatar={draft.avatar} avatarUrl={avatarPreviewUrl ?? profile.avatarUrl ?? null} />
             <div className="profile-edit-heading-copy">
               <h3 className="display-heading display-heading--section">Profile settings</h3>
               <p>{remote ? 'Your user ID and username stay the same.' : 'Your user ID and demo username stay the same.'}</p>
             </div>
           </div>
+          {remote && onUploadAvatar && (
+            <div className="profile-avatar-upload" role="group" aria-label="Profile photo">
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                aria-label="Upload profile photo"
+                style={{ display: 'none' }}
+                disabled={busy}
+                onChange={async (event) => {
+                  const file = event.currentTarget.files?.[0];
+                  event.currentTarget.value = '';
+                  if (!file) return;
+                  if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+                    setErrors((current) => ({ ...current, avatar: 'Choose a PNG, JPEG, or WebP image.' }));
+                    return;
+                  }
+                  if (file.size === 0 || file.size > 2 * 1024 * 1024) {
+                    setErrors((current) => ({ ...current, avatar: 'Avatar image must be 2 MB or smaller.' }));
+                    return;
+                  }
+                  const preview = URL.createObjectURL(file);
+                  setAvatarPreviewUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return preview; });
+                  setErrors((current) => { const next = { ...current }; delete next.avatar; return next; });
+                  setSaveError('');
+                  setSubmitting(true);
+                  try {
+                    const ok = await onUploadAvatar(file);
+                    if (!ok) setSaveError('Your photo could not be uploaded. Try another image.');
+                  } finally {
+                    setSubmitting(false);
+                    setAvatarPreviewUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null; });
+                  }
+                }}
+              />
+              <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => avatarInputRef.current?.click()}>
+                {profile.avatarUrl ? 'Replace photo' : 'Upload photo'}
+              </Button>
+              {profile.avatarUrl && onRemoveAvatar && (
+                <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={async () => {
+                  setSaveError('');
+                  setSubmitting(true);
+                  try {
+                    const ok = await onRemoveAvatar();
+                    if (!ok) setSaveError('Your photo could not be removed. Try again.');
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }}>
+                  Remove photo
+                </Button>
+              )}
+              <span className="ui-field-message">PNG, JPEG, or WebP up to 2 MB. Falls back to your chosen look or initials when removed.</span>
+            </div>
+          )}
           <TextInput
             ref={nameInputRef}
             id="profile-display-name"
@@ -289,7 +358,7 @@ export function ProfileDialog({
         <div className="profile-view">
           {logoutError && <p className="profile-save-error" role="alert">{logoutError}</p>}
           <div className="profile-summary">
-            <ProfileAvatar displayName={profile.displayName} avatar={profile.avatar} size="lg" />
+            <ProfileAvatar displayName={profile.displayName} avatar={profile.avatar} avatarUrl={profile.avatarUrl ?? null} size="lg" />
             <div className="profile-summary-identity">
               <h3 className="display-heading display-heading--section">{profile.displayName}</h3>
               <p className="profile-username">@{profile.username}</p>

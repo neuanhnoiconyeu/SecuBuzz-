@@ -56,9 +56,20 @@ export function searchEmoji(query: string): EmojiEntry[] {
 type GraphemeSegmenter = { segment(text: string): Iterable<{ segment: string }> };
 const Segmenter = (Intl as typeof Intl & { Segmenter?: new (locale: string, options: { granularity: 'grapheme' }) => GraphemeSegmenter }).Segmenter;
 const segmenter = Segmenter ? new Segmenter('en', { granularity: 'grapheme' }) : null;
+const MAX_EMOJI_ONLY_TEXT_LENGTH = 8192;
+function emojiGraphemes(text: string): string[] | null {
+  if (!segmenter || !text.trim() || text.includes('\ufe0e')) return null;
+  const parts = [...segmenter.segment(text.trim())].map(part => part.segment).filter(part => !/^\s+$/u.test(part));
+  return parts.length > 0 && parts.every(part => Boolean(findEmoji(part))) ? parts : null;
+}
 /** Enlarge short, standalone emoji messages; never treat plain digits, punctuation or text as emoji. */
 export function emojiOnlyCount(text: string): number {
-  if (!segmenter || text.length > 128 || !text.trim() || text.includes('\ufe0e')) return 0;
-  const parts = [...segmenter.segment(text.trim())].map(part => part.segment).filter(part => !/^\s+$/u.test(part));
-  return parts.length <= 3 && parts.every(part => Boolean(findEmoji(part))) ? parts.length : 0;
+  if (text.length > 128) return 0;
+  const parts = emojiGraphemes(text);
+  return parts && parts.length <= 3 ? parts.length : 0;
+}
+/** Detect any non-empty message composed exclusively of Unicode emojis and optional whitespace. */
+export function isEmojiOnlyMessage(text: string): boolean {
+  if (text.length > MAX_EMOJI_ONLY_TEXT_LENGTH) return false;
+  return emojiGraphemes(text) !== null;
 }

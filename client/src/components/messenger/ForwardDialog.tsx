@@ -15,10 +15,11 @@ interface ForwardDialogProps {
   message: ChatMessage | null;
   conversations: ForwardTarget[];
   onClose(): void;
-  onConfirm(conversationIds: string[], note: string, operationId: string): Promise<{ failed: string[]; noteFailed?: string[] }>;
+  onRelease?(operationId: string): void;
+  onConfirm(conversationIds: string[], note: string, operationId: string): Promise<{ failed: string[]; noteFailed?: string[]; errors?: Record<string, string> }>;
 }
 
-export function ForwardDialog({ message, conversations, onClose, onConfirm }: ForwardDialogProps) {
+export function ForwardDialog({ message, conversations, onClose, onConfirm, onRelease }: ForwardDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
@@ -29,6 +30,8 @@ export function ForwardDialog({ message, conversations, onClose, onConfirm }: Fo
   const [attempted, setAttempted] = useState(false);
   const operationId = useRef('');
   const submitLock = useRef(false);
+  const release = useRef(onRelease); release.current = onRelease;
+  useEffect(() => () => release.current?.(operationId.current), []);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -39,6 +42,7 @@ export function ForwardDialog({ message, conversations, onClose, onConfirm }: Fo
       operationId.current = createClientMessageId();
       dialog.showModal();
     } else if (!message && dialog.open) {
+      release.current?.(operationId.current);
       dialog.close();
     }
   }, [message]);
@@ -62,9 +66,10 @@ export function ForwardDialog({ message, conversations, onClose, onConfirm }: Fo
     setAttempted(true);
     setError('');
     try {
-      const { failed, noteFailed = [] } = await onConfirm(selected, note.trim(), operationId.current);
+      const { failed, noteFailed = [], errors = {} } = await onConfirm(selected, note.trim(), operationId.current);
       setCompleted(previous => [...new Set([...previous, ...selected.filter(id => !failed.includes(id))])]);
       if (failed.length === 0) {
+        release.current?.(operationId.current);
         onClose();
       } else {
         const names = (ids: string[]) => ids.map(id => conversations.find(c => c.id === id)?.displayName ?? 'Unavailable conversation').join(', ');
@@ -73,6 +78,7 @@ export function ForwardDialog({ message, conversations, onClose, onConfirm }: Fo
         setError([
           forwardFailed.length ? `Could not forward to: ${names(forwardFailed)}.` : '',
           noteFailed.length ? `The message was forwarded to ${names(noteFailed)}, but the optional note was not confirmed.` : '',
+          ...[...new Set(failed.map(id => errors[id]).filter(Boolean))],
           'Retry resumes unfinished sends without forwarding completed messages again.',
         ].filter(Boolean).join(' '));
       }
@@ -85,7 +91,7 @@ export function ForwardDialog({ message, conversations, onClose, onConfirm }: Fo
   };
 
   return (
-    <dialog ref={dialogRef} className="ui-dialog forward-dialog" onClose={onClose}
+    <dialog ref={dialogRef} className="ui-dialog forward-dialog" onClose={() => { release.current?.(operationId.current); onClose(); }}
       onCancel={event => { if (submitLock.current) event.preventDefault(); }} aria-labelledby="forward-title">
       <div className="ui-dialog-panel">
         <div className="ui-dialog-header">
@@ -93,13 +99,15 @@ export function ForwardDialog({ message, conversations, onClose, onConfirm }: Fo
             <h2 className="ui-dialog-title" id="forward-title">Forward to</h2>
             <p className="ui-dialog-description">Choose up to {MAX_RECIPIENTS} conversations.</p>
           </div>
-          <Button variant="ghost" size="sm" className="ui-dialog-close" disabled={busy} onClick={onClose} aria-label="Close">
+          <Button variant="ghost" size="sm" className="ui-dialog-close" disabled={busy} onClick={() => { release.current?.(operationId.current); onClose(); }} aria-label="Close">
             <X size={16} aria-hidden="true" />
           </Button>
         </div>
 
         <div className="ui-dialog-body">
-          <blockquote className="forward-preview">{message?.content}</blockquote>
+          <blockquote className="forward-preview">{message?.content || (message?.voice ? 'Voice message' : '')}
+            {message?.attachments?.map(file => <span className="forward-media-name" key={file.id}> {file.name}</span>)}
+          </blockquote>
 
           <div className="conversation-search">
             <Search size={16} className="conversation-search-icon" aria-hidden="true" />

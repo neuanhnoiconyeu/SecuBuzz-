@@ -16,6 +16,7 @@ export function liveKitParticipantIdentity(actor: RealtimeActor): string {
 }
 export const directCallRoomName = (callId: string) => `direct:${createHash('sha256').update(callId).digest('hex')}`;
 export const directCallParticipantIdentity = (callId: string, userId: string) => createHash('sha256').update(JSON.stringify([callId, userId])).digest('hex');
+export const catalogRoomName = (id: string) => `voice:${createHash('sha256').update(`catalog:${id}`).digest('hex')}`;
 
 /** Private credentials stay out of JSON, inspection, responses and the frontend bundle. */
 export class LiveKitConfig {
@@ -70,6 +71,18 @@ export class LiveKitConfig {
   }
 
   /** Internal signing primitive; the HTTP service must authenticate and authorize first. */
+  async issueCatalogToken(roomId: string, actor: RealtimeActor, sessionExpiresAt: Date): Promise<LiveKitConnectionDetails> {
+    const ttl = Math.min(30, Math.floor((sessionExpiresAt.getTime() - Date.now()) / 1000));
+    if (!this.directCallsReady || !this.serverUrl || !LIVEKIT_ROOM_ID.test(roomId) || ttl < 1) throw new Error('LiveKit unavailable.');
+    const participantIdentity = liveKitParticipantIdentity(actor), roomName = catalogRoomName(roomId);
+    const token = new AccessToken(this.#apiKey, this.#apiSecret, { identity: participantIdentity, name: actor.displayName, ttl });
+    token.addGrant({ roomJoin: true, room: roomName, canSubscribe: true, canPublish: true,
+      canPublishSources: [TrackSource.MICROPHONE, TrackSource.CAMERA], canPublishData: false, canUpdateOwnMetadata: false });
+    return { roomId, roomName, participantIdentity, serverUrl: this.serverUrl, token: await token.toJwt(),
+      expiresAt: new Date((Math.floor(Date.now() / 1000) + ttl) * 1000).toISOString() };
+  }
+
+  /** Legacy configured-conversation rooms retain their existing authorization contract. */
   async issueToken(roomId: string, actor: RealtimeActor, sessionExpiresAt: Date): Promise<LiveKitConnectionDetails> {
     const room = this.room(roomId);
     const ttl = Math.min(300, Math.floor((sessionExpiresAt.getTime() - Date.now()) / 1_000));

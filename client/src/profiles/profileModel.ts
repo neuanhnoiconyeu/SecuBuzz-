@@ -32,6 +32,7 @@ export interface EditableProfileFields {
 export interface UserProfile extends EditableProfileFields {
   readonly id: string;
   readonly username: string;
+  readonly avatarUrl?: string | null;
   readonly isDemo: boolean;
 }
 

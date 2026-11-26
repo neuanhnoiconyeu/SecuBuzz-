@@ -108,9 +108,10 @@ export class LiveKitConnectionService {
   }
 
   async #token(roomId: string, signal: AbortSignal): Promise<LiveKitConnectionDetails> {
-    if(this.#options.purpose==='direct-call'&&this.#options.requestToken){
-      const id=this.#options.getConnectionId?.();if(!id)throw new LiveKitConnectionError('authentication_required');
-      try{return parseDetails(await this.#options.requestToken(roomId,id,signal),roomId,this.#url!,true);}
+    if(this.#options.requestToken){
+      const directCall=this.#options.purpose==='direct-call';
+      const id=directCall?this.#options.getConnectionId?.():'';if(directCall&&!id)throw new LiveKitConnectionError('authentication_required');
+      try{return parseDetails(await this.#options.requestToken(roomId,id??'',signal),roomId,this.#url!,directCall);}
       catch(error){
         if(error instanceof LiveKitConnectionError)throw error;
         if(error instanceof ApiError){
@@ -223,7 +224,7 @@ export function createSessionLiveKitConnection(user: AuthUser | null, authMode: 
   return new LiveKitConnectionService({ user, authMode, enabled: enabled === 'true'&&secure?.enabled!==false,
     purpose,
     ...(getConnectionId ? { getConnectionId } : {}),
-    ...(secure&&purpose==='direct-call'?{requestToken:(callId:string,connectionId:string,signal:AbortSignal)=>secure.api.request('/api/calls/token',{method:'POST',body:{callId,connectionId},signal})}:{}),
+    ...(secure?{requestToken:(id:string,connectionId:string,signal:AbortSignal)=>secure.api.request(purpose==='direct-call'?LIVEKIT_CALL_TOKEN_PATH:LIVEKIT_TOKEN_PATH,{method:'POST',body:purpose==='direct-call'?{callId:id,connectionId}:{roomId:id},signal})}:{}),
     serverUrl: process.env.NEXT_PUBLIC_LIVEKIT_URL,
     getCsrfToken: () => typeof document === 'undefined' ? null : document.querySelector<HTMLMetaElement>('meta[name="secubuzz-csrf-token"]')?.content ?? null,
     ...(onAuthenticationRequired ? { onAuthenticationRequired } : {}) });

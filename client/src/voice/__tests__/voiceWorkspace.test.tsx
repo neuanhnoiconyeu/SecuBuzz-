@@ -28,7 +28,12 @@ test('a real account can browse the room catalog while unavailable without recei
   expect(screen.getByRole('button', { name: 'Join room' })).toBeDisabled();
   expect(screen.queryByText('Ava Morgan')).not.toBeInTheDocument();
   expect(screen.queryByRole('list', { name: 'Room participants' })).not.toBeInTheDocument();
-  expect(screen.getByRole('list', { name: 'Available voice rooms' }).children).toHaveLength(3);
+  const roomList = screen.getByRole('list', { name: 'Available voice rooms' });
+  expect(roomList.children).toHaveLength(3);
+  expect(roomList).toHaveTextContent('Lounge');
+  expect(roomList).toHaveTextContent('Study Room');
+  expect(roomList).toHaveTextContent('Gaming Room');
+  expect(roomList).not.toHaveTextContent('Dev Corner');
   expect(screen.getAllByRole('status').some(status => status.textContent?.includes('Live voice unavailable'))).toBe(true);
 });
 

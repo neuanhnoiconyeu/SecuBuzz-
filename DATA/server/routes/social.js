@@ -1,4 +1,5 @@
 const express=require('express');
+const fs=require('node:fs');
 const { sendError }=require('../auth/errors');
 const { query }=require('../social/validation');
 
@@ -9,7 +10,7 @@ function createSocialRouters(service,middleware) {
         value.use((req,res,next)=>{try{service.rate(['GET','HEAD'].includes(req.method)?'read':'write',req.auth,req.socket.remoteAddress || 'unknown');next();}catch(error){next(error);}});
         value.use((req,res,next)=>['GET','HEAD'].includes(req.method) ? next() : middleware.requireCsrf(req,res,next));
         value.use((req,res,next)=>{
-            if(['GET','HEAD'].includes(req.method))return next();
+            if(['GET','HEAD'].includes(req.method) || req.path==='/me/avatar')return next();
             if(Number(req.headers['content-length'] || 0)>8192)return sendError(res,'PAYLOAD_TOO_LARGE',413);
             if(!req.headers['transfer-encoding'] && !Number(req.headers['content-length'] || 0))return next();
             if(!req.is('application/json'))return sendError(res,'UNSUPPORTED_MEDIA_TYPE',415);
@@ -23,6 +24,13 @@ function createSocialRouters(service,middleware) {
     users.get('/search',(req,res)=>res.json(service.search(req.auth,req.query,source(req))));
     users.get('/me',noQuery,(req,res)=>res.json(service.ownProfile(req.auth)));
     users.patch('/me',noQuery,(req,res)=>res.json(service.updateProfile(req.auth,req.csrfProof,req.body)));
+    users.post('/me/avatar',noQuery,(req,res,next)=>{service.uploadAvatar(req.auth,req.csrfProof,req).then(result=>res.json(result),next);});
+    users.delete('/me/avatar',noQuery,(req,res)=>res.json(service.removeAvatar(req.auth,req.csrfProof,req.body)));
+    users.get('/:id/avatar',(req,res)=>{
+        const avatar=service.getAvatar(req.auth,req.params.id,req.query);
+        res.set({'Content-Type':avatar.mimeType,'Content-Length':String(avatar.byteSize),'Cache-Control':'private, max-age=300','X-Content-Type-Options':'nosniff'});
+        const stream=fs.createReadStream(avatar.filePath);res.on('close',()=>stream.destroy());stream.on('error',()=>res.destroy());stream.pipe(res);
+    });
     users.patch('/:id',noQuery,(req,res)=>sendError(res,'NOT_FOUND',404));
     users.get('/:id',noQuery,(req,res)=>res.json(service.profile(req.auth,req.params.id)));
     // Retain the closed legacy CRUD paths without mounting their unauthorised handlers.

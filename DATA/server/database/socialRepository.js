@@ -2,8 +2,8 @@ const { randomUUID }=require('node:crypto');
 const { createRepositories }=require('./repositories');
 
 // Public projections only; caller supplies the verified actor. No connection or auth duplication.
-const publicColumns='u.user_id,u.username,p.display_name,p.avatar,a.username_key';
-const publicJoins='JOIN Users u ON u.user_id=a.user_id JOIN UserProfiles p ON p.user_id=u.user_id';
+const publicColumns='u.user_id,u.username,p.display_name,p.avatar,av.sha256 AS avatar_sha256,a.username_key';
+const publicJoins='JOIN Users u ON u.user_id=a.user_id JOIN UserProfiles p ON p.user_id=u.user_id LEFT JOIN UserProfileAvatars av ON av.user_id=u.user_id';
 const noBlock=`NOT EXISTS(SELECT 1 FROM Blocks b WHERE (b.blocker_id=@actor AND b.blocked_id=u.user_id)
     OR (b.blocker_id=u.user_id AND b.blocked_id=@actor))`;
 const relationships=`LEFT JOIN Friendships f ON f.user_low=min(@actor,u.user_id) AND f.user_high=max(@actor,u.user_id) AND f.origin='authenticated'
@@ -87,7 +87,15 @@ function createSocialRepository(db) {
             const [low,high]=pair(actor,target);
             db.prepare("UPDATE FriendRequests SET status='cancelled',resolved_at=? WHERE min(sender_id,recipient_id)=? AND max(sender_id,recipient_id)=? AND status='pending'").run(at,low,high);
         },
-        unblock(actor,target) {db.prepare('DELETE FROM Blocks WHERE blocker_id=? AND blocked_id=?').run(actor,target);}
+        unblock(actor,target) {db.prepare('DELETE FROM Blocks WHERE blocker_id=? AND blocked_id=?').run(actor,target);},
+        avatarRecord:id=>get('SELECT * FROM UserProfileAvatars WHERE user_id=@id',{id}),
+        upsertAvatar(id,{storageKey,mimeType,byteSize,sha256},at) {
+            db.prepare(`INSERT INTO UserProfileAvatars(user_id,storage_key,mime_type,byte_size,sha256,updated_at) VALUES(?,?,?,?,?,?)
+                ON CONFLICT(user_id) DO UPDATE SET storage_key=excluded.storage_key,mime_type=excluded.mime_type,
+                byte_size=excluded.byte_size,sha256=excluded.sha256,updated_at=excluded.updated_at`)
+                .run(id,storageKey,mimeType,byteSize,sha256,at);
+        },
+        deleteAvatar:id=>db.prepare('DELETE FROM UserProfileAvatars WHERE user_id=?').run(id).changes
     };
 }
 module.exports={createSocialRepository};

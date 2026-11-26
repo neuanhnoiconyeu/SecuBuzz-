@@ -162,3 +162,95 @@ test('voice content reuses encrypted attachment ownership, realtime/history, cip
   const reloaded=(await stack.history(bob,conversationId)).items[0];assert.deepEqual(content.decodeAuthenticatedContent(await TestDevice.decrypt(bobKey.key,reloaded)),decoded);
   assert.equal((await alice.browser.mutate('DELETE',`/api/messages/${reloaded.storageId}`)).status,200);await assert.rejects(receiver.read(attachment,new AbortController().signal),{status:404});
 });
+
+test('a participant forwards a fresh encrypted copy to another authorized conversation; source Unsend cannot revoke the copy',async()=>{
+  const {alice,bob,conversationId,epoch}=await stack.pair('forward-source-a','forward-source-b');
+  const carol=await stack.person('forward-destination-c');await stack.registerDevice(carol);await stack.befriend(bob,carol);
+  const destination=await stack.openDm(bob,carol),destinationEpoch=await stack.publishEpoch(bob,destination),recipientKey=await stack.currentKey(carol,destination);
+  const sourceUploader=new files.AuthenticatedAttachments(session(alice),conversationId),sourceReader=new files.AuthenticatedAttachments(session(bob),conversationId);
+  const original=fixture('forward-private.pdf','application/pdf'),sourceFile=await sourceUploader.upload(original),sourceBatch=await sourceUploader.seal([sourceFile]);
+  const sender=await stack.connect(alice),forwarder=await stack.connect(bob),recipient=await stack.connect(carol);
+  const sourceWire=await stack.envelope(alice,conversationId,epoch,content.encodeAuthenticatedContent({text:'',attachments:sourceBatch.manifests}),sourceBatch.messageId);
+  assert.equal((await stack.send(sender,sourceWire)).status,'sent');
+  const plaintext=await sourceReader.read(sourceFile,new AbortController().signal);
+  const targetUploader=new files.AuthenticatedAttachments(session(bob),destination),targetReader=new files.AuthenticatedAttachments(session(carol),destination);
+  const targetFile=await targetUploader.upload(new File([plaintext],original.name,{type:original.type})),targetBatch=await targetUploader.seal([targetFile]);
+  const sourceManifest=sourceBatch.manifests[0],targetManifest=targetBatch.manifests[0];
+  assert.notEqual(targetManifest.key,sourceManifest.key);assert.notEqual(targetManifest.id,sourceManifest.id);assert.notEqual(targetManifest.iv,sourceManifest.iv);
+  assert.notEqual(targetManifest.sha256,sourceManifest.sha256);assert.equal(targetManifest.conversationId,destination);assert.equal(targetManifest.senderId,bob.id);
+  const text=content.encodeAuthenticatedContent({text:'',attachments:targetBatch.manifests,forwarded:true,operation:{id:randomUUID(),part:'message'}});
+  const wire=await stack.envelope(bob,destination,destinationEpoch,text,targetBatch.messageId),mark=recipient.mark();
+  assert.equal((await stack.send(forwarder,wire)).status,'sent');const arrived=await recipient.waitFor('message:new',m=>m.id===wire.id,{since:mark});
+  const decoded=content.decodeAuthenticatedContent(await TestDevice.decrypt(recipientKey.key,arrived as never));assert.equal(decoded.forwarded,true);
+  assert.equal(decoded.attachments[0].messageId,wire.id);
+  assert.deepEqual(Buffer.from(await (await targetReader.read(targetFile,new AbortController().signal)).arrayBuffer()),Buffer.from(await original.arrayBuffer()));
+  assert.equal((await fetch(stack.url+`/api/attachments/${targetFile.id}/download`,{headers:headers(alice)})).status,404);
+  assert.equal((await fetch(stack.url+`/api/attachments/${sourceFile.id}/download`,{headers:headers(carol)})).status,404);
+  const sourceStored=(await stack.history(alice,conversationId)).items.find((m:{id:string;storageId:string})=>m.id===sourceWire.id)!;
+  assert.equal((await alice.browser.mutate('DELETE',`/api/messages/${sourceStored.storageId}`)).status,200);
+  await assert.rejects(sourceReader.read(sourceFile,new AbortController().signal),{status:404});
+  assert.deepEqual(Buffer.from(await (await targetReader.read(targetFile,new AbortController().signal)).arrayBuffer()),Buffer.from(await original.arrayBuffer()));
+  const targetStored=(await stack.history(carol,destination)).items.find((m:{id:string;storageId:string})=>m.id===wire.id)!;
+  assert.equal((await bob.browser.mutate('DELETE',`/api/messages/${targetStored.storageId}`)).status,200);
+  await assert.rejects(targetReader.read(targetFile,new AbortController().signal),{status:404});
+  assert.ok(!stack.fixture.databaseText().includes(targetManifest.key));assert.ok(!stack.fixture.databaseText().includes(original.name));
+});
+
+test('historical encrypted PDF, image, video, and document attachments remain readable after block/unblock before re-friending while new uploads stay forbidden',async()=>{
+  const {alice,bob,conversationId,epoch,bobKey}=await stack.pair('block-attach-a','block-attach-b');
+  const outsider=await stack.person('block-attach-outsider');
+  const sender=new files.AuthenticatedAttachments(session(alice),conversationId);
+  const receiver=new files.AuthenticatedAttachments(session(bob),conversationId);
+  const selected=[
+    fixture('history-report.pdf','application/pdf'),
+    fixture('history-photo.png','image/png'),
+    fixture('history-clip.mp4','video/mp4'),
+    fixture('history-notes.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+  ];
+  const uploaded=await Promise.all(selected.map(file=>sender.upload(file)));
+  const batch=await sender.seal(uploaded);
+  const wire=await stack.envelope(alice,conversationId,epoch,content.encodeAuthenticatedContent({text:'Files before block',attachments:batch.manifests}),batch.messageId);
+  const a=await stack.connect(alice),b=await stack.connect(bob),mark=b.mark();
+  assert.equal((await stack.send(a,wire)).status,'sent');
+  sender.accepted(batch.messageId);
+  await b.waitFor('message:new',e=>e.id===wire.id,{since:mark});
+
+  // 1. Before block: receiver decrypts and verifies all attachment types.
+  for(let i=0;i<uploaded.length;i++){
+    const decrypted=await receiver.read(uploaded[i],new AbortController().signal);
+    assert.deepEqual(Buffer.from(await decrypted.arrayBuffer()),Buffer.from(await selected[i]!.arrayBuffer()));
+  }
+
+  // 2. Block: history and attachment downloads return 404.
+  assert.equal((await alice.browser.mutate('POST','/api/blocks',{userId:bob.id})).status,204);
+  for(const item of uploaded)await assert.rejects(receiver.read(item,new AbortController().signal),{status:404});
+  await assert.rejects(sender.upload(fixture('blocked-upload.pdf','application/pdf')),{status:404});
+
+  // 3. Unblock (before re-friending): interactionAllowed is false, but historical attachments are readable and decryptable.
+  assert.equal((await alice.browser.mutate('DELETE',`/api/blocks/${bob.id}`)).status,204);
+  assert.equal((await bob.browser.request(`/api/conversations/${conversationId}`)).body.conversation.interactionAllowed,false);
+  const history=await stack.history(bob,conversationId);
+  const decoded=content.decodeAuthenticatedContent(await TestDevice.decrypt(bobKey.key,history.items[0]));
+  assert.deepEqual(decoded.attachments,batch.manifests);
+  for(let i=0;i<uploaded.length;i++){
+    const decrypted=await receiver.read(uploaded[i],new AbortController().signal);
+    assert.deepEqual(Buffer.from(await decrypted.arrayBuffer()),Buffer.from(await selected[i]!.arrayBuffer()));
+  }
+  // Unauthorized outsider still denied; new uploads/sends still forbidden until friendship is restored.
+  assert.equal((await fetch(stack.url+`/api/attachments/${uploaded[0].id}/download`,{headers:headers(outsider)})).status,404);
+  await assert.rejects(sender.upload(fixture('unfriended-upload.pdf','application/pdf')),{status:403});
+  await assert.rejects(receiver.upload(fixture('unfriended-recv.pdf','application/pdf')),{status:403});
+
+  // 4. Re-establish friendship: interactionAllowed is true, historical and new attachments both work.
+  await stack.befriend(alice,bob);
+  assert.equal((await bob.browser.request(`/api/conversations/${conversationId}`)).body.conversation.interactionAllowed,true);
+  for(let i=0;i<uploaded.length;i++){
+    const decrypted=await receiver.read(uploaded[i],new AbortController().signal);
+    assert.deepEqual(Buffer.from(await decrypted.arrayBuffer()),Buffer.from(await selected[i]!.arrayBuffer()));
+  }
+  const freshFile=fixture('after-refriend.pdf','application/pdf');
+  const freshItem=await sender.upload(freshFile),freshBatch=await sender.seal([freshItem]);
+  const freshWire=await stack.envelope(alice,conversationId,epoch,content.encodeAuthenticatedContent({text:'After refriend',attachments:freshBatch.manifests}),freshBatch.messageId);
+  assert.equal((await stack.send(a,freshWire)).status,'sent');
+  assert.deepEqual(Buffer.from(await (await receiver.read(freshItem,new AbortController().signal)).arrayBuffer()),Buffer.from(await freshFile.arrayBuffer()));
+});

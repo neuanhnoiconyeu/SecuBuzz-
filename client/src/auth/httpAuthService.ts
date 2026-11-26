@@ -28,8 +28,9 @@ function authUser(value: unknown): AuthUser {
     value.id === DEMO_USER_ID || /^demo[-_:]/i.test(value.id as string)) {
     throw new AuthError('invalid_response');
   }
+  const avatarUrl = typeof value.avatarUrl === 'string' && /^\/api\/users\/[A-Za-z0-9._:-]+\/avatar(?:\?v=[A-Za-z0-9_-]+)?$/.test(value.avatarUrl) ? value.avatarUrl : undefined;
   return { id: value.id as string, username: value.username as string, displayName: value.displayName as string,
-    avatar: value.avatar as AuthUser['avatar'], isDemo: false };
+    avatar: value.avatar as AuthUser['avatar'], ...(avatarUrl ? { avatarUrl } : {}), isDemo: false };
 }
 
 /** DB-2 same-origin cookie adapter. It never reads or retains a session bearer. */
@@ -258,14 +259,18 @@ export class HttpAuthService implements AuthService {
     const request = async (path: string, options: ApiRequest = {}, binary?: {body?:Blob}): Promise<unknown> => {
       const handshake = path === this.endpoints.csrf && (options.method ?? 'GET') === 'GET' && options.body === undefined;
       const social = /^\/api\/(?:users|friends|blocks)(?:[/?][A-Za-z0-9._~%/?=&:-]*)?$/.test(path);
-      const secure = /^\/api\/(?:keys\/devices(?:\/[A-Za-z0-9_-]{22}\/revoke)?|conversations(?:\/dm|\/[A-Za-z0-9._:-]+(?:\/(?:messages|pins|reactions|keys(?:\/epochs(?:\/[A-Za-z0-9_-]{22})?)?))?)?|messages\/[A-Za-z0-9-]+(?:\/(?:read|pin|reaction))?)(?:\?[A-Za-z0-9._~%=&-]+)?$/.test(path);
+      const secure = /^\/api\/(?:keys\/devices(?:\/[A-Za-z0-9_-]{22}\/revoke)?|conversations(?:\/dm|\/[A-Za-z0-9._:-]+(?:\/(?:messages|pins|reactions|preferences|keys(?:\/epochs(?:\/[A-Za-z0-9_-]{22})?)?))?)?|messages\/[A-Za-z0-9-]+(?:\/(?:read|pin|reaction))?)(?:\?[A-Za-z0-9._~%=&-]+)?$/.test(path);
       const attachmentJson=(path==='/api/attachments/limits'&&(options.method??'GET')==='GET')||
         (/^\/api\/attachments\/[0-9a-f-]{36}$/.test(path)&&options.method==='DELETE')||
         (/^\/api\/attachments\/batches\/[A-Za-z0-9._:-]+\/[0-9a-f-]{36}$/.test(path)&&options.method==='POST');
       const attachmentBinary=binary!==undefined&&((options.method==='POST'&&/^\/api\/attachments\?conversation_id=[A-Za-z0-9._:%-]+&message_id=[0-9a-f-]{36}&id=[0-9a-f-]{36}$/.test(path)&&binary.body instanceof Blob&&binary.body.size<=50*1024*1024+16)||
-        (options.method==='GET'&&/^\/api\/attachments\/[0-9a-f-]{36}\/download$/.test(path)&&binary.body===undefined));
+        (options.method==='GET'&&/^\/api\/attachments\/[0-9a-f-]{36}\/download$/.test(path)&&binary.body===undefined)||
+        (options.method==='POST'&&path==='/api/users/me/avatar'&&binary.body instanceof Blob&&binary.body.size<=2*1024*1024));
       const callToken=path==='/api/calls/token'&&options.method==='POST';
-      if ((binary!==undefined ? !attachmentBinary : !social && !secure && !handshake && !attachmentJson&&!callToken) || path.includes('..') || path.includes('//')) {
+      const voiceRoom = path === '/api/voice/token' && options.method === 'POST' ||
+        path === '/api/voice/rooms' && ['GET','POST'].includes(options.method ?? 'GET') ||
+        /^\/api\/voice\/rooms\/(?:lounge|study-room|dev-corner|room-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/.test(path) && ['PATCH','DELETE'].includes(options.method ?? 'GET');
+      if ((binary!==undefined ? !attachmentBinary : !social && !secure && !handshake && !attachmentJson&&!callToken&&!voiceRoom) || path.includes('..') || path.includes('//')) {
         throw new ApiError('unavailable');
       }
       const controller = new AbortController();

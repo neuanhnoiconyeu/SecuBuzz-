@@ -27,7 +27,6 @@ export function decodeAuthenticatedContent(raw: string): AuthenticatedContent | 
         (value.v!==1 ? !validAttachmentSet(value.attachments) : !value.text.trim())) return null;
     const result: AuthenticatedContent = { text: value.text };
     if(value.v===2||value.v===3){
-      if(value.forwarded||value.operation)return null;
       result.attachments=value.attachments as EncryptedAttachmentManifest[];
       const first=result.attachments[0]!;
       if(result.attachments.some(m=>m.conversationId!==first.conversationId||m.messageId!==first.messageId||m.senderId!==first.senderId))return null;
@@ -45,6 +44,7 @@ export function decodeAuthenticatedContent(raw: string): AuthenticatedContent | 
     }
     if (result.reply && (result.forwarded || result.operation)) return null;
     if (result.forwarded && !result.operation) return null;
+    if (result.attachments && result.operation?.part === 'note') return null;
     return result;
   } catch { return null; }
 }

@@ -11,6 +11,8 @@ import {
 export interface ProfileService {
   getCurrentProfile(): Promise<UserProfile>;
   updateProfile(updates: ProfileUpdates): Promise<UserProfile>;
+  uploadAvatar?(file: File): Promise<UserProfile>;
+  removeAvatar?(): Promise<UserProfile>;
   setPresencePreference(preference: PresencePreference): Promise<UserProfile>;
   subscribeToProfileChanges(listener: (profile: UserProfile) => void): () => void;
 }

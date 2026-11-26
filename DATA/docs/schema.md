@@ -1,7 +1,7 @@
 # DATA schema and ERD
 
-Current working-tree schema is version 12 (`0012-groups.sql`); its additive group
-schema is documented below. The existing DB-4B key schema is unchanged:
+Current working-tree schema is version 16 (`0016-customization-retention.sql`).
+The additive group schema is documented below. The existing DB-4B key schema is unchanged:
 `0007-recipient-keys.sql` adds DeviceKeys
 (public signing/agreement points, self-signature, account ownership, stable deviceId,
 monotonic keyVersion and active/superseded/revoked status), ConversationKeyEpochs
@@ -52,6 +52,9 @@ DB-4B adds `0006-encrypted-message-lifecycle.sql` to the existing Messages table
 | AuthChallenges | Anonymous pre-session proof verifiers; PK challenge_hash | Hash-only nonce/CSRF storage, integer issue/expiry times; expiry index. No authenticated user association. |
 | AuthRateLimits | Durable shared fixed-window counters; PK bucket_hash | Hashed source/identifier/account keys, integer times/attempt count; expiry index. Independent infrastructure table. |
 | SocialRevisions | DB-3 user-scoped version; PK/FK user_id to Users | Nonnegative integer updated transactionally for visible social changes; supports coherent paginated snapshots, not relationship copies or a global activity count. |
+| UserProfileAvatars | PK/FK `user_id` to Users | Opaque storage key, allowlisted image MIME type, bounded byte size, content digest and update time. Foreign key is restrictive; avatar file replacement/removal is explicit service behavior. |
+| ConversationThemes | PK/FK `conversation_id` to Conversations; nullable `updated_by` FK to Users | Allowlisted theme ID and update time. Foreign keys are restrictive. |
+| ConversationNicknames | Composite PK `(conversation_id,target_user_id)`; optional `updated_by` FK to Users | Bounded nonblank display nickname and update time. Foreign keys are restrictive. |
 
 The schema does not encode full business authorization. DB-3 must enforce block restrictions and atomic friendship transitions. DB-5 must enforce invitations, history visibility, owner transfer, at least one owner, and authorized leave/removal. Membership rows are retained to keep historical sender and receipt references valid. Rejoining and multiple membership intervals need an agreed DB-5 policy. Profile length/content rules require API validation in DB-3. Timestamp syntax outside session integers remains a trusted DAL caller responsibility.
 
@@ -103,6 +106,9 @@ Encryption metadata is stored unchanged: algorithm, version, encoding, IV, ciphe
 | 11 | `0011-encrypted-message-revisions.sql` |
 | 12 | `0012-groups.sql` |
 | 13 | `0013-attachment-lifecycle.sql` |
+| 14 | `0014-voice-rooms.sql` |
+| 15 | `0015-conversation-customization.sql` |
+| 16 | `0016-customization-retention.sql` |
 
 ### Added tables
 
@@ -186,3 +192,34 @@ The database does not validate the `storage_key` format, recompute `integrity_di
 `attachments_immutable` protects attachment identity and metadata. `attachments_lifecycle` checks every update. A deleted row permits value-preserving updates or only an isolated `purge_state` transition from `not_purged` to `purged`; it rejects any other changed value, a purge-state reversal, and a purge transition combined with another column change. Comparisons are NULL-safe. Existing status transitions, association, sender, and `deleted_at` consistency checks remain enforced. This is the Project Owner-approved Task 8.4 amendment recorded in the DB-6B design decision. `attachments_metadata_insert` enforces the encrypted metadata length bound.
 
 Migration 0009 is DB-6B draft schema in this isolated implementation workspace. Its presence does not enable the Attachment API or any feature gate. Published migrations 0001–0008 remain unchanged.
+
+## Authenticated community voice rooms (V2.4)
+
+Migration `0014-voice-rooms.sql` (renumbered cleanly from `0013-voice-rooms.sql`) adds
+`VoiceRooms`, independent of Conversations, Messages, device keys and encrypted
+attachments. Rooms are shared with all signed-in users; this catalog does not grant
+direct-conversation access. The owner is a session-derived `Users` foreign key with ON
+DELETE RESTRICT. Default Lounge, Study Room and Dev Corner (projected to the catalog
+UI/API as Gaming Room) rows have no account owner and cannot be renamed or removed.
+`voice_rooms_active_name` enforces unique normalized active names;
+`voice_rooms_owner` supports owner quotas. `voice_rooms_identity` preserves ownership,
+identity, creation time, defaults and terminal deletion. `voice_rooms_retained`
+retains tombstones for room admission and media cleanup. No existing row or trigger
+is changed. Room metadata and participant display names are not media E2EE.
+
+## Conversation customization (V2.5)
+
+Migration 0015 (`0015-conversation-customization.sql`, renumbered with unchanged SQL and
+checksum `6a132cff0ce19ee83be87c6f26b8dac3277c25fa95e654f04671cd53200d9748`) adds
+`UserProfileAvatars`, `ConversationThemes` and `ConversationNicknames`. Its six
+historical non-restrictive delete actions are pinned as a file-and-checksum-specific
+linter exception. Migration 0016 (`0016-customization-retention.sql`) rebuilds those
+tables with `ON DELETE RESTRICT`, copies all stored values and recreates the avatar
+social-revision triggers. No customization rows are cascaded or nulled by a parent
+deletion. Avatar bytes remain in private storage and are replaced or removed only through
+the explicit avatar service.
+
+`UserProfileAvatars` belongs to one user. Theme and nickname rows belong to a
+conversation; nickname targets and optional updater identities are user-owned
+references. These tables are included in DATA group snapshots so mutation and
+rollback checks cover V2.5 state as well as group and messaging data.

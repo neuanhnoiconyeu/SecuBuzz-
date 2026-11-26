@@ -77,15 +77,15 @@ async function select(page, name) {
     await alice.getByRole('textbox', { name: /^Message to / }).fill('Unsent composer draft stays intact');
     for (const page of pages) await page.evaluate(() => {
       window.__buzzEffects = [];
-      new MutationObserver(records => { for (const r of records) if (r.attributeName === 'data-buzz-active' && r.target.matches('.chat-window') && r.target.dataset.buzzActive === 'true') window.__buzzEffects.push(getComputedStyle(r.target).animationName); })
-        .observe(document.querySelector('.chat-window'), { attributes: true });
+      new MutationObserver(records => { for (const r of records) if (r.attributeName === 'data-buzz-active' && r.target.matches('.real-messenger') && r.target.dataset.buzzActive === 'true') window.__buzzEffects.push(getComputedStyle(r.target).animationName); })
+        .observe(document.querySelector('.real-messenger'), { attributes: true });
     });
     await bob.emulateMedia({ reducedMotion: 'reduce' });
     await alice.getByRole('button', { name: 'Send BUZZ alert' }).click();
     await expect(alice.getByRole('status', { name: 'Buzz notification' })).toHaveText('BUZZ! sent.');
     await expect(bob.getByRole('status', { name: 'Buzz notification' })).toHaveText('Buzz Alice sent you a BUZZ!');
     check('authenticated Buzz reaches the other browser profile', true);
-    check('sender uses the existing shake animation', await alice.evaluate(() => window.__buzzEffects.includes('buzz-shake')));
+    check('sender uses the whole-window shake animation', await alice.evaluate(() => window.__buzzEffects.includes('messenger-buzz-shake')));
     check('recipient reduced motion suppresses animation but retains notice', await bob.evaluate(() => window.__buzzEffects.length > 0 && window.__buzzEffects.every(x => x === 'none')));
     await expect(alice.getByRole('button', { name: 'Send BUZZ alert' })).toBeDisabled(); check('cooldown disables repeated Buzz without disabling the composer', await alice.getByRole('textbox', { name: /^Message to / }).isEnabled());
     await expect(alice.getByRole('textbox', { name: /^Message to / })).toHaveValue('Unsent composer draft stays intact');

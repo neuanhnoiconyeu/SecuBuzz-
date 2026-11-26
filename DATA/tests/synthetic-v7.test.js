@@ -27,11 +27,12 @@ const { DEFAULT_SEED, buildVersionSeven, tableCounts, contentDigest } = require(
 const SEED = DEFAULT_SEED;
 const OTHER_SEED = 4242;
 const FILE_NAME = 'synthetic-v7.sqlite';
+const BASELINE_VERSION = 7;
 const migrations = loadMigrations();
 const groupMigration = migrations.find(migration => /CREATE TABLE\s+(?:IF NOT EXISTS\s+)?GroupExtensions\b/i.test(migration.sql));
-assert.ok(groupMigration, 'the migration directory identifies the GroupExtensions boundary');
-const PUBLISHED = Object.freeze(migrations.filter(migration => migration.version < groupMigration.version));
-const BASELINE_VERSION = PUBLISHED.at(-1).version;
+assert.ok(groupMigration && groupMigration.version > BASELINE_VERSION, 'the migration directory identifies the GroupExtensions boundary after version 7');
+const PUBLISHED = Object.freeze(migrations.filter(migration => migration.version <= BASELINE_VERSION));
+assert.equal(PUBLISHED.at(-1)?.version, BASELINE_VERSION);
 // Counted by hand from the data set in the header of support/synthetic-v7.js.
 const EXPECTED_COUNTS = Object.freeze({
     AccountCredentials:6, // ada, ben, cleo, dan, eve, finn

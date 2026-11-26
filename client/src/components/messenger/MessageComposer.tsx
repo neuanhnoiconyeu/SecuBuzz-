@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import type { ChangeEvent, KeyboardEvent } from 'react';
+import type { ChangeEvent, ClipboardEvent, KeyboardEvent } from 'react';
 import { BellRing, Check, Mic, Paperclip, Send, Smile, Sparkles, Square, X } from 'lucide-react';
 import { EmojiPicker } from './EmojiPicker';
 import { useAnchoredMessagePopover } from '@/hooks/useAnchoredMessagePopover';
@@ -8,6 +8,7 @@ import type { MessageAttachment, VoiceMessageMetadata,RecordedVoiceDraft } from 
 import {VOICE_LIMITS} from '../../../../shared/encryptedVoice';
 import { DEMO_MESSAGING_CAPABILITIES, type MessagingCapabilities } from '@/messaging/messagingCapabilities';
 import { AttachmentUploadError, type AttachmentUploader } from '@/messaging/attachmentUpload';
+import { extractClipboardImages } from '@/messaging/clipboardImages';
 import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT,ATTACHMENT_LIMITS } from '../../../../shared/attachmentPolicy';
 import { useAttachmentDrafts } from '@/hooks/useAttachmentDrafts';
 import { useVoiceRecording } from '@/hooks/useVoiceRecording';
@@ -50,6 +51,7 @@ export interface MessageComposerProps {
   onTypingActivity?(): void;
   onTypingStop?(): void;
   onRewriteDraft?(draft: string): void;
+  quickEmoji?: string;
 }
 
 export function MessageComposer({
@@ -76,6 +78,7 @@ export function MessageComposer({
   textOnly = false,
   capabilities = DEMO_MESSAGING_CAPABILITIES,
   active = true,
+  quickEmoji,
 }: MessageComposerProps) {
   const canAttach = !textOnly && capabilities.attachments;
   const canRecord = !textOnly && capabilities.voiceMessages;
@@ -102,6 +105,7 @@ export function MessageComposer({
   const emojiPanel = useRef<HTMLDivElement>(null), emojiTrigger = useRef<HTMLButtonElement>(null);
   const emojiId = useId();
   const selection = useRef<{ start: number; end: number } | null>(null);
+  const emojiCaret = useRef<number | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const submitLock = useRef(false);
@@ -123,6 +127,10 @@ export function MessageComposer({
 
   useEffect(() => {
     sizeToDraft(inputRef.current);
+    if (emojiCaret.current !== null) {
+      inputRef.current?.setSelectionRange(emojiCaret.current, emojiCaret.current);
+      emojiCaret.current = null;
+    }
   }, [value]);
 
   useEffect(() => {
@@ -139,7 +147,8 @@ export function MessageComposer({
   useEffect(() => {
     if (emojiOpen) emojiPanel.current?.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
   }, [emojiOpen]);
-  useEffect(() => { if (!active || !capabilities.emoji || disabled || isSending || isSubmitting) closeEmoji(); }, [active, capabilities.emoji, disabled, isSending, isSubmitting, closeEmoji]);
+  useEffect(() => { if (!active || !capabilities.emoji) closeEmoji(); }, [active, capabilities.emoji, closeEmoji]);
+  useEffect(() => { closeEmoji(); selection.current = null; emojiCaret.current = null; }, [conversationName, closeEmoji]);
 
   const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.currentTarget.files ?? []);
@@ -150,6 +159,20 @@ export function MessageComposer({
     void attachmentDrafts.addFiles(files);
   };
 
+  const handlePaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
+    const images = extractClipboardImages(event.clipboardData);
+    if (images.length === 0) return;
+    event.preventDefault();
+    if (!canAttach || disabled || isSending || submitLock.current) return;
+    if (attachmentUnavailableReason) {
+      setSendError(attachmentUnavailableReason);
+      return;
+    }
+    setSendFeedback(false);
+    setSendError('');
+    void attachmentDrafts.addFiles(images);
+  };
+
   const startRecording = () => {
     if (!canRecord || disabled || isSending || submitLock.current) return;
     setSendError('');
@@ -157,39 +180,40 @@ export function MessageComposer({
   };
 
   const insertEmoji = (emoji: string) => {
-    if (!capabilities.emoji) return;
+    if (!active || !capabilities.emoji || disabled || isSending || submitLock.current || isUploading) return;
     const input = inputRef.current;
     const text = latestValue.current;
     const start = Math.min(selection.current?.start ?? input?.selectionStart ?? text.length, text.length);
     const end = Math.min(selection.current?.end ?? input?.selectionEnd ?? text.length, text.length);
     const next = text.slice(0, start) + emoji + text.slice(end);
+    const caret = start + emoji.length;
+    selection.current = { start: caret, end: caret };
+    emojiCaret.current = input?.value === next ? null : caret;
+    latestValue.current = next;
+    // Updating the textarea selection must not move focus outside the picker.
+    input?.setSelectionRange(caret, caret);
     setValue(next);
-    setEmojiOpen(false);
     setSendFeedback(false);
     onTypingActivity?.();
-    const caret = start + emoji.length;
-    window.requestAnimationFrame(() => {
-      input?.focus();
-      input?.setSelectionRange(caret, caret);
-    });
   };
 
-  const submit = async () => {
-    const content = value.trim();
-    const hasExtras = attachments.length > 0 || Boolean(voiceDraft);
-    if (!capabilities.sendMessages || !supportedDraft || (!content && !hasExtras) || disabled || isSending || isRecording || requestingMicrophone || processingAttachments || submitLock.current) return;
-    if(prepareVoice&&voiceDraft&&attachments.length>=ATTACHMENT_LIMITS.maxCount){setSendError('A voice recording counts as one file. Attach up to four other files.');return;}
-    if(prepareVoice&&voiceDraft&&attachments.reduce((n,file)=>n+file.sizeBytes,voiceDraft.blob.size)>ATTACHMENT_LIMITS.maxTotalSizeMb*1024*1024){setSendError('Voice and attachments must total 100 MB or less.');return;}
+  const submit = async (overrideText?: string) => {
+    const isQuick = typeof overrideText === 'string';
+    const content = isQuick ? overrideText : value.trim();
+    const hasExtras = !isQuick && (attachments.length > 0 || Boolean(voiceDraft));
+    if (!capabilities.sendMessages || (!isQuick && !supportedDraft) || (!content && !hasExtras) || disabled || isSending || isRecording || requestingMicrophone || processingAttachments || (isQuick && isUploading) || submitLock.current) return;
+    if(!isQuick&&prepareVoice&&voiceDraft&&attachments.length>=ATTACHMENT_LIMITS.maxCount){setSendError('A voice recording counts as one file. Attach up to four other files.');return;}
+    if(!isQuick&&prepareVoice&&voiceDraft&&attachments.reduce((n,file)=>n+file.sizeBytes,voiceDraft.blob.size)>ATTACHMENT_LIMITS.maxTotalSizeMb*1024*1024){setSendError('Voice and attachments must total 100 MB or less.');return;}
     submitLock.current = true;
     setIsSubmitting(true);
     setSendError('');
     setSendFeedback(false);
     onTypingStop?.();
     try {
-      const sentAttachments = attachments.length ? await attachmentDrafts.prepareForSend() : [];
+      const sentAttachments = !isQuick && attachments.length ? await attachmentDrafts.prepareForSend() : [];
       if (!mounted.current) return;
       let sentVoice:VoiceMessageMetadata|undefined;
-      if(voiceDraft){
+      if(!isQuick && voiceDraft){
         if(prepareVoice){
           const operation=new AbortController();voiceOperation.current=operation;sentVoice=await prepareVoice(voiceDraft,operation.signal);
           if(operation.signal.aborted||!mounted.current){if(sentVoice.attachment)void discardVoice.current?.(sentVoice.attachment).catch(()=>{});return;}
@@ -205,10 +229,14 @@ export function MessageComposer({
       const accepted = hasExtras ? await onSend(content, extras) : await onSend(content);
       if (!mounted.current) return;
       if (accepted) {
-        preparedVoice.current=null;
-        attachmentDrafts.clearAccepted();
-        if (latestValue.current === value) setValue('');
-        voice.clearDraft();
+        closeEmoji();
+        if (!isQuick) {
+          selection.current = null; emojiCaret.current = null;
+          preparedVoice.current=null;
+          attachmentDrafts.clearAccepted();
+          if (latestValue.current === value) setValue('');
+          voice.clearDraft();
+        }
         setSendFeedback(true);
       } else setSendError(textOnly ? 'Your message was not confirmed. Your draft is still here.' : 'The message was not accepted. Your draft is still here.');
     } catch (failure) {
@@ -386,9 +414,10 @@ export function MessageComposer({
             className="composer-icon-button"
             disabled={disabled || isSending || isSubmitting || isUploading}
             onClick={() => {
+              if (emojiOpen) { emojiPanel.current?.querySelector<HTMLInputElement>('input[type="search"]')?.focus(); return; }
               const input = inputRef.current;
               selection.current = input ? { start: input.selectionStart, end: input.selectionEnd } : null;
-              setEmojiOpen(open => !open);
+              setEmojiOpen(true);
             }}
             aria-label="Insert emoji"
             aria-haspopup="dialog"
@@ -400,7 +429,7 @@ export function MessageComposer({
 
           {emojiOpen && (
             <div ref={emojiPanel} id={emojiId} className="composer-emoji-popover emoji-picker-panel" role="dialog" aria-label="Emoji picker">
-              <EmojiPicker onSelect={insertEmoji} onClose={() => closeEmoji(true)} />
+              <EmojiPicker onSelect={insertEmoji} onClose={() => closeEmoji(true)} disabled={disabled || isSending || isSubmitting || isUploading} />
             </div>
           )}
         </div>}
@@ -418,6 +447,7 @@ export function MessageComposer({
             if (sendError) setSendError('');
           }}
           onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
           onBlur={onTypingStop}
           placeholder={`Message ${conversationName}…`}
           rows={1}
@@ -425,17 +455,35 @@ export function MessageComposer({
           aria-invalid={Boolean(displayedError)}
           aria-describedby={`message-input-hint message-input-demo${displayedError ? ' message-input-error' : ''}`}
         />
-        <Button
-          className="composer-send"
-          type="submit"
-          disabled={!canSend}
-          loading={isSending || isSubmitting}
-          leadingIcon={sendFeedback
-            ? <Check size={16} className="composer-submit-mark" aria-hidden="true" />
-            : <Send size={16} aria-hidden="true" />}
+        {!hasContent && !disabled && quickEmoji && capabilities.sendMessages ? (
+          <Button
+            className="composer-send composer-quick-emoji"
+            type="button"
+            variant="ghost"
+            disabled={isSending || isRecording || requestingMicrophone || isUploading || processingAttachments || isSubmitting}
+            loading={isSending || isSubmitting}
+            aria-label={`Send ${quickEmoji}`}
+            title={`Send ${quickEmoji}`}
+            onClick={() => void submit(quickEmoji)}
           >
-          {isUploading ? `${attachmentActionLabel} ${uploadProgress}/${attachments.length}` : 'Send'}
-        </Button>
+            <span aria-hidden="true">{quickEmoji}</span>
+          </Button>
+        ) : (
+          <Button
+            className="composer-send"
+            type="submit"
+            variant="ghost"
+            disabled={!canSend}
+            loading={isSending || isSubmitting}
+            aria-label={isUploading ? `${attachmentActionLabel} ${uploadProgress}/${attachments.length}` : 'Send'}
+            title={isUploading ? `${attachmentActionLabel} ${uploadProgress}/${attachments.length}` : 'Send'}
+            leadingIcon={sendFeedback
+              ? <Check size={18} className="composer-submit-mark" aria-hidden="true" />
+              : <Send size={18} aria-hidden="true" />}
+          >
+            {isUploading ? `${attachmentActionLabel} ${uploadProgress}/${attachments.length}` : ''}
+          </Button>
+        )}
       </div>
 
       {displayedError && (

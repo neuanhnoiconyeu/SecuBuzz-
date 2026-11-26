@@ -105,6 +105,22 @@ test('lint: ON DELETE CASCADE, SET NULL and SET DEFAULT are reported from versio
     assert.equal(lint.lintSql(sql, { file: '0012-later.sql' }).strict, true);
 });
 
+test('lint: only the exact applied 0015 checksum grandfathers its six existing foreign-key actions', () => {
+    const file = '0015-conversation-customization.sql';
+    const sql = fs.readFileSync(path.join(MIGRATIONS,file),'utf8');
+    const accepted = lint.lintSql(sql,{file});
+    assert.deepEqual(accepted.violations,[]);
+    assert.deepEqual(accepted.exempted.filter(entry=>entry.rule==='FORBIDDEN_FOREIGN_KEY_ACTION').map(entry=>entry.phrase).sort(),
+        ['ON DELETE CASCADE','ON DELETE CASCADE','ON DELETE CASCADE','ON DELETE CASCADE','SET NULL','SET NULL']);
+    const changed = lint.lintSql(`${sql}\n-- checksum mismatch`,{file});
+    assert.deepEqual(changed.exempted,[]);
+    assert.deepEqual(changed.violations.map(entry=>entry.phrase).sort(),
+        ['ON DELETE CASCADE','ON DELETE CASCADE','ON DELETE CASCADE','ON DELETE CASCADE','SET NULL','SET NULL']);
+    const copied = lint.lintSql(sql,{file:'0016-copy.sql'});
+    assert.deepEqual(copied.exempted,[]);
+    assert.equal(copied.violations.length,6);
+});
+
 test('lint: file names outside ^\\d{4}-[a-z0-9-]+\\.sql$ and versions that are not contiguous from 1 are reported', () => {
     assert.deepEqual(lint.lintFileNames([...PUBLISHED]).violations, []);
     assert.deepEqual(lint.lintFileNames([...PUBLISHED, '0008-example.sql', '0009-attachment-lifecycle.sql']).violations, []);
@@ -143,7 +159,7 @@ test('lint: the 0001 exemption covers exactly PRAGMA foreign_keys = ON in 0001-l
 test('lint helper reads only: fs listing and reading, no other module, no database, ASCII source', () => {
     const source = fs.readFileSync(LINT_FILE, 'utf8');
     assert.deepEqual([...new Set(source.match(/\bfs\.\w+/g))].sort(), ['fs.readFileSync', 'fs.readdirSync']);
-    assert.deepEqual([...source.matchAll(/require\(([^)]*)\)/g)].map(match => match[1]).sort(), ["'node:fs'", "'node:path'"]);
+    assert.deepEqual([...source.matchAll(/require\(([^)]*)\)/g)].map(match => match[1]).sort(), ["'node:crypto'", "'node:fs'", "'node:path'"]);
     assert.doesNotMatch(source, /better-sqlite3|new Database|\.prepare\(|\.exec\(|Math\.random|Date\.now|process\.env/);
     for (const file of [LINT_FILE, __filename]) assert.match(fs.readFileSync(file, 'utf8'), /^[\x00-\x7f]*$/, `${path.basename(file)} is ASCII`);
 });
@@ -157,7 +173,17 @@ test('lint of server/database/migrations: 0001 to 0007 pass (DC-07) and every fi
     assert.deepEqual(result.violations.map(lint.formatViolation), []);
     assert.deepEqual(result.files.map(file => file.name).slice(0, PUBLISHED.length), [...PUBLISHED]);
     for (const file of result.files) assert.equal(file.strict, file.version >= lint.STRICT_FROM_VERSION, file.name);
-    assert.deepEqual(result.exempted.map(e => [e.file, e.line, e.keyword, e.statement]), [['0001-legacy.sql', 2, 'PRAGMA', 'PRAGMA foreign_keys = ON']]);
+    assert.deepEqual(result.exempted.filter(e => e.rule === 'FORBIDDEN_STATEMENT')
+        .map(e => [e.file, e.line, e.keyword, e.statement]), [['0001-legacy.sql', 2, 'PRAGMA', 'PRAGMA foreign_keys = ON']]);
+    assert.deepEqual(result.exempted.filter(e => e.rule === 'FORBIDDEN_FOREIGN_KEY_ACTION')
+        .map(e => [e.file,e.phrase]).sort(), [
+        ['0015-conversation-customization.sql','ON DELETE CASCADE'],
+        ['0015-conversation-customization.sql','ON DELETE CASCADE'],
+        ['0015-conversation-customization.sql','ON DELETE CASCADE'],
+        ['0015-conversation-customization.sql','ON DELETE CASCADE'],
+        ['0015-conversation-customization.sql','SET NULL'],
+        ['0015-conversation-customization.sql','SET NULL'],
+    ]);
 
     // DC-07: the published files hold trigger bodies with BEGIN ... END and CASE ... END. Every CREATE TRIGGER of them
     // gets a delimited body, and a COMMIT appended after the last statement is still found, so no body swallows text.

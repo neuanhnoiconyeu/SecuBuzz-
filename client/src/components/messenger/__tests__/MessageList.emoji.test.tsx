@@ -33,7 +33,7 @@ test('full-picker reactions replace or remove my choice without changing other u
   expect(screen.getByRole('button', { name: '👍 1' })).toHaveAttribute('aria-pressed', 'false');
 });
 
-test('short standalone Unicode emoji enlarge without changing indicators, identity, or media captions', () => {
+test('standalone Unicode emoji messages enlarge uniformly without changing indicators, identity, or media captions', () => {
   const { container } = render(<MessageList currentUserId="self" onRetryMessage={jest.fn()} messages={[
     { ...message, content: '👩🏽‍💻', isEdited: true, forwardedFrom: 'Friend' },
     { ...message, id: 'many', content: '😀 😀 😀 😀' },
@@ -42,9 +42,13 @@ test('short standalone Unicode emoji enlarge without changing indicators, identi
     { ...message, id: 'voice', type: 'voice', content: '😀', voice: { audioUrl: 'blob:voice', durationSeconds: 1 } },
     { ...message, id: 'deleted', content: '😀', isDeleted: true },
   ]} />);
-  expect(container.querySelectorAll('.message-text--emoji')).toHaveLength(1);
+  expect(container.querySelectorAll('.message-text--emoji')).toHaveLength(2);
   const original = container.querySelector<HTMLElement>('[data-message-id="message"]')!;
-  expect(original.querySelector('.message-text--emoji')).toHaveAttribute('data-emoji-count', '1');
+  expect(original.querySelector('.message-text--emoji')).toBeInTheDocument();
+  expect(original.querySelector('.message-bubble--bare')).toBeInTheDocument();
+  const many = container.querySelector<HTMLElement>('[data-message-id="many"]')!;
+  expect(many.querySelector('.message-text--emoji')).toBeInTheDocument();
+  expect(many.querySelector('.message-bubble--bare')).toBeInTheDocument();
   expect(within(original).getByText(/Forwarded from Friend/)).toBeInTheDocument();
   expect(within(original).getByText('(edited)')).toBeInTheDocument();
 });

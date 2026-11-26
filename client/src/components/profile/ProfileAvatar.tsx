@@ -7,15 +7,17 @@ import type { ProfileAvatarId } from '@/profiles/profileModel';
 export interface ProfileAvatarProps {
   displayName: string;
   avatar: ProfileAvatarId;
+  avatarUrl?: string | null | undefined;
   size?: AvatarSize;
   className?: string;
 }
 
 const presetIcons = { smile: Smile, star: Star, rocket: Rocket, cat: Cat };
 
-/** Approved local presets only; profile avatars never fetch a remote image. */
-export function ProfileAvatar({ avatar, className = '', displayName, size = 'md' }: ProfileAvatarProps) {
+/** Approved local presets or authenticated account avatar images; never fetches external URLs. */
+export function ProfileAvatar({ avatar, avatarUrl, className = '', displayName, size = 'md' }: ProfileAvatarProps) {
   const classes = `profile-avatar profile-avatar--${avatar} ${className}`.trim();
+  if (avatarUrl) return <Avatar name={displayName} src={avatarUrl} size={size} className={classes} />;
   if (avatar === 'initials') return <Avatar name={displayName} size={size} className={classes} />;
 
   const Icon = presetIcons[avatar];

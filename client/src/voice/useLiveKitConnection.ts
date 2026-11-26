@@ -16,7 +16,7 @@ export function useLiveKitConnection(purpose: 'voice-room' | 'direct-call' = 'vo
   initialIdentity.current = user;
   useEffect(() => {
     const revalidate = () => { void restore.current(); };
-    const connection = purpose === 'voice-room' ? createSessionLiveKitConnection(initialIdentity.current, mode, revalidate)
+    const connection = purpose === 'voice-room' ? api ? createSessionLiveKitConnection(initialIdentity.current, mode, revalidate, purpose, undefined, {api,enabled}) : createSessionLiveKitConnection(initialIdentity.current, mode, revalidate)
       : api?createSessionLiveKitConnection(initialIdentity.current, mode, revalidate, purpose, () => connectionId.current?.() ?? null,{api,enabled})
       : createSessionLiveKitConnection(initialIdentity.current, mode, revalidate, purpose, () => connectionId.current?.() ?? null);
     setService(connection); setSnapshot(connection.getSnapshot());

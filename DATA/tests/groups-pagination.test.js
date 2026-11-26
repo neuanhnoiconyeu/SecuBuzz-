@@ -12,9 +12,11 @@ const fs = require('node:fs');
 const { createHash } = require('node:crypto');
 const { performance } = require('node:perf_hooks');
 const { AuthError } = require('../server/auth/errors');
+const { startServer } = require('../server/start');
+const { envDefaults, Browser } = require('./support/auth');
 const cursor = require('../server/groups/cursor');
 const { createRandom, forAll } = require('./support/random');
-const { httpGroupFixture, snapshot, changedTables, createClock, actorRequest } = require('./support/groups');
+const { httpGroupFixture, snapshot, changedTables, createClock, actorRequest, openLimiter } = require('./support/groups');
 const { createGroupRepository } = require('../server/database/groupRepository');
 
 const MESSAGE_FEATURES=Object.freeze({groupApi:true,groupMessaging:true,groups:Object.freeze({directAdd:true,maxMembers:50,
@@ -33,30 +35,58 @@ const { encode, decode, CursorError, CURSOR_ERROR_CODES: CODES, ROUTE_KINDS, ROU
 const MAX_INT = Number.MAX_SAFE_INTEGER;
 
 test('T-5D-17: large synthetic group fixture stays indexed and meets host request latency budget', { timeout:180000 }, async t => {
-    const f=await httpGroupFixture(t,{clock:createClock('2032-01-01T00:00:00.000Z'),features:{...MESSAGE_FEATURES,
-        groups:{...MESSAGE_FEATURES.groups,maxMembers:250}},messageOptions:{groupRecipientKeyVerifier:MESSAGE_VERIFIER}});
+    const paginationFeatures={...MESSAGE_FEATURES,groups:{...MESSAGE_FEATURES.groups,maxMembers:250}};
+    const messageOptions={groupRecipientKeyVerifier:MESSAGE_VERIFIER};
+    const f=await httpGroupFixture(t,{clock:createClock('2032-01-01T00:00:00.000Z'),features:paginationFeatures,messageOptions});
     const groupRepository=createGroupRepository(f.db),groupIds=[f.groupId];
-    for(let index=1;index<100;index++)groupIds.push(f.builder.createGroup({ownerId:f.actors.owner.id,conversationId:`p17-list-${index}`,
-        title:`P17 group ${index}`,idempotencyKey:null}));
     const large=groupIds[0];
-    for(let index=0;index<197;index++) {
-        const userId=`p17-member-${String(index).padStart(3,'0')}`;
-        f.repositories.users.create({user_id:userId,username:userId,display_name:`P17 Member ${index}`});
-        f.builder.addMember(large,userId);
-    }
     const stamp=f.clock.iso();
+    const insertMessage=f.db.prepare(`INSERT INTO Messages(message_id,conversation_id,sender_id,receiver_id,ciphertext,iv,algorithm,
+        envelope_version,encoding,sender_name,client_timestamp,message_type,fingerprint,client_id,origin,message_seq,created_at,updated_at)
+        VALUES(?,?,?,?,?,?,'AES-256-GCM',1,'base64','Group Owner',?,'text',?,?,'authenticated',?,?,?)`);
     f.db.transaction(()=>{
-        for(let sequence=1;sequence<=10000;sequence++)f.repositories.messages.insertAuthenticated({message_id:`p17-storage-${sequence}`,
-            conversation_id:large,sender_id:f.actors.owner.id,receiver_id:null,ciphertext:'opaque synthetic ciphertext',iv:'opaque-iv',
-            envelope_version:1,encoding:'base64',sender_name:'Group Owner',client_timestamp:stamp,message_type:'text',
-            fingerprint:String(sequence).padStart(64,'0'),client_id:`p17-client-${sequence}`,message_seq:sequence,created_at:stamp});
+        for(let index=1;index<100;index++)groupIds.push(f.builder.createGroup({ownerId:f.actors.owner.id,conversationId:`p17-list-${index}`,
+            title:`P17 group ${index}`,idempotencyKey:null}));
+        for(let index=0;index<197;index++) {
+            const userId=`p17-member-${String(index).padStart(3,'0')}`;
+            f.repositories.users.create({user_id:userId,username:userId,display_name:`P17 Member ${index}`});
+            f.builder.addMember(large,userId);
+        }
+        for(let sequence=1;sequence<=10000;sequence++) {
+            insertMessage.run(`p17-storage-${sequence}`,large,f.actors.owner.id,null,'opaque synthetic ciphertext','opaque-iv',
+                stamp,String(sequence).padStart(64,'0'),`p17-client-${sequence}`,sequence,stamp,stamp);
+        }
     })();
     assert.equal(f.db.prepare('SELECT count(*) AS n FROM ConversationMembers WHERE conversation_id=? AND left_at IS NULL').get(large).n,200);
     assert.equal(f.db.prepare('SELECT count(*) AS n FROM Messages WHERE conversation_id=?').get(large).n,10000);
 
+    // Restart the ephemeral loopback listener after bulk DB population so benchmark fetch() requests
+    // never reuse a pre-seed keep-alive socket past startServer's production keepAliveTimeout.
+    await f.application.close();
+    let benchOrigin=null;
+    for(let attempt=0;attempt<16;attempt++) {
+        const benchApp=await startServer({db:f.db,config:f.config,env:{...envDefaults,PORT:'0'},features:paginationFeatures,
+            messageOptions,now:f.clock.now,limiter:openLimiter(),log:()=>{}});
+        const port=benchApp.server.address().port;
+        const candidateOrigin=`http://127.0.0.1:${port}`;
+        try {
+            await fetch(`${candidateOrigin}/__fixture_port_probe__`,{method:'HEAD',redirect:'manual'});
+            f.applications.push(benchApp);
+            benchOrigin=candidateOrigin;
+            break;
+        } catch(error) {
+            await benchApp.close();
+            if(error?.cause?.message!=='bad port')throw error;
+        }
+    }
+    assert.ok(benchOrigin,'benchmark loopback server acquired a Node-fetch-compatible port');
+    const benchBrowser=new Browser(benchOrigin,f.config.origins[0]);
+    benchBrowser.cookies=new Map(f.actors.owner.browser.cookies);
+    const benchOwner={...f.actors.owner,browser:benchBrowser};
+
     const sample=async(method,url)=>{
         const start=performance.now();
-        const response=await actorRequest(f.actors.owner,method,url);
+        const response=await actorRequest(benchOwner,method,url);
         const elapsed=performance.now()-start;
         assert.equal(response.status,200,`${method} ${url}`);
         return elapsed;

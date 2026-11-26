@@ -1,5 +1,5 @@
 import { StrictMode } from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import Home from '@/app/page';
 import { AuthProvider, useAuth } from '../AuthProvider';
 import { DevelopmentAuthService } from '../developmentAuthService';
@@ -118,8 +118,35 @@ test('real sessions never receive demo people; failed server logout preserves id
   expect(screen.getByText('Verified User · @verified')).toBeInTheDocument();
   expect(screen.queryByText('Ava Morgan')).not.toBeInTheDocument();
   expect(screen.queryByRole('log')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Sign Out' }));
+  const signout = screen.getByRole('button', { name: 'Sign out' });
+  expect(signout).toHaveAttribute('title', 'Sign out');
+  expect(signout.textContent).toBe('');
+  fireEvent.click(signout);
   await waitFor(() => expect(screen.getAllByRole('alert').some(alert => alert.textContent?.includes('Your server session may still be active'))).toBe(true));
   expect(screen.getByText('Verified User · @verified')).toBeInTheDocument();
   expect(replace).not.toHaveBeenCalled();
+});
+
+test('compact footer keeps the full account label and pending logout prevents duplicate submissions', async () => {
+  let finish!: () => void;
+  const logout = jest.fn(() => new Promise<void>(resolve => { finish = resolve; }));
+  const displayName = 'Long account display name for footer layout', username = 'long-account-name-for-footer';
+  const service: AuthService = {
+    mode: 'api', getCurrentUser: async () => ({ id: 'footer-account', username, displayName, avatar: 'cat', isDemo: false }),
+    login: jest.fn(), register: jest.fn(), logout,
+  };
+  render(<TestApp service={service} />);
+  const button = await screen.findByRole('button', { name: 'Sign out' });
+  const footer = within(button.closest('footer')!);
+  expect(footer.getByText(`${displayName} · @${username}`)).toHaveAttribute('title', `${displayName} · @${username}`);
+  expect(button.querySelector('.lucide-log-out')).toBeInTheDocument();
+  expect(button).toHaveAttribute('title', 'Sign out');
+  fireEvent.click(button);
+  expect(button).toBeDisabled();
+  expect(button).toHaveAttribute('aria-busy', 'true');
+  fireEvent.click(button);
+  expect(logout).toHaveBeenCalledTimes(1);
+  await act(async () => { finish(); });
+  await waitFor(() => expect(replace).toHaveBeenCalledWith('/login?next=%2F'));
+  expect(screen.queryByText(`${displayName} · @${username}`)).not.toBeInTheDocument();
 });

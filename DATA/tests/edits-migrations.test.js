@@ -5,7 +5,7 @@ test('migration 11 preserves all existing data, schema objects and encryption gu
  for(const m of loadMigrations().filter(m=>m.version<=10))fs.writeFileSync(path.join(directory,m.name),m.sql);
  migrate(db,{directory});direct(repositories);repositories.messages.insert(encrypted());
  const rows=db.prepare('SELECT * FROM Messages').all(),objects=db.prepare("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'").all();
- assert.deepEqual(migrate(db).applied,['0011-encrypted-message-revisions.sql','0012-groups.sql','0013-attachment-lifecycle.sql']);
+ assert.deepEqual(migrate(db).applied,['0011-encrypted-message-revisions.sql','0012-groups.sql','0013-attachment-lifecycle.sql','0014-voice-rooms.sql','0015-conversation-customization.sql','0016-customization-retention.sql']);
  assert.deepEqual(db.prepare('SELECT * FROM Messages').all(),rows);
  // 0013 extends the shared Attachments table; every other version-10 object stays byte-identical.
  for(const o of objects)if(o.name!=='Attachments')assert.deepEqual(db.prepare('SELECT type,name,sql FROM sqlite_master WHERE type=? AND name=?').get(o.type,o.name),o);

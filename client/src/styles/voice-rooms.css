@@ -103,3 +103,10 @@
   .voice-workspace-nav .ui-button { font-size: .7rem; padding-inline: .45rem; }
   .voice-workspace-user { max-width: 5rem; font-size: .7rem; }
 }
+
+.voice-room-management { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; padding: .4rem 1rem; font-size: .72rem; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); }
+.voice-room-management > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.voice-room-create { width: 100%; padding: .45rem; margin-block: .4rem; border: 1px solid var(--color-border); border-radius: .4rem; background: var(--color-surface); color: var(--color-text); }
+.voice-room-create:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.voice-room-dialog-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
+.voice-room-row > span { overflow-wrap: anywhere; min-width: 0; }

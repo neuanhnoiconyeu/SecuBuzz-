@@ -9,6 +9,7 @@ import { generateDevice, registration, validateLocalDevice } from '../devices';
 import { decryptV2 } from '../messages';
 import { E2eeApi } from '../api';
 import type { Registration, EpochBody } from '../model';
+import { ApiError } from '@/api/sessionApi';
 
 const vector = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '../server/test/e2ee/vectors/protocol-v1.json'), 'utf8'));
 const epoch = { ...vector.epoch.body, conversationId: vector.conversationId, creatorUserId: vector.epoch.creatorUserId, publishedAt: vector.epoch.body.createdAt };
@@ -78,4 +79,194 @@ test('typed API boundaries reject unexpected private/raw-key fields before any n
   await expect(api.register({ ...vector.registrations.alice, privateKey: 'must never leave the client' } as Registration)).rejects.toMatchObject({ code: 'invalid_proof' });
   await expect(api.publish(vector.conversationId, { ...vector.epoch.body, rawKey: new Uint8Array(32) } as EpochBody)).rejects.toMatchObject({ code: 'invalid_proof' });
   expect(request).not.toHaveBeenCalled();
+});
+test('conversation parsing preserves the exact legacy contract and requires the explicit V2 response shape', () => {
+  const alice = vector.devices.alice.userId, bob = vector.devices.bob.userId;
+  const api = new E2eeApi({ actor: { id: alice, username: 'alice' }, request: jest.fn(), dispose() {} });
+  const participants = [
+    { id: alice, username: 'alice', displayName: 'Alice', avatar: 'default' },
+    { id: bob, username: 'bob', displayName: 'Bob', avatar: 'default' },
+  ];
+  const legacy = { id: vector.conversationId, type: 'direct', participants, createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z', interactionAllowed: true };
+  expect(api.conversation(legacy)).toEqual(legacy);
+  expect(() => api.conversation({ ...legacy, themeId: 'ocean' })).toThrow();
+  const version2 = { ...legacy, participants: participants.map(participant => ({ ...participant, avatarUrl: null })),
+    themeId: 'ocean', nicknames: { [bob]: 'Bobby' } };
+  expect(api.conversation(version2, 2)).toMatchObject({ themeId: 'ocean', nicknames: { [bob]: 'Bobby' } });
+  expect(() => api.conversation(version2)).toThrow();
+  expect(() => api.conversation(legacy, 2)).toThrow();
+  expect(() => api.conversation({ ...version2, unexpected: true }, 2)).toThrow();
+  expect(() => api.conversation({ ...version2, nicknames: { [bob]: '\ud800' } }, 2)).toThrow();
+});
+test('conversation list falls back only from rejected V2 query and accepts the current extended DTO without avatarUrl', async () => {
+  const alice = vector.devices.alice.userId, bob = vector.devices.bob.userId;
+  const dto = { id: vector.conversationId, type: 'direct', participants: [
+    { id: alice, username: 'alice', displayName: 'Alice', avatar: 'default' },
+    { id: bob, username: 'bob', displayName: 'Bob', avatar: 'default' },
+  ], createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+  interactionAllowed: true, themeId: 'ocean', nicknames: { [bob]: 'Bobby' } };
+  const request = jest.fn().mockRejectedValueOnce(new ApiError('validation'))
+    .mockResolvedValueOnce({ items: [dto], nextCursor: null });
+  const api = new E2eeApi({ actor: { id: alice, username: 'alice' }, request, dispose() {} });
+
+  const page = await api.conversations();
+  expect(request.mock.calls.map(([url]) => url)).toEqual([
+    '/api/conversations?contractVersion=2&limit=50',
+    '/api/conversations?limit=50',
+  ]);
+  expect(page.items[0]).toMatchObject({
+    themeId: 'ocean', nicknames: { [bob]: 'Bobby' },
+    participants: [{ id: alice, avatarUrl: null }, { id: bob, avatarUrl: null }],
+  });
+
+  request.mockResolvedValueOnce({ conversation: dto });
+  const opened = await api.createDirect(bob);
+  expect(opened.id).toBe(vector.conversationId);
+  expect(opened.participants.map(participant => participant.avatarUrl)).toEqual([null, null]);
+  expect(request.mock.calls[2]![0]).toBe('/api/conversations/dm');
+});
+test('conversation listing retains strict V2 parsing and never falls back for authorization or malformed DTOs', async () => {
+  const alice = vector.devices.alice.userId, bob = vector.devices.bob.userId;
+  const dto = { id: vector.conversationId, type: 'direct', participants: [
+    { id: alice, username: 'alice', displayName: 'Alice', avatar: 'default', avatarUrl: null },
+    { id: bob, username: 'bob', displayName: 'Bob', avatar: 'default', avatarUrl: null },
+  ], createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+  interactionAllowed: true, themeId: 'forest', nicknames: { [bob]: 'Bobby' } };
+  const request = jest.fn().mockResolvedValue({ items: [dto], nextCursor: null });
+  const api = new E2eeApi({ actor: { id: alice, username: 'alice' }, request, dispose() {} });
+
+  const page = await api.conversations();
+  expect(request).toHaveBeenCalledTimes(1);
+  expect(page.items[0]).toMatchObject({ themeId: 'forest', nicknames: { [bob]: 'Bobby' } });
+
+  const unauthorized = new E2eeApi({ actor: { id: alice, username: 'alice' },
+    request: jest.fn().mockRejectedValue(new ApiError('unauthorized')), dispose() {} });
+  await expect(unauthorized.conversations()).rejects.toMatchObject({ code: 'unauthorized' });
+
+  const malformed = new E2eeApi({ actor: { id: alice, username: 'alice' },
+    request: jest.fn().mockRejectedValueOnce(new ApiError('validation'))
+      .mockResolvedValueOnce({ items: [{ ...dto, nicknames: { 'outsider-id': 'Intruder' } }], nextCursor: null }), dispose() {} });
+  await expect(malformed.conversations()).rejects.toMatchObject({ code: 'invalid_proof' });
+});
+test('conversation detail retries without contractVersion only when the older backend rejects the query', async () => {
+  const alice = vector.devices.alice.userId, bob = vector.devices.bob.userId, id = vector.conversationId;
+  const oldDto = { id, type: 'direct', participants: [
+    { id: alice, username: 'alice', displayName: 'Alice', avatar: 'default' },
+    { id: bob, username: 'bob', displayName: 'Bob', avatar: 'default' },
+  ], createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+  interactionAllowed: true, themeId: 'ocean', nicknames: { [bob]: 'Bobby' } };
+  const envelope = vector.message.envelope;
+  const request = jest.fn().mockRejectedValueOnce(new ApiError('validation'))
+    .mockResolvedValueOnce({ conversation: oldDto })
+    .mockResolvedValueOnce({ items: [{
+      storageId: 'stored-message-id', id: envelope.id, conversationId: id, senderId: envelope.senderId,
+      senderName: envelope.senderName, timestamp: envelope.timestamp, type: envelope.type, encryption: envelope.encryption,
+      storedAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+      sequence: 1, revision: 0, state: 'active', deletedAt: null,
+    }], nextCursor: null })
+    .mockResolvedValueOnce({ conversation: { ...oldDto, participants: oldDto.participants.map(p => ({ ...p, avatarUrl: null })) } });
+  const api = new E2eeApi({ actor: { id: alice, username: 'alice' }, request, dispose() {} });
+
+  const oldConversation = await api.getConversation(id);
+  expect(request.mock.calls.slice(0, 2).map(([url]) => url)).toEqual([
+    `/api/conversations/${id}?contractVersion=2`,
+    `/api/conversations/${id}`,
+  ]);
+  expect(oldConversation).toMatchObject({ themeId: 'ocean', nicknames: { [bob]: 'Bobby' },
+    participants: [{ id: alice, avatarUrl: null }, { id: bob, avatarUrl: null }] });
+
+  const history = await api.history(id);
+  expect(request.mock.calls[2]![0]).toBe(`/api/conversations/${id}/messages?limit=50`);
+  expect(history.items[0]!.id).toBe(envelope.id);
+
+  const version2Conversation = await api.getConversation(id);
+  expect(request.mock.calls[3]![0]).toBe(`/api/conversations/${id}?contractVersion=2`);
+  expect(version2Conversation.nicknames).toEqual({ [bob]: 'Bobby' });
+});
+test('conversation detail does not retry authorization errors or accept malformed fallback data', async () => {
+  const alice = vector.devices.alice.userId, bob = vector.devices.bob.userId, id = vector.conversationId;
+  const request = jest.fn().mockRejectedValue(new ApiError('unauthorized'));
+  const api = new E2eeApi({ actor: { id: alice, username: 'alice' }, request, dispose() {} });
+  await expect(api.getConversation(id)).rejects.toMatchObject({ code: 'unauthorized' });
+  expect(request).toHaveBeenCalledTimes(1);
+
+  const invalidDto = { id, type: 'direct', participants: [
+    { id: alice, username: 'alice', displayName: 'Alice', avatar: 'default' },
+    { id: bob, username: 'bob', displayName: 'Bob', avatar: 'default' },
+  ], createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+  interactionAllowed: true, themeId: 'ocean', nicknames: { 'outsider-id': 'Intruder' } };
+  const malformedRequest = jest.fn().mockRejectedValueOnce(new ApiError('validation'))
+    .mockResolvedValueOnce({ conversation: invalidDto });
+  const malformedApi = new E2eeApi({ actor: { id: alice, username: 'alice' }, request: malformedRequest, dispose() {} });
+  await expect(malformedApi.getConversation(id)).rejects.toMatchObject({ code: 'invalid_proof' });
+  expect(malformedRequest).toHaveBeenCalledTimes(2);
+});
+test('conversation creation and preference writes use unversioned mutations and accept the legacy extended DTO', async () => {
+  const alice = vector.devices.alice.userId, bob = vector.devices.bob.userId, id = vector.conversationId;
+  const dto = { id, type: 'direct', participants: [
+    { id: alice, username: 'alice', displayName: 'Alice', avatar: 'default' },
+    { id: bob, username: 'bob', displayName: 'Bob', avatar: 'default' },
+  ], createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+  interactionAllowed: true, themeId: 'ocean', nicknames: { [bob]: 'Bobby' } };
+  const request = jest.fn()
+    .mockResolvedValueOnce({ conversation: dto })
+    .mockResolvedValueOnce({ conversation: dto });
+  const api = new E2eeApi({ actor: { id: alice, username: 'alice' }, request, dispose() {} });
+
+  const created = await api.createDirect(bob);
+  const saved = await api.updatePreferences(id, { themeId: 'ocean', nicknames: { [bob]: 'Bobby' } });
+
+  expect(created.nicknames).toEqual({ [bob]: 'Bobby' });
+  expect(saved.nicknames).toEqual({ [bob]: 'Bobby' });
+  expect(request.mock.calls.map(([url, options]) => [url, options?.method])).toEqual([
+    ['/api/conversations/dm', 'POST'],
+    [`/api/conversations/${id}/preferences`, 'PATCH'],
+  ]);
+  expect(request.mock.calls[0]![1]?.body).toEqual({ recipientId: bob });
+  expect(request.mock.calls[1]![1]?.body).toEqual({ themeId: 'ocean', nicknames: { [bob]: 'Bobby' } });
+});
+test('new backend V1 mutation responses are hydrated from strict V2 detail without retrying the mutation', async () => {
+  const alice = vector.devices.alice.userId, bob = vector.devices.bob.userId, id = vector.conversationId;
+  const v1 = { id, type: 'direct', participants: [
+    { id: alice, username: 'alice', displayName: 'Alice', avatar: 'default' },
+    { id: bob, username: 'bob', displayName: 'Bob', avatar: 'default' },
+  ], createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z', interactionAllowed: true };
+  const v2 = { ...v1, participants: v1.participants.map(participant => ({ ...participant, avatarUrl: null })),
+    themeId: 'forest', nicknames: { [bob]: 'Bobby' } };
+  const request = jest.fn()
+    .mockResolvedValueOnce({ conversation: v1 })
+    .mockResolvedValueOnce({ conversation: v2 })
+    .mockResolvedValueOnce({ conversation: v1 })
+    .mockResolvedValueOnce({ conversation: v2 });
+  const api = new E2eeApi({ actor: { id: alice, username: 'alice' }, request, dispose() {} });
+
+  const created = await api.createDirect(bob);
+  const saved = await api.updatePreferences(id, { themeId: 'forest' });
+
+  expect(created).toMatchObject({ id, themeId: 'forest', nicknames: { [bob]: 'Bobby' } });
+  expect(saved).toMatchObject({ id, themeId: 'forest', nicknames: { [bob]: 'Bobby' } });
+  expect(request.mock.calls.map(([url, options]) => [url, options?.method])).toEqual([
+    ['/api/conversations/dm', 'POST'],
+    [`/api/conversations/${id}?contractVersion=2`, undefined],
+    [`/api/conversations/${id}/preferences`, 'PATCH'],
+    [`/api/conversations/${id}?contractVersion=2`, undefined],
+  ]);
+});
+test('conversation mutations do not retry authorization failures or accept malformed response identities', async () => {
+  const alice = vector.devices.alice.userId, bob = vector.devices.bob.userId, id = vector.conversationId;
+  const denied = jest.fn().mockRejectedValue(new ApiError('forbidden'));
+  const deniedApi = new E2eeApi({ actor: { id: alice, username: 'alice' }, request: denied, dispose() {} });
+  await expect(deniedApi.updatePreferences(id, { themeId: 'ocean' })).rejects.toMatchObject({ code: 'forbidden' });
+  expect(denied).toHaveBeenCalledTimes(1);
+
+  const malformed = { id: 'another-conversation', type: 'direct', participants: [
+    { id: alice, username: 'alice', displayName: 'Alice', avatar: 'default' },
+    { id: bob, username: 'bob', displayName: 'Bob', avatar: 'default' },
+  ], createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+  interactionAllowed: true, themeId: 'ocean', nicknames: {} };
+  const malformedRequest = jest.fn().mockResolvedValue({ conversation: malformed });
+  const malformedApi = new E2eeApi({ actor: { id: alice, username: 'alice' }, request: malformedRequest, dispose() {} });
+  await expect(malformedApi.updatePreferences(id, { themeId: 'ocean' })).rejects.toMatchObject({ code: 'invalid_proof' });
+  expect(malformedRequest).toHaveBeenCalledTimes(1);
 });

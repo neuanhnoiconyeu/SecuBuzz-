@@ -80,6 +80,11 @@ export interface DataAdapters {
 }
 
 export interface DataApplication {
+  readonly voiceRooms?: {
+    authorize(context: DataContext, id: string): { id: string } | null;
+    deleted(): { id: string; deletedAt: string }[];
+    setCleanup(handler: ((id: string) => Promise<void>) | null): void;
+  };
   readonly setDirectCallTokenHandler?: (handler:((req:import('node:http').IncomingMessage,res:import('node:http').ServerResponse)=>Promise<boolean>)|null)=>void;
   readonly auth: DataAuth;
   readonly adapters: DataAdapters;

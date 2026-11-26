@@ -115,8 +115,8 @@ async function closed(pages) {
     check('call controls use real authenticated workspace', true);
     check('unauthorized call token is denied', [403, 404].includes((await api(alice, '/api/calls/token', 'POST', { callId: '00000000-0000-4000-8000-000000000000', connectionId: 'not-the-owner' })).status));
     const noCsrf = await alice.evaluate(() => fetch('/api/calls/token', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.status)); check('token endpoint preserves CSRF', noCsrf === 403);
-    const invite = async kind => { await alice.getByRole('button', { name: `${kind} call Call Bob`, exact: true }).click(); await expect(bob.getByRole('button', { name: 'Accept', exact: true })).toBeEnabled({ timeout: 20000 }); };
-    const accept = async kind => { await invite(kind); await bob.getByRole('button', { name: 'Accept', exact: true }).click(); for (const page of pages) await expect(page.locator('.direct-call-status')).toHaveAttribute('data-state', 'connected', { timeout: 45000 }); };
+    const invite = async kind => { await alice.getByRole('button', { name: `${kind} call Call Bob`, exact: true }).click(); await expect(bob.getByRole('button', { name: 'Answer', exact: true })).toBeEnabled({ timeout: 20000 }); };
+    const accept = async kind => { await invite(kind); await bob.getByRole('button', { name: 'Answer', exact: true }).click(); for (const page of pages) await expect(page.locator('.direct-call-status')).toHaveAttribute('data-state', 'connected', { timeout: 45000 }); };
     if (process.argv.includes('--video-only')) {
       await accept('Video'); await media(alice, 'Video Alice', true); await media(bob, 'Video Bob', true);
       await alice.getByRole('button', { name: 'Hang up call', exact: true }).click(); await closed(pages); evidence.passed = true; return;
@@ -149,7 +149,7 @@ async function closed(pages) {
     await contexts[0].grantPermissions(['microphone', 'camera'], { origin });
     await expect.poll(() => alice.evaluate(() => navigator.permissions.query({ name: 'microphone' }).then(p => p.state))).toBe('granted');
     await alice.route('**/api/calls/token', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: { code: 'SERVICE_UNAVAILABLE' } }) }));
-    await invite('Voice'); await bob.getByRole('button', { name: 'Accept', exact: true }).click(); await closed(pages); await alice.unroute('**/api/calls/token'); check('token failure stops call and releases media', true);
+    await invite('Voice'); await bob.getByRole('button', { name: 'Answer', exact: true }).click(); await closed(pages); await alice.unroute('**/api/calls/token'); check('token failure stops call and releases media', true);
     await accept('Voice'); await media(alice, 'Recovered voice Alice', false); await media(bob, 'Recovered voice Bob', false);
     await alice.getByRole('button', { name: 'Hang up call', exact: true }).click(); await closed(pages); check('a new call recovers after failure', true);
     check('live calls never use attachment storage', evidence.attachmentRequests === 0);

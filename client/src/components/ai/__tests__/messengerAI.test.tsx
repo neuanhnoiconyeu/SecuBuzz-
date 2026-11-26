@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import Home from '@/app/page';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { DevelopmentAuthService } from '@/auth/developmentAuthService';
@@ -7,6 +7,9 @@ import { createDemoProfile } from '@/profiles/profileModel';
 import { MessengerApp } from '@/components/messenger/MessengerApp';
 import { AI_TOOLS, type AIProvider, type AIResponse } from '@/ai/aiModel';
 import * as providers from '@/ai/demoAIProvider';
+
+// Timing budget: multi-step Messenger + AI renders exceed 5s default under full-suite concurrency (see jest.setup.js).
+jest.setTimeout(20000);
 
 jest.mock('@/ai/demoAIProvider', () => ({ ...jest.requireActual('@/ai/demoAIProvider'), createAIProvider: jest.fn() }));
 const providerFactory = jest.mocked(providers.createAIProvider);
@@ -25,7 +28,7 @@ afterAll(() => {
   if (originalClose) Object.defineProperty(HTMLDialogElement.prototype, 'close', originalClose); else Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
 });
 beforeEach(() => { window.history.replaceState({}, '', '/'); replace.mockClear(); providerFactory.mockReset().mockReturnValue(new providers.DemoAIProvider(0)); });
-afterEach(() => { sessions.splice(0).forEach(session => session.dispose()); jest.restoreAllMocks(); });
+afterEach(() => { cleanup(); sessions.splice(0).forEach(session => session.dispose()); jest.restoreAllMocks(); });
 
 async function mount() {
   const session = createDemoMessengerSession(createDemoProfile()); sessions.push(session);

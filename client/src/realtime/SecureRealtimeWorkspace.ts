@@ -10,6 +10,8 @@ import type { BuzzEvent } from '../../../shared/buzz';
 
 export interface SecureLiveState {
   buzz?: BuzzEvent;
+  /** Ephemeral metadata only, emitted after a new live message is verified and reconciled. */
+  incomingMessage?: { id: string; conversationId: string; senderId: string; senderName: string } | undefined;
   connection: LiveConnection; conversations: DirectConversation[]; rows: Record<string, DecryptedRow[]>;
   cursors: Record<string, string | null>; unread: Record<string, number>; typing: Record<string, TypingUpdate>;
   presence: Record<string, PresenceUpdate>; receipts: Record<string, Receipt>; keyVersions: Record<string, number>;
@@ -57,6 +59,9 @@ export class SecureRealtimeWorkspace {
   private readDone = new Set<string>();
   private readInFlight = new Set<string>();
   private liveSeen = new Set<string>();
+  private notificationEpoch = 0;
+  private notificationRun = 0;
+  private notificationsReady = false;
   private accessVersions = new Map<string, number>();
   private accessVersion(cid: string): number { return this.accessVersions.get(cid) ?? 0; }
   private state: SecureLiveState = { connection: 'offline', conversations: [], rows: {}, cursors: {}, unread: {},
@@ -67,7 +72,8 @@ export class SecureRealtimeWorkspace {
     this.reactions = new AuthenticatedReactions(session.api.session);
     this.transport = new AuthenticatedSocketIoClient(session.api.session, {
       connection: status => {
-        this.update({ connection: status, ...(status !== 'connected' ? { typing: {}, presence: {} } : {}) });
+        this.notificationsReady = false; this.notificationEpoch++;
+        this.update({ connection: status, ...(status !== 'connected' ? { typing: {}, presence: {}, incomingMessage: undefined } : {}) });
         if (status === 'connected') void this.reconcile().catch(e => this.fail('', e));
       },
       message: envelope => this.receive(envelope), keys: e => {
@@ -104,6 +110,8 @@ export class SecureRealtimeWorkspace {
     if (!this.active) return; this.state = { ...this.state, ...patch }; for (const listener of this.listeners) listener();
   }
   private allowed(cid: string): boolean { return this.active && this.state.conversations.some(c => c.id === cid && c.interactionAllowed); }
+  /** DATA lists unblocked member conversations even when renewed friendship is required to write. */
+  private readable(cid: string): boolean { return this.active && this.state.conversations.some(c => c.id === cid); }
   private fail(cid: string, e: unknown) {
     if (!this.active) return;
     this.update({ errors: { ...this.state.errors, [cid]: e instanceof SocketFailure ? e.message : securityMessage(e) } });
@@ -118,6 +126,12 @@ export class SecureRealtimeWorkspace {
     if (!this.allowed(cid)) return Promise.reject(new SocketFailure('unauthorized_conversation'));
     return this.transport.buzz(cid);
   }
+  applyConversation(updated: DirectConversation): void {
+    if (!this.active) return;
+    const exists = this.state.conversations.some(c => c.id === updated.id);
+    if (!exists) return;
+    this.update({ conversations: this.state.conversations.map(c => c.id === updated.id ? updated : c) });
+  }
   refresh(): Promise<void> {
     if (this.refreshing) return this.refreshing;
     const run = async () => {
@@ -128,42 +142,48 @@ export class SecureRealtimeWorkspace {
       }
       if (cursor) throw new ApiError('resource_limit');
       const authorized = new Set(conversations.filter(c => c.interactionAllowed).map(c => c.id));
+      const readable = new Set(conversations.map(c => c.id));
+      const readOnlyAdded = conversations.filter(c => !c.interactionAllowed && !this.state.conversations.some(old => old.id === c.id));
       const added = conversations.some(c => c.interactionAllowed && !this.state.conversations.some(old => old.id === c.id && old.interactionAllowed));
-      for (const c of this.state.conversations) if (c.interactionAllowed && !authorized.has(c.id)) {
+      for (const c of this.state.conversations) if (!readable.has(c.id) || c.interactionAllowed !== authorized.has(c.id)) {
         this.accessVersions.set(c.id, this.accessVersion(c.id) + 1);
         this.deletionHints.delete(c.id);this.editHints.delete(c.id); this.refreshLoaded.delete(c.id);
       }
-      const retain = <T,>(entries: Record<string, T>) => Object.fromEntries(Object.entries(entries).filter(([id]) => authorized.has(id)));
+      const retain = <T,>(entries: Record<string, T>, scopes = authorized) => Object.fromEntries(Object.entries(entries).filter(([id]) => scopes.has(id)));
       const receipts = Object.fromEntries(Object.entries(this.state.receipts).filter(([, r]) => authorized.has(r.conversationId)));
       const peers = new Set(conversations.filter(c => c.interactionAllowed).flatMap(c => c.participants.map(p => p.id)));
       this.pins.authorize(conversations);
       this.reactions.authorize(conversations);
-      this.update({ conversations, rows: retain(this.state.rows), cursors: retain(this.state.cursors), unread: retain(this.state.unread),
+      this.update({ conversations, rows: retain(this.state.rows, readable), cursors: retain(this.state.cursors, readable), unread: retain(this.state.unread),
         typing: retain(this.state.typing), receipts, presence: Object.fromEntries(Object.entries(this.state.presence).filter(([id]) => peers.has(id))) });
       this.transport.setScopes(conversations);
       // A newly granted room has no client join event. A new handshake provides the room-ready
       // barrier; the following reconciliation includes anything sent during this transition.
       if (added && this.transport.connected) this.transport.refreshRooms();
+      for (const c of readOnlyAdded) void this.sync(c.id).catch(() => {});
     };
     this.refreshing = run().finally(() => { this.refreshing = undefined; }); return this.refreshing;
   }
   private async reconcile() {
+    const epoch = this.notificationEpoch, run = ++this.notificationRun;
+    this.notificationsReady = false;
     await this.refresh(); if (!this.active || !this.transport.connected) return;
     for (const conversation of this.state.conversations) {
-      if (!conversation.interactionAllowed) continue;
-      try { await this.session.revalidate(conversation.id); } catch (e) { this.fail(conversation.id, e); }
+      if (conversation.interactionAllowed) try { await this.session.revalidate(conversation.id); } catch (e) { this.fail(conversation.id, e); }
       this.refreshLoaded.add(conversation.id);
       await this.sync(conversation.id).catch(() => { /* One unavailable history must not prevent other authorized conversations from recovering. */ });
       await this.pins.refresh(conversation.id, true).catch(() => {});
       await this.reactions.refresh(conversation.id).catch(() => {});
     }
     this.update({ synchronized: this.state.synchronized + 1 });
+    if (this.active && this.transport.connected && epoch === this.notificationEpoch && run === this.notificationRun) this.notificationsReady = true;
   }
   select(cid: string | null, visible: boolean) {
     if (this.selected !== cid || !visible) this.stopTyping(); this.selected = cid; this.visible = visible;
     if (cid && visible) { this.update({ unread: { ...this.state.unread, [cid]: 0 } }); this.markVisibleRead(cid); }
   }
   sync(cid: string): Promise<void> {
+    if (!this.readable(cid)) return Promise.reject(new ApiError('not_found'));
     const inFlight = this.syncing.get(cid);
     if (inFlight) { inFlight.dirty = true; return inFlight.promise; }
     const job = { dirty: false, promise: Promise.resolve() };
@@ -173,10 +193,17 @@ export class SecureRealtimeWorkspace {
         const version = this.accessVersion(cid), known = this.state.rows[cid] ?? [], anchors = new Set(known.map(r => r.message.id));
         const targets = new Set([...(this.deletionHints.get(cid)??[]),...(this.editHints.get(cid)??[])]), refreshLoaded = this.refreshLoaded.has(cid);
         const oldest = known.length ? Math.min(...known.map(row => row.message.sequence)) : undefined;
-        let cursor: string | undefined, headCursor: string | null = null, fetched: DecryptedRow[] = [], completed = false;
+        let cursor: string | undefined, headCursor: string | null = null, fetched: DecryptedRow[] = [], completed = false, stale = false;
         for (let page = 0; page < 200; page++) {
-          const history = await this.session.history(cid, cursor);
-          if (!this.active || version !== this.accessVersion(cid) || !this.allowed(cid)) return;
+          let history: Awaited<ReturnType<SecureMessagingSession['history']>>;
+          try { history = await this.session.history(cid, cursor); }
+          catch (e) {
+            if (!this.readable(cid)) return;
+            if (version !== this.accessVersion(cid)) { stale = true; job.dirty = true; break; }
+            throw e;
+          }
+          if (!this.readable(cid)) return;
+          if (version !== this.accessVersion(cid)) { stale = true; job.dirty = true; break; }
           if (page === 0) headCursor = history.nextCursor;
           fetched = mergeSecureRows(fetched, history.items);
           const targetReached = [...targets].every(id => fetched.some(row => row.message.id === id));
@@ -184,6 +211,7 @@ export class SecureRealtimeWorkspace {
           if (!history.nextCursor || (targetReached && loadedReached && (!known.length || history.items.some(r => anchors.has(r.message.id))))) { completed = true; break; }
           cursor = history.nextCursor;
         }
+        if (stale) continue;
         if (!completed) throw new ApiError('resource_limit');
         for (const id of targets) if (fetched.some(row => row.message.id === id && row.message.state === 'deleted')) this.deletionHints.get(cid)?.delete(id);
         for(const id of targets)if(fetched.some(row=>row.message.id===id&&!row.error))this.editHints.get(cid)?.delete(id);
@@ -191,13 +219,13 @@ export class SecureRealtimeWorkspace {
         const current = this.state.rows[cid] ?? [], rows = mergeSecureRows(current, fetched);
         const newest = known.length ? Math.max(...known.map(row => row.message.sequence)) : 0;
         const newPeerRows = fetched.filter(r => r.message.state === 'active' && r.message.senderId !== this.session.api.session.actor.id && !anchors.has(r.message.id) && r.message.sequence > newest);
-        const unread = this.visible && this.selected === cid ? 0 : (this.state.unread[cid] ?? 0) +
+        const unread = !this.allowed(cid) || this.visible && this.selected === cid ? 0 : (this.state.unread[cid] ?? 0) +
           (current.length === 0 ? 0 : newPeerRows.filter(r => !this.liveSeen.has(key(cid, r.message.id))).length);
         this.update({ rows: { ...this.state.rows, [cid]: rows }, cursors: { ...this.state.cursors,
           [cid]: Object.prototype.hasOwnProperty.call(this.state.cursors, cid) ? this.state.cursors[cid]! : headCursor },
           unread: { ...this.state.unread, [cid]: unread } });
         this.markVisibleRead(cid);
-      } while (job.dirty && this.active && this.allowed(cid));
+      } while (job.dirty && this.active && this.readable(cid));
     };
     job.promise = run().catch(e => { this.fail(cid, e); throw e; }).finally(() => this.syncing.delete(cid));
     this.syncing.set(cid, job); return job.promise;
@@ -214,14 +242,17 @@ export class SecureRealtimeWorkspace {
     const cid=row.message.conversationId;this.update({rows:{...this.state.rows,[cid]:mergeSecureRows(this.state.rows[cid]??[],[row])}});
   }
   async older(cid: string): Promise<void> {
-    const cursor = this.state.cursors[cid]; if (!cursor || !this.allowed(cid)) return;
+    const cursor = this.state.cursors[cid]; if (!cursor || !this.readable(cid)) return;
     const version = this.accessVersion(cid), result = await this.session.history(cid, cursor);
-    if (!this.active || version !== this.accessVersion(cid) || !this.allowed(cid)) return;
+    if (!this.active || version !== this.accessVersion(cid) || !this.readable(cid)) return;
     this.update({ rows: { ...this.state.rows, [cid]: mergeSecureRows(this.state.rows[cid] ?? [], result.items) },
       cursors: { ...this.state.cursors, [cid]: result.nextCursor } });
   }
   private async receive(envelope: EnvelopeV2): Promise<boolean> {
     const cid = envelope.conversationId, version = this.accessVersion(cid); if (!this.allowed(cid)) return false;
+    const epoch = this.notificationEpoch, notify = this.notificationsReady;
+    const baseline = Object.prototype.hasOwnProperty.call(this.state.rows, cid)
+      ? Math.max(0, ...(this.state.rows[cid] ?? []).map(row => row.message.sequence)) : null;
     try {
       await this.session.decryptIncoming(envelope);
       if (!this.active || version !== this.accessVersion(cid) || !this.allowed(cid)) return false;
@@ -231,8 +262,14 @@ export class SecureRealtimeWorkspace {
         !this.state.rows[cid]?.some(r => r.message.id === envelope.id)) this.update({ unread: { ...this.state.unread, [cid]: (this.state.unread[cid] ?? 0) + 1 } });
       await this.sync(cid);
       const found = this.state.rows[cid]?.find(r => r.message.id === envelope.id);
-      return this.active && version === this.accessVersion(cid) && this.allowed(cid) && !!found && found.text !== null &&
+      const accepted = this.active && version === this.accessVersion(cid) && this.allowed(cid) && !!found && found.text !== null &&
         found.message.state === 'active' && wire(found.message as EnvelopeV2) === wire(envelope);
+      if (accepted && found && !found.error && first && notify && this.notificationsReady && epoch === this.notificationEpoch &&
+        baseline !== null && found.message.sequence > baseline && envelope.senderId !== this.session.api.session.actor.id) {
+        this.update({ incomingMessage: { id: envelope.id, conversationId: cid, senderId: envelope.senderId,
+          senderName: this.state.conversations.find(c => c.id === cid)?.participants.find(p => p.id === envelope.senderId)?.displayName ?? 'Your contact' } });
+      }
+      return accepted;
     } catch (e) { this.fail(cid, e); if (this.allowed(cid)) await this.sync(cid).catch(() => {}); return false; }
   }
   private observeReceipt(event: Receipt) {

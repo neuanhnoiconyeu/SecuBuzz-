@@ -18,7 +18,7 @@ export function VoiceMessageView({voice,senderName,ownerId,conversationId}:{voic
     if(!encrypted)return;const audio=player.current;
     return()=>{if(audio){audio.pause();audio.removeAttribute('src');audio.load();}};
   },[encrypted,source.previewUrl]);
-  return <div style={{marginTop:'6px',display:'flex',alignItems:'center',gap:'6px'}}>
+  return <div className="voice-message-card">
     <Mic size={14} style={{flexShrink:0}}/>
     {source.loading?<span role="status">Loading encrypted voice message…</span>:source.error?<><span role="alert">{source.error}</span>{encrypted&&<Button size="sm" variant="ghost" onClick={()=>{setFailed(false);retry(value=>value+1);}}>Retry voice message</Button>}</>:<>
       <audio ref={player} controls preload="metadata" aria-label={`Voice message from ${senderName}`} src={source.previewUrl} style={{height:'28px',maxWidth:'200px',minWidth:0}} onError={()=>setFailed(true)}/>

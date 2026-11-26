@@ -8,7 +8,8 @@ const { validate }=require('./validation');
 let hashOperations=0;
 
 function publicUser(row) {
-    return Object.freeze({id:row.user_id,username:row.username,displayName:row.display_name,avatar:row.avatar,isDemo:false});
+    return Object.freeze({id:row.user_id,username:row.username,displayName:row.display_name,avatar:row.avatar,
+        ...(row.avatar_sha256 ? {avatarUrl:`/api/users/${row.user_id}/avatar?v=${row.avatar_sha256.slice(0,12)}`} : {}),isDemo:false});
 }
 function createAuthService({db,config,now=Date.now,passwordHasher=createPasswordHasher(),limiter=createSqliteRateLimiter(db)}) {
     const repository=createAuthRepository(db);

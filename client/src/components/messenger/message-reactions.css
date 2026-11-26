@@ -18,6 +18,12 @@
   max-width: min(72%, 38rem);
   flex: 0 1 auto;
   flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.message-row-outgoing .msg-bubble-wrap {
+  align-items: flex-end;
 }
 
 .msg-bubble-wrap--has-reactions {
@@ -228,9 +234,14 @@
 .msg-menu-item:hover { background: var(--rx-hover); }
 .msg-menu-item--danger { color: var(--color-error); }
 
-.message-text--emoji { display: block; font-size: 2rem; line-height: 1.3; letter-spacing: 0.04em; }
-.message-text--emoji[data-emoji-count='1'] { font-size: 2.75rem; }
-.message-text--emoji[data-emoji-count='2'] { font-size: 2.4rem; }
+.message-text--emoji {
+  display: block;
+  max-width: 100%;
+  font-size: var(--emoji-standalone-size, 2.5rem);
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
 
 .message-reply-quote {
   display: block;
@@ -259,6 +270,17 @@
   outline: 2px solid var(--color-brand);
   outline-offset: 3px;
   background: var(--color-brand-soft);
+}
+
+.message-row[data-message-highlighted='true'] .message-bubble--bare {
+  background: transparent;
+  border-radius: 0.5rem;
+}
+
+.message-row[data-message-highlighted='true'] .msg-bubble-wrap > .message-attachments .message-attachment,
+.message-row[data-message-highlighted='true'] .msg-bubble-wrap > .voice-message-card {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
 }
 
 .chat-history-wrap { display: flex; flex-direction: column; }

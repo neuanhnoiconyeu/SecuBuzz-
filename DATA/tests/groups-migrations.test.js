@@ -245,7 +245,9 @@ test('upgrade from version 7: every group of any origin gets one from_joined ext
 
     const result = migrate(db);
     assert.deepEqual(result.applied, laterNames());
-    assert.equal(result.applied.at(-1), '0013-attachment-lifecycle.sql');
+    assert.ok(result.applied.includes('0012-groups.sql'));
+    assert.ok(result.applied.includes('0013-attachment-lifecycle.sql'));
+    assert.equal(result.applied.at(-1), '0016-customization-retention.sql');
 
     // DB5-R14.13: one extension row per group conversation of any origin, never for a direct conversation.
     const extensions = db.prepare('SELECT * FROM GroupExtensions ORDER BY conversation_id').all();
@@ -1222,8 +1224,10 @@ test('P-27: for generated version-7 databases the upgrade keeps every row and va
                 for (const entry of added) {
                     const names = entry.columns.map(column => column.name);
                     assert.ok(!canonicalColumns.every(name => names.includes(name)), `${entry.table} holds every column of ${canonical}`);
-                    const revisionFields = entry.table === 'MessageEditRevisions' && canonical === 'Messages' ? ['iv','sender_id'] : [];
-                    assert.deepEqual(defining.filter(name => names.includes(name)).sort(), revisionFields, `${entry.table} has only approved revision fields of ${canonical}`);
+                    const approvedSharedFields = entry.table === 'MessageEditRevisions' && canonical === 'Messages' ? ['iv','sender_id']
+                        : entry.table === 'UserProfileAvatars' && canonical === 'Attachments' ? ['byte_size','storage_key'] : [];
+                    assert.deepEqual(defining.filter(name => names.includes(name)).sort(), approvedSharedFields,
+                        `${entry.table} has only approved fields of ${canonical}`);
                 }
             }
             assert.deepEqual(db.pragma('foreign_key_check'), []);

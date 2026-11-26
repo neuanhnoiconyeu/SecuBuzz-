@@ -9,7 +9,7 @@ function seed(db){const r=createRepositories(db);for(const id of ['a','b'])r.use
 test('migration 6 to 7 preserves every existing value, receipt, attachment, index, trigger, checksum and FK with enforcement on',t=>{
     const {db}=atSix(t);seed(db);const names=db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(r=>r.name);
     const before=Object.fromEntries(names.map(n=>[n,db.prepare('SELECT * FROM '+n).all()]));const objects=db.prepare("SELECT name,type FROM sqlite_master WHERE type IN ('index','trigger') AND name NOT LIKE 'sqlite_%' ORDER BY name").all();
-    assert.deepEqual(migrate(db).applied,['0007-recipient-keys.sql','0008-authenticated-message-pins.sql','0009-authenticated-message-reactions.sql','0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql','0013-attachment-lifecycle.sql']);assert.equal(db.pragma('foreign_keys',{simple:true}),1);
+    assert.deepEqual(migrate(db).applied,['0007-recipient-keys.sql','0008-authenticated-message-pins.sql','0009-authenticated-message-reactions.sql','0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql','0013-attachment-lifecycle.sql','0014-voice-rooms.sql','0015-conversation-customization.sql','0016-customization-retention.sql']);assert.equal(db.pragma('foreign_keys',{simple:true}),1);
     for(const [name,rows]of Object.entries(before)){
         if(name==='SchemaMigrations')assert.deepEqual(db.prepare('SELECT * FROM SchemaMigrations WHERE version<=6 ORDER BY version').all(),rows);
         else if(name==='Messages'||name==='Attachments')assert.deepEqual(db.prepare(`SELECT ${Object.keys(rows[0]).join(',')} FROM ${name}`).all(),rows);
@@ -26,7 +26,7 @@ test('failed migration 7 rolls back the whole rebuild including dependent tables
     assert.deepEqual(db.prepare('SELECT * FROM Messages').all(),rows);assert.deepEqual(db.prepare('SELECT * FROM MessageReceipts').all(),receipts);assert.deepEqual(db.prepare('SELECT * FROM Attachments').all(),attachments);assert.deepEqual(db.pragma('foreign_key_check'),[]);
 });
 test('fresh migration 7 enforces key ownership, immutable history, monotonic states and epoch foreign keys',t=>{
-    const {db}=fixture(t);assert.equal(db.prepare('SELECT max(version) v FROM SchemaMigrations').get().v,13);assert.deepEqual(db.pragma('foreign_key_check'),[]);
+    const {db}=fixture(t);assert.equal(db.prepare('SELECT max(version) v FROM SchemaMigrations').get().v,16);assert.deepEqual(db.pragma('foreign_key_check'),[]);
     for(const name of ['DeviceKeys','ConversationKeyEpochs','ConversationKeyWraps'])assert.ok(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name));
     assert.throws(()=>db.prepare('INSERT INTO DeviceKeys(device_key_id,user_id,device_id,key_version,created_at,agreement_public_key,signing_public_key,signature,registered_at) VALUES(?,?,?,?,?,?,?,?,?)').run('k'.repeat(43),'missing','d'.repeat(22),1,'time','p'.repeat(87),'q'.repeat(87),'s'.repeat(86),'time'));
 });

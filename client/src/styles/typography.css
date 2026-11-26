@@ -43,6 +43,7 @@
   --type-buzz-line: 1.2;
   --type-display-tracking: 0.015em;
   --type-buzz-tracking: 0.02em;
+  --emoji-standalone-size: 2.5rem;
 }
 
 /* Headings, branding, and BUZZ share one Bungee family/weight declaration. */
@@ -93,5 +94,6 @@
     --type-modal-size: 1.125rem;
     --type-section-size: 1rem;
     --type-buzz-size: 0.75rem;
+    --emoji-standalone-size: 2.2rem;
   }
 }

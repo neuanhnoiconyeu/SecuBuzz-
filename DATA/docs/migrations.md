@@ -40,6 +40,9 @@ Starting the existing `npm start` also applies pending migrations before mountin
 | `0011-encrypted-message-revisions.sql` | Append-only signed encrypted edits; original ciphertext and identity remain immutable. |
 | `0012-groups.sql` | Version 12 (DB-5B draft): additive group extensions, membership intervals, Invitations, read positions and creation keys; backfills existing groups and adds immutable-history, overlap and replacement guards. No pre-existing row or published migration changes. |
 | `0013-attachment-lifecycle.sql` | Version 13 (DB-6B reconciliation): adds canonical attachment integrity, deletion, purge and declared-format metadata; adds `AttachmentReservations`, indexes and lifecycle guards scoped to canonical (`e2ee_version IS NULL`) rows. `expires_at` is owned by `0010-encrypted-attachments.sql`; main's encrypted-attachment rows and triggers remain authoritative. |
+| `0014-voice-rooms.sql` | Adds the persistent authenticated community-room catalog and protected defaults. |
+| `0015-conversation-customization.sql` | Adds profile avatars, conversation themes and nicknames. This immutable file retains its recorded checksum. |
+| `0016-customization-retention.sql` | Rebuilds the three customization tables with restrictive foreign keys, preserving rows and avatar revision triggers. |
 
 The runner obtains a `BEGIN IMMEDIATE` writer lock, validates existing history, applies **all** pending versions and checks foreign keys within one transaction. Failures roll back the entire pending batch, including the migration ledger and Messages rebuild. Already committed earlier versions remain intact. Success records each version once. Repeating the command reports zero migrations applied.
 
@@ -125,3 +128,47 @@ The `Attachments` columns added are: nullable `integrity_digest` (with a 64-char
 For deleted attachment rows, `attachments_lifecycle` rejects every actual column-value change except an isolated `purge_state` transition from `not_purged` to `purged`. It uses NULL-safe comparisons and rejects combined purge-plus-other-column updates and purge-state reversal. Existing lifecycle, association, sender, and `deleted_at` checks remain active. This exact rule is the Project Owner-approved Task 8.4 amendment, also documented in [schema.md](schema.md#version-13-attachment-lifecycle-migration) and in the DB-6B design decision. Migration 0013 is the reconciled forward migration; this documentation does not imply feature enablement or production deployment. Migrations 0001–0012 remain unchanged.
 
 **One-way effect and backup precondition for 0013:** the first start of an image containing `0013-attachment-lifecycle.sql` applies it to `sqlite-data` immediately and permanently. Code without migration 0013 then stops with `MIGRATION_HISTORY_MISMATCH`. Before that first start against data to keep, stop every writer and archive both complete Docker volume roots, `sqlite-data` and `private-storage`, together using the [cold-backup commands](../../docs/docker-development.md#cold-backup-commands-powershell); the [restore procedure](../../docs/docker-development.md#restore-into-new-volumes-first-powershell) restores them as a pair into fresh volumes. Compose Watch is not used while 0013 is a draft. Migration 0013 is rehearsed only in a Disposable_Project under T-6B-51. No backup helper or script exists (DK-06).
+
+## V2.4 additive room migration
+
+`0014-voice-rooms.sql` follows migrations 0001–0013 (renumbered from pre-merge
+`0013-voice-rooms.sql` with byte-identical SQL/checksum). It creates the
+independent authenticated community-room catalog and its three protected defaults.
+It does not rewrite existing account, conversation, message, attachment or E2EE
+records. Apply only with the canonical migration runner; repeat execution verifies
+the existing ledger/checksums and applies nothing. The whole pending batch rolls
+back on failure. Preserve a consistent database backup before first startup of an
+updated image. The room tombstones are retained; there is no destructive down
+migration. See `docs/custom-voice-rooms-v2-4.md` for authorization, token admission
+limits, room deletion and verification results.
+
+## V2.5 conversation customization retention
+
+`0015-conversation-customization.sql` (renumbered from pre-merge `0014` with
+identical normalized SHA-256
+`6a132cff0ce19ee83be87c6f26b8dac3277c25fa95e654f04671cd53200d9748`) must not
+have its SQL rewritten: its recorded normalized checksum is preserved verbatim.
+The file contains four `ON DELETE CASCADE` and two `ON DELETE SET NULL` actions,
+unlike the repository's retention policy. The migration linter grandfathers only
+those six findings for that exact filename and checksum; modified content, copied
+SQL and all other migrations remain subject to the normal rule.
+
+`0016-customization-retention.sql` (renumbered from pre-merge `0015` with
+byte-identical SQL/checksum) creates replacement tables, copies every customization
+row, swaps the tables transactionally and restores the three avatar revision
+triggers. All customization foreign keys now use `ON DELETE RESTRICT`: avatar
+metadata remains owned by its user, preferences remain tied to their conversation
+and referenced users, and deletion cannot silently discard customization history.
+Avatar file replacement/removal continues through the explicit avatar service. No
+account-erasure API is added.
+
+The conversation API keeps the exact historical DTO as its default contract.
+Callers opt into V2.5 `themeId`, `nicknames` and participant `avatarUrl` fields
+with `?contractVersion=2`; the authenticated E2EE client requests and strictly
+parses that version. List cursors are bound to their response contract version.
+
+The migration runner applies 0016 with foreign keys enabled and checks
+referential integrity before commit. Test this upgrade against a disposable
+backup before deploying; existing V2 primary Docker ledgers recorded `0013`–`0014`
+under pre-merge names before `0013-attachment-lifecycle.sql` landed on `main` and
+require cold-backup migration/rebuild planning before startup on merged code.

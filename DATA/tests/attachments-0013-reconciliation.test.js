@@ -15,7 +15,7 @@ const MIGRATIONS = path.join(__dirname, '..', 'server', 'database', 'migrations'
 test('fresh database applies main 0008-0012 and DB-6B 0013 with canonical attachment schema', (t) => {
     const { db } = fixture(t);
     const versions = db.prepare('SELECT version FROM SchemaMigrations ORDER BY version').all().map(({ version }) => version);
-    assert.deepEqual(versions, [1,2,3,4,5,6,7,8,9,10,11,12,13]);
+    assert.deepEqual(versions, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
     const columns = db.prepare('PRAGMA table_info(Attachments)').all().map(({ name }) => name);
     for (const name of ['expires_at','integrity_digest','deleted_at','purge_state','declared_algorithm','declared_format_version']) {
         assert.ok(columns.includes(name), `Attachments.${name} exists`);
@@ -49,7 +49,10 @@ test('version 12 to 13 upgrade preserves canonical attachment rows and enforces 
     });
     assert.equal(inserted.attachment_id, 'pre-0013');
     const before = db.prepare('SELECT * FROM Attachments').all();
-    assert.deepEqual(migrate(db).applied, ['0013-attachment-lifecycle.sql']);
+    assert.deepEqual(migrate(db).applied, [
+        '0013-attachment-lifecycle.sql','0014-voice-rooms.sql',
+        '0015-conversation-customization.sql','0016-customization-retention.sql'
+    ]);
     assert.deepEqual(db.prepare('SELECT attachment_id,conversation_id,uploaded_by,storage_key,encrypted_metadata,media_type,byte_size,status FROM Attachments ORDER BY attachment_id').all(),
         before.map(({ attachment_id, conversation_id, uploaded_by, storage_key, encrypted_metadata, media_type, byte_size, status }) =>
             ({ attachment_id, conversation_id, uploaded_by, storage_key, encrypted_metadata, media_type, byte_size, status })));
@@ -63,6 +66,6 @@ test('version 12 to 13 upgrade preserves canonical attachment rows and enforces 
 
 test('0013 is idempotent for the runner after a successful apply', (t) => {
     const { db } = fixture(t);
-    assert.deepEqual(migrate(db), { version: 13, applied: [] });
+    assert.deepEqual(migrate(db), { version: 16, applied: [] });
     assert.deepEqual(db.pragma('foreign_key_check'), []);
 });

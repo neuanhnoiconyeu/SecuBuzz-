@@ -21,7 +21,7 @@ function socialProxyRewrites(env = process.env) {
   if (!auth.length) return [];
   const origin = new URL(auth[0].destination).origin;
   return [
-    '/api/users/search', '/api/users/me', '/api/users/:id',
+    '/api/users/search', '/api/users/me/avatar', '/api/users/me', '/api/users/:id/avatar', '/api/users/:id',
     '/api/friends/requests/:id/accept', '/api/friends/requests/:id/decline',
     '/api/friends/requests/:id', '/api/friends/requests', '/api/friends/:id', '/api/friends',
     '/api/blocks/:userId', '/api/blocks',
@@ -33,9 +33,10 @@ function messagingProxyRewrites(env = process.env) {
   const origin = new URL(auth[0].destination).origin;
   return ['/api/keys/devices/:deviceId/revoke', '/api/keys/devices',
     '/api/conversations/:id/keys/epochs/:keyId', '/api/conversations/:id/keys/epochs', '/api/conversations/:id/keys',
-    '/api/conversations/:id/messages', '/api/conversations/:id/pins', '/api/conversations/:id/reactions', '/api/conversations/dm', '/api/conversations/:id', '/api/conversations',
+    '/api/conversations/:id/messages', '/api/conversations/:id/pins', '/api/conversations/:id/reactions', '/api/conversations/:id/preferences', '/api/conversations/dm', '/api/conversations/:id', '/api/conversations',
     '/api/messages/:id/reaction', '/api/messages/:id/pin', '/api/messages/:id/read', '/api/messages/:id',
-    '/api/attachments/limits','/api/attachments/batches/:cid/:mid','/api/attachments/:id/download','/api/attachments/:id','/api/attachments','/api/calls/token'].map(source => ({ source, destination: `${origin}${source}` }));
+    '/api/attachments/limits','/api/attachments/batches/:cid/:mid','/api/attachments/:id/download','/api/attachments/:id','/api/attachments','/api/calls/token',
+    '/api/voice/token','/api/voice/rooms/:id','/api/voice/rooms'].map(source => ({ source, destination: `${origin}${source}` }));
 }
 function realtimeProxyRewrites(env = process.env) {
   const auth = authProxyRewrites(env); if (!auth.length) return [];

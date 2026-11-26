@@ -71,11 +71,15 @@ const UINT32_MAX = 0xffffffff;
 const SIDECARS = Object.freeze(['-wal', '-shm', '-journal']);
 // Design, Data Models: SHA-256 of the LF-normalised text of each published migration (the checksum the runner records).
 const migrations = loadMigrations();
+const VERSION = 7;
 const groupMigration = migrations.find(migration => /CREATE TABLE\s+(?:IF NOT EXISTS\s+)?GroupExtensions\b/i.test(migration.sql));
-if (!groupMigration) throw new Error('the migration directory must identify the GroupExtensions boundary');
-const PUBLISHED = Object.freeze(migrations.filter(migration => migration.version < groupMigration.version).map(migration => Object.freeze(migration)));
-const VERSION = PUBLISHED.at(-1)?.version;
-if (!Number.isInteger(VERSION)) throw new Error('the GroupExtensions migration must follow a published schema');
+if (!groupMigration || groupMigration.version <= VERSION) {
+    throw new Error('the migration directory must identify the GroupExtensions boundary after version 7');
+}
+const PUBLISHED = Object.freeze(migrations.filter(migration => migration.version <= VERSION).map(migration => Object.freeze(migration)));
+if (PUBLISHED.length !== VERSION || PUBLISHED.at(-1)?.version !== VERSION) {
+    throw new Error('the synthetic version-7 fixture requires contiguous migrations 0001 to 0007');
+}
 const BASE64URL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 
 // ---------------------------------------------------------------------------------------------------------------

@@ -21,8 +21,11 @@ test('rejects corruption, substituted keys, modified metadata and cross-message 
     await expect(decryptAttachment({...encrypted.manifest,...patch},encrypted.bytes)).rejects.toThrow('integrity');
   expect(parseEncryptedAttachment({...encrypted.manifest,extra:true})).toBeNull();
 });
-test('file keys and IVs are fresh per file, and media forwarding content is rejected',async()=>{
+test('file keys and IVs are fresh per file, and media forwarding requires a valid encrypted operation',async()=>{
   const file=makeAttachmentFile('secret.pdf','application/pdf'),a=await encryptAttachment(file,scope),b=await encryptAttachment(file,{...scope,id:crypto.randomUUID()});
   expect(a.manifest.key).not.toBe(b.manifest.key);expect(a.manifest.iv).not.toBe(b.manifest.iv);
-  expect(()=>encodeAuthenticatedContent({text:'Forward',attachments:[a.manifest],forwarded:true,operation:{id:'operation',part:'message'}})).toThrow();
+  const forwarded={text:'Forward',attachments:[a.manifest],forwarded:true as const,operation:{id:'operation',part:'message' as const}};
+  expect(decodeAuthenticatedContent(encodeAuthenticatedContent(forwarded))).toEqual(forwarded);
+  expect(()=>encodeAuthenticatedContent({...forwarded,operation:{id:'operation',part:'note'}})).toThrow();
+  expect(()=>encodeAuthenticatedContent({text:'Forward',attachments:[a.manifest],forwarded:true})).toThrow();
 });
