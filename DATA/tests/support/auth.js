@@ -15,8 +15,16 @@ class Browser {
     async request(url,{method='GET',body,rawBody,headers={}}={}) {
         const requestHeaders={Origin:this.sourceOrigin,...(this.cookies.size ? {Cookie:[...this.cookies].map(([k,v])=>`${k}=${v}`).join('; ')} : {}),
             ...(body!==undefined || rawBody!==undefined ? {'Content-Type':'application/json'} : {}),...headers};
-        const response=await fetch(this.origin+url,{method,headers:requestHeaders,
-            body:rawBody ?? (body===undefined ? undefined : JSON.stringify(body)),redirect:'manual'});
+        let response;
+        try {
+            response=await fetch(this.origin+url,{method,headers:requestHeaders,
+                body:rawBody ?? (body===undefined ? undefined : JSON.stringify(body)),redirect:'manual'});
+        } catch(error) {
+            if (error?.cause?.message === 'bad port') {
+                throw new TypeError(`Node fetch rejected fixture port ${new URL(this.origin).port}`,{cause:error});
+            }
+            throw error;
+        }
         const setCookies=response.headers.getSetCookie();
         for (const cookie of setCookies) {
             const pair=cookie.split(';',1)[0];const index=pair.indexOf('=');const key=pair.slice(0,index);const value=pair.slice(index+1);
@@ -44,8 +52,32 @@ async function setup(t,{env={},...dependencies}={}) {
     });
     const db=openDatabase({filename});connections.push(db);
     const configuration=loadAuthConfig({...envDefaults,...env});
-    const application=await startServer({db,config:configuration,env:{...envDefaults,...env},...dependencies});applications.push(application);
-    const url=`http://127.0.0.1:${application.server.address().port}`;
+    const serverEnv={...envDefaults,...env};
+    const rejectedPorts=[];
+    let application,url;
+    for (let attempt=0;attempt<16;attempt++) {
+        const candidate=await startServer({db,config:configuration,env:serverEnv,...dependencies});
+        const address=candidate.server.address();
+        const port=address&&typeof address==='object'?address.port:null;
+        if (!Number.isInteger(port) || port<1 || port>65535) {
+            await candidate.close();
+            throw new Error('Fixture server did not receive a valid TCP port.');
+        }
+        const candidateUrl=`http://127.0.0.1:${port}`;
+        try {
+            // Node fetch applies its forbidden-port list before opening a socket. Probe the selected ephemeral port
+            // without credentials; retry only when the OS selected a port fetch itself rejects.
+            await fetch(`${candidateUrl}/__fixture_port_probe__`,{method:'HEAD',redirect:'manual'});
+            application=candidate;url=candidateUrl;break;
+        } catch(error) {
+            await candidate.close();
+            if (error?.cause?.message!=='bad port' || String(serverEnv.PORT)!=='0') throw error;
+            rejectedPorts.push(port);
+            t.diagnostic?.(`Node fetch rejected ephemeral fixture port ${port}; retrying with a new OS-assigned port.`);
+        }
+    }
+    if (!application) throw new Error(`No Node-fetch-compatible ephemeral fixture port after 16 attempts; rejected ports: ${rejectedPorts.join(', ')}`);
+    applications.push(application);
     return {db,filename,directory,connections,applications,children,application,config:configuration,
         browser:()=>new Browser(url,configuration.origins[0]),
         async anotherServer() {

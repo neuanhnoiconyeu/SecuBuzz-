@@ -6,10 +6,20 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { groupDatabase, createClock, snapshot, changedTables } = require('./support/groups');
+const { groupDatabase, createClock, snapshot, changedTables, httpGroupFixture, actorRequest } = require('./support/groups');
 const { forAll } = require('./support/random');
 const { permittedRanges, inRanges } = require('../server/groups/policy');
 const { createGroupRepository, withMembershipTransaction, RepositoryError } = require('../server/database/groupRepository');
+
+const P12_FEATURES=Object.freeze({groupApi:true,groupMessaging:true,groups:Object.freeze({directAdd:true,maxMembers:50,
+    maxPendingInvitationsPerGroup:50,maxPendingInvitationsPerInvitee:50})});
+const P12_VERIFIER=Object.freeze({async verifyEnvelope(){return {verified:true};}});
+const P12_NAMES=Object.freeze({owner:'Group Owner',admin:'Group Admin',member:'Group Member',pendingInvitee:'Group Invitee',
+    nonMember:'Group Outsider',removedMember:'Group Removed'});
+const P12_ENVELOPE=(actor,id,clientId)=>({id:clientId,conversationId:id,senderId:actor.id,
+    senderName:P12_NAMES[actor.actorClass],timestamp:'2026-01-01T00:00:00.000Z',type:'text',
+    encryption:{version:1,algorithm:'AES-256-GCM',encoding:'base64',iv:Buffer.alloc(12,1).toString('base64'),
+        ciphertext:Buffer.alloc(32,2).toString('base64')}});
 
 const P11_SEED = 5129;
 const P11_RUNS = 100;
@@ -271,4 +281,88 @@ test('AF-14: a rejoin keeps the earlier interval and does not rewrite joined_at'
         assert.deepEqual(f.groups.historyPage(id,f.actors.never,{ policy, highWater:7 }),[]);
         assert.equal(f.groups.getPermittedMessage(id,f.actors.never,policy,`${id}-message-7`),null);
     }
+});
+
+test('T-5D-14 P-12: generated group history matches an independent membership event log', { timeout:240000 }, async t => {
+    const f=await httpGroupFixture(t,{clock:createClock('2031-01-01T00:00:00.000Z'),features:P12_FEATURES,
+        messageOptions:{groupRecipientKeyVerifier:P12_VERIFIER}});
+    const actorSet=[f.actors.owner,f.actors.admin,f.actors.member,f.actors.pendingInvitee,f.actors.nonMember,f.actors.removedMember];
+    const property=await forAll('P-12-group-history-membership-event-log',{runs:100,seed:0x5d120012,onRun:line=>t.diagnostic(line),
+        describe:sample=>`policy=${sample.policy},ops=${sample.operations.join(',')}`},
+        random=>({policy:random.pick(['all','from_joined']),operations:Array.from({length:40},(_,index)=>
+            index<5?['join','send','leave','rejoin','remove'][index]:random.pick(['join','send','leave','rejoin','remove']))}),
+        async(sample,info)=>{
+            const owner=f.actors.owner;
+            const created=await actorRequest(owner,'POST','/api/groups',{body:{name:`P12 ${info.run}`,
+                historyPolicy:sample.policy,idempotencyKey:`p12-${info.run}`}});
+            assert.equal(created.status,201,`${info.line}: group creation`);
+            const groupId=created.body.group.id;
+            const model=new Map(actorSet.map(actor=>[actor.id,{actor,active:actor.id===owner.id,ever:actor.id===owner.id,
+                firstJoinSeq:actor.id===owner.id?1:null,intervalStart:actor.id===owner.id?1:null,intervals:[]} ]));
+            const events=[];let highWater=0;
+            const activeActors=()=>actorSet.filter(actor=>model.get(actor.id).active);
+            const callAdd=async actor=>{
+                const entry=model.get(actor.id),firstSeq=highWater+1;
+                const response=await actorRequest(owner,'POST',`/api/groups/${groupId}/members`,{body:{userId:actor.id}});
+                assert.equal(response.status,201,`${info.line}: add ${actor.actorClass}`);
+                if(!entry.ever)entry.firstJoinSeq=firstSeq;
+                entry.active=true;entry.ever=true;entry.intervalStart=firstSeq;
+            };
+            const callLeave=async actor=>{
+                const entry=model.get(actor.id);
+                const response=await actorRequest(actor,'POST',`/api/groups/${groupId}/leave`);
+                assert.equal(response.status,204,`${info.line}: leave ${actor.actorClass}`);
+                entry.intervals.push({first:entry.intervalStart,last:highWater});entry.intervalStart=null;entry.active=false;
+            };
+            const callRemove=async actor=>{
+                const entry=model.get(actor.id);
+                const response=await actorRequest(owner,'DELETE',`/api/groups/${groupId}/members/${actor.id}`);
+                assert.equal(response.status,204,`${info.line}: remove ${actor.actorClass}`);
+                entry.intervals.push({first:entry.intervalStart,last:highWater});entry.intervalStart=null;entry.active=false;
+            };
+            const callSend=async actor=>{
+                const response=await actorRequest(actor,'POST',`/api/groups/${groupId}/messages`,
+                    {body:P12_ENVELOPE(actor,groupId,`p12-${info.run}-${events.length}`)});
+                assert.equal(response.status,201,`${info.line}: message send`);
+                highWater++;
+                assert.equal(response.body.message.sequence,highWater,`${info.line}: sequence follows event-log oracle`);
+                events.push({sequence:highWater,senderId:actor.id,activeAtSend:new Set(activeActors().map(value=>value.id)),
+                    message:response.body.message});
+            };
+            for(let index=0;index<sample.operations.length;index++){
+                const operation=sample.operations[index],active=activeActors(),former=actorSet.filter(actor=>model.get(actor.id).ever&&!model.get(actor.id).active),
+                    never=actorSet.filter(actor=>!model.get(actor.id).ever),nonOwner=active.filter(actor=>actor.id!==owner.id);
+                if(operation==='join'&&never.length){await callAdd(info.random.pick(never));continue;}
+                if(operation==='rejoin'&&former.length){await callAdd(info.random.pick(former));continue;}
+                if(operation==='leave'&&nonOwner.length){await callLeave(info.random.pick(nonOwner));continue;}
+                if(operation==='remove'&&nonOwner.length){await callRemove(info.random.pick(nonOwner));continue;}
+                await callSend(info.random.pick(active));
+            }
+            for(const actor of actorSet){
+                const entry=model.get(actor.id);
+                if(!entry.active){
+                    if(!entry.ever&&actor.id===owner.id)continue;
+                    const denied=await actorRequest(actor,'GET',`/api/groups/${groupId}/messages`);
+                    assert.deepEqual([denied.status,denied.body],[404,{code:'NOT_FOUND',fields:[]}],`${info.line}: inactive users get no history`);
+                    continue;
+                }
+                const expected=events.filter(event=>event.activeAtSend.has(actor.id)
+                    ||sample.policy==='all'&&event.sequence<(entry.firstJoinSeq??1)).map(event=>event.sequence);
+                const actual=[],seen=new Set();let cursor=null,pageIndex=0;
+                while(true){
+                    const limit=info.random.int(1,10),query=`?limit=${limit}${cursor?`&cursor=${encodeURIComponent(cursor)}`:''}`;
+                    const page=await actorRequest(actor,'GET',`/api/groups/${groupId}/messages${query}`);
+                    assert.equal(page.status,200,`${info.line}: active history page ${pageIndex}`);
+                    const sequences=page.body.items.map(item=>item.sequence);
+                    assert.equal(new Set(sequences).size,sequences.length,`${info.line}: no duplicate on page`);
+                    assert.ok(sequences.every((sequence,index)=>index===0||sequences[index-1]>sequence),`${info.line}: descending page`);
+                    for(const sequence of sequences){assert.ok(!seen.has(sequence),`${info.line}: pages are disjoint`);seen.add(sequence);actual.push(sequence);}
+                    cursor=page.body.nextCursor;pageIndex++;
+                    if(!cursor)break;
+                    assert.ok(pageIndex<=events.length+1,`${info.line}: traversal terminates`);
+                }
+                assert.deepEqual(actual,expected.slice().reverse(),`${info.line}: ${actor.actorClass} event-log history`);
+            }
+        });
+    t.diagnostic(`P-12 seed=${property.seed} sequences=${property.runs} events=40 users<=6 policies=all/from_joined; oracle=independent event log`);
 });

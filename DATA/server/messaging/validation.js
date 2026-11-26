@@ -68,4 +68,9 @@ function page(input,actor,id) {
     }
     return {limit,context,highWater,before};
 }
-module.exports={MAX_BODY,MAX_CIPHERTEXT,envelope,fingerprint,page,conversationId,identifier,wireId,query,emptyBody,invalid,iso};
+function groupPage(input,actor,id) {
+    if(input&&typeof input==='object'&&!Array.isArray(input))
+        for(const key of Object.keys(input))if(!['limit','cursor'].includes(key))invalid(key);
+    return page(input,actor,id);
+}
+module.exports={MAX_BODY,MAX_CIPHERTEXT,envelope,fingerprint,page,groupPage,conversationId,identifier,wireId,query,emptyBody,invalid,iso};

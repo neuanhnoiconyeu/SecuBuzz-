@@ -47,16 +47,16 @@ test('names, identity fields, CSRF and Origin are validated; failed writes leave
  assert.equal((await mutate(f.alice,'POST','/api/voice/rooms',{name:'Room',requestId:randomUUID()},{Origin:'http://evil.invalid'})).status,403);
  assert.equal(f.db.prepare('SELECT count(*) n FROM VoiceRooms WHERE owner_id IS NOT NULL').get().n,0);
 });
-test('additive schema 12-to-13 upgrade preserves records/checksums, repeats and retains default/tombstone integrity',t=>{
+test('additive schema 13-to-14 upgrade preserves records/checksums, repeats and retains default/tombstone integrity',t=>{
  const {db}=fixture(t,{migrate:false}),dir=temporary(t),all=loadMigrations();
- for(const m of all.filter(m=>m.version<=12))fs.writeFileSync(path.join(dir,m.name),m.sql);
+ for(const m of all.filter(m=>m.version<=13))fs.writeFileSync(path.join(dir,m.name),m.sql);
  migrate(db,{directory:dir});
  db.prepare("INSERT INTO Users(user_id,username,display_name) VALUES('owner','owner','Owner')").run();
  const before=db.prepare('SELECT * FROM Users').all(),ledger=db.prepare('SELECT * FROM SchemaMigrations').all();
- assert.deepEqual(migrate(db).applied,['0013-voice-rooms.sql','0014-conversation-customization.sql','0015-customization-retention.sql']);
- assert.deepEqual(db.prepare('SELECT * FROM Users').all(),before);assert.deepEqual(db.prepare('SELECT * FROM SchemaMigrations WHERE version<=12').all(),ledger);
+ assert.deepEqual(migrate(db).applied,['0014-voice-rooms.sql','0015-conversation-customization.sql','0016-customization-retention.sql']);
+ assert.deepEqual(db.prepare('SELECT * FROM Users').all(),before);assert.deepEqual(db.prepare('SELECT * FROM SchemaMigrations WHERE version<=13').all(),ledger);
  assert.equal(migrate(db).applied.length,0);assert.deepEqual(db.pragma('foreign_key_check'),[]);assert.equal(db.pragma('integrity_check',{simple:true}),'ok');
  assert.throws(()=>db.prepare("DELETE FROM VoiceRooms WHERE room_id='lounge'").run(),/voice_room_retained/);
  assert.throws(()=>db.prepare("UPDATE VoiceRooms SET name='changed' WHERE room_id='lounge'").run(),/voice_room_immutable/);
- const isolated=new Database(':memory:');isolated.pragma('foreign_keys=ON');assert.equal(migrate(isolated).version,15);isolated.close();
+ const isolated=new Database(':memory:');isolated.pragma('foreign_keys=ON');assert.equal(migrate(isolated).version,16);isolated.close();
 });

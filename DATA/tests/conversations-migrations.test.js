@@ -18,7 +18,7 @@ test('DB-4A additive upgrade preserves all version-4 records, ciphertext and app
     r.legacy.saveMessage('a','b','ORIGINAL_CIPHERTEXT','ORIGINAL_IV');
     const names=['Users','UserProfiles','Conversations','ConversationMembers','Messages','FriendRequests','Friendships','Blocks','Sessions','AccountCredentials','AuditLogs'];
     const before=Object.fromEntries(names.map(name=>[name,db.prepare(`SELECT * FROM ${name}`).all()]));const history=db.prepare('SELECT * FROM SchemaMigrations ORDER BY version').all();
-    assert.deepEqual(migrate(db).applied,['0005-conversation-provenance.sql','0006-encrypted-message-lifecycle.sql','0007-recipient-keys.sql','0008-authenticated-message-pins.sql','0009-authenticated-message-reactions.sql','0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql','0013-voice-rooms.sql','0014-conversation-customization.sql','0015-customization-retention.sql']);
+    assert.deepEqual(migrate(db).applied,['0005-conversation-provenance.sql','0006-encrypted-message-lifecycle.sql','0007-recipient-keys.sql','0008-authenticated-message-pins.sql','0009-authenticated-message-reactions.sql','0010-encrypted-attachments.sql','0011-encrypted-message-revisions.sql','0012-groups.sql','0013-attachment-lifecycle.sql','0014-voice-rooms.sql','0015-conversation-customization.sql','0016-customization-retention.sql']);
     for(const [name,rows] of Object.entries(before)){
         if(rows.length)assert.deepEqual(db.prepare(`SELECT ${Object.keys(rows[0]).join(',')} FROM ${name}`).all(),rows);
         else assert.equal(db.prepare(`SELECT count(*) AS n FROM ${name}`).get().n,0);

@@ -66,20 +66,20 @@ const { createKeyRepository } = require('../../server/e2ee/repository');
 const { guardPath, UnsafePathError } = require('./groups');
 const { createRandom } = require('./random');
 
-const VERSION = 7;
 const DEFAULT_SEED = 535;
 const UINT32_MAX = 0xffffffff;
 const SIDECARS = Object.freeze(['-wal', '-shm', '-journal']);
 // Design, Data Models: SHA-256 of the LF-normalised text of each published migration (the checksum the runner records).
-const PUBLISHED = Object.freeze([
-    { version:1, name:'0001-legacy.sql', checksum:'7ac0d3b5695135a3f8b2a2bc747e707b211899ee6651aff63d0aeb4ea49a006f' },
-    { version:2, name:'0002-foundation.sql', checksum:'8f2e3b0bbdd09e59e85ab5c395518b816b9590804b42fcb0c84ef26a893c55c4' },
-    { version:3, name:'0003-authentication.sql', checksum:'ad5b31788a95ea296a7ba908f647fbc9bc8ae91d9035a31503681a3f5199634f' },
-    { version:4, name:'0004-profiles-friends.sql', checksum:'cc3e1700a5ec4b83e9fd4a72a61a6ad647108d08a0e4c816cbcdcc9f99f7bd89' },
-    { version:5, name:'0005-conversation-provenance.sql', checksum:'e6129fab323e2f0576f3b30b2da3225ab0efedb4cc02c37307ea949ea81c1e0c' },
-    { version:6, name:'0006-encrypted-message-lifecycle.sql', checksum:'68b73b2d80569ddb24d8e68b51de919f61fa167b93032e76012ed9af96712ef9' },
-    { version:7, name:'0007-recipient-keys.sql', checksum:'6a73d3a1533a40f09546fff27639ec654363837f4e6fcb6bd23a7aef5eff06c2' },
-]);
+const migrations = loadMigrations();
+const VERSION = 7;
+const groupMigration = migrations.find(migration => /CREATE TABLE\s+(?:IF NOT EXISTS\s+)?GroupExtensions\b/i.test(migration.sql));
+if (!groupMigration || groupMigration.version <= VERSION) {
+    throw new Error('the migration directory must identify the GroupExtensions boundary after version 7');
+}
+const PUBLISHED = Object.freeze(migrations.filter(migration => migration.version <= VERSION).map(migration => Object.freeze(migration)));
+if (PUBLISHED.length !== VERSION || PUBLISHED.at(-1)?.version !== VERSION) {
+    throw new Error('the synthetic version-7 fixture requires contiguous migrations 0001 to 0007');
+}
 const BASE64URL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -511,7 +511,8 @@ function groupSummary(db) {
 function verify(db) {
     assert.equal(db.pragma('integrity_check', { simple:true }), 'ok', 'synthetic fixture integrity_check');
     assert.deepEqual(db.pragma('foreign_key_check'), [], 'synthetic fixture foreign_key_check');
-    assert.deepEqual(db.prepare('SELECT version, name, checksum FROM SchemaMigrations ORDER BY version').all(), PUBLISHED.map(entry => ({ ...entry })),
+    assert.deepEqual(db.prepare('SELECT version, name, checksum FROM SchemaMigrations ORDER BY version').all(),
+        PUBLISHED.map(({ version, name, checksum }) => ({ version, name, checksum })),
         'synthetic fixture ledger is 0001 to 0007');
 }
 
@@ -538,8 +539,9 @@ function prepareTarget(filename) {
 
 // A temporary copy of 0001 to 0007 for the runner's options.directory; removed file by file afterwards.
 function withPublishedMigrations(work) {
-    const published = loadMigrations().filter(migration => migration.version <= VERSION);
-    assert.deepEqual(published.map(({ version, name, checksum }) => ({ version, name, checksum })), PUBLISHED.map(entry => ({ ...entry })),
+    const published = PUBLISHED;
+    assert.deepEqual(published.map(({ version, name, checksum }) => ({ version, name, checksum })),
+        PUBLISHED.map(({ version, name, checksum }) => ({ version, name, checksum })),
         'migrations 0001 to 0007 keep their published names and checksums');
     const directory = guardPath(fs.mkdtempSync(path.join(os.tmpdir(), 'secubuzz-db5-v7-migrations-')));
     const written = [];

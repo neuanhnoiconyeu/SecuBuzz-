@@ -113,6 +113,8 @@ const MESSAGING_CHECKPOINT_DIGESTS = Object.freeze({
     'e2ee-migrations.test.js':'5485f3f4e84488f8e55c3ee5ee16309f71ac3a8f2bee7d3c07c63457ca294e27',
     'messaging-http.test.js':'625c8502513384d0e16c4a80040c5b4b7137488823def7e4157fdf2bc09283a4',
     'support/messaging.js':'02c93a4489a588c5941a5f32d68d7e3a42695a9ac49fc68a127ed01fda59e9ed',
+    // Project Owner-approved Task 2.24 fixture revision carried by the DB-5C/DB-5D lineage.
+    'support/auth.js':'0d7996a8bef3be2703bfbb40dfe3c170efb3571a9bfdd6077832de2ef50bcc6f',
 });
 const LAST_NAME = `'${LAST_PUBLISHED.name}'`;
 const VERSION_LIST = `[${PUBLISHED.map(m => m.version).join(',')}]`;

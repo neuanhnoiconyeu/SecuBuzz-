@@ -27,8 +27,12 @@ const { DEFAULT_SEED, buildVersionSeven, tableCounts, contentDigest } = require(
 const SEED = DEFAULT_SEED;
 const OTHER_SEED = 4242;
 const FILE_NAME = 'synthetic-v7.sqlite';
-const PUBLISHED = Object.freeze(['0001-legacy.sql', '0002-foundation.sql', '0003-authentication.sql', '0004-profiles-friends.sql',
-    '0005-conversation-provenance.sql', '0006-encrypted-message-lifecycle.sql', '0007-recipient-keys.sql']);
+const BASELINE_VERSION = 7;
+const migrations = loadMigrations();
+const groupMigration = migrations.find(migration => /CREATE TABLE\s+(?:IF NOT EXISTS\s+)?GroupExtensions\b/i.test(migration.sql));
+assert.ok(groupMigration && groupMigration.version > BASELINE_VERSION, 'the migration directory identifies the GroupExtensions boundary after version 7');
+const PUBLISHED = Object.freeze(migrations.filter(migration => migration.version <= BASELINE_VERSION));
+assert.equal(PUBLISHED.at(-1)?.version, BASELINE_VERSION);
 // Counted by hand from the data set in the header of support/synthetic-v7.js.
 const EXPECTED_COUNTS = Object.freeze({
     AccountCredentials:6, // ada, ben, cleo, dan, eve, finn
@@ -47,7 +51,7 @@ const EXPECTED_COUNTS = Object.freeze({
     Friendships:4, // legacy gus-hana, authenticated ada-ben, cleo-dan, ben-dan
     MessageReceipts:14, // legacy dm 3 + 1, dm 3 + 1, alpha 4, beta 2
     Messages:36, // legacy dm 3 + 2, dm 4 + 3, alpha 12, beta 10, legacy group 2
-    SchemaMigrations:7,
+    SchemaMigrations:BASELINE_VERSION,
     SecurityLogs:1,
     Sessions:2,
     SocialRevisions:8,
@@ -75,13 +79,13 @@ test('the builder makes one version-7 file under os.tmpdir() with the hand-count
     const { directory, file, summary } = build(t, SEED);
     assert.equal(summary.file, fs.realpathSync.native(file));
     assert.equal(summary.seed, SEED);
-    assert.equal(summary.version, 7);
+    assert.equal(summary.version, BASELINE_VERSION);
     assert.deepEqual(summary.counts, EXPECTED_COUNTS);
     assert.deepEqual(summary.groups, GROUPS);
     assert.deepEqual(fs.readdirSync(directory), [FILE_NAME], 'one file: no -wal, -shm or -journal sidecar is left');
     readOnly(file, db => {
         assert.deepEqual(db.prepare('SELECT version, name FROM SchemaMigrations ORDER BY version').all(),
-            PUBLISHED.map((name, index) => ({ version:index + 1, name })));
+            PUBLISHED.map(({ version, name }) => ({ version, name })));
         assert.deepEqual(tableCounts(db), EXPECTED_COUNTS, 'no table of 0008 or later exists');
         assert.equal(db.pragma('integrity_check', { simple:true }), 'ok');
         assert.deepEqual(db.pragma('foreign_key_check'), []);
@@ -138,7 +142,7 @@ test('a copy of the fixture upgrades with the real migration directory to the la
     const db = openDatabase({ filename:copy }); // migrates on open, as the backend does
     connections.push(db);
     const latest = loadMigrations();
-    assert.ok(latest.length > 7, 'the real directory holds a migration after 0007');
+    assert.ok(latest.length > BASELINE_VERSION, 'the real directory holds a migration after the synthetic fixture boundary');
     assert.deepEqual(db.prepare('SELECT version, name, checksum FROM SchemaMigrations ORDER BY version').all(),
         latest.map(({ version, name, checksum }) => ({ version, name, checksum })));
     assert.deepEqual(db.pragma('foreign_key_check'), []);

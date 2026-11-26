@@ -1,6 +1,6 @@
 # DATA schema and ERD
 
-Current working-tree schema is version 15 (`0015-customization-retention.sql`).
+Current working-tree schema is version 16 (`0016-customization-retention.sql`).
 The additive group schema is documented below. The existing DB-4B key schema is unchanged:
 `0007-recipient-keys.sql` adds DeviceKeys
 (public signing/agreement points, self-signature, account ownership, stable deviceId,
@@ -105,9 +105,10 @@ Encryption metadata is stored unchanged: algorithm, version, encoding, IV, ciphe
 | 10 | `0010-encrypted-attachments.sql` |
 | 11 | `0011-encrypted-message-revisions.sql` |
 | 12 | `0012-groups.sql` |
-| 13 | `0013-voice-rooms.sql` |
-| 14 | `0014-conversation-customization.sql` |
-| 15 | `0015-customization-retention.sql` |
+| 13 | `0013-attachment-lifecycle.sql` |
+| 14 | `0014-voice-rooms.sql` |
+| 15 | `0015-conversation-customization.sql` |
+| 16 | `0016-customization-retention.sql` |
 
 ### Added tables
 
@@ -174,14 +175,32 @@ The backfill inserts one extension for every group conversation of both origins:
 
 Schema presence is not authorization. The repository exposes a managed group only when kind is group, origin is authenticated and an extension exists. Active authorized members retain earlier permitted intervals after rejoining; absence gaps never become visible. `all` additionally allows sequences before the first join. Former members and never-members receive no history. Server filtering does not replace key-based confidentiality; E2EE and realtime security remain under their existing contracts.
 
+## Version 13 attachment lifecycle migration
+
+`0013-attachment-lifecycle.sql` extends the existing shared `Attachments` table; it does not create a second attachment store. It adds nullable `integrity_digest`, `deleted_at`, `declared_algorithm`, and `declared_format_version` columns, plus `purge_state` defaulting to `not_purged` with the values `not_purged` and `purged`. `expires_at` is added by `0010-encrypted-attachments.sql` and is not repeated. Existing attachment columns and values are preserved. The migration also creates `AttachmentReservations` with restrictive foreign keys and indexes for reservation lookups and expiry. Its triggers are scoped to canonical rows (`e2ee_version IS NULL`), so main's encrypted-attachment rows and triggers remain authoritative.
+
+The database does not validate the `storage_key` format, recompute `integrity_digest` from private-storage bytes, or interpret descriptor identifiers (`declared_algorithm` and `declared_format_version`). The migration constrains a non-NULL digest to 64 lowercase hexadecimal characters and bounds non-NULL descriptor lengths to 1..64 characters; the storage provider and service validate keys and verify byte digests.
+
+### Added named objects
+
+| Kind | Names |
+| --- | --- |
+| Indexes | `idx_attachments_pending_expiry`, `idx_attachments_uploader_usage`, `idx_attachments_search`, `idx_attachments_purge`, `idx_reservations_user`, `idx_reservations_conversation`, `idx_reservations_source`, `idx_reservations_expiry` |
+| Table | `AttachmentReservations` |
+| Triggers | `attachments_immutable`, `attachments_lifecycle`, `attachments_metadata_insert` |
+
+`attachments_immutable` protects attachment identity and metadata. `attachments_lifecycle` checks every update. A deleted row permits value-preserving updates or only an isolated `purge_state` transition from `not_purged` to `purged`; it rejects any other changed value, a purge-state reversal, and a purge transition combined with another column change. Comparisons are NULL-safe. Existing status transitions, association, sender, and `deleted_at` consistency checks remain enforced. This is the Project Owner-approved Task 8.4 amendment recorded in the DB-6B design decision. `attachments_metadata_insert` enforces the encrypted metadata length bound.
+
+Migration 0009 is DB-6B draft schema in this isolated implementation workspace. Its presence does not enable the Attachment API or any feature gate. Published migrations 0001–0008 remain unchanged.
+
 ## Authenticated community voice rooms (V2.4)
 
-Migration `0013-voice-rooms.sql` adds `VoiceRooms`, independent of Conversations,
-Messages, device keys and encrypted attachments. Rooms are shared with all signed-in
-users; this catalog does not grant direct-conversation access. The owner is a
-session-derived `Users` foreign key with ON DELETE RESTRICT. Default Lounge, Study
-Room and Dev Corner (projected to the catalog UI/API as Gaming Room) rows have no
-account owner and cannot be renamed or removed.
+Migration `0014-voice-rooms.sql` (renumbered cleanly from `0013-voice-rooms.sql`) adds
+`VoiceRooms`, independent of Conversations, Messages, device keys and encrypted
+attachments. Rooms are shared with all signed-in users; this catalog does not grant
+direct-conversation access. The owner is a session-derived `Users` foreign key with ON
+DELETE RESTRICT. Default Lounge, Study Room and Dev Corner (projected to the catalog
+UI/API as Gaming Room) rows have no account owner and cannot be renamed or removed.
 `voice_rooms_active_name` enforces unique normalized active names;
 `voice_rooms_owner` supports owner quotas. `voice_rooms_identity` preserves ownership,
 identity, creation time, defaults and terminal deletion. `voice_rooms_retained`
@@ -190,14 +209,15 @@ is changed. Room metadata and participant display names are not media E2EE.
 
 ## Conversation customization (V2.5)
 
-Migration 0014 adds `UserProfileAvatars`, `ConversationThemes` and
-`ConversationNicknames`. It is immutable and already applied with a recorded
-checksum; its six historical non-restrictive delete actions are pinned as a
-file-and-checksum-specific linter exception. Migration 0015 rebuilds those tables
-with `ON DELETE RESTRICT`, copies all stored values and recreates the avatar
-social-revision triggers. No customization rows are cascaded or nulled by a
-parent deletion. Avatar bytes remain in private storage and are replaced or
-removed only through the explicit avatar service.
+Migration 0015 (`0015-conversation-customization.sql`, renumbered with unchanged SQL and
+checksum `6a132cff0ce19ee83be87c6f26b8dac3277c25fa95e654f04671cd53200d9748`) adds
+`UserProfileAvatars`, `ConversationThemes` and `ConversationNicknames`. Its six
+historical non-restrictive delete actions are pinned as a file-and-checksum-specific
+linter exception. Migration 0016 (`0016-customization-retention.sql`) rebuilds those
+tables with `ON DELETE RESTRICT`, copies all stored values and recreates the avatar
+social-revision triggers. No customization rows are cascaded or nulled by a parent
+deletion. Avatar bytes remain in private storage and are replaced or removed only through
+the explicit avatar service.
 
 `UserProfileAvatars` belongs to one user. Theme and nickname rows belong to a
 conversation; nickname targets and optional updater identities are user-owned

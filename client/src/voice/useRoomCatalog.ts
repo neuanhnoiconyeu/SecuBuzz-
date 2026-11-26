@@ -15,7 +15,7 @@ export function parseRoomCatalog(value: unknown): VoiceRoom[] {
       !(room.ownerId === null || typeof room.ownerId === 'string') ||
       !(room.ownerName === null || typeof room.ownerName === 'string')) throw new ApiError('invalid_response');
     ids.add(room.id);
-    // Migration 0013 rows with ownerId=null are SQL-immutable; project current default names by stable ID.
+    // Migration 0014 rows with ownerId=null are SQL-immutable; project current default names by stable ID.
     const defaultName = room.ownerId === null ? DEFAULT_VOICE_ROOM_NAMES[room.id] : undefined;
     return defaultName && defaultName !== room.name ? { ...room, name: defaultName } : room;
   });

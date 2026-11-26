@@ -22,8 +22,8 @@ function foreignKeys(db,table) {
 
 test('fresh empty database migrates through customization retention with integrity and idempotence',t=>{
     const {db}=fixture(t,{migrate:false});
-    assert.deepEqual(migrate(db),{version:15,applied:migrationList.map(entry=>entry.name)});
-    assert.deepEqual(migrate(db),{version:15,applied:[]});
+    assert.deepEqual(migrate(db),{version:16,applied:migrationList.map(entry=>entry.name)});
+    assert.deepEqual(migrate(db),{version:16,applied:[]});
     assert.equal(db.pragma('foreign_keys',{simple:true}),1);
     assert.deepEqual(db.pragma('foreign_key_check'),[]);
     assert.equal(db.pragma('integrity_check',{simple:true}),'ok');
@@ -33,9 +33,9 @@ test('fresh empty database migrates through customization retention with integri
     assert.equal(db.prepare("SELECT count(*) AS n FROM sqlite_master WHERE type='table' AND name LIKE '%_v15'").get().n,0);
 });
 
-test('upgrade from version 13 preserves existing rows, customization, ownership, triggers and referential integrity',t=>{
+test('upgrade from version 14 preserves existing rows, customization, ownership, triggers and referential integrity',t=>{
     const {db}=fixture(t,{migrate:false});
-    assert.equal(migrate(db,{directory:directoryThrough(t,13)}).version,13);
+    assert.equal(migrate(db,{directory:directoryThrough(t,14)}).version,14);
     const repositories=createRepositories(db);
     repositories.users.create({user_id:'custom-a',username:'custom-a',display_name:'Custom A'});
     repositories.users.create({user_id:'custom-b',username:'custom-b',display_name:'Custom B'});
@@ -58,7 +58,7 @@ test('upgrade from version 13 preserves existing rows, customization, ownership,
         'ConversationKeyEpochs','ConversationKeyWraps','VoiceRooms'];
     const preservedBefore=Object.fromEntries(preservedTables.map(table=>[table,rows(db,table)]));
 
-    assert.deepEqual(migrate(db,{directory:directoryThrough(t,14)}).applied,['0014-conversation-customization.sql']);
+    assert.deepEqual(migrate(db,{directory:directoryThrough(t,15)}).applied,['0015-conversation-customization.sql']);
     db.prepare(`INSERT INTO UserProfileAvatars(user_id,storage_key,mime_type,byte_size,sha256,updated_at)
         VALUES(?,?,?,?,?,?)`).run('custom-a','custom-avatar.png','image/png',8,'a'.repeat(64),at);
     db.prepare(`INSERT INTO ConversationThemes(conversation_id,theme_id,updated_by,updated_at)
@@ -69,11 +69,11 @@ test('upgrade from version 13 preserves existing rows, customization, ownership,
         .map(table=>[table,rows(db,table)]));
     const revisionBefore=db.prepare("SELECT revision FROM SocialRevisions WHERE user_id='custom-b'").get().revision;
 
-    assert.deepEqual(migrate(db).applied,['0015-customization-retention.sql']);
+    assert.deepEqual(migrate(db).applied,['0016-customization-retention.sql']);
     for(const table of preservedTables)assert.deepEqual(rows(db,table),preservedBefore[table],`${table} is preserved`);
     for(const table of Object.keys(customizationBefore))
         assert.deepEqual(rows(db,table),customizationBefore[table],`${table} customization is preserved`);
-    assert.deepEqual(migrate(db),{version:15,applied:[]});
+    assert.deepEqual(migrate(db),{version:16,applied:[]});
     assert.equal(db.pragma('integrity_check',{simple:true}),'ok');
     assert.deepEqual(db.pragma('foreign_key_check'),[]);
 

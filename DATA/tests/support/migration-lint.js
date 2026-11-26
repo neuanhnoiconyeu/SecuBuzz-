@@ -41,7 +41,8 @@
 // treats this PRAGMA as a no-op.
 //
 // Applied-migration exception. The deployed database has migration 0014 recorded with the checksum below, and that
-// immutable file contains six forbidden foreign-key actions. Only that exact filename and normalized SHA-256 may
+// canonical merged chain renumbers that immutable file to 0015 while retaining its exact SHA-256 checksum; it
+// contains six forbidden foreign-key actions. Only that exact filename and normalized SHA-256 may
 // grandfather those six findings. Any changed byte, another file or a different action set remains a violation;
 // every new migration is subject to the normal rule.
 //
@@ -73,7 +74,7 @@ const PUBLISHED_EXEMPTIONS = Object.freeze([
 ]);
 const APPLIED_FOREIGN_KEY_ACTION_EXEMPTIONS = Object.freeze([
     Object.freeze({
-        file: '0014-conversation-customization.sql',
+        file: '0015-conversation-customization.sql',
         checksum: '6a132cff0ce19ee83be87c6f26b8dac3277c25fa95e654f04671cd53200d9748',
         actions: Object.freeze(['ON DELETE CASCADE', 'ON DELETE CASCADE', 'ON DELETE CASCADE', 'ON DELETE CASCADE', 'SET NULL', 'SET NULL']),
     }),

@@ -105,8 +105,8 @@ test('lint: ON DELETE CASCADE, SET NULL and SET DEFAULT are reported from versio
     assert.equal(lint.lintSql(sql, { file: '0012-later.sql' }).strict, true);
 });
 
-test('lint: only the exact applied 0014 checksum grandfathers its six existing foreign-key actions', () => {
-    const file = '0014-conversation-customization.sql';
+test('lint: only the exact applied 0015 checksum grandfathers its six existing foreign-key actions', () => {
+    const file = '0015-conversation-customization.sql';
     const sql = fs.readFileSync(path.join(MIGRATIONS,file),'utf8');
     const accepted = lint.lintSql(sql,{file});
     assert.deepEqual(accepted.violations,[]);
@@ -116,7 +116,7 @@ test('lint: only the exact applied 0014 checksum grandfathers its six existing f
     assert.deepEqual(changed.exempted,[]);
     assert.deepEqual(changed.violations.map(entry=>entry.phrase).sort(),
         ['ON DELETE CASCADE','ON DELETE CASCADE','ON DELETE CASCADE','ON DELETE CASCADE','SET NULL','SET NULL']);
-    const copied = lint.lintSql(sql,{file:'0015-copy.sql'});
+    const copied = lint.lintSql(sql,{file:'0016-copy.sql'});
     assert.deepEqual(copied.exempted,[]);
     assert.equal(copied.violations.length,6);
 });
@@ -177,12 +177,12 @@ test('lint of server/database/migrations: 0001 to 0007 pass (DC-07) and every fi
         .map(e => [e.file, e.line, e.keyword, e.statement]), [['0001-legacy.sql', 2, 'PRAGMA', 'PRAGMA foreign_keys = ON']]);
     assert.deepEqual(result.exempted.filter(e => e.rule === 'FORBIDDEN_FOREIGN_KEY_ACTION')
         .map(e => [e.file,e.phrase]).sort(), [
-        ['0014-conversation-customization.sql','ON DELETE CASCADE'],
-        ['0014-conversation-customization.sql','ON DELETE CASCADE'],
-        ['0014-conversation-customization.sql','ON DELETE CASCADE'],
-        ['0014-conversation-customization.sql','ON DELETE CASCADE'],
-        ['0014-conversation-customization.sql','SET NULL'],
-        ['0014-conversation-customization.sql','SET NULL'],
+        ['0015-conversation-customization.sql','ON DELETE CASCADE'],
+        ['0015-conversation-customization.sql','ON DELETE CASCADE'],
+        ['0015-conversation-customization.sql','ON DELETE CASCADE'],
+        ['0015-conversation-customization.sql','ON DELETE CASCADE'],
+        ['0015-conversation-customization.sql','SET NULL'],
+        ['0015-conversation-customization.sql','SET NULL'],
     ]);
 
     // DC-07: the published files hold trigger bodies with BEGIN ... END and CASE ... END. Every CREATE TRIGGER of them

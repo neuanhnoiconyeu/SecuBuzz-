@@ -3,7 +3,7 @@ const { AuthError } = require('../auth/errors');
 const { createSqliteRateLimiter } = require('../auth/rateLimiter');
 const invalid = () => { throw new AuthError('VALIDATION_ERROR',400); };
 const idPattern = /^(?:lounge|study-room|dev-corner|room-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/;
-// Migration 0013 default rows are trigger-immutable in SQLite; map stable IDs to current display names.
+// Migration 0014 default rows are trigger-immutable in SQLite; map stable IDs to current display names.
 const DEFAULT_ROOM_NAMES = Object.freeze({ lounge: 'Lounge', 'study-room': 'Study Room', 'dev-corner': 'Gaming Room' });
 function roomName(body,creating) {
     if (!body || typeof body!=='object' || Array.isArray(body) ||
